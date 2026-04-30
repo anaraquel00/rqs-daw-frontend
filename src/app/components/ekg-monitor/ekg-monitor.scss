@@ -1,0 +1,102 @@
+.ekg-container {
+  background: rgba(10, 15, 20, 0.8);
+  border: 1px solid rgba(0, 255, 204, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 25px;
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.1);
+}
+
+.radar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+
+  h3 {
+    color: #00ffcc;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    margin: 0;
+  }
+
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #333;
+    border-radius: 50%;
+
+    &.active {
+      background-color: #ff003c;
+      box-shadow: 0 0 10px #ff003c;
+      animation: pulse 1s infinite;
+    }
+  }
+}
+
+.canvas-wrapper {
+  position: relative;
+  background-color: #05080a;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #1a2b3c;
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 150px;
+  }
+
+  // Linhas de grade para simular equipamento médico/militar
+  .grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+      linear-gradient(rgba(0, 255, 204, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 204, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+  }
+}
+
+.controls {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+
+  .btn-play {
+    background: transparent;
+    color: #00ffcc;
+    border: 1px solid #00ffcc;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.1);
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+    }
+
+    &.playing {
+      color: #ff003c;
+      border-color: #ff003c;
+
+      &:hover {
+        background: rgba(255, 0, 60, 0.1);
+        box-shadow: 0 0 15px rgba(255, 0, 60, 0.3);
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}

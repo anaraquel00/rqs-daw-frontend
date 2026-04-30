@@ -1,0 +1,38 @@
+<div class="glass-panel">
+  <div class="scanner-header">
+    <h2>RQS DSP CORE</h2>
+    <p>Arraste a faixa crua do Suno para homologação acústica</p>
+  </div>
+
+  <div class="drop-zone"
+       (dragover)="onDragOver($event)"
+       (drop)="onDrop($event)"
+       (dragleave)="onDragLeave($event)"
+       [class.active]="isDragging">
+
+    <div class="icon-container">
+      <span class="cyber-icon">🎧</span>
+    </div>
+    <p class="drop-text" *ngIf="!selectedFile">Solte o arquivo .WAV aqui</p>
+    <p class="drop-text file-ready" *ngIf="selectedFile">💿 {{ selectedFile.name }} interceptado.</p>
+  </div>
+
+  <div class="style-selectors" *ngIf="selectedFile && !isProcessing && !processedAudioUrl">
+    <button class="btn-blue-team" (click)="processar('blue_team')">🛡️ Blue Team (Clean)</button>
+    <button class="btn-red-team" (click)="processar('jonah_red')">🔥 Jonah Red (Aggrotech)</button>
+    <button class="btn-suno-fix" (click)="processar('suno_fix')">🔧 Suno Fix (HQ Live)</button>
+  </div>
+
+  <div class="processing-status" *ngIf="isProcessing">
+    <div class="spinner"></div>
+    <p>⚙️ RQS Reator processando telemetria... Aguarde.</p>
+  </div>
+
+  <div class="download-section" *ngIf="processedAudioUrl">
+    <a [href]="processedAudioUrl" [download]="processedAudioName" class="btn-download">
+      ✅ Masterização concluída! [Download áudio]
+    </a>
+  </div>
+  <!-- 📡 NOSSO NOVO MONITOR CARDÍACO -->
+  <app-ekg-monitor *ngIf="processedAudioUrl" [audioUrl]="processedAudioUrl"></app-ekg-monitor>
+</div>

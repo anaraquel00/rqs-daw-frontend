@@ -1,0 +1,19 @@
+<div class="ekg-container" *ngIf="audioUrl">
+  <div class="radar-header">
+    <span class="pulse-dot" [class.active]="isPlaying"></span>
+    <h3>RQS MONITOR DE FREQUÊNCIA</h3>
+  </div>
+
+  <div class="canvas-wrapper">
+    <!-- O nosso ecrã de osciloscópio -->
+    <canvas #canvasElement width="500" height="150"></canvas>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <div class="controls">
+    <audio #audioElement [src]="audioUrl" (ended)="pararMonitor()"></audio>
+    <button class="btn-play" (click)="togglePlay()" [class.playing]="isPlaying">
+      {{ isPlaying ? '⏸️ PAUSAR VARREDURA' : '▶️ INICIAR TELEMETRIA' }}
+    </button>
+  </div>
+</div>

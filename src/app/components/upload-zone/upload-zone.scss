@@ -1,0 +1,103 @@
+.glass-panel {
+  background: rgba(16, 18, 27, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 40px;
+  width: 600px;
+  margin: 50px auto;
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5);
+  color: #fff;
+  text-align: center;
+}
+
+.drop-zone {
+  border: 2px dashed rgba(0, 212, 255, 0.4);
+  border-radius: 12px;
+  padding: 60px 20px;
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  margin-bottom: 30px;
+
+  &.active {
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.2);
+  }
+
+  .file-ready {
+    color: #00ffcc;
+    font-weight: bold;
+  }
+}
+
+.style-selectors {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+
+    &:hover { transform: scale(1.05); }
+  }
+
+  .btn-blue-team { background: #0a4d8c; color: white; border: 1px solid #00d4ff; }
+  .btn-red-team { background: #8c0a0a; color: white; border: 1px solid #ff003c; }
+  .btn-suno-fix { background: #333; color: white; border: 1px solid #888; }
+}
+
+.processing-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  color: #00d4ff;
+  font-weight: bold;
+  margin-top: 20px;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 212, 255, 0.2);
+    border-top: 4px solid #00d4ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.download-section {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+
+  .btn-download {
+    display: inline-block;
+    background: linear-gradient(90deg, #00d4ff, #0a4d8c);
+    color: white;
+    text-decoration: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.8);
+      transform: translateY(-2px);
+    }
+  }
+}
