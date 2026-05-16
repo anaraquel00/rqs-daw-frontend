@@ -17,11 +17,14 @@
     <p class="drop-text file-ready" *ngIf="selectedFile">💿 {{ selectedFile.name }} interceptado.</p>
   </div>
 
-  <div class="style-selectors" *ngIf="selectedFile && !isProcessing && !processedAudioUrl">
-    <button class="btn-blue-team" (click)="processar('blue_team')">🛡️ Blue Team (Clean)</button>
-    <button class="btn-red-team" (click)="processar('jonah_red')">🔥 Jonah Red (Aggrotech)</button>
-    <button class="btn-suno-fix" (click)="processar('suno_fix')">🔧 Suno Fix (HQ Live)</button>
-  </div>
+  <!-- 🎛️ NOSSA NOVA MESA DE MASTERIZAÇÃO (Só aparece após o upload) -->
+  <app-mastering-panel
+    *ngIf="selectedFile && !isProcessing"
+    [originalFile]="selectedFile"
+    [isProcessing]="isProcessing"
+    [masteredAudioUrl]="processedAudioUrl"
+    (processMaster)="processarMaster($event)">
+  </app-mastering-panel>
 
   <div class="processing-status" *ngIf="isProcessing">
     <div class="spinner"></div>

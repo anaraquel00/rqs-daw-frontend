@@ -1,0 +1,71 @@
+<div class="mastering-board" *ngIf="originalFile">
+  <!-- Reprodutor e Toggle A/B -->
+  <div class="player-section">
+    
+    <!-- 💿 MOTOR ORIGINAL (Oculto se Master estiver ativo) -->
+    <audio [src]="originalAudioUrl" controls class="cyber-player" 
+           [style.display]="modoAudicao === 'original' ? 'block' : 'none'">
+    </audio>
+
+    <!-- 🎛️ MOTOR MASTERIZADO (Oculto se Original estiver ativo) -->
+    <audio *ngIf="masteredAudioUrl" [src]="masteredAudioUrl" controls class="cyber-player" 
+           [style.display]="modoAudicao === 'master' ? 'block' : 'none'">
+    </audio>
+
+    <!-- Placeholder caso não haja master ainda, para manter o design alinhado -->
+    <div class="cyber-player placeholder" *ngIf="modoAudicao === 'master' && !masteredAudioUrl" style="height: 40px;"></div>
+    
+    <div class="toggle-container">
+      <button class="toggle-btn" 
+              [class.active]="modoAudicao === 'original'" 
+              (click)="alternarModo('original')">
+        Original
+      </button>
+      
+      <!-- O Switch visual -->
+      <div class="switch" (click)="alternarModo(modoAudicao === 'original' ? 'master' : 'original')">
+        <div class="slider" [class.on]="modoAudicao === 'master'"></div>
+      </div>
+
+      <button class="toggle-btn" 
+              [class.active]="modoAudicao === 'master'" 
+              [disabled]="!masteredAudioUrl"
+              (click)="alternarModo('master')">
+        Master
+      </button>
+    </div>
+
+    <div class="volume-match">
+      <input type="checkbox" id="volMatch" [(ngModel)]="volumeMatch" disabled>
+      <label for="volMatch">Volume Match (Em construção 🔧)</label>
+    </div>
+  </div>
+
+  <hr class="cyber-divider">
+
+  <!-- Controles de Engenharia -->
+  <div class="controls-section">
+    <div class="control-group">
+      <h4>Estilo</h4>
+      <div class="btn-group">
+        <button [class.selected]="estiloSelecionado === 'quente'" (click)="selecionarEstilo('quente')">Quente</button>
+        <button [class.selected]="estiloSelecionado === 'equilibrado'" (click)="selecionarEstilo('equilibrado')">Equilibrado</button>
+        <button [class.selected]="estiloSelecionado === 'aberto'" (click)="selecionarEstilo('aberto')">Aberto</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h4>Intensidade de LUFS</h4>
+      <div class="btn-group">
+        <button [class.selected]="intensidadeSelecionada === 'baixa'" (click)="selecionarIntensidade('baixa')">Baixa</button>
+        <button [class.selected]="intensidadeSelecionada === 'media'" (click)="selecionarIntensidade('media')">Média</button>
+        <button [class.selected]="intensidadeSelecionada === 'alta'" (click)="selecionarIntensidade('alta')">Alta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ignição -->
+  <button class="btn-process" (click)="dispararProcessamento()" [disabled]="isProcessing">
+    {{ isProcessing ? 'Processando IA Acústica...' : 'CRIAR MASTERIZAÇÃO' }}
+  </button>
+</div>

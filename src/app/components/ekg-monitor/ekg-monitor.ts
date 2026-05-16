@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { SafeResourceUrl } from '@angular/platform-browser';
 @Component({
   selector: 'app-ekg-monitor',
   standalone: true,
@@ -9,8 +9,7 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./ekg-monitor.scss']
 })
 export class EkgMonitorComponent implements OnDestroy {
-  @Input() audioUrl: string | null = null;
-
+  @Input() audioUrl: SafeResourceUrl | string | null = null;
   @ViewChild('canvasElement') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('audioElement') audioRef!: ElementRef<HTMLAudioElement>;
 

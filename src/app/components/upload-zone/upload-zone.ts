@@ -2,12 +2,13 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DspService } from '../../services/dsp';
 import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
+import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
 
 
 @Component({
   selector: 'app-upload-zone',
   standalone: true,
-  imports: [CommonModule, EkgMonitorComponent],
+  imports: [CommonModule, EkgMonitorComponent, MasteringPanelComponent],
   templateUrl: './upload-zone.html',
   styleUrls: ['./upload-zone.scss']
 })
@@ -72,4 +73,32 @@ export class UploadZoneComponent {
       }
     });
   }
+
+  // 🚀 A nova função que recebe as ordens do painel
+  processarMaster(config: {estilo: string, intensidade: string}) {
+    if (!this.selectedFile) return;
+
+    this.isProcessing = true;
+    this.processedAudioUrl = null;
+
+    // Por enquanto, vamos juntar os dois parâmetros numa string para o backend
+    const estiloPayload = `${config.estilo}_${config.intensidade}`;
+
+    console.log(`🚀 [IGNIÇÃO] Enviando para RQS API. Payload: ${estiloPayload}`);
+
+    this.dspService.processarAudio(this.selectedFile, estiloPayload).subscribe({
+      next: (response: Blob) => {
+        this.isProcessing = false;
+        this.processedAudioUrl = window.URL.createObjectURL(response);
+        const originalName = this.selectedFile!.name.replace('.wav', '');
+        this.processedAudioName = `RQS_MASTER_${estiloPayload.toUpperCase()}_${originalName}.wav`;
+        console.log('✅ [SUCESSO] Pacote ancorado. Mude o Toggle para Master e ouça!');
+      },
+      error: (err) => {
+        this.isProcessing = false;
+        console.error('⚠️ [ERRO DE PROTOCOLO] O reator Python rejeitou a carga:', err);
+      }
+    });
+  }
 }
+
