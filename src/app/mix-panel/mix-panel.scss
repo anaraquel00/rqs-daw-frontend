@@ -1,0 +1,281 @@
+// 💎 VARIÁVEIS DO MAINFRAME (Cores da Ordem e do Caos)
+$bg-dark: #0d0e12;
+$bg-card: #141722;
+$border-neon: #00f0ff; // Ciano RQS
+$accent-purple: #9d00ff; // Roxo Ordem
+$danger-red: #ff0055; // Sangue Jonah
+$text-bright: #ffffff;
+$text-muted: #8b949e;
+
+.mix-panel-container {
+  background-color: $bg-dark;
+  color: $text-bright;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid rgba($border-neon, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  max-width: 800px;
+  margin: 20px auto;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    color: $border-neon;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba($border-neon, 0.3);
+  }
+
+  // 📁 A ZONA HÍBRIDA (Drag & Drop + Click)
+  .dropzone {
+    border: 2px dashed rgba($border-neon, 0.4);
+    background-color: $bg-card;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+      border-color: $border-neon;
+      background-color: rgba($border-neon, 0.03);
+      box-shadow: 0 0 15px rgba($border-neon, 0.2);
+      transform: translateY(-2px);
+
+      .icon {
+        transform: scale(1.1);
+        text-shadow: 0 0 10px $border-neon;
+      }
+    }
+
+    .icon {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 10px;
+      transition: transform 0.2s ease;
+    }
+
+    p {
+      color: $text-muted;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0;
+
+      strong {
+        color: $border-neon;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // 📋 A MESA DE MIXAGEM (Lista de Tracks)
+  .track-list {
+    background-color: rgba($bg-card, 0.6);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid rgba($text-muted, 0.1);
+
+    h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: $text-muted;
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: $bg-card;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border-left: 4px solid $accent-purple;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+
+      &:hover {
+        background-color: rgba($bg-card, 1);
+        border-left-color: $border-neon;
+      }
+
+      .track-name {
+        font-size: 13px;
+        font-family: 'Courier New', Courier, monospace; // Vibe terminal técnico
+        color: rgba($text-bright, 0.9);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
+      }
+
+      .controls {
+        display: flex;
+        gap: 6px;
+
+        button {
+          background: rgba($text-bright, 0.05);
+          border: 1px solid rgba($text-bright, 0.1);
+          color: $text-bright;
+          padding: 6px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 11px;
+          transition: all 0.15s ease;
+
+          &:hover:not([disabled]) {
+            background: rgba($text-bright, 0.15);
+            border-color: rgba($text-bright, 0.3);
+          }
+
+          &:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+          }
+        }
+
+        .btn-danger {
+          background: rgba($danger-red, 0.1);
+          border: 1px solid rgba($danger-red, 0.3);
+          color: #ff4d7d;
+
+          &:hover {
+            background: $danger-red !important;
+            color: $text-bright;
+            box-shadow: 0 0 10px rgba($danger-red, 0.4);
+          }
+        }
+      }
+    }
+  }
+
+  // 🚀 BOTÃO DE IGNIÇÃO NUCLEAR
+  .ignite-btn {
+    width: 100%;
+    margin-top: 20px;
+    background: linear-gradient(135deg, $accent-purple, #cc00ff);
+    color: $text-bright;
+    border: none;
+    padding: 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba($accent-purple, 0.3);
+
+    &:hover {
+      background: linear-gradient(135deg, #ad14ff, #db2eff);
+      box-shadow: 0 0 20px rgba(#cc00ff, 0.5);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+  // STATUS E TELEMETRIA
+  .processing-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba($border-neon, 0.05);
+    border: 1px dashed rgba($border-neon, 0.4);
+    border-radius: 6px;
+
+    p {
+      color: $border-neon;
+      font-family: 'Courier New', Courier, monospace;
+      margin: 0;
+      animation: pulse 1.5s infinite;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba($border-neon, 0.3);
+      border-top-color: $border-neon;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  .success-status {
+    text-align: center;
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(0, 255, 136, 0.1);
+    border-left: 4px solid #00ff88;
+    border-radius: 4px;
+
+    p {
+      color: #00ff88;
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  // CAMPO DE NOMENCLATURA
+  .metadata-section {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: $text-muted;
+      letter-spacing: 1px;
+    }
+
+    .cyber-input {
+      background-color: rgba($bg-dark, 0.8);
+      border: 1px solid rgba($border-neon, 0.3);
+      color: $border-neon;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s ease;
+
+      &:focus {
+        border-color: $border-neon;
+        box-shadow: 0 0 10px rgba($border-neon, 0.2);
+        background-color: $bg-dark;
+      }
+
+      &::placeholder {
+        color: rgba($text-muted, 0.5);
+      }
+    }
+  }
+}

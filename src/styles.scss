@@ -1,1 +1,71 @@
-/* You can add global styles to this file, and also import other style files */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #060709;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+.rqs-mainframe {
+  padding: 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  .mainframe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(#00f0ff, 0.2);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      color: #ffffff;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px rgba(#00f0ff, 0.4);
+    }
+
+    .system-status {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #00f0ff;
+      background: rgba(#00f0ff, 0.05);
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(#00f0ff, 0.2);
+    }
+  }
+
+  // 🔥 A MÁGICA DOS PAINÉIS PARALELOS
+  .mainframe-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); // 🧠 Duas colunas com exatamente a mesma fração de tamanho!
+    gap: 25px; // Espaçamento simétrico entre os dois blocos
+    align-items: start; // Garante que eles comecem alinhados no topo
+
+    // Responsividade tática: se a tela for muito estreita (ex: notebook antigo), empilha
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // Padronização dos Racks para manterem a consistência visual
+  .panel-rack {
+    width: 100%;
+    box-sizing: border-box;
+
+    // Força os componentes internos (mix-panel e upload-zone) a limparem margens externas automáticas
+    app-upload-zone, app-mix-panel {
+      display: block;
+      width: 100%;
+    }
+
+    // Remove as propriedades max-width antigas para os componentes preencherem o grid simetricamente
+    .mix-panel-container, .upload-container {
+      max-width: 100% !important;
+      margin: 0 !important;
+      min-height: 520px; // Altura mínima de segurança para as caixas ficarem gêmeas
+    }
+  }
+}

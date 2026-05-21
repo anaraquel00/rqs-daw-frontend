@@ -8,23 +8,35 @@
        (dragover)="onDragOver($event)"
        (drop)="onDrop($event)"
        (dragleave)="onDragLeave($event)"
+       (click)="fileInput.click()"
        [class.active]="isDragging">
 
     <div class="icon-container">
       <span class="cyber-icon">🎧</span>
     </div>
-    <p class="drop-text" *ngIf="!selectedFile">Solte o arquivo .WAV aqui</p>
+
+    <p class="drop-text" *ngIf="!selectedFile">
+      Solte o arquivo .WAV aqui<br>
+      <span style="font-size: 12px; color: #00f0ff; opacity: 0.8;">ou clique para buscar no sistema</span>
+    </p>
+
     <p class="drop-text file-ready" *ngIf="selectedFile">💿 {{ selectedFile.name }} interceptado.</p>
+
+    <input
+      type="file"
+      #fileInput
+      accept=".wav, .mp3"
+      (change)="onFileSelect($event)"
+      style="display: none;">
   </div>
 
-  <!-- 🎛️ NOSSA NOVA MESA DE MASTERIZAÇÃO (Só aparece após o upload) -->
   <app-mastering-panel
     *ngIf="selectedFile && !isProcessing"
     [originalFile]="selectedFile"
     [isProcessing]="isProcessing"
     [masteredAudioUrl]="processedAudioUrl"
-    (processMaster)="processarMaster($event)">
-  </app-mastering-panel>
+    (processMaster)="processarMaster($event)"
+    (estiloAlterado)="trocarPerfil($any($event))"> </app-mastering-panel>
 
   <div class="processing-status" *ngIf="isProcessing">
     <div class="spinner"></div>
@@ -35,7 +47,11 @@
     <a [href]="processedAudioUrl" [download]="processedAudioName" class="btn-download">
       ✅ Masterização concluída! [Download áudio]
     </a>
+
+  <button class="btn-danger"(click)="ejetarFaixa()">
+      ⏏️ EJETAR FAIXA E LIMPAR DECK
+  </button>
   </div>
-  <!-- 📡 NOSSO NOVO MONITOR CARDÍACO -->
+
   <app-ekg-monitor *ngIf="processedAudioUrl" [audioUrl]="processedAudioUrl"></app-ekg-monitor>
 </div>

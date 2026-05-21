@@ -1,0 +1,59 @@
+<div class="mix-panel-container">
+  <h2>🎛️ RQS Setlist Engine</h2>
+
+  <div
+    class="dropzone"
+    (drop)="onFileDrop($event)"
+    (dragover)="onDragOver($event)"
+    (click)="fileInput.click()">
+
+    <span class="icon">📁</span>
+    <p>Arraste suas faixas masterizadas aqui<br>ou <strong>clique para abrir a pasta</strong></p>
+
+    <input
+      type="file"
+      #fileInput
+      multiple
+      accept=".wav, .mp3"
+      (change)="onFileSelect($event)"
+      style="display: none;">
+  </div>
+
+  <div class="track-list" *ngIf="tracks.length > 0">
+    <h3>Linha do Tempo ({{ tracks.length }} faixas)</h3>
+    <ul>
+      <li *ngFor="let track of tracks; let i = index">
+        <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
+
+        <div class="controls">
+          <button (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
+          <button (click)="moveDown(i)" [disabled]="i === tracks.length - 1">🔽</button>
+          <button class="btn-danger" (click)="removeTrack(i)">❌</button>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div class="metadata-section" *ngIf="tracks.length > 0">
+      <label for="exportName">Nomenclatura do Deploy (.WAV):</label>
+      <input
+        type="text"
+        id="exportName"
+        class="cyber-input"
+        [(ngModel)]="setlistName"
+        placeholder="Ex: THE_BLOODPRINT_SESSIONS_XXX" />
+    </div>
+  <div class="processing-status" *ngIf="isProcessing">
+      <div class="spinner"></div>
+      <p>⚙️ RQS Motor FFmpeg costurando o crossfade... Aguarde.</p>
+    </div>
+
+    <div class="success-status" *ngIf="mixSuccess">
+      <p>✅ Deploy Concluído! O download da Setlist iniciou automaticamente.</p>
+    </div>
+
+    <button class="btn-primary ignite-btn"
+            (click)="igniteSetlist()"
+            [disabled]="isProcessing || tracks.length === 0">
+      {{ isProcessing ? '🔥 RENDERIZANDO MATRIZ...' : '🔥 INICIAR DEPLOY DA SETLIST' }}
+    </button>
+</div>

@@ -115,6 +115,51 @@
     }
   }
 }
+// GRID DOS PERFIS ACÚSTICOS
+  .profiles-grid {
+    display: grid !important; // Sobrescreve o flexbox antigo se houver
+    grid-template-columns: 1fr 1fr; // Divide em duas colunas iguais
+    gap: 10px;
+
+    button {
+      margin: 0; // Remove margens residuais
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 12px 8px;
+
+      // Efeito neon cybernetic no hover
+      &:hover {
+        box-shadow: inset 0 0 10px rgba(#00f0ff, 0.2);
+      }
+    }
+  }
+
+.btn-secondary {
+  width: 100%;
+  padding: 12px;
+  background: rgba(0, 212, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: #00d4ff;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+  }
+
+  &:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+  }
+}
 
 .btn-process {
   width: 100%;
