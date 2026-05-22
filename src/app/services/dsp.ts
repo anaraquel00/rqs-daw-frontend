@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DspService {
-
-  // 🔗 Aponta para o Monólito (No deploy, trocaremos localhost pela URL do Railway)
-  private baseUrl = 'http://localhost:3000/api/v1';
+// 🛡️ A variável agora consome o ambiente ativo (Local ou Nuvem)
+  private baseUrl = environment.baseUrl;
 
   constructor(private http: HttpClient) { }
 
