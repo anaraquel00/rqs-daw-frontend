@@ -3,12 +3,17 @@ body {
   padding: 0;
   background-color: #060709;
   font-family: 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
 }
 
 .rqs-mainframe {
   padding: 20px;
   min-height: 100vh;
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 10px; /* Recupera espaço útil nas bordas do celular */
+  }
 
   .mainframe-header {
     display: flex;
@@ -35,6 +40,17 @@ body {
       border-radius: 4px;
       border: 1px solid rgba(#00f0ff, 0.2);
     }
+    /* 📱 PATCH MOBILE DO CABEÇALHO */
+    @media (max-width: 768px) {
+      flex-direction: column; /* Empilha o Título e o Status */
+      gap: 12px;
+      text-align: center;
+
+      h1 {
+        font-size: 14px; /* Reduz a fonte na versão mobile */
+        line-height: 1.4;
+      }
+    }
   }
 
   // 🔥 A MÁGICA DOS PAINÉIS PARALELOS
@@ -47,6 +63,9 @@ body {
     // Responsividade tática: se a tela for muito estreita (ex: notebook antigo), empilha
     @media (max-width: 1024px) {
       grid-template-columns: 1fr;
+    }
+    @media (max-width: 768px) {
+      gap: 15px; // Reduz o espaço entre os painéis no celular
     }
   }
 
@@ -69,3 +88,4 @@ body {
     }
   }
 }
+
