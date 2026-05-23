@@ -196,5 +196,42 @@ export class UploadZoneComponent {
 
     console.log('[ALFA CORE] Deck limpo e aguardando nova carga.');
   }
+
+  // 🛡️ Novo Estado da Interface para o Demucs
+  isExtractingStems = false;
+
+  // 🧬 Protocolo de Dissecação de Matriz
+  extrairStems() {
+    if (!this.selectedFile) return;
+
+    // Trava a interface
+    this.isExtractingStems = true;
+    console.log(`[STEM CORE] Iniciando dissecação de áudio para: ${this.selectedFile.name}`);
+
+    this.dspService.extractStems(this.selectedFile).subscribe({
+      next: (blob: Blob) => {
+        this.isExtractingStems = false;
+
+        // 🎯 O "Truque" do Arquiteto: Força o download do ZIP invisivelmente
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        // Limpa o nome original e adiciona a tag RQS
+        const originalName = this.selectedFile!.name.replace('.wav', '').replace('.mp3', '');
+        a.download = `RQS_6_STEMS_${originalName}.zip`;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        console.log('[STEM CORE] Payload zipado entregue com sucesso!');
+      },
+      error: (err) => {
+        this.isExtractingStems = false;
+        console.error('[CRITICAL] Falha na extração de stems. O reator superaqueceu:', err);
+      }
+    });
+  }
 }
 

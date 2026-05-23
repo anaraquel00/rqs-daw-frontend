@@ -29,7 +29,16 @@
       (change)="onFileSelect($event)"
       style="display: none;">
   </div>
+   <div class="stem-action-panel" *ngIf="selectedFile && !isProcessing && !isExtractingStems">
+    <button class="btn-stem-extract" (click)="extrairStems()" style="background-color: #ff003c; color: white; padding: 10px 20px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 15px;">
+      🧬 EXTRAIR 6 STEMS (ISOLAMENTO MULTI-PISTA)
+    </button>
+  </div>
 
+  <div class="processing-status stem-status" *ngIf="isExtractingStems">
+    <div class="spinner"></div>
+    <p>🧬 IA Demucs está dissecando a matriz acústica em 6 canais... (Pode demorar alguns minutos. Não feches a aba!)</p>
+   </div>
   <app-mastering-panel
     *ngIf="selectedFile && !isProcessing"
     [originalFile]="selectedFile"

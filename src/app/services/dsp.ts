@@ -54,4 +54,15 @@ export class DspService {
       responseType: 'blob'
     });
   }
+
+  // 4. Dispara para o motor de Separação de Stems (Demucs 6 Canais)
+  extractStems(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('audio', file);
+
+    // 🛡️ PROTOCOLO BLOB: Avisa o Angular para esperar o pacote .zip blindado
+    return this.http.post(`${this.baseUrl}/stems/split`, formData, {
+      responseType: 'blob'
+    });
+  }
 }
