@@ -3,7 +3,12 @@ body {
   padding: 0;
   background-color: #060709;
   font-family: 'Segoe UI', Roboto, sans-serif;
-  overflow-x: hidden;
+  overflow-x: hidden; /* Corta vazamentos horizontais pela raiz */
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit; /* Força todo o hardware a respeitar as bordas */
 }
 
 .rqs-mainframe {
@@ -88,4 +93,38 @@ body {
     }
   }
 }
+/* 📱 PATCH DE BLINDAGEM MÁXIMA PARA MOBILE (ANTI-VAZAMENTO) */
+@media (max-width: 768px) {
+  /* 1. Força a Grelha Principal a colapsar numa Coluna Única */
+  .mainframe-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
 
+  /* 2. Destrói qualquer largura mínima que os painéis internos estejam a exigir */
+  .panel-rack,
+  app-mix-panel,
+  app-upload-zone {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* 3. Força todos os textos do cabeçalho a quebrarem de linha */
+  .mainframe-header {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .mainframe-header h1,
+  .system-status {
+    font-size: 1.1rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    text-align: center !important;
+    margin: 5px 0 !important;
+  }
+}

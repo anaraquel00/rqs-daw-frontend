@@ -5,7 +5,12 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 40px;
-  width: 600px;
+
+  /* 🛡️ BLINDAGEM RESPONSIVA */
+  width: 100%;          /* Ocupa a largura disponível da tela do telemóvel */
+  max-width: 600px;     /* Mas não passa de 600px no Desktop (mantém a sua estética) */
+  box-sizing: border-box; /* Garante que o padding não estoure a largura */
+
   margin: -1px auto;
   box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5);
   color: #fff;
