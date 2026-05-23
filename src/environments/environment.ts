@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  baseUrl: 'https://ten-ravens-lick.loca.lt/api/v1'
+  baseUrl: 'https://sidesplitting-aaliyah-hissingly.ngrok-free.dev/api/v1'
 };
