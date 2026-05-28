@@ -279,3 +279,165 @@ $text-muted: #8b949e;
     }
   }
 }
+// 🎛️ ESTILOS DO MÓDULO RQS MIX ENGINE
+.mix-control-module {
+  margin: 25px 0;
+  padding: 20px;
+  border: 1px dashed rgba(0, 255, 204, 0.3); // Borda Ciano RQS
+  background: rgba(0, 15, 20, 0.4); // Fundo sutil do mainframe
+  border-radius: 8px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+
+  .cyber-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #00ffcc;
+    font-size: 0.9rem;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .slider-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+
+    span {
+      color: #777;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    // O hardware do Slider
+    .cyber-slider {
+      flex-grow: 1;
+      -webkit-appearance: none;
+      background: rgba(0, 255, 204, 0.15);
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+      transition: all 0.3s ease;
+
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px; // Formato mais industrial
+        background: #cc00ff; // Roxo combinando com o botão de deploy
+        cursor: pointer;
+        border: 2px solid #fff;
+        box-shadow: 0 0 10px rgba(204, 0, 255, 0.8);
+        transition: transform 0.1s ease;
+
+        &:hover {
+          transform: scale(1.2);
+          box-shadow: 0 0 15px rgba(204, 0, 255, 1);
+        }
+      }
+    }
+
+    // O visor digital exato
+    .cyber-number-input {
+      width: 65px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid #00ffcc;
+      color: #00ffcc;
+      padding: 8px;
+      text-align: center;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      font-weight: bold;
+      font-size: 1rem;
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        background: rgba(0, 255, 204, 0.1);
+      }
+    }
+  }
+
+  .tech-hint {
+    color: #555;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 10px;
+  }
+}
+.track-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.track-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 10px;
+  border-left: 3px solid #00ffcc;
+}
+
+.custom-crossfade-bridge {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(0, 255, 204, 0.05);
+  padding: 8px 15px;
+  border-left: 3px dashed rgba(0, 255, 204, 0.3);
+  margin-left: 20px; /* Recuo para parecer uma hierarquia de conexão */
+
+  label {
+    color: #b000ff; /* Tom roxo para diferenciar da música */
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .slider-container-mini {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+
+    .cyber-slider-mini {
+      flex-grow: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      background: rgba(176, 0, 255, 0.2);
+      outline: none;
+
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px; height: 14px;
+        background: #00ffcc;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+    }
+
+    .cyber-number-input-mini {
+      width: 55px;
+      background: #000;
+      border: 1px solid #b000ff;
+      color: #fff;
+      text-align: center;
+      padding: 4px;
+      font-size: 0.85rem;
+      font-family: monospace;
+    }
+
+    .sec-label {
+      color: #666;
+      font-size: 0.75rem;
+    }
+  }
+}

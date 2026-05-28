@@ -19,20 +19,47 @@
       style="display: none;">
   </div>
 
-  <div class="track-list" *ngIf="tracks.length > 0">
+<div class="track-list" *ngIf="tracks.length > 0">
     <h3>Linha do Tempo ({{ tracks.length }} faixas)</h3>
     <ul>
-      <li *ngFor="let track of tracks; let i = index">
-        <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
+      <li *ngFor="let track of tracks; let i = index" class="track-item">
 
-        <div class="controls">
-          <button (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
-          <button (click)="moveDown(i)" [disabled]="i === tracks.length - 1">🔽</button>
-          <button class="btn-danger" (click)="removeTrack(i)">❌</button>
+        <div class="track-main-row">
+          <div class="track-info">
+            <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
+            <audio controls [src]="track.previewUrl" class="cyber-player" style="display: block; margin-top: 8px; width: 100%; max-width: 300px; height: 30px;"></audio>
+          </div>
+          <div class="controls">
+            <button (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
+            <button (click)="moveDown(i)" [disabled]="i === tracks.length - 1">🔽</button>
+            <button class="btn-danger" (click)="removeTrack(i)">❌</button>
+          </div>
         </div>
+
+        <div class="custom-crossfade-bridge" *ngIf="i < tracks.length - 1">
+          <div class="bridge-line"></div>
+          <label>↳ Crossfade em direção à Faixa [{{ i + 2 }}]:</label>
+
+          <div class="slider-container-mini">
+            <input
+              type="range" min="0" max="15" step="0.5"
+              [(ngModel)]="track.crossfadeNext"
+              class="cyber-slider-mini"
+              title="Ajuste o crossfade" aria-label="Ajuste o crossfade em segundos" />
+
+            <input
+              type="number" min="0" max="15" step="0.5"
+              [(ngModel)]="track.crossfadeNext"
+              class="cyber-number-input-mini"
+              title="Valor numérico" aria-label="Valor numérico do crossfade" />
+            <span class="sec-label">segundos</span>
+          </div>
+        </div>
+
       </li>
     </ul>
   </div>
+
   <div class="metadata-section" *ngIf="tracks.length > 0">
       <label for="exportName">Nomenclatura do Deploy (.WAV):</label>
       <input
@@ -40,20 +67,21 @@
         id="exportName"
         class="cyber-input"
         [(ngModel)]="setlistName"
-        placeholder="Ex: THE_BLOODPRINT_SESSIONS_XXX" />
-    </div>
+        placeholder="Ex: THE_BLUEPRINT_SESSIONS_XXX" />
+  </div>
+
   <div class="processing-status" *ngIf="isProcessing">
       <div class="spinner"></div>
       <p>⚙️ RQS Motor FFmpeg costurando o crossfade... Aguarde.</p>
-    </div>
+  </div>
 
-    <div class="success-status" *ngIf="mixSuccess">
+  <div class="success-status" *ngIf="mixSuccess">
       <p>✅ Deploy Concluído! O download da Setlist iniciou automaticamente.</p>
-    </div>
+  </div>
 
-    <button class="btn-primary ignite-btn"
-            (click)="igniteSetlist()"
-            [disabled]="isProcessing || tracks.length === 0">
-      {{ isProcessing ? '🔥 RENDERIZANDO MATRIZ...' : '🔥 INICIAR DEPLOY DA SETLIST' }}
-    </button>
+  <button class="btn-primary ignite-btn"
+          (click)="igniteSetlist()"
+          [disabled]="isProcessing || tracks.length === 0">
+    {{ isProcessing ? '🔥 RENDERIZANDO MATRIZ...' : '🔥 INICIAR DEPLOY DA SETLIST' }}
+  </button>
 </div>

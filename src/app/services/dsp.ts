@@ -35,17 +35,17 @@ export class DspService {
   }
 
   // 2. Dispara para o motor de Setlist/Mixer
-  generateMix(files: File[], crossfadeTime: number): Observable<any> {
+generateMix(files: File[], crossfades: number[]): Observable<any> {
     const formData = new FormData();
 
     // Empacota as 5 (ou mais) faixas no barramento
     files.forEach(f => formData.append('tracks', f));
-    formData.append('crossfade', crossfadeTime.toString());
+    // 🛡️ SERIALIZAÇÃO: Transforma o Array num pacote JSON seguro para a rede
+    formData.append('crossfades', JSON.stringify(crossfades));
 
-    // 🛡️ PROTOCOLO BLOB: Avisa ao Angular para esperar um arquivo físico, não um JSON
     return this.http.post(`${this.baseUrl}/mix/generate`, formData, {
-      responseType: 'blob'
-    });
+    responseType: 'blob'
+  });
   }
 
   // 3. Dispara para a anomalia do FFmpeg do Jonah (Vídeo)
