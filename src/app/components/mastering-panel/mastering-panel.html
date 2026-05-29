@@ -45,7 +45,8 @@
 
   <!-- Controles de Engenharia -->
   <div class="controls-section">
-     <div class="control-group">
+    <!-- Bloco 1: Perfil Acústico -->
+    <div class="control-group">
       <h4>Perfil Acústico (Powered by RQS DSP)</h4>
       <div class="btn-group profiles-grid">
         <button [class.selected]="estiloSelecionado === 'thunder'" (click)="selecionarEstilo('thunder')">
@@ -62,16 +63,31 @@
         </button>
       </div>
     </div>
+
+    <!-- Bloco 2: Controle de Intensidade da Compressão/Loudness (Estilo Mixea) -->
+    <div class="control-group">
+      <h4>Intensidade da Masterização (Dynamic Control)</h4>
+      <div class="btn-group intensity-selector">
+        <button [class.selected]="intensidadeSelecionada === 'baixa'" (click)="selecionarIntensidade('baixa')">
+          🟢 Baixa (Dinâmica)
+        </button>
+        <button [class.selected]="intensidadeSelecionada === 'media'" (click)="selecionarIntensidade('media')">
+          🟡 Média (Equilibrada)
+        </button>
+        <button [class.selected]="intensidadeSelecionada === 'alta'" (click)="selecionarIntensidade('alta')">
+          🔴 Alta (Competitiva)
+        </button>
+      </div>
+    </div>
   </div>
 
-  <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 15px;">
+  <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 25px;">
+    <button class="btn-secondary" (click)="dispararPreview()" [disabled]="isProcessing">
+      {{ isProcessing ? 'Analisando...' : '🎧 OUVIR TESTE (15s)' }}
+    </button>
 
-  <button class="btn-secondary" (click)="dispararPreview()" [disabled]="isProcessing">
-    {{ isProcessing ? 'Analisando...' : '🎧 OUVIR TESTE (15s)' }}
-  </button>
-
-  <button class="btn-process" (click)="dispararProcessamento()" [disabled]="isProcessing">
-    {{ isProcessing ? 'Processando IA Acústica...' : '🔥 MASTERIZAR FAIXA COMPLETA' }}
-  </button>
-</div>
+    <button class="btn-process" (click)="dispararProcessamento()" [disabled]="isProcessing">
+      {{ isProcessing ? 'Processando IA Acústica...' : '🔥 MASTERIZAR FAIXA COMPLETA' }}
+    </button>
+  </div>
 </div>

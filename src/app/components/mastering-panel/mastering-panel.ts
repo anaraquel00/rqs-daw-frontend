@@ -11,35 +11,28 @@ import { FormsModule } from '@angular/forms';
 })
 export class MasteringPanelComponent implements OnChanges, OnDestroy {
 
-  // Recebe o arquivo cru da Zona de Upload
   @Input() originalFile: File | null = null;
   @Input() isProcessing = false;
   @Input() masteredAudioUrl: string | null = null;
 
-  // Emite a ordem de ignição para o componente pai
+  // Emissores de Eventos de Comunicação Inter-Componentes [1.1.2]
   @Output() processMaster = new EventEmitter<{estilo: string, intensidade: string, preview: boolean}>();
+  @Output() estiloAlterado = new EventEmitter<string>(); // 🟢 CORREÇÃO: Resolve o (estiloAlterado) do pai
 
-  // Estados do Painel
-  // 🛡️ Nomenclatura atualizada para os Perfis Dolby-Style
   estiloSelecionado: string = 'clear_sky';
   intensidadeSelecionada: string = 'media';
   modoAudicao: 'original' | 'master' = 'original';
   volumeMatch: boolean = true;
 
-  // 🛡️ PATCH: Variável estática para blindar a memória e estabilizar o Player
   originalAudioUrl: string | null = null;
 
-  // ⚙️ INJEÇÃO: Monitora quando a "General" joga o arquivo na interface
   ngOnChanges(changes: SimpleChanges) {
     if (changes['originalFile'] && this.originalFile) {
-      // 1. Destrói o buffer antigo se houver
       this.limparBufferOriginal();
-      // 2. Forja o novo URL apenas UMA vez
       this.originalAudioUrl = window.URL.createObjectURL(this.originalFile);
     }
   }
 
-  // 🧹 GARBAGE COLLECTION: Limpa a RAM do navegador quando o painel for fechado
   ngOnDestroy() {
     this.limparBufferOriginal();
   }
@@ -51,9 +44,9 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
     }
   }
 
-  // 🎛️ Funções de Controle Intactas
   selecionarEstilo(estilo: string) {
     this.estiloSelecionado = estilo;
+    this.estiloAlterado.emit(estilo); // 🟢 CORREÇÃO: Dispara a troca de fita instantânea no player [1.1.2]
   }
 
   selecionarIntensidade(intensidade: string) {
@@ -61,22 +54,23 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
   }
 
   alternarModo(modo: 'original' | 'master') {
-    if (modo === 'master' && !this.masteredAudioUrl) return; // Trava de segurança
+    if (modo === 'master' && !this.masteredAudioUrl) return;
     this.modoAudicao = modo;
   }
 
   dispararPreview() {
-  this.processMaster.emit({
-  estilo: this.estiloSelecionado,
-  intensidade: this.intensidadeSelecionada,
-  preview: true // Flag para indicar que é um teste de 15 segundos
-  })
+    this.processMaster.emit({
+      estilo: this.estiloSelecionado,
+      intensidade: this.intensidadeSelecionada,
+      preview: true
+    });
   }
+
   dispararProcessamento() {
     this.processMaster.emit({
       estilo: this.estiloSelecionado,
       intensidade: this.intensidadeSelecionada,
-      preview: false // Flag para indicar que é o processamento completo
+      preview: false
     });
   }
 }

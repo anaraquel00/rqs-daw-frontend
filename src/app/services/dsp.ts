@@ -7,60 +7,52 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class DspService {
-// 🛡️ A variável agora consome o ambiente ativo (Local ou Nuvem)
   private baseUrl = environment.baseUrl;
 
   constructor(private http: HttpClient) { }
 
- // 1. Dispara para o motor de Masterização (Módulo Alfa)
+  // 1. Dispara para o motor de Masterização (Módulo Alfa - Em lote ou final)
   masterizeTrack(formData: FormData): Observable<any> {
-    // 🛡️ CORREÇÃO CRÍTICA: Use CRASE (`) no lugar de aspas simples (') para a variável funcionar!
     return this.http.post(`${this.baseUrl}/mastering/process`, formData, {
       responseType: 'blob'
     });
   }
 
- // 1. Dispara para o motor de DSP
-  processMastering(file: File, estilo: string = 'equilibrado', intensidade: string = 'media'): Observable<any> {
+  // 2. Dispara para o motor de DSP individual (com controle de intensidade/volume) [1]
+  processMastering(file: File, estilo: string = 'clear_sky', intensidade: string = 'media'): Observable<any> {
     const formData = new FormData();
-
-    // ⚠️ Atenção ao nome 'audio' aqui, pois é o que o seu back-end em Node.js aguarda!
     formData.append('audio', file);
     formData.append('estilo', estilo);
-    formData.append('intensidade', intensidade);
+    formData.append('intensidade', intensidade); // Garante que a intensidade chegue ao reator
 
     return this.http.post(`${this.baseUrl}/mastering/process`, formData, {
-      responseType: 'blob' // Mantém a exigência do blob para baixar o .wav
+      responseType: 'blob'
     });
   }
 
-  // 2. Dispara para o motor de Setlist/Mixer
-generateMix(files: File[], crossfades: number[]): Observable<any> {
+  // 3. Dispara para o motor de Setlist/Mixer (FFmpeg)
+  generateMix(files: File[], crossfades: number[]): Observable<any> {
     const formData = new FormData();
-
-    // Empacota as 5 (ou mais) faixas no barramento
     files.forEach(f => formData.append('tracks', f));
-    // 🛡️ SERIALIZAÇÃO: Transforma o Array num pacote JSON seguro para a rede
     formData.append('crossfades', JSON.stringify(crossfades));
 
     return this.http.post(`${this.baseUrl}/mix/generate`, formData, {
-    responseType: 'blob'
-  });
+      responseType: 'blob'
+    });
   }
 
-  // 3. Dispara para a anomalia do FFmpeg do Jonah (Vídeo)
+  // 4. Dispara para a renderização de Vídeo (Jonah Mod)
   renderVideo(audioUrl: string, preset: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/video/render`, { audioUrl, preset }, {
       responseType: 'blob'
     });
   }
 
-  // 4. Dispara para o motor de Separação de Stems (Demucs 6 Canais)
+  // 5. Dispara para o motor de Separação de Stems (Demucs 6 Canais)
   extractStems(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('audio', file);
 
-    // 🛡️ PROTOCOLO BLOB: Avisa o Angular para esperar o pacote .zip blindado
     return this.http.post(`${this.baseUrl}/stems/split`, formData, {
       responseType: 'blob'
     });

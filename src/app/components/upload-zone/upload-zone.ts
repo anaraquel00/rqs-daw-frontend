@@ -1,10 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DspService } from '../../services/dsp';
 import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
 import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
 import { forkJoin } from 'rxjs';
-
 
 @Component({
   selector: 'app-upload-zone',
@@ -13,41 +12,13 @@ import { forkJoin } from 'rxjs';
   templateUrl: './upload-zone.html',
   styleUrls: ['./upload-zone.scss']
 })
-export class UploadZoneComponent {
-// 📂 Protocolo de Captura por Clique
-  onFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-
-    if (input.files && input.files.length > 0) {
-      const selected = input.files[0];
-      const fileName = selected.name.toLowerCase();
-
-      // 🛡️ Filtro estrito de formato de áudio
-      if (fileName.endsWith('.wav') || fileName.endsWith('.mp3')) {
-        this.selectedFile = selected;
-
-        // Limpa qualquer masterização anterior caso o usuário troque a track
-        this.processedAudioUrl = null;
-
-        console.log(`[ALFA CORE] Track engatada via File Picker: ${this.selectedFile.name}`);
-      } else {
-        console.error('[BLOCK] Formato incompatível. Insira espectros puros (.wav ou .mp3).');
-      }
-
-      // Reseta o input para permitir selecionar o mesmo arquivo duas vezes, se necessário
-      input.value = '';
-    }
-  }
+export class UploadZoneComponent implements OnDestroy {
   isDragging = false;
   selectedFile: File | null = null;
-
-  // 🛡️ Novos Estados da Interface
   isProcessing = false;
-  // 🛡️ O novo barramento de memória para o processamento em Lote
-  processedAudioUrl: string | null = null; // Mantemos para a master final
+  processedAudioUrl: string | null = null;
   processedAudioName: string = '';
 
-  // O Cache de Previews (Armazena as 4 versões de 30 segundos)
   previewsCache: { [key: string]: string } = {
     thunder: '',
     clear_sky: '',
@@ -56,6 +27,24 @@ export class UploadZoneComponent {
   };
 
   private dspService = inject(DspService);
+
+  onFileSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+
+    if (input.files && input.files.length > 0) {
+      const selected = input.files[0];
+      const fileName = selected.name.toLowerCase();
+
+      if (fileName.endsWith('.wav') || fileName.endsWith('.mp3')) {
+        this.selectedFile = selected;
+        this.processedAudioUrl = null;
+        console.log(`[ALFA CORE] Track engatada via File Picker: ${this.selectedFile.name}`);
+      } else {
+        console.error('[BLOCK] Formato incompatível. Insira espectros puros (.wav ou .mp3).');
+      }
+      input.value = '';
+    }
+  }
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
@@ -73,30 +62,26 @@ export class UploadZoneComponent {
 
     if (event.dataTransfer?.files.length) {
       this.selectedFile = event.dataTransfer.files[0];
-      // Limpa os estados anteriores se um novo arquivo for jogado
       this.processedAudioUrl = null;
       this.isProcessing = false;
       console.log('📦 [FRONT-END] Arquivo ancorado:', this.selectedFile.name);
     }
   }
 
-  processar(estilo: string) {
+  // 🟢 CORREÇÃO: Suporta o envio dinâmico da intensidade no fluxo síncrono [1]
+  processar(estilo: string, intensidade: string = 'media') {
     if (!this.selectedFile) return;
 
-    // Trava a interface e mostra o aviso de carregamento
     this.isProcessing = true;
     this.processedAudioUrl = null;
 
-    console.log(`🚀 [IGNIÇÃO] Enviando para RQS API. Estilo: ${estilo}`);
+    console.log(`🚀 [IGNIÇÃO] Enviando para RQS API. Estilo: ${estilo} | Intensidade: ${intensidade}`);
 
-    this.dspService.processMastering(this.selectedFile, estilo).subscribe({
+    this.dspService.processMastering(this.selectedFile, estilo, intensidade).subscribe({
       next: (response: Blob) => {
-        // Libera a interface
         this.isProcessing = false;
-
-        // Gera o URL na memória e cria o nome final
         this.processedAudioUrl = window.URL.createObjectURL(response);
-        const originalName = this.selectedFile!.name.replace('.wav', '');
+        const originalName = this.selectedFile!.name.replace(/\.[^/.]+$/, "");
         this.processedAudioName = `RQS_MASTER_${estilo.toUpperCase()}_${originalName}.wav`;
 
         console.log('✅ [SUCESSO] Pacote ancorado. Aguardando extração manual.');
@@ -120,20 +105,18 @@ export class UploadZoneComponent {
       const requisicoesHttp = estilosDolby.map(perfil => {
         const formData = new FormData();
         formData.append('audio', this.selectedFile!);
-        formData.append('estilo', perfil); // Injeta um perfil diferente para cada request
+        formData.append('estilo', perfil);
         formData.append('intensidade', config.intensidade);
         formData.append('preview', 'true');
 
         return this.dspService.masterizeTrack(formData);
       });
 
-      // O forkJoin dispara os 4 e "congela" até todos terminarem
       forkJoin(requisicoesHttp).subscribe({
         next: (blobs: Blob[]) => {
           this.isProcessing = false;
           console.log('[ALFA CORE] Matriz de Previews renderizada com sucesso!');
 
-          // Salva os 4 arquivos temporários na RAM do navegador
           this.previewsCache = {
             thunder: window.URL.createObjectURL(blobs[0]),
             clear_sky: window.URL.createObjectURL(blobs[1]),
@@ -141,7 +124,6 @@ export class UploadZoneComponent {
             aurora: window.URL.createObjectURL(blobs[3])
           };
 
-          // Define o áudio que vai tocar primeiro como o estilo que a General escolheu na tela
           this.processedAudioUrl = this.previewsCache[config.estilo];
         },
         error: (err) => {
@@ -152,7 +134,7 @@ export class UploadZoneComponent {
     }
     // 🔥 ROTA 2: SE FOR MASTERIZAÇÃO FINAL (Processa apenas a faixa inteira escolhida)
     else {
-      console.log(`[ALFA CORE] Renderizando Master Definitiva. Perfil: ${config.estilo.toUpperCase()}`);
+      console.log(`[ALFA CORE] Renderizando Master Definitiva. Perfil: ${config.estilo.toUpperCase()} | Intensidade: ${config.intensidade.toUpperCase()}`);
 
       const formData = new FormData();
       formData.append('audio', this.selectedFile);
@@ -164,7 +146,9 @@ export class UploadZoneComponent {
         next: (blob: Blob) => {
           this.isProcessing = false;
           this.processedAudioUrl = window.URL.createObjectURL(blob);
-          this.processedAudioName = `RQS_MASTER_${config.estilo.toUpperCase()}.wav`;
+
+          const originalName = this.selectedFile!.name.replace(/\.[^/.]+$/, "");
+          this.processedAudioName = `RQS_MASTER_${config.estilo.toUpperCase()}_${originalName}.wav`;
         },
         error: (err) => {
           this.isProcessing = false;
@@ -173,22 +157,18 @@ export class UploadZoneComponent {
       });
     }
   }
+
   trocarPerfil(novoEstilo: string) {
-    // Se as 4 músicas já estiverem carregadas na RAM, nós apenas trocamos o cabo do Player!
     if (this.previewsCache && this.previewsCache[novoEstilo]) {
       this.processedAudioUrl = this.previewsCache[novoEstilo];
       console.log(`[ALFA CORE] Fita trocada instantaneamente para: ${novoEstilo.toUpperCase()}`);
     }
   }
-  // ⏏️ Protocolo de Ejeção de Fita (Limpeza de RAM)
+
   ejetarFaixa() {
     console.log('[ALFA CORE] Ejetando artefato e limpando a RAM do deck...');
+    this.liberarMemoriaDeBlobs();
 
-    // Revoga a URL do Blob antigo para não causar vazamento de memória (Memory Leak) no navegador
-    if (this.processedAudioUrl) {
-      window.URL.revokeObjectURL(this.processedAudioUrl);
-    }
-    // Zera os ponteiros de estado
     this.selectedFile = null;
     this.processedAudioUrl = null;
     this.processedAudioName = '';
@@ -197,14 +177,26 @@ export class UploadZoneComponent {
     console.log('[ALFA CORE] Deck limpo e aguardando nova carga.');
   }
 
-  // 🛡️ Novo Estado da Interface para o Demucs
-  isExtractingStems = false;
+  ngOnDestroy() {
+    this.liberarMemoriaDeBlobs();
+  }
 
-  // 🧬 Protocolo de Dissecação de Matriz
+  private liberarMemoriaDeBlobs() {
+    if (this.processedAudioUrl) {
+      window.URL.revokeObjectURL(this.processedAudioUrl);
+    }
+    Object.values(this.previewsCache).forEach(url => {
+      if (url) {
+        window.URL.revokeObjectURL(url);
+      }
+    });
+    this.previewsCache = { thunder: '', clear_sky: '', sunroof: '', aurora: '' };
+  }
+
+  isExtractingStems = false;
   extrairStems() {
     if (!this.selectedFile) return;
 
-    // Trava a interface
     this.isExtractingStems = true;
     console.log(`[STEM CORE] Iniciando dissecação de áudio para: ${this.selectedFile.name}`);
 
@@ -212,12 +204,10 @@ export class UploadZoneComponent {
       next: (blob: Blob) => {
         this.isExtractingStems = false;
 
-        // 🎯 O "Truque" do Arquiteto: Força o download do ZIP invisivelmente
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        // Limpa o nome original e adiciona a tag RQS
-        const originalName = this.selectedFile!.name.replace('.wav', '').replace('.mp3', '');
+        const originalName = this.selectedFile!.name.replace(/\.[^/.]+$/, "");
         a.download = `RQS_6_STEMS_${originalName}.zip`;
 
         document.body.appendChild(a);
@@ -234,4 +224,3 @@ export class UploadZoneComponent {
     });
   }
 }
-

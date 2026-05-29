@@ -95,37 +95,74 @@ $text-muted: #8b949e;
       margin: 0;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 15px;
     }
 
-    li {
+    li.track-item {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
       background-color: $bg-card;
-      padding: 12px 16px;
       border-radius: 6px;
       border-left: 4px solid $accent-purple;
       transition: border-color 0.2s ease, background-color 0.2s ease;
+      overflow: hidden;
 
       &:hover {
         background-color: rgba($bg-card, 1);
         border-left-color: $border-neon;
       }
 
+      .track-main-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        gap: 15px;
+      }
+
+      .track-info {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0; // Fixes flex overflow
+      }
+
       .track-name {
+        display: inline-block; // <--- CORREÇÃO: Necessário para o ellipsis funcionar em spans!
+        vertical-align: middle;
+        width: 100%;           // <--- Garante limite espacial do truncamento
         font-size: 13px;
-        font-family: 'Courier New', Courier, monospace; // Vibe terminal técnico
+        font-family: 'Courier New', Courier, monospace;
         color: rgba($text-bright, 0.9);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 70%;
+      }
+
+      .cyber-player {
+        width: 100%;
+        height: 40px;
+        outline: none;
+        border-radius: 4px;
+        background: transparent;
+
+        &::-webkit-media-controls-panel {
+          background-color: rgba($bg-dark, 0.6);
+          border: 1px solid rgba($border-neon, 0.2);
+          border-radius: 4px;
+        }
+        &::-webkit-media-controls-current-time-display,
+        &::-webkit-media-controls-time-remaining-display {
+          color: $border-neon;
+          font-family: 'Courier New', Courier, monospace;
+        }
       }
 
       .controls {
         display: flex;
         gap: 6px;
+        flex-shrink: 0;
 
         button {
           background: rgba($text-bright, 0.05);
@@ -370,21 +407,6 @@ $text-muted: #8b949e;
     margin-top: 10px;
   }
 }
-.track-item {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-
-.track-main-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 10px;
-  border-left: 3px solid #00ffcc;
-}
-
 .custom-crossfade-bridge {
   display: flex;
   align-items: center;

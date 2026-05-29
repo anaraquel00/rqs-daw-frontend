@@ -19,48 +19,54 @@
       style="display: none;">
   </div>
 
-<div class="track-list" *ngIf="tracks.length > 0">
-    <h3>Linha do Tempo ({{ tracks.length }} faixas)</h3>
-    <ul>
-      <li *ngFor="let track of tracks; let i = index" class="track-item">
+  <!-- Nova Diretiva Condicional Angular 17+ -->
+  @if (tracks.length > 0) {
+    <div class="track-list">
+      <h3>Linha do Tempo ({{ tracks.length }} faixas)</h3>
+      <ul>
+        <!-- Novo Loop Otimizado. 'track.rawUrl' garante identificação ultra-rápida na renderização -->
+        @for (track of tracks; track track.rawUrl; let i = $index) {
+          <li class="track-item">
+            <div class="track-main-row">
+              <div class="track-info">
+                <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
+                <audio controls [src]="track.previewUrl" class="cyber-player"></audio>
+              </div>
+              <div class="controls">
+                <button (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
+                <button (click)="moveDown(i)" [disabled]="i === tracks.length - 1">🔽</button>
+                <button class="btn-danger" (click)="removeTrack(i)">❌</button>
+              </div>
+            </div>
 
-        <div class="track-main-row">
-          <div class="track-info">
-            <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
-            <audio controls [src]="track.previewUrl" class="cyber-player" style="display: block; margin-top: 8px; width: 100%; max-width: 300px; height: 30px;"></audio>
-          </div>
-          <div class="controls">
-            <button (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
-            <button (click)="moveDown(i)" [disabled]="i === tracks.length - 1">🔽</button>
-            <button class="btn-danger" (click)="removeTrack(i)">❌</button>
-          </div>
-        </div>
+            <!-- Ajustado para o limite de renderização do crossfade -->
+            @if (i < tracks.length - 1) {
+              <div class="custom-crossfade-bridge">
+                <div class="bridge-line"></div>
+                <label>↳ Crossfade em direção à Faixa [{{ i + 2 }}]:</label>
 
-        <div class="custom-crossfade-bridge" *ngIf="i < tracks.length - 1">
-          <div class="bridge-line"></div>
-          <label>↳ Crossfade em direção à Faixa [{{ i + 2 }}]:</label>
+                <div class="slider-container-mini">
+                  <input
+                    type="range" min="0" max="15" step="0.5"
+                    [(ngModel)]="track.crossfadeNext"
+                    class="cyber-slider-mini"
+                    title="Ajuste o crossfade" aria-label="Ajuste o crossfade em segundos" />
 
-          <div class="slider-container-mini">
-            <input
-              type="range" min="0" max="15" step="0.5"
-              [(ngModel)]="track.crossfadeNext"
-              class="cyber-slider-mini"
-              title="Ajuste o crossfade" aria-label="Ajuste o crossfade em segundos" />
+                  <input
+                    type="number" min="0" max="15" step="0.5"
+                    [(ngModel)]="track.crossfadeNext"
+                    class="cyber-number-input-mini"
+                    title="Valor numérico" aria-label="Valor numérico do crossfade" />
+                  <span class="sec-label">segundos</span>
+                </div>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    </div>
 
-            <input
-              type="number" min="0" max="15" step="0.5"
-              [(ngModel)]="track.crossfadeNext"
-              class="cyber-number-input-mini"
-              title="Valor numérico" aria-label="Valor numérico do crossfade" />
-            <span class="sec-label">segundos</span>
-          </div>
-        </div>
-
-      </li>
-    </ul>
-  </div>
-
-  <div class="metadata-section" *ngIf="tracks.length > 0">
+    <div class="metadata-section">
       <label for="exportName">Nomenclatura do Deploy (.WAV):</label>
       <input
         type="text"
@@ -68,16 +74,21 @@
         class="cyber-input"
         [(ngModel)]="setlistName"
         placeholder="Ex: THE_BLUEPRINT_SESSIONS_XXX" />
-  </div>
+    </div>
+  }
 
-  <div class="processing-status" *ngIf="isProcessing">
+  @if (isProcessing) {
+    <div class="processing-status">
       <div class="spinner"></div>
       <p>⚙️ RQS Motor FFmpeg costurando o crossfade... Aguarde.</p>
-  </div>
+    </div>
+  }
 
-  <div class="success-status" *ngIf="mixSuccess">
+  @if (mixSuccess) {
+    <div class="success-status">
       <p>✅ Deploy Concluído! O download da Setlist iniciou automaticamente.</p>
-  </div>
+    </div>
+  }
 
   <button class="btn-primary ignite-btn"
           (click)="igniteSetlist()"
