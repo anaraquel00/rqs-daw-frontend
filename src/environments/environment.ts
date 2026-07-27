@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  baseUrl: 'http://localhost:3000/api/v1'
+  baseUrl: 'https://amtfeiaofpif6727nabio75era0mxaau.lambda-url.us-east-1.on.aws'
 };
