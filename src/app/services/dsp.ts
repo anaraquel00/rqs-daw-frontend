@@ -70,11 +70,10 @@ getPresignedUrl(filename: string): Observable<any> {
   });
 }
 
-// 2. Faz o PUT binário direto do navegador para o Bucket S3 (Bypass de 6MB) [1.2.6]
+// No seu dsp.service.ts:
 uploadToS3(uploadUrl: string, file: File): Observable<any> {
-  return this.http.put(uploadUrl, file, {
-    headers: { 'Content-Type': file.type || 'audio/wav' }
-  });
+  // 🟢 Envia o arquivo puro sem headers. Isso garante 100% de aceitação na AWS S3!
+  return this.http.put(uploadUrl, file);
 }
 
 }
