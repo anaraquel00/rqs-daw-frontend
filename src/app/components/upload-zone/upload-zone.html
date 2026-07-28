@@ -1,7 +1,14 @@
 <div class="glass-panel">
+  <!-- 🌐 BOTÕES SELETORES DE IDIOMA NA BARRA DE TOPO (OPCIONAL / SUPER ÚTIL) -->
+  <div class="lang-selector-header" style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 15px;">
+    <button (click)="lang.setLanguage('pt')" [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'" style="background: none; border: none; font-weight: bold; cursor: pointer; font-size: 11px;">PT</button>
+    <span style="color: #444;">|</span>
+    <button (click)="lang.setLanguage('en')" [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'" style="background: none; border: none; font-weight: bold; cursor: pointer; font-size: 11px;">EN</button>
+  </div>
+
   <div class="scanner-header">
-    <h2>RQS DSP CORE</h2>
-    <p>Arraste a faixa para homologação acústica</p>
+    <h2>{{ lang.t().RQS_DSP_CORE }}</h2>
+    <p>{{ lang.t().SUBTITLE }}</p>
   </div>
 
   <div class="drop-zone"
@@ -16,11 +23,11 @@
     </div>
 
     <p class="drop-text" *ngIf="!selectedFile">
-      Solte o arquivo .WAV aqui<br>
-      <span style="font-size: 12px; color: #00f0ff; opacity: 0.8;">ou clique para buscar no sistema</span>
+      {{ lang.t().DROP_PROMPT }}<br>
+      <span style="font-size: 12px; color: #00f0ff; opacity: 0.8;">{{ lang.t().OR_CLICK }}</span>
     </p>
 
-    <p class="drop-text file-ready" *ngIf="selectedFile">💿 {{ selectedFile.name }} interceptado.</p>
+    <p class="drop-text file-ready" *ngIf="selectedFile">💿 {{ selectedFile.name }} {{ lang.t().FILE_INTERCEPTED }}</p>
 
     <input
       type="file"
@@ -33,7 +40,7 @@
   <!-- Botão de Extração de Stems -->
   <div class="stem-action-panel" *ngIf="selectedFile && !isProcessing && !isExtractingStems && !isUploadingS3">
     <button class="btn-stem-extract" (click)="extrairStems()" style="background-color: #ff003c; color: white; padding: 10px 20px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 15px;">
-      🧬 EXTRAIR 6 STEMS (ISOLAMENTO MULTI-PISTA)
+      {{ lang.t().EXTRACT_STEMS }}
     </button>
   </div>
 
@@ -47,8 +54,7 @@
     (estiloAlterado)="trocarPerfil($any($event))">
   </app-mastering-panel>
 
-  <!-- 📟 TERMINAL DE TELEMETRIA RQS (CYBERPUNK MAINFRAME LOGGER) [1] -->
-  <!-- Ativa dinamicamente se o S3 estiver subindo, se o Lambda estiver masterizando ou se o Demucs estiver extraindo -->
+  <!-- 📟 TERMINAL DE TELEMETRIA RQS (Sincronizado de Idioma de forma reativa!) -->
   <div class="cyber-terminal" *ngIf="isProcessing || isUploadingS3 || isExtractingStems">
     <div class="terminal-header">
       <span class="dot red"></span>
@@ -57,16 +63,13 @@
       <span class="terminal-title">rqs_mainframe_logger.sh</span>
     </div>
     <div class="terminal-body" #terminalBody>
-      @for (log of systemLogs; track log) {
-        <div class="terminal-line animate-fade">
-          <span class="prompt">>></span> <span class="log-text">{{ log }}</span>
-        </div>
-      }
-      <!-- Cursor piscando em verde indica atividade do reator -->
+      <div *ngFor="let log of systemLogs" class="terminal-line animate-fade">
+        <span class="prompt">>></span> <span class="log-text">{{ log }}</span>
+      </div>
       <div class="terminal-line active-status">
         <span class="prompt">>></span>
         <span class="status-text">
-          {{ isUploadingS3 ? 'SINCRONIZANDO S3 BUNKER' : (isExtractingStems ? 'DISSECANDO MATRIZ (DEMUCS)' : 'REATOR ACÚSTICO ATIVO') }}
+          {{ isUploadingS3 ? lang.t().SYNCHRONIZING : (isExtractingStems ? lang.t().DISSECTING : lang.t().REACTOR_PROCESSING) }}
         </span>
         <span class="blink-block">█</span>
       </div>
@@ -76,11 +79,11 @@
   <!-- Seção de Download Final -->
   <div class="download-section" *ngIf="processedAudioUrl && !isProcessing">
     <a [href]="processedAudioUrl" [download]="processedAudioName" class="btn-download">
-      ✅ Masterização concluída! [Download áudio]
+      {{ lang.t().MASTER_COMPLETED }}
     </a>
 
     <button class="btn-danger" (click)="ejetarFaixa()">
-      ⏏️ EJETAR FAIXA E LIMPAR DECK
+      {{ lang.t().EJECT_DECK }}
     </button>
   </div>
 

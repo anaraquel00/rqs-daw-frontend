@@ -4,6 +4,8 @@ import { DspService } from '../../services/dsp';
 import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
 import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
 import { forkJoin } from 'rxjs';
+import { LanguageService } from '../../services/language.service'; // 🟢 IMPORTANTE
+
 
 @Component({
   selector: 'app-upload-zone',
@@ -16,6 +18,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
 
   // Referência para rolar o terminal de logs automaticamente para o final
   @ViewChild('terminalBody') private terminalScrollContainer!: ElementRef;
+
+  readonly lang = inject(LanguageService);
 
   isDragging = false;
   selectedFile: File | null = null;

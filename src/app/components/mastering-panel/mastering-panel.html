@@ -2,27 +2,25 @@
   <!-- Reprodutor e Toggle A/B -->
   <div class="player-section">
 
-    <!-- 💿 MOTOR ORIGINAL (Oculto se Master estiver ativo) -->
+    <!-- 💿 MOTOR ORIGINAL -->
     <audio [src]="originalAudioUrl" controls class="cyber-player"
            [style.display]="modoAudicao === 'original' ? 'block' : 'none'">
     </audio>
 
-    <!-- 🎛️ MOTOR MASTERIZADO (Oculto se Original estiver ativo) -->
+    <!-- 🎛️ MOTOR MASTERIZADO -->
     <audio *ngIf="masteredAudioUrl" [src]="masteredAudioUrl" controls class="cyber-player"
            [style.display]="modoAudicao === 'master' ? 'block' : 'none'">
     </audio>
 
-    <!-- Placeholder caso não haja master ainda, para manter o design alinhado -->
     <div class="cyber-player placeholder" *ngIf="modoAudicao === 'master' && !masteredAudioUrl" style="height: 40px;"></div>
 
     <div class="toggle-container">
       <button class="toggle-btn"
               [class.active]="modoAudicao === 'original'"
               (click)="alternarModo('original')">
-        Original
+        {{ lang.t().ORIGINAL }}
       </button>
 
-      <!-- O Switch visual -->
       <div class="switch" (click)="alternarModo(modoAudicao === 'original' ? 'master' : 'original')">
         <div class="slider" [class.on]="modoAudicao === 'master'"></div>
       </div>
@@ -31,13 +29,13 @@
               [class.active]="modoAudicao === 'master'"
               [disabled]="!masteredAudioUrl"
               (click)="alternarModo('master')">
-        Master
+        {{ lang.t().MASTER }}
       </button>
     </div>
 
     <div class="volume-match">
       <input type="checkbox" id="volMatch" [(ngModel)]="volumeMatch" disabled>
-      <label for="volMatch">Volume Match (Em construção 🔧)</label>
+      <label for="volMatch">{{ lang.t().VOLUME_MATCH }}</label>
     </div>
   </div>
 
@@ -47,35 +45,35 @@
   <div class="controls-section">
     <!-- Bloco 1: Perfil Acústico -->
     <div class="control-group">
-      <h4>Perfil Acústico (Powered by RQS DSP)</h4>
+      <h4>{{ lang.t().PERFIL_ACUSTICO }}</h4>
       <div class="btn-group profiles-grid">
         <button [class.selected]="estiloSelecionado === 'thunder'" (click)="selecionarEstilo('thunder')">
-          🌩️ Thunder
+          {{ lang.t().THUNDER }}
         </button>
         <button [class.selected]="estiloSelecionado === 'clear_sky'" (click)="selecionarEstilo('clear_sky')">
-          ☁️ Clear Sky
+          {{ lang.t().CLEAR_SKY }}
         </button>
         <button [class.selected]="estiloSelecionado === 'sunroof'" (click)="selecionarEstilo('sunroof')">
-          ☀️ Sunroof
+          {{ lang.t().SUNROOF }}
         </button>
         <button [class.selected]="estiloSelecionado === 'aurora'" (click)="selecionarEstilo('aurora')">
-          🌌 Aurora
+          {{ lang.t().AURORA }}
         </button>
       </div>
     </div>
 
-    <!-- Bloco 2: Controle de Intensidade da Compressão/Loudness (Estilo Mixea) -->
+    <!-- Bloco 2: Controle de Intensidade -->
     <div class="control-group">
-      <h4>Intensidade da Masterização (Dynamic Control)</h4>
+      <h4>{{ lang.t().INTENSIDADE_MASTER }}</h4>
       <div class="btn-group intensity-selector">
         <button [class.selected]="intensidadeSelecionada === 'baixa'" (click)="selecionarIntensidade('baixa')">
-          🟢 Baixa (Dinâmica)
+          {{ lang.t().BAIXA }}
         </button>
         <button [class.selected]="intensidadeSelecionada === 'media'" (click)="selecionarIntensidade('media')">
-          🟡 Média (Equilibrada)
+          {{ lang.t().MEDIA }}
         </button>
         <button [class.selected]="intensidadeSelecionada === 'alta'" (click)="selecionarIntensidade('alta')">
-          🔴 Alta (Competitiva)
+          {{ lang.t().ALTA }}
         </button>
       </div>
     </div>
@@ -83,11 +81,11 @@
 
   <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 25px;">
     <button class="btn-secondary" (click)="dispararPreview()" [disabled]="isProcessing">
-      {{ isProcessing ? 'Analisando...' : '🎧 OUVIR TESTE (15s)' }}
+      {{ isProcessing ? lang.t().ANALYZING : lang.t().HEAR_TEST }}
     </button>
 
     <button class="btn-process" (click)="dispararProcessamento()" [disabled]="isProcessing">
-      {{ isProcessing ? 'Processando IA Acústica...' : '🔥 MASTERIZAR FAIXA COMPLETA' }}
+      {{ isProcessing ? lang.t().PROCESSING_ACUSTICO : lang.t().MASTER_FULL }}
     </button>
   </div>
 </div>
