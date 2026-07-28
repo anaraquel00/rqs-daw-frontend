@@ -39,17 +39,20 @@
     <div class="spinner"></div>
     <p>🧬 IA Demucs está dissecando a matriz acústica em 6 canais... (Pode demorar alguns minutos. Não feches a aba!)</p>
    </div>
+  <!-- Adicionamos o [isProcessing] bloqueado se o S3 ainda estiver subindo o arquivo em background -->
   <app-mastering-panel
     *ngIf="selectedFile && !isProcessing"
     [originalFile]="selectedFile"
-    [isProcessing]="isProcessing"
+    [isProcessing]="isProcessing || isUploadingS3"
     [masteredAudioUrl]="processedAudioUrl"
     (processMaster)="processarMaster($event)"
-    (estiloAlterado)="trocarPerfil($any($event))"> </app-mastering-panel>
+    (estiloAlterado)="trocarPerfil($any($event))">
+  </app-mastering-panel>
 
-  <div class="processing-status" *ngIf="isProcessing">
+    <!-- Mensagem de feedback visual elegante do upload em background para o usuário -->
+  <div class="processing-status" *ngIf="isUploadingS3">
     <div class="spinner"></div>
-    <p>⚙️ RQS Reator processando telemetria... Aguarde.</p>
+    <p>⚡ Sincronizando matriz de áudio com o Bunker... Aguarde.</p>
   </div>
 
   <div class="download-section" *ngIf="processedAudioUrl">

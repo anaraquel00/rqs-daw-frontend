@@ -19,6 +19,10 @@ export class UploadZoneComponent implements OnDestroy {
   processedAudioUrl: string | null = null;
   processedAudioName: string = '';
 
+  // 🟢 ESTADOS DO UPLOAD EM SEGUNDO PLANO S3 [1.2.6]
+  s3Key: string | null = null;
+  isUploadingS3 = false;
+
   previewsCache: { [key: string]: string } = {
     thunder: '',
     clear_sky: '',
@@ -38,7 +42,10 @@ export class UploadZoneComponent implements OnDestroy {
       if (fileName.endsWith('.wav') || fileName.endsWith('.mp3')) {
         this.selectedFile = selected;
         this.processedAudioUrl = null;
-        console.log(`[ALFA CORE] Track engatada via File Picker: ${this.selectedFile.name}`);
+        this.s3Key = null; // Reseta o cache S3 do arquivo anterior
+
+        // 🟢 Dispara o upload em segundo plano imediatamente! [1.2.6]
+        this.iniciarUploadS3Silencioso(selected);
       } else {
         console.error('[BLOCK] Formato incompatível. Insira espectros puros (.wav ou .mp3).');
       }
@@ -64,51 +71,56 @@ export class UploadZoneComponent implements OnDestroy {
       this.selectedFile = event.dataTransfer.files[0];
       this.processedAudioUrl = null;
       this.isProcessing = false;
-      console.log('📦 [FRONT-END] Arquivo ancorado:', this.selectedFile.name);
+      this.s3Key = null; // Reseta o cache S3 do arquivo anterior
+
+      // 🟢 Dispara o upload em segundo plano imediatamente! [1.2.6]
+      this.iniciarUploadS3Silencioso(this.selectedFile);
     }
   }
 
-  // 🟢 CORREÇÃO: Suporta o envio dinâmico da intensidade no fluxo síncrono [1]
-  processar(estilo: string, intensidade: string = 'media') {
-    if (!this.selectedFile) return;
+  // 🟢 MÉTODO DO EMISSOR DE UPLOAD EM BACKGROUND (Bypass total de 6MB) [1.2.6]
+  iniciarUploadS3Silencioso(file: File) {
+    this.isUploadingS3 = true;
+    console.log(`[ALFA CORE] Iniciando upload em segundo plano para o S3: ${file.name}`);
 
-    this.isProcessing = true;
-    this.processedAudioUrl = null;
-
-    console.log(`🚀 [IGNIÇÃO] Enviando para RQS API. Estilo: ${estilo} | Intensidade: ${intensidade}`);
-
-    this.dspService.processMastering(this.selectedFile, estilo, intensidade).subscribe({
-      next: (response: Blob) => {
-        this.isProcessing = false;
-        this.processedAudioUrl = window.URL.createObjectURL(response);
-        const originalName = this.selectedFile!.name.replace(/\.[^/.]+$/, "");
-        this.processedAudioName = `RQS_MASTER_${estilo.toUpperCase()}_${originalName}.wav`;
-
-        console.log('✅ [SUCESSO] Pacote ancorado. Aguardando extração manual.');
+    this.dspService.getPresignedUrl(file.name).subscribe({
+      next: (s3Response) => {
+        this.dspService.uploadToS3(s3Response.uploadUrl, file).subscribe({
+          next: () => {
+            this.isUploadingS3 = false;
+            this.s3Key = s3Response.s3Key; // Salva a chave S3 na memória da aplicação
+            console.log('[ALFA CORE] Upload silencioso de background completo! S3 Key:', this.s3Key);
+          },
+          error: (err) => {
+            this.isUploadingS3 = false;
+            console.error('[CRITICAL] Erro no upload em segundo plano para o S3', err);
+          }
+        });
       },
       error: (err) => {
-        this.isProcessing = false;
-        console.error('⚠️ [ERRO DE PROTOCOLO] O reator Python rejeitou a carga:', err);
+        this.isUploadingS3 = false;
+        console.error('[CRITICAL] Erro ao solicitar pre-signed URL', err);
       }
     });
   }
 
   processarMaster(config: { estilo: string, intensidade: string, preview: boolean }) {
-    if (!this.selectedFile) return;
+    if (!this.selectedFile || !this.s3Key) return; // Trava física se o upload em background ainda não terminou
     this.isProcessing = true;
 
-    // 🚀 ROTA 1: SE FOR PREVIEW (GERA OS 4 ESTILOS AO MESMO TEMPO)
+    // 🚀 ROTA 1: SE FOR PREVIEW (Bypass de 6MB: Envia apenas a chave do S3 para gerar os 4 testes de 15s!) [1]
     if (config.preview) {
-      console.log('[ALFA CORE] Iniciando processamento em lote (Batch)...');
+      console.log('[ALFA CORE] Iniciando processamento em lote (Batch) via S3...');
 
       const estilosDolby = ['thunder', 'clear_sky', 'sunroof', 'aurora'];
       const requisicoesHttp = estilosDolby.map(perfil => {
         const formData = new FormData();
-        formData.append('audio', this.selectedFile!);
+        formData.append('s3Key', this.s3Key!); // 🟢 CORREÇÃO: Envia apenas a chave do S3 em formato de texto leve! [1]
         formData.append('estilo', perfil);
         formData.append('intensidade', config.intensidade);
         formData.append('preview', 'true');
 
+        // Retorna o áudio binário direto (O preview de 15s pesa ~1.3MB, totalmente abaixo do limite de 6MB da AWS) [1, 1.1.2]
         return this.dspService.masterizeTrack(formData);
       });
 
@@ -128,64 +140,41 @@ export class UploadZoneComponent implements OnDestroy {
         },
         error: (err) => {
           this.isProcessing = false;
-          console.error('[CRITICAL] Falha no multithreading de DSP', err);
+          console.error('[CRITICAL] Falha no multithreading de S3 Previews', err);
         }
       });
     }
     // 🔥 ROTA 2: SE FOR MASTERIZAÇÃO FINAL (Bypass de 6MB via S3) [1.2.6]
     else {
-      console.log(`[ALFA CORE] Iniciando pipeline S3 para Master Definitiva. Perfil: ${config.estilo.toUpperCase()}`);
+      console.log(`[ALFA CORE] Iniciando processamento final via S3. Perfil: ${config.estilo.toUpperCase()}`);
 
-      // 1. Solicita a URL pré-assinada
-      this.dspService.getPresignedUrl(this.selectedFile.name).subscribe({
-        next: (s3Response) => {
+      const formData = new FormData();
+      formData.append('s3Key', this.s3Key); // Envia apenas a chave em formato texto leve [1]
+      formData.append('estilo', config.estilo);
+      formData.append('intensidade', config.intensidade);
+      formData.append('preview', 'false');
 
-          // 2. Faz o upload direto do navegador para o S3 [1.2.6]
-          this.dspService.uploadToS3(s3Response.uploadUrl, this.selectedFile!).subscribe({
-            next: () => {
-              console.log('[ALFA CORE] Upload direto para o S3 concluído com sucesso!');
+      this.dspService.masterizeTrackS3(formData).subscribe({
+        next: (response: any) => {
+          this.isProcessing = false;
 
-              // 3. Dispara a masterização enviando apenas a chave (Key) em texto leve [1]
-              const formData = new FormData();
-              formData.append('s3Key', s3Response.s3Key);
-              formData.append('estilo', config.estilo);
-              formData.append('intensidade', config.intensidade);
-              formData.append('preview', 'false');
+          // Salva a URL do S3 para o reprodutor nativo tocar na tela
+          this.processedAudioUrl = response.downloadUrl;
+          this.processedAudioName = response.fileName;
 
-              // 🟢 CORREÇÃO FINAL: Chama a rota JSON sintonizada para o S3 [1, 1.1.2]
-              this.dspService.masterizeTrackS3(formData).subscribe({
-                next: (response: any) => {
-                  this.isProcessing = false;
+          // Cria um elemento âncora dinâmico para forçar o download direto do S3 [1.2.6]
+          const a = document.createElement('a');
+          a.href = response.downloadUrl;
+          a.download = response.fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
 
-                  // Salva a URL do S3 para o reprodutor nativo tocar na tela
-                  this.processedAudioUrl = response.downloadUrl;
-                  this.processedAudioName = response.fileName;
-
-                  // Cria um elemento âncora dinâmico para forçar o download direto do S3 [1.2.6]
-                  const a = document.createElement('a');
-                  a.href = response.downloadUrl;
-                  a.download = response.fileName;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-
-                  console.log('[ALFA CORE] Master finalizada e baixada com sucesso direto do S3!');
-                },
-                error: (err) => {
-                  this.isProcessing = false;
-                  console.error('[CRITICAL] Falha na masterização final S3', err);
-                }
-              });
-            },
-            error: (err) => {
-              this.isProcessing = false;
-              console.error('[CRITICAL] Falha no upload direto para o S3', err);
-            }
-          });
+          console.log('[ALFA CORE] Master finalizada e baixada com sucesso direto do S3!');
         },
         error: (err) => {
           this.isProcessing = false;
-          console.error('[CRITICAL] Falha ao solicitar URL de upload do S3', err);
+          console.error('[CRITICAL] Falha na masterização final S3', err);
         }
       });
     }
@@ -205,6 +194,7 @@ export class UploadZoneComponent implements OnDestroy {
     this.selectedFile = null;
     this.processedAudioUrl = null;
     this.processedAudioName = '';
+    this.s3Key = null; // Reseta a chave
     this.isProcessing = false;
 
     console.log('[ALFA CORE] Deck limpo e aguardando nova carga.');
