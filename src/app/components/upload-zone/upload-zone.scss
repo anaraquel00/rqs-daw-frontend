@@ -135,3 +135,104 @@ transition: all 0.3s ease;
   cursor: pointer;
   transition: all 0.3s ease;
 }
+
+/* 📟 TERMINAL DE TELEMETRIA CYBERPUNK */
+.cyber-terminal {
+  background: #05070a;
+  border: 1px solid #00f0ff;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 25px;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15), inset 0 0 10px rgba(0, 240, 255, 0.05);
+  text-align: left;
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+
+      &.red { background: #ff0055; box-shadow: 0 0 6px #ff0055; }
+      &.yellow { background: #ffa600; box-shadow: 0 0 6px #ffa600; }
+      &.green { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+    }
+
+    .terminal-title {
+      font-size: 10px;
+      color: #8b949e;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-left: 8px;
+      text-transform: uppercase;
+    }
+  }
+
+  .terminal-body {
+    max-height: 150px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    color: #c9d1d9;
+
+    /* Custom Scrollbar */
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+    &::-webkit-scrollbar-thumb { background: #00f0ff; border-radius: 2px; }
+
+    .terminal-line {
+      display: flex;
+      gap: 8px;
+      line-height: 1.4;
+
+      .prompt {
+        color: #00f0ff;
+        text-shadow: 0 0 6px rgba(0, 240, 255, 0.5);
+        font-weight: bold;
+      }
+
+      .log-text {
+        font-family: 'Fira Code', monospace;
+      }
+
+      &.active-status {
+        color: #00ff88;
+        font-weight: bold;
+
+        .status-text {
+          font-family: 'Fira Code', monospace;
+          letter-spacing: 0.5px;
+        }
+
+        .blink-block {
+          display: inline-block;
+          margin-left: 4px;
+          animation: blink 1s step-end infinite;
+        }
+      }
+    }
+  }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Transição de fade para entrada suave de logs */
+.animate-fade {
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

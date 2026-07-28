@@ -1,7 +1,7 @@
 <div class="glass-panel">
   <div class="scanner-header">
     <h2>RQS DSP CORE</h2>
-    <p>Arraste a faixa crua do Suno para homologação acústica</p>
+    <p>Arraste a faixa para homologação acústica</p>
   </div>
 
   <div class="drop-zone"
@@ -29,19 +29,17 @@
       (change)="onFileSelect($event)"
       style="display: none;">
   </div>
-   <div class="stem-action-panel" *ngIf="selectedFile && !isProcessing && !isExtractingStems">
+
+  <!-- Botão de Extração de Stems -->
+  <div class="stem-action-panel" *ngIf="selectedFile && !isProcessing && !isExtractingStems && !isUploadingS3">
     <button class="btn-stem-extract" (click)="extrairStems()" style="background-color: #ff003c; color: white; padding: 10px 20px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 15px;">
       🧬 EXTRAIR 6 STEMS (ISOLAMENTO MULTI-PISTA)
     </button>
   </div>
 
-  <div class="processing-status stem-status" *ngIf="isExtractingStems">
-    <div class="spinner"></div>
-    <p>🧬 IA Demucs está dissecando a matriz acústica em 6 canais... (Pode demorar alguns minutos. Não feches a aba!)</p>
-   </div>
-  <!-- Adicionamos o [isProcessing] bloqueado se o S3 ainda estiver subindo o arquivo em background -->
+  <!-- Painel de Masterização Principal -->
   <app-mastering-panel
-    *ngIf="selectedFile && !isProcessing"
+    *ngIf="selectedFile && !isProcessing && !isExtractingStems"
     [originalFile]="selectedFile"
     [isProcessing]="isProcessing || isUploadingS3"
     [masteredAudioUrl]="processedAudioUrl"
@@ -49,21 +47,42 @@
     (estiloAlterado)="trocarPerfil($any($event))">
   </app-mastering-panel>
 
-    <!-- Mensagem de feedback visual elegante do upload em background para o usuário -->
-  <div class="processing-status" *ngIf="isUploadingS3">
-    <div class="spinner"></div>
-    <p>⚡ Sincronizando matriz de áudio com o Bunker... Aguarde.</p>
+  <!-- 📟 TERMINAL DE TELEMETRIA RQS (CYBERPUNK MAINFRAME LOGGER) [1] -->
+  <!-- Ativa dinamicamente se o S3 estiver subindo, se o Lambda estiver masterizando ou se o Demucs estiver extraindo -->
+  <div class="cyber-terminal" *ngIf="isProcessing || isUploadingS3 || isExtractingStems">
+    <div class="terminal-header">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+      <span class="terminal-title">rqs_mainframe_logger.sh</span>
+    </div>
+    <div class="terminal-body" #terminalBody>
+      @for (log of systemLogs; track log) {
+        <div class="terminal-line animate-fade">
+          <span class="prompt">>></span> <span class="log-text">{{ log }}</span>
+        </div>
+      }
+      <!-- Cursor piscando em verde indica atividade do reator -->
+      <div class="terminal-line active-status">
+        <span class="prompt">>></span>
+        <span class="status-text">
+          {{ isUploadingS3 ? 'SINCRONIZANDO S3 BUNKER' : (isExtractingStems ? 'DISSECANDO MATRIZ (DEMUCS)' : 'REATOR ACÚSTICO ATIVO') }}
+        </span>
+        <span class="blink-block">█</span>
+      </div>
+    </div>
   </div>
 
-  <div class="download-section" *ngIf="processedAudioUrl">
+  <!-- Seção de Download Final -->
+  <div class="download-section" *ngIf="processedAudioUrl && !isProcessing">
     <a [href]="processedAudioUrl" [download]="processedAudioName" class="btn-download">
       ✅ Masterização concluída! [Download áudio]
     </a>
 
-  <button class="btn-danger"(click)="ejetarFaixa()">
+    <button class="btn-danger" (click)="ejetarFaixa()">
       ⏏️ EJETAR FAIXA E LIMPAR DECK
-  </button>
+    </button>
   </div>
 
-  <app-ekg-monitor *ngIf="processedAudioUrl" [audioUrl]="processedAudioUrl"></app-ekg-monitor>
+  <app-ekg-monitor *ngIf="processedAudioUrl && !isProcessing" [audioUrl]="processedAudioUrl"></app-ekg-monitor>
 </div>

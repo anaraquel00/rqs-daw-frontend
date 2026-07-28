@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import { Component, inject, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DspService } from '../../services/dsp';
 import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
@@ -12,14 +12,19 @@ import { forkJoin } from 'rxjs';
   templateUrl: './upload-zone.html',
   styleUrls: ['./upload-zone.scss']
 })
-export class UploadZoneComponent implements OnDestroy {
+export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
+
+  // Referência para rolar o terminal de logs automaticamente para o final
+  @ViewChild('terminalBody') private terminalScrollContainer!: ElementRef;
+
   isDragging = false;
   selectedFile: File | null = null;
   isProcessing = false;
   processedAudioUrl: string | null = null;
   processedAudioName: string = '';
 
-  // 🟢 ESTADOS DO UPLOAD EM SEGUNDO PLANO S3 [1.2.6]
+  // 🟢 REGISTRO DE TELEMETRIA DINÂMICA
+  systemLogs: string[] = [];
   s3Key: string | null = null;
   isUploadingS3 = false;
 
@@ -32,6 +37,25 @@ export class UploadZoneComponent implements OnDestroy {
 
   private dspService = inject(DspService);
 
+  // Auto-scroll do terminal a cada nova linha adicionada
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
+    try {
+      this.terminalScrollContainer.nativeElement.scrollTop = this.terminalScrollContainer.nativeElement.scrollHeight;
+    } catch(err) { }
+  }
+
+  // 🟢 GRAVADOR DE LOGS SÔNICOS (Escreve na tela e no console de desenvolvedor) [1]
+  addLog(message: string) {
+    const time = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+    const logEntry = `[${time}] ${message}`;
+    this.systemLogs.push(logEntry);
+    console.log(`[RQS CORE] ${logEntry}`);
+  }
+
   onFileSelect(event: Event) {
     const input = event.target as HTMLInputElement;
 
@@ -42,9 +66,10 @@ export class UploadZoneComponent implements OnDestroy {
       if (fileName.endsWith('.wav') || fileName.endsWith('.mp3')) {
         this.selectedFile = selected;
         this.processedAudioUrl = null;
-        this.s3Key = null; // Reseta o cache S3 do arquivo anterior
+        this.s3Key = null;
+        this.systemLogs = []; // Reseta o terminal sônico
 
-        // 🟢 Dispara o upload em segundo plano imediatamente! [1.2.6]
+        this.addLog(`Track engatada via File Picker: ${selected.name}`);
         this.iniciarUploadS3Silencioso(selected);
       } else {
         console.error('[BLOCK] Formato incompatível. Insira espectros puros (.wav ou .mp3).');
@@ -71,63 +96,64 @@ export class UploadZoneComponent implements OnDestroy {
       this.selectedFile = event.dataTransfer.files[0];
       this.processedAudioUrl = null;
       this.isProcessing = false;
-      this.s3Key = null; // Reseta o cache S3 do arquivo anterior
+      this.s3Key = null;
+      this.systemLogs = [];
 
-      // 🟢 Dispara o upload em segundo plano imediatamente! [1.2.6]
+      this.addLog(`Track engatada via Drag & Drop: ${this.selectedFile.name}`);
       this.iniciarUploadS3Silencioso(this.selectedFile);
     }
   }
 
-  // 🟢 MÉTODO DO EMISSOR DE UPLOAD EM BACKGROUND (Bypass total de 6MB) [1.2.6]
   iniciarUploadS3Silencioso(file: File) {
     this.isUploadingS3 = true;
-    console.log(`[ALFA CORE] Iniciando upload em segundo plano para o S3: ${file.name}`);
+    this.addLog(`Iniciando handshake S3 para: ${file.name}`);
 
     this.dspService.getPresignedUrl(file.name).subscribe({
       next: (s3Response) => {
+        this.addLog(`URL pré-assinada concedida pelo S3. Iniciando upload em background...`);
+
         this.dspService.uploadToS3(s3Response.uploadUrl, file).subscribe({
           next: () => {
             this.isUploadingS3 = false;
-            this.s3Key = s3Response.s3Key; // Salva a chave S3 na memória da aplicação
-            console.log('[ALFA CORE] Upload silencioso de background completo! S3 Key:', this.s3Key);
+            this.s3Key = s3Response.s3Key;
+            this.addLog(`Upload concluído! Arquivo persistido em: ${s3Response.s3Key}`);
           },
           error: (err) => {
             this.isUploadingS3 = false;
-            console.error('[CRITICAL] Erro no upload em segundo plano para o S3', err);
+            this.addLog(`❌ ERRO CRÍTICO S3: Falha ao enviar bytes do arquivo para o bunker.`);
           }
         });
       },
       error: (err) => {
         this.isUploadingS3 = false;
-        console.error('[CRITICAL] Erro ao solicitar pre-signed URL', err);
+        this.addLog(`❌ ERRO DE PROTOCOLO: A API de gateway rejeitou a URL pré-assinada.`);
       }
     });
   }
 
   processarMaster(config: { estilo: string, intensidade: string, preview: boolean }) {
-    if (!this.selectedFile || !this.s3Key) return; // Trava física se o upload em background ainda não terminou
+    if (!this.selectedFile || !this.s3Key) return;
     this.isProcessing = true;
 
     // 🚀 ROTA 1: SE FOR PREVIEW (Bypass de 6MB: Envia apenas a chave do S3 para gerar os 4 testes de 15s!) [1]
     if (config.preview) {
-      console.log('[ALFA CORE] Iniciando processamento em lote (Batch) via S3...');
+      this.addLog(`Iniciando renderização de lote de Previews (Batch). Perfil: ${config.estilo.toUpperCase()}`);
 
       const estilosDolby = ['thunder', 'clear_sky', 'sunroof', 'aurora'];
       const requisicoesHttp = estilosDolby.map(perfil => {
         const formData = new FormData();
-        formData.append('s3Key', this.s3Key!); // 🟢 CORREÇÃO: Envia apenas a chave do S3 em formato de texto leve! [1]
+        formData.append('s3Key', this.s3Key!);
         formData.append('estilo', perfil);
         formData.append('intensidade', config.intensidade);
         formData.append('preview', 'true');
 
-        // Retorna o áudio binário direto (O preview de 15s pesa ~1.3MB, totalmente abaixo do limite de 6MB da AWS) [1, 1.1.2]
         return this.dspService.masterizeTrack(formData);
       });
 
       forkJoin(requisicoesHttp).subscribe({
         next: (blobs: Blob[]) => {
           this.isProcessing = false;
-          console.log('[ALFA CORE] Matriz de Previews renderizada com sucesso!');
+          this.addLog(`Lote de Previews (4 Estilos) gerados com sucesso na AWS Lambda!`);
 
           this.previewsCache = {
             thunder: window.URL.createObjectURL(blobs[0]),
@@ -137,19 +163,20 @@ export class UploadZoneComponent implements OnDestroy {
           };
 
           this.processedAudioUrl = this.previewsCache[config.estilo];
+          this.addLog(`Fita de reprodução conectada ao estilo selecionado: ${config.estilo.toUpperCase()}`);
         },
         error: (err) => {
           this.isProcessing = false;
-          console.error('[CRITICAL] Falha no multithreading de S3 Previews', err);
+          this.addLog(`❌ ERRO DE RENDERIZAÇÃO: Falha crítica na síntese paralela de previews.`);
         }
       });
     }
     // 🔥 ROTA 2: SE FOR MASTERIZAÇÃO FINAL (Bypass de 6MB via S3) [1.2.6]
     else {
-      console.log(`[ALFA CORE] Iniciando processamento final via S3. Perfil: ${config.estilo.toUpperCase()}`);
+      this.addLog(`Disparando Masterização Final Completa no S3. Perfil: ${config.estilo.toUpperCase()}`);
 
       const formData = new FormData();
-      formData.append('s3Key', this.s3Key); // Envia apenas a chave em formato texto leve [1]
+      formData.append('s3Key', this.s3Key);
       formData.append('estilo', config.estilo);
       formData.append('intensidade', config.intensidade);
       formData.append('preview', 'false');
@@ -158,11 +185,9 @@ export class UploadZoneComponent implements OnDestroy {
         next: (response: any) => {
           this.isProcessing = false;
 
-          // Salva a URL do S3 para o reprodutor nativo tocar na tela
           this.processedAudioUrl = response.downloadUrl;
           this.processedAudioName = response.fileName;
 
-          // Cria um elemento âncora dinâmico para forçar o download direto do S3 [1.2.6]
           const a = document.createElement('a');
           a.href = response.downloadUrl;
           a.download = response.fileName;
@@ -170,11 +195,11 @@ export class UploadZoneComponent implements OnDestroy {
           a.click();
           document.body.removeChild(a);
 
-          console.log('[ALFA CORE] Master finalizada e baixada com sucesso direto do S3!');
+          this.addLog(`Masterização finalizada com sucesso! Arquivo exportado: ${response.fileName}`);
         },
         error: (err) => {
           this.isProcessing = false;
-          console.error('[CRITICAL] Falha na masterização final S3', err);
+          this.addLog(`❌ FALHA CRÍTICA: O limitador ou reator Python falharam na master final.`);
         }
       });
     }
@@ -183,21 +208,22 @@ export class UploadZoneComponent implements OnDestroy {
   trocarPerfil(novoEstilo: string) {
     if (this.previewsCache && this.previewsCache[novoEstilo]) {
       this.processedAudioUrl = this.previewsCache[novoEstilo];
-      console.log(`[ALFA CORE] Fita trocada instantaneamente para: ${novoEstilo.toUpperCase()}`);
+      this.addLog(`Fita trocada instantaneamente via cache local para: ${novoEstilo.toUpperCase()}`);
     }
   }
 
   ejetarFaixa() {
-    console.log('[ALFA CORE] Ejetando artefato e limpando a RAM do deck...');
+    this.addLog('Limpando o deck do reprodutor e liberando memória RAM...');
     this.liberarMemoriaDeBlobs();
 
     this.selectedFile = null;
     this.processedAudioUrl = null;
     this.processedAudioName = '';
-    this.s3Key = null; // Reseta a chave
+    this.s3Key = null;
     this.isProcessing = false;
+    this.systemLogs = [];
 
-    console.log('[ALFA CORE] Deck limpo e aguardando nova carga.');
+    console.log('[ALFA CORE] Deck limpo.');
   }
 
   ngOnDestroy() {
@@ -221,11 +247,12 @@ export class UploadZoneComponent implements OnDestroy {
     if (!this.selectedFile) return;
 
     this.isExtractingStems = true;
-    console.log(`[STEM CORE] Iniciando dissecação de áudio para: ${this.selectedFile.name}`);
+    this.addLog(`Iniciando dissecação acústica de 6 canais (Demucs) para: ${this.selectedFile.name}`);
 
     this.dspService.extractStems(this.selectedFile).subscribe({
       next: (blob: Blob) => {
         this.isExtractingStems = false;
+        this.addLog(`Divisão multi-pista concluída com sucesso! Compactando arquivos...`);
 
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -238,11 +265,11 @@ export class UploadZoneComponent implements OnDestroy {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
 
-        console.log('[STEM CORE] Payload zipado entregue com sucesso!');
+        this.addLog(`ZIP de 6 canais entregue com sucesso!`);
       },
       error: (err) => {
         this.isExtractingStems = false;
-        console.error('[CRITICAL] Falha na extração de stems. O reator superaqueceu:', err);
+        this.addLog(`❌ ERRO DE DISSECAÇÃO: O motor Demucs excedeu os limites operacionais.`);
       }
     });
   }
