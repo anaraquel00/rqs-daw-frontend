@@ -147,17 +147,29 @@ export class UploadZoneComponent implements OnDestroy {
 
               // 3. Dispara a masterização enviando apenas a chave (Key) em texto leve [1]
               const formData = new FormData();
-              formData.append('s3Key', s3Response.s3Key); // Envia o ponteiro leve em vez do arquivo de 50MB!
+              formData.append('s3Key', s3Response.s3Key);
               formData.append('estilo', config.estilo);
               formData.append('intensidade', config.intensidade);
               formData.append('preview', 'false');
 
+              // Altere o tipo do subscribe para 'any' para ler o JSON de resposta [1]
               this.dspService.masterizeTrack(formData).subscribe({
-                next: (blob: Blob) => {
+                next: (response: any) => {
                   this.isProcessing = false;
-                  this.processedAudioUrl = window.URL.createObjectURL(blob);
-                  const originalName = this.selectedFile!.name.replace(/\.[^/.]+$/, "");
-                  this.processedAudioName = `RQS_MASTER_${config.estilo.toUpperCase()}_${originalName}.wav`;
+
+                  // Salva a URL do S3 para o reprodutor nativo tocar na tela
+                  this.processedAudioUrl = response.downloadUrl;
+                  this.processedAudioName = response.fileName;
+
+                  // Cria um elemento âncora dinâmico para forçar o download direto do S3 [1.2.6]
+                  const a = document.createElement('a');
+                  a.href = response.downloadUrl;
+                  a.download = response.fileName;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+
+                  console.log('[ALFA CORE] Master finalizada e baixada com sucesso direto do S3!');
                 },
                 error: (err) => {
                   this.isProcessing = false;
