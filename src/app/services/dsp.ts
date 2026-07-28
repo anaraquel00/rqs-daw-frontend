@@ -17,6 +17,10 @@ export class DspService {
       responseType: 'blob'
     });
   }
+  // 🟢 NOVA ROTA S3: Processa a master final e recebe a resposta JSON com a URL do S3 (Sem forçar blob!) [1, 1.1.2]
+  masterizeTrackS3(formData: FormData): Observable<any> {
+    return this.http.post(`${this.baseUrl}/mastering/process`, formData); // Retorno padrão em JSON [1]
+  }
 
   // 2. Dispara para o motor de DSP individual (com controle de intensidade/volume) [1]
   processMastering(file: File, estilo: string = 'clear_sky', intensidade: string = 'media'): Observable<any> {
@@ -72,4 +76,5 @@ uploadToS3(uploadUrl: string, file: File): Observable<any> {
     headers: { 'Content-Type': file.type || 'audio/wav' }
   });
 }
+
 }

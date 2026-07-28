@@ -152,8 +152,8 @@ export class UploadZoneComponent implements OnDestroy {
               formData.append('intensidade', config.intensidade);
               formData.append('preview', 'false');
 
-              // Altere o tipo do subscribe para 'any' para ler o JSON de resposta [1]
-              this.dspService.masterizeTrack(formData).subscribe({
+              // 🟢 CORREÇÃO FINAL: Chama a rota JSON sintonizada para o S3 [1, 1.1.2]
+              this.dspService.masterizeTrackS3(formData).subscribe({
                 next: (response: any) => {
                   this.isProcessing = false;
 
