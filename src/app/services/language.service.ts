@@ -36,8 +36,29 @@ export const PT_DICT = {
   HEAR_TEST: "🎧 OUVIR TESTE (15s)",
   MASTER_FULL: "🔥 MASTERIZAR FAIXA COMPLETA",
   ANALYZING: "Analisando...",
-  PROCESSING_ACUSTICO: "Processando IA Acústica..."
+  PROCESSING_ACUSTICO: "Processando IA Acústica...",
+
+  // 🎛️ NOVAS CHAVES: Mix Panel (Setlist Engine) [1.1]
+  SETLIST_ENGINE: "🎛️ RQS Setlist Engine",
+  MIX_DROP_PROMPT: "Arraste suas faixas masterizadas aqui",
+  MIX_OR_CLICK: "ou clique para abrir a pasta",
+  TIMELINE_TITLE: "Linha do Tempo",
+  TRACKS_COUNT: "faixas",
+  CROSSFADE_TO: "↳ Crossfade em direção à Faixa",
+  SECONDS: "segundos",
+  DEPLOY_LABEL: "Nomenclatura do Deploy (.WAV):",
+  FFMPEG_PROCESSING: "⚙️ RQS Motor FFmpeg costurando o crossfade... Aguarde.",
+  DEPLOY_COMPLETED: "✅ Deploy Concluído! O download da Setlist iniciou automaticamente.",
+  IGNITE_IDLE: "🔥 INICIAR DEPLOY DA SETLIST",
+  IGNITE_ACTIVE: "🔥 RENDERIZANDO MATRIZ...",
+
+  // 📟 NOVAS CHAVES: EKG Monitor [1.1]
+  EKG_MONITOR_TITLE: "📟 MONITORAMENTO DE EKG ACÚSTICO",
+  SIGNAL_ACTIVE: "SINAL DE ÁUDIO ATIVO",
+  FREQUENCY_SPECTRUM: "Análise de Espectro de Frequência",
+  PHASE_CORRELATION: "Correlação de Fase & Imagem Estéreo"
 };
+
 
 // 🇺🇸 Dicionário de Tradução: Inglês
 export const EN_DICT: typeof PT_DICT = {
@@ -75,7 +96,27 @@ export const EN_DICT: typeof PT_DICT = {
   HEAR_TEST: "🎧 HEAR TEST (15s)",
   MASTER_FULL: "🔥 MASTER FULL TRACK",
   ANALYZING: "Analyzing...",
-  PROCESSING_ACUSTICO: "Processing Acoustic AI..."
+  PROCESSING_ACUSTICO: "Processing Acoustic AI...",
+
+  // 🎛️ NOVAS CHAVES: Mix Panel (Setlist Engine) [1.1]
+  SETLIST_ENGINE: "🎛️ RQS Setlist Engine",
+  MIX_DROP_PROMPT: "Drag your mastered tracks here",
+  MIX_OR_CLICK: "or click to open folder",
+  TIMELINE_TITLE: "Timeline",
+  TRACKS_COUNT: "tracks",
+  CROSSFADE_TO: "↳ Crossfade towards Track",
+  SECONDS: "seconds",
+  DEPLOY_LABEL: "Deploy Filename (.WAV):",
+  FFMPEG_PROCESSING: "⚙️ RQS FFmpeg Engine stitching crossfades... Please wait.",
+  DEPLOY_COMPLETED: "✅ Deploy Completed! Setlist download started automatically.",
+  IGNITE_IDLE: "🔥 START SETLIST DEPLOY",
+  IGNITE_ACTIVE: "🔥 RENDERING COMPILATION...",
+
+  // 📟 NOVAS CHAVES: EKG Monitor [1.1]
+  EKG_MONITOR_TITLE: "📟 ACOUSTIC EKG MONITOR",
+  SIGNAL_ACTIVE: "AUDIO SIGNAL ACTIVE",
+  FREQUENCY_SPECTRUM: "Frequency Spectrum Analysis",
+  PHASE_CORRELATION: "Phase Correlation & Stereo Imaging"
 };
 
 @Injectable({

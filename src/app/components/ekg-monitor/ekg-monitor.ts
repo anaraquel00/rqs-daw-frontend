@@ -1,6 +1,8 @@
-import { Component, ElementRef, Input, ViewChild, OnDestroy } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SafeResourceUrl } from '@angular/platform-browser';
+import { LanguageService } from '../../services/language.service'; // 🟢 IMPORTANTE
+
 @Component({
   selector: 'app-ekg-monitor',
   standalone: true,
@@ -18,6 +20,8 @@ export class EkgMonitorComponent implements OnDestroy {
   private analyser: AnalyserNode | null = null;
   private animationId: number = 0;
   private isInitialized = false;
+  readonly lang = inject(LanguageService);
+
 
   togglePlay() {
     const audio = this.audioRef.nativeElement;

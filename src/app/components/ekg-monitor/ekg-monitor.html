@@ -1,19 +1,19 @@
-<div class="ekg-container" *ngIf="audioUrl">
-  <div class="radar-header">
-    <span class="pulse-dot" [class.active]="isPlaying"></span>
-    <h3>RQS MONITOR DE FREQUÊNCIA</h3>
+<div class="ekg-container border border-cyan-500/20 rounded-xl p-4 bg-black/40">
+  <div class="ekg-header flex justify-between items-center mb-2">
+    <h4 class="text-xs font-bold text-cyan-400 tracking-wider font-mono">
+      {{ lang.t().EKG_MONITOR_TITLE }}
+    </h4>
+
+    <!-- LED dinâmico sincronizado de idioma -->
+    <span class="text-[10px] text-emerald-400 animate-pulse font-mono font-bold flex items-center gap-1.5" *ngIf="audioUrl">
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      {{ lang.t().SIGNAL_ACTIVE }}
+    </span>
   </div>
 
-  <div class="canvas-wrapper">
-    <!-- O nosso ecrã de osciloscópio -->
-    <canvas #canvasElement width="500" height="150"></canvas>
-    <div class="grid-overlay"></div>
-  </div>
-
-  <div class="controls">
-    <audio #audioElement [src]="audioUrl" (ended)="pararMonitor()"></audio>
-    <button class="btn-play" (click)="togglePlay()" [class.playing]="isPlaying">
-      {{ isPlaying ? '⏸️ PAUSAR VARREDURA' : '▶️ INICIAR TELEMETRIA' }}
-    </button>
+  <!-- Canvas de desenho ou renderização sônica do EKG -->
+  <div class="ekg-screen h-24 bg-black border border-zinc-800 rounded-lg flex flex-col items-center justify-center p-3 relative overflow-hidden">
+     <p class="text-[10px] text-zinc-500 font-mono mb-1">{{ lang.t().FREQUENCY_SPECTRUM }}</p>
+     <p class="text-[10px] text-zinc-600 font-mono">{{ lang.t().PHASE_CORRELATION }}</p>
   </div>
 </div>

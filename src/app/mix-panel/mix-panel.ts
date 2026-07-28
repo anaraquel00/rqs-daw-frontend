@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DspService } from '../services/dsp';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { LanguageService } from '../services/language.service';
 
 export interface RQSTrack {
   file: File;
@@ -31,6 +32,7 @@ export class MixPanelComponent implements OnDestroy {
   isProcessing: boolean = false;
   mixSuccess: boolean = false;
   setlistName: string = 'THE_BLUEPRINT_SESSIONS_Vol_XYZ';
+  readonly lang = inject(LanguageService);
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
