@@ -57,4 +57,19 @@ export class DspService {
       responseType: 'blob'
     });
   }
+  // No seu dsp.service.ts:
+
+// 1. Solicita a URL pré-assinada de upload
+getPresignedUrl(filename: string): Observable<any> {
+  return this.http.get(`${this.baseUrl}/mastering/presigned-url`, {
+    params: { filename }
+  });
+}
+
+// 2. Faz o PUT binário direto do navegador para o Bucket S3 (Bypass de 6MB) [1.2.6]
+uploadToS3(uploadUrl: string, file: File): Observable<any> {
+  return this.http.put(uploadUrl, file, {
+    headers: { 'Content-Type': file.type || 'audio/wav' }
+  });
+}
 }

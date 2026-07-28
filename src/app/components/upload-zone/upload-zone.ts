@@ -132,27 +132,48 @@ export class UploadZoneComponent implements OnDestroy {
         }
       });
     }
-    // 🔥 ROTA 2: SE FOR MASTERIZAÇÃO FINAL (Processa apenas a faixa inteira escolhida)
+    // 🔥 ROTA 2: SE FOR MASTERIZAÇÃO FINAL (Bypass de 6MB via S3) [1.2.6]
     else {
-      console.log(`[ALFA CORE] Renderizando Master Definitiva. Perfil: ${config.estilo.toUpperCase()} | Intensidade: ${config.intensidade.toUpperCase()}`);
+      console.log(`[ALFA CORE] Iniciando pipeline S3 para Master Definitiva. Perfil: ${config.estilo.toUpperCase()}`);
 
-      const formData = new FormData();
-      formData.append('audio', this.selectedFile);
-      formData.append('estilo', config.estilo);
-      formData.append('intensidade', config.intensidade);
-      formData.append('preview', 'false');
+      // 1. Solicita a URL pré-assinada
+      this.dspService.getPresignedUrl(this.selectedFile.name).subscribe({
+        next: (s3Response) => {
 
-      this.dspService.masterizeTrack(formData).subscribe({
-        next: (blob: Blob) => {
-          this.isProcessing = false;
-          this.processedAudioUrl = window.URL.createObjectURL(blob);
+          // 2. Faz o upload direto do navegador para o S3 [1.2.6]
+          this.dspService.uploadToS3(s3Response.uploadUrl, this.selectedFile!).subscribe({
+            next: () => {
+              console.log('[ALFA CORE] Upload direto para o S3 concluído com sucesso!');
 
-          const originalName = this.selectedFile!.name.replace(/\.[^/.]+$/, "");
-          this.processedAudioName = `RQS_MASTER_${config.estilo.toUpperCase()}_${originalName}.wav`;
+              // 3. Dispara a masterização enviando apenas a chave (Key) em texto leve [1]
+              const formData = new FormData();
+              formData.append('s3Key', s3Response.s3Key); // Envia o ponteiro leve em vez do arquivo de 50MB!
+              formData.append('estilo', config.estilo);
+              formData.append('intensidade', config.intensidade);
+              formData.append('preview', 'false');
+
+              this.dspService.masterizeTrack(formData).subscribe({
+                next: (blob: Blob) => {
+                  this.isProcessing = false;
+                  this.processedAudioUrl = window.URL.createObjectURL(blob);
+                  const originalName = this.selectedFile!.name.replace(/\.[^/.]+$/, "");
+                  this.processedAudioName = `RQS_MASTER_${config.estilo.toUpperCase()}_${originalName}.wav`;
+                },
+                error: (err) => {
+                  this.isProcessing = false;
+                  console.error('[CRITICAL] Falha na masterização final S3', err);
+                }
+              });
+            },
+            error: (err) => {
+              this.isProcessing = false;
+              console.error('[CRITICAL] Falha no upload direto para o S3', err);
+            }
+          });
         },
         error: (err) => {
           this.isProcessing = false;
-          console.error('[CRITICAL] Falha na masterização final', err);
+          console.error('[CRITICAL] Falha ao solicitar URL de upload do S3', err);
         }
       });
     }
