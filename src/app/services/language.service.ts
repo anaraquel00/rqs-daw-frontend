@@ -3,7 +3,7 @@ import { Injectable, signal, computed } from '@angular/core';
 // 🇧🇷 Dicionário de Tradução: Português
 export const PT_DICT = {
   RQS_DSP_CORE: "RQS DSP CORE",
-  SUBTITLE: "Arraste a faixa crua do Suno para homologação acústica",
+  SUBTITLE: "Arraste a faixa para homologação acústica",
   DROP_PROMPT: "Solte o arquivo .WAV aqui",
   OR_CLICK: "ou clique para buscar no sistema",
   FILE_INTERCEPTED: "interceptado.",
@@ -12,7 +12,7 @@ export const PT_DICT = {
   REACTOR_PROCESSING: "⚙️ RQS Reator processando telemetria... Aguarde.",
   MASTER_COMPLETED: "✅ Masterização concluída! [Download áudio]",
   EJECT_DECK: "⏏️ EJETAR FAIXA E LIMPAR DECK",
-  SYNCHRONIZING: "⚡ Sincronizando matriz de áudio com o S3 Bunker... Aguarde.",
+  SYNCHRONIZING: "⚡ Sincronizando matriz de áudio com o Bunker... Aguarde.",
 
     // 🟢 NOVO: Chaves auxiliares do painel de Stems sempre visível [1]
   DISSECTING_MINI: "🧬 EXTRAINDO...",
@@ -67,7 +67,7 @@ export const PT_DICT = {
 // 🇺🇸 Dicionário de Tradução: Inglês
 export const EN_DICT: typeof PT_DICT = {
   RQS_DSP_CORE: "RQS DSP CORE",
-  SUBTITLE: "Drag the raw Suno track here for acoustic validation",
+  SUBTITLE: "Drag the track here for acoustic validation",
   DROP_PROMPT: "Drop the .WAV file here",
   OR_CLICK: "or click to browse system",
   FILE_INTERCEPTED: "intercepted.",
@@ -76,7 +76,7 @@ export const EN_DICT: typeof PT_DICT = {
   REACTOR_PROCESSING: "⚙️ RQS Reactor processing telemetry... Please wait.",
   MASTER_COMPLETED: "✅ Mastering completed! [Download audio]",
   EJECT_DECK: "⏏️ EJECT TRACK & CLEAR DECK",
-  SYNCHRONIZING: "⚡ Synchronizing audio matrix with S3 Bunker... Please wait.",
+  SYNCHRONIZING: "⚡ Synchronizing audio matrix with Bunker... Please wait.",
 
     // 🇺🇸 Adicione no dicionário EN_DICT:
    DISSECTING_MINI: "🧬 EXTRACTING...",
