@@ -60,7 +60,17 @@ export const PT_DICT = {
   EKG_MONITOR_TITLE: "📟 MONITORAMENTO DE EKG ACÚSTICO",
   SIGNAL_ACTIVE: "SINAL DE ÁUDIO ATIVO",
   FREQUENCY_SPECTRUM: "Análise de Espectro de Frequência",
-  PHASE_CORRELATION: "Correlação de Fase & Imagem Estéreo"
+  PHASE_CORRELATION: "Correlação de Fase & Imagem Estéreo",
+
+FOOTER_TAGLINE: "Reator de inteligência acústica e engenharia DSP para música eletrônica e industrial.",
+FOOTER_TELEMETRY: "TELEMETRIA DO MAINFRAME",
+FOOTER_NODE: "Nó de Rede",
+FOOTER_COMPLIANCE: "Conformidade",
+FOOTER_TERMS: "Termos de Serviço",
+FOOTER_PRIVACY: "Política de Privacidade",
+FOOTER_SA_EAST: "São Paulo (sa-east-1) - Latência Mínima",
+FOOTER_EBU_R128: "EBU R128 & Apple ADM Compliant",
+FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. Todos os direitos reservados.",
 };
 
 
@@ -125,6 +135,16 @@ export const EN_DICT: typeof PT_DICT = {
   SIGNAL_ACTIVE: "AUDIO SIGNAL ACTIVE",
   FREQUENCY_SPECTRUM: "Frequency Spectrum Analysis",
   PHASE_CORRELATION: "Phase Correlation & Stereo Imaging",
+
+FOOTER_TAGLINE: "Acoustic intelligence and DSP engineering reactor for electronic and industrial music.",
+FOOTER_TELEMETRY: "MAINFRAME TELEMETRY",
+FOOTER_NODE: "Network Node",
+FOOTER_COMPLIANCE: "Compliance",
+FOOTER_TERMS: "Terms of Service",
+FOOTER_PRIVACY: "Privacy Policy",
+FOOTER_SA_EAST: "São Paulo (sa-east-1) - Ultra-Low Latency",
+FOOTER_EBU_R128: "EBU R128 & Apple ADM Compliant",
+FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. All rights reserved."
 
  };
 
