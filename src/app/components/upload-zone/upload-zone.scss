@@ -236,3 +236,32 @@ transition: all 0.3s ease;
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.btn-stem-extract {
+  width: 100%;
+  padding: 12px;
+  font-weight: bold;
+  font-size: 13px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background-color: #ff003c;
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 0, 60, 0.3);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 0, 60, 0.5);
+  }
+
+  /* 🔴 ESTILO DESATIVADO CYBERPUNK (Aguardando arquivo) */
+  &:disabled {
+    background: rgba(255, 0, 60, 0.12) !important;
+    border: 1px dashed rgba(255, 0, 60, 0.4) !important;
+    color: rgba(255, 255, 255, 0.35) !important;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+}

@@ -14,6 +14,10 @@ export const PT_DICT = {
   EJECT_DECK: "⏏️ EJETAR FAIXA E LIMPAR DECK",
   SYNCHRONIZING: "⚡ Sincronizando matriz de áudio com o S3 Bunker... Aguarde.",
 
+    // 🟢 NOVO: Chaves auxiliares do painel de Stems sempre visível [1]
+  DISSECTING_MINI: "🧬 EXTRAINDO...",
+  UPLOAD_FIRST_STEMS: "Carregue uma faixa para liberar o isolamento de Stems",
+
   // Mastering Panel
   ORIGINAL: "Original",
   MASTER: "Master",
@@ -74,6 +78,10 @@ export const EN_DICT: typeof PT_DICT = {
   EJECT_DECK: "⏏️ EJECT TRACK & CLEAR DECK",
   SYNCHRONIZING: "⚡ Synchronizing audio matrix with S3 Bunker... Please wait.",
 
+    // 🇺🇸 Adicione no dicionário EN_DICT:
+   DISSECTING_MINI: "🧬 EXTRACTING...",
+   UPLOAD_FIRST_STEMS: "Upload a track to unlock Stem isolation",
+
   // Mastering Panel
   ORIGINAL: "Original",
   MASTER: "Master",
@@ -116,8 +124,9 @@ export const EN_DICT: typeof PT_DICT = {
   EKG_MONITOR_TITLE: "📟 ACOUSTIC EKG MONITOR",
   SIGNAL_ACTIVE: "AUDIO SIGNAL ACTIVE",
   FREQUENCY_SPECTRUM: "Frequency Spectrum Analysis",
-  PHASE_CORRELATION: "Phase Correlation & Stereo Imaging"
-};
+  PHASE_CORRELATION: "Phase Correlation & Stereo Imaging",
+
+ };
 
 @Injectable({
   providedIn: 'root'

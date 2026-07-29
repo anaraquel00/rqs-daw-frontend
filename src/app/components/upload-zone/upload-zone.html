@@ -1,5 +1,5 @@
 <div class="glass-panel">
-  <!-- 🌐 BOTÕES SELETORES DE IDIOMA NA BARRA DE TOPO (OPCIONAL / SUPER ÚTIL) -->
+  <!-- BOTÕES SELETORES DE IDIOMA NA BARRA DE TOPO -->
   <div class="lang-selector-header" style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 15px;">
     <button (click)="lang.setLanguage('pt')" [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'" style="background: none; border: none; font-weight: bold; cursor: pointer; font-size: 11px;">PT</button>
     <span style="color: #444;">|</span>
@@ -37,11 +37,18 @@
       style="display: none;">
   </div>
 
-  <!-- Botão de Extração de Stems -->
-  <div class="stem-action-panel" *ngIf="selectedFile && !isProcessing && !isExtractingStems && !isUploadingS3">
-    <button class="btn-stem-extract" (click)="extrairStems()" style="background-color: #ff003c; color: white; padding: 10px 20px; border: none; font-weight: bold; cursor: pointer; margin-bottom: 15px;">
-      {{ lang.t().EXTRACT_STEMS }}
+  <!-- 🧬 PAINEL DE STEMS SEMPRE VISÍVEL (Marketing e Usabilidade Ativos!) [1] -->
+  <div class="stem-action-panel" style="margin-top: 15px; margin-bottom: 15px;">
+    <button
+      class="btn-stem-extract"
+      (click)="extrairStems()"
+      [disabled]="!selectedFile || isProcessing || isExtractingStems || isUploadingS3">
+      {{ isExtractingStems ? lang.t().DISSECTING_MINI : lang.t().EXTRACT_STEMS }}
     </button>
+    <!-- Helper Text indica o que o usuário deve fazer para liberar a extração -->
+    <p class="text-[10px] text-zinc-500 text-center mt-1.5 font-mono" *ngIf="!selectedFile">
+      * {{ lang.t().UPLOAD_FIRST_STEMS }}
+    </p>
   </div>
 
   <!-- Painel de Masterização Principal -->
@@ -54,7 +61,7 @@
     (estiloAlterado)="trocarPerfil($any($event))">
   </app-mastering-panel>
 
-  <!-- 📟 TERMINAL DE TELEMETRIA RQS (Sincronizado de Idioma de forma reativa!) -->
+  <!-- 📟 TERMINAL DE TELEMETRIA RQS (Mainframe Logger) -->
   <div class="cyber-terminal" *ngIf="isProcessing || isUploadingS3 || isExtractingStems">
     <div class="terminal-header">
       <span class="dot red"></span>
