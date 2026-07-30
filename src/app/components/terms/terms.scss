@@ -1,0 +1,135 @@
+/* Estilo Scoped para Páginas Legais RQS [1] */
+:host {
+  display: block;
+  width: 100%;
+  min-height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.terms-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 40px;
+  background: rgba(20, 25, 30, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  text-align: left;
+  color: #c9d1d9;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+
+  /* Títulos Principais Cianos */
+  h1 {
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 26px;
+    font-weight: 900;
+    color: #00f0ff;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 15px;
+    margin-top: 0;
+  }
+
+  /* Data de atualização */
+  .update-date {
+    font-family: monospace;
+    font-size: 11px;
+    color: #555;
+    margin: 10px 0 25px 0;
+  }
+
+  /* Subtítulos Roxos de Seção */
+  h2 {
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-left: 3px solid #b000ff;
+    padding-left: 12px;
+    margin-top: 35px;
+    margin-bottom: 15px;
+    text-shadow: 0 0 8px rgba(176, 0, 255, 0.2);
+  }
+
+  /* Parágrafos e Listas */
+  p, li {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #8b949e;
+  }
+
+  ul {
+    padding-left: 20px;
+    margin: 15px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Caixas de Código e Destaques */
+  code {
+    background: rgba(0, 240, 255, 0.1);
+    color: #00f0ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+
+  strong, .highlight {
+    color: #00f0ff;
+    font-weight: bold;
+  }
+
+  /* Links de Navegação do Rodapé do Bloco */
+  .bottom-nav {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+
+    a {
+      color: #00f0ff;
+      text-decoration: none;
+      transition: color 0.2s ease, text-shadow 0.2s ease;
+
+      &:hover {
+        color: #ffffff;
+        text-shadow: 0 0 6px #00f0ff;
+      }
+
+      &.secondary {
+        color: #555;
+        &:hover { color: #8b949e; }
+      }
+    }
+  }
+
+  /* Barra de alternância rápida de idiomas */
+  .lang-toggle-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 20px;
+
+    button {
+      background: none;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 11px;
+      transition: color 0.2s;
+
+      &:hover { color: #ffffff; }
+    }
+  }
+}

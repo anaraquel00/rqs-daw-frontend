@@ -1,0 +1,89 @@
+/* src/app/app.component.scss */
+
+.rqs-mainframe-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+/* 🛰️ HEADER DA WORKSTATION PREMIUM */
+.rqs-mainframe-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+  }
+
+  .header-branding {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .satellite-icon {
+      font-size: 17px;
+      filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.4));
+    }
+
+    .header-title {
+      margin: 0;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 17px;
+      font-weight: 900;
+      color: #c9d1d9;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+    }
+  }
+
+  /* LED de Status Ativo do Mainframe */
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 8px rgba(0, 255, 136, 0.05);
+
+    .status-led {
+      width: 6px;
+      height: 6px;
+      background: #00ff88;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #00ff88;
+      animation: statusPulse 2.5s infinite ease-in-out;
+    }
+
+    .status-text {
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: bold;
+      color: #00ff88;
+      letter-spacing: 1px;
+      text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);
+    }
+  }
+}
+
+/* Animação suave de pulsação do LED */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.9); }
+}
+

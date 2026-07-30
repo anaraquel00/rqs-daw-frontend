@@ -1,18 +1,24 @@
-<main class="rqs-mainframe">
-  <header class="mainframe-header">
-    <h1>🛰️ RAQUEL SYNTHS DIGITAL AUDIO WORKSTATION</h1>
-    <div class="system-status">⚡ CORE STATUS: OPERATIONAL</div>
+<!-- src/app/app.component.html -->
+<div class="rqs-mainframe-container">
+
+  <!-- 🛰️ RQS GLOBAL WORKSTATION HEADER (Completamente Redesenhado) -->
+  <header class="rqs-mainframe-header">
+    <div class="header-branding">
+      <span class="satellite-icon">🛰️</span>
+      <h1 class="header-title">RAQUEL SYNTHS DIGITAL AUDIO WORKSTATION</h1>
+    </div>
+
+    <!-- LED dinâmico pulsante verde indica atividade do mainframe -->
+    <div class="header-status">
+      <span class="status-led"></span>
+      <span class="status-text">CORE STATUS: OPERATIONAL</span>
+    </div>
   </header>
 
-  <div class="mainframe-grid">
+  <!-- O ROUTER OUTLET DINÂMICO -->
+  <router-outlet></router-outlet>
 
-    <section class="panel-rack left-rack">
-      <app-upload-zone></app-upload-zone>
-      </section>
-
-    <section class="panel-rack right-rack">
-      <app-mix-panel></app-mix-panel>
-    </section>
-  </div>
+  <!-- O SEU NOVO FOOTER COMPONENTE GLOBAL -->
   <app-footer></app-footer>
-</main>
+
+</div>

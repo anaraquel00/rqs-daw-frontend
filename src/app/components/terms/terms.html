@@ -1,0 +1,41 @@
+<div class="terms-container">
+  <!-- Seletor de Idiomas -->
+  <div class="lang-toggle-bar">
+    <button (click)="lang.setLanguage('pt')" [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'">PT</button>
+    <span style="color: #333;">|</span>
+    <button (click)="lang.setLanguage('en')" [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'">EN</button>
+  </div>
+
+  @if (lang.currentLang() === 'pt') {
+    <!-- 🇧🇷 CONTRATO EM PORTUGUÊS -->
+    <h1>Termos de Serviço</h1>
+    <p class="update-date">Última atualização: 29 de Julho de 2026</p>
+
+    <p>Bem-vindo à <strong class="highlight">RaQuel Synths</strong>. Ao acessar e usar nossas ferramentas de estúdio (<code>studio.raquelsynths.com</code> e <code>dj.raquelsynths.com</code>), você concorda com os seguintes termos:</p>
+
+    <h2>1. Aceitação de Licença</h2>
+    <p>Ao processar arquivos de áudio em nossa workstation, você declara possuir os direitos legais e autorais sobre os fonogramas originais ou gerados via IA (como Suno 5.5). A RQS não reivindica direitos de propriedade sobre suas músicas.</p>
+
+    <h2>2. Uso e Processamento de Áudio</h2>
+    <p>Para viabilizar a masterização de alta velocidade em arquivos WAV, todos os buffers de áudio são gravados e processados estritamente na pasta efêmera segura <code>/tmp</code> e no bucket do Amazon S3 de São Paulo (sa-east-1).</p>
+    <p class="highlight">Todos os seus uploads e faixas masterizadas são deletados permanentemente de nossos servidores após 24 horas.</p>
+  } @else {
+    <!-- 🇺🇸 CONTRATO EM INGLÊS (GOOGLE ADSENSE READY) -->
+    <h1>Terms of Service</h1>
+    <p class="update-date">Last Updated: July 29, 2026</p>
+
+    <p>Welcome to <strong class="highlight">RaQuel Synths</strong>. By accessing and using our studio platform (<code>studio.raquelsynths.com</code> and <code>dj.raquelsynths.com</code>), you agree to comply with and be bound by the following terms:</p>
+
+    <h2>1. Acceptance of License</h2>
+    <p>By processing audio files in our workstation, you agree that you own the legal copyrights of the original or AI-generated phonograms (such as Suno 5.5). RQS does not claim any ownership rights over your music.</p>
+
+    <h2>2. Audio Processing and Usage</h2>
+    <p>To enable high-speed mastering of heavy WAV files, all audio buffers are processed strictly in the secure ephemeral <code>/tmp</code> directory and our Amazon S3 bucket in São Paulo (sa-east-1).</p>
+    <p class="highlight">All your uploads and mastered tracks are permanently deleted from our servers after 24 hours.</p>
+  }
+
+  <div class="bottom-nav">
+    <a routerLink="/" class="primary">Voltar ao Estúdio / Back to Studio</a>
+    <a routerLink="/privacy" class="secondary">Política de Privacidade / Privacy Policy</a>
+  </div>
+</div>
