@@ -1,19 +1,24 @@
-<div class="ekg-container border border-cyan-500/20 rounded-xl p-4 bg-black/40">
-  <div class="ekg-header flex justify-between items-center mb-2">
-    <h4 class="text-xs font-bold text-cyan-400 tracking-wider font-mono">
-      {{ lang.t().EKG_MONITOR_TITLE }}
-    </h4>
-
-    <!-- LED dinâmico sincronizado de idioma -->
-    <span class="text-[10px] text-emerald-400 animate-pulse font-mono font-bold flex items-center gap-1.5" *ngIf="audioUrl">
-      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-      {{ lang.t().SIGNAL_ACTIVE }}
-    </span>
+<!-- src/app/components/ekg-monitor/ekg-monitor.html -->
+<div class="ekg-container">
+  <!-- Cabeçalho do Radar de Equipamento Médico -->
+  <div class="radar-header">
+    <div class="pulse-dot" [class.active]="isPlaying"></div>
+    <h3>{{ lang.t().EKG_MONITOR_TITLE }}</h3>
   </div>
 
-  <!-- Canvas de desenho ou renderização sônica do EKG -->
-  <div class="ekg-screen h-24 bg-black border border-zinc-800 rounded-lg flex flex-col items-center justify-center p-3 relative overflow-hidden">
-     <p class="text-[10px] text-zinc-500 font-mono mb-1">{{ lang.t().FREQUENCY_SPECTRUM }}</p>
-     <p class="text-[10px] text-zinc-600 font-mono">{{ lang.t().PHASE_CORRELATION }}</p>
+  <!-- Tela do Osciloscópio com o Canvas e a Grade Analógica -->
+  <div class="canvas-wrapper">
+    <!-- O Canvas físico onde a caneta de fósforo verde desenha a onda -->
+    <canvas #ekgCanvas></canvas>
+
+    <!-- Suas linhas de grade personalizadas de 20px via SCSS -->
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- Botão de controle de reprodução integrado -->
+  <div class="controls" *ngIf="audioUrl">
+    <button class="btn-play" [class.playing]="isPlaying" (click)="togglePlay()">
+      {{ isPlaying ? 'STOP' : 'PLAY' }}
+    </button>
   </div>
 </div>

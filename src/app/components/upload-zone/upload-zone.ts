@@ -175,7 +175,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         }
       });
     }
-    // 🔥 ROTA 2: SE FOR MASTERIZAÇÃO FINAL (Bypass de 6MB via S3) [1.2.6]
+   // 🔥 ROTA 2: SE FOR MASTERIZAÇÃO FINAL (Bypass de 6MB via S3) [1.2.6]
     else {
       this.addLog(`Disparando Masterização Final Completa no S3. Perfil: ${config.estilo.toUpperCase()}`);
 
@@ -189,17 +189,14 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         next: (response: any) => {
           this.isProcessing = false;
 
+          // 🟢 SALVA O PONTEIRO: Libera o áudio final para o reprodutor nativo e o EKG na tela! [1]
           this.processedAudioUrl = response.downloadUrl;
           this.processedAudioName = response.fileName;
 
-          const a = document.createElement('a');
-          a.href = response.downloadUrl;
-          a.download = response.fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+          // ❌ REMOVIDO: O bloco antigo de download automático ('a.click') foi excluído! [1]
+          // Isso impede que o navegador baixe o arquivo de 35MB de forma intrusiva e indesejada.
 
-          this.addLog(`Masterização finalizada com sucesso! Arquivo exportado: ${response.fileName}`);
+          this.addLog(`Masterização finalizada com sucesso! Use o player de A/B para audicionar o áudio masterizado e verifique a integridade sônica no EKG.`);
         },
         error: (err) => {
           this.isProcessing = false;
