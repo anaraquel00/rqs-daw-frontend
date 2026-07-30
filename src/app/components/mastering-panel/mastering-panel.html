@@ -79,14 +79,26 @@
     </div>
   </div>
 
-   <!-- 🟢 BADGE DO CONSUMO DO PLANO (Estilo Telemetria de Transmissão RQS) [1] -->
+  <!-- 🟢 BADGE DO CONSUMO DO PLANO (Estilo Telemetria de Transmissão RQS) [1] -->
   <div class="plan-usage-badge" style="margin-top: 20px; padding: 10px; background: rgba(0, 240, 255, 0.03); border: 1px dashed rgba(0, 240, 255, 0.15); border-radius: 6px; font-family: monospace; font-size: 11px; text-align: center;">
     <span *ngIf="!auth.isPremium()" style="color: #8b949e;">
-      ⚡ {{ lang.t().FREE_USAGE_LABEL }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong>
+      ⚡ {{ lang.t().FREE_USAGE_LABEL || 'Masterizações gratuitas restantes' }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong>
     </span>
     <span *ngIf="auth.isPremium()" style="color: #00ff88; font-weight: bold; text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);">
-      💎 {{ lang.t().PRO_USAGE_LABEL }}
+      💎 {{ lang.t().PRO_USAGE_LABEL || 'RQS PRO ATIVO' }}
     </span>
+  </div>
+
+  <!-- 🟢 BANNER DE UPGRADE DINÂMICO (Exibe apenas quando a cota gratuita zerar e não for Premium) -->
+  <div *ngIf="!auth.isPremium() && auth.remainingMasters() === 0" class="pro-upgrade-banner" style="margin-top: 15px; padding: 15px; background: rgba(255, 0, 85, 0.04); border: 1px solid rgba(255, 0, 85, 0.25); border-radius: 8px; text-align: center; font-family: monospace; animation: pulseBorder 2s infinite alternate;">
+    <p style="color: #ff0055; font-weight: bold; font-size: 12px; margin: 0 0 8px 0; letter-spacing: 1px;">⚠️ LIMITE OPERACIONAL ALCANÇADO</p>
+    <p style="color: #c9d1d9; font-size: 11px; margin: 0 0 15px 0; line-height: 1.4;">
+      Cadastre-se e mude para o plano Pro e tenha masterizações ilimitadas por apenas R$ 49,90 ou 10 dólares!
+    </p>
+    <!-- Cole aqui o Link de Pagamento da Stripe que você criou -->
+    <a href="https://buy.stripe.com/test_aFa00bdzW3Qmgt9dT7djO00" target="_blank" class="btn-upgrade" rel="noopener noreferrer" style="display: inline-block; padding: 8px 16px; background: #ff0055; color: #fff; font-weight: bold; font-size: 11px; border-radius: 6px; text-decoration: none; box-shadow: 0 0 10px rgba(255, 0, 85, 0.4); transition: transform 0.2s;">
+      ⚡ ADQUIRIR PLANO PRO UNLIMITED
+    </a>
   </div>
 
   <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 20px;">

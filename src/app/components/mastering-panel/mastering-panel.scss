@@ -214,3 +214,19 @@
     cursor: not-allowed;
   }
 }
+
+@keyframes pulseBorder {
+  0% {
+    border-color: rgba(255, 0, 85, 0.2);
+    box-shadow: 0 0 5px rgba(255, 0, 85, 0.05);
+  }
+  100% {
+    border-color: rgba(255, 0, 85, 0.45);
+    box-shadow: 0 0 12px rgba(255, 0, 85, 0.15);
+  }
+}
+
+.btn-upgrade:hover {
+  transform: scale(1.03);
+  background: #ff1a6c !important;
+}
