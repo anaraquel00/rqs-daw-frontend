@@ -10,24 +10,21 @@ export class AuthService {
   private platformId = inject(PLATFORM_ID);
   private supabase!: SupabaseClient;
 
- readonly session = signal<any | null>(null);
- readonly userRole = signal<'free' | 'premium'>('free');
- readonly completedMasters = signal<number>(0);
+  readonly session = signal<any | null>(null);
+  readonly userRole = signal<'free' | 'premium'>('free');
+  readonly completedMasters = signal<number>(0);
 
-// Sinais Computados reativos para controle de Paywall [1.1]
- readonly remainingMasters = computed(() => {
-  if (this.userRole() === 'premium') return Infinity;
-  return Math.max(0, 3 - this.completedMasters());
-});
+  // Sinais Computados reativos para controle de Paywall [1.1]
+  readonly remainingMasters = computed(() => {
+    if (this.userRole() === 'premium') return Infinity;
+    return Math.max(0, 3 - this.completedMasters());
+  });
 
-readonly canMaster = computed(() => this.userRole() === 'premium' || this.remainingMasters() > 0);
-
-// 🟢 CORREÇÃO: Transforma isPremium em um sinal computado reativo legítimo
-readonly isPremium = computed(() => this.userRole() === 'premium');
+  readonly canMaster = computed(() => this.userRole() === 'premium' || this.remainingMasters() > 0);
+  readonly isPremium = computed(() => this.userRole() === 'premium');
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      // ⚠️ Substitua com as suas credenciais reais copiadas do painel do seu Supabase [1]
       const supabaseUrl = 'https://ucearnthodrltkvkmhit.supabase.co';
       const supabaseKey = 'sb_publishable_v2YYX5ksPlYxbh2Xf4HwwQ_UEc5NZyR';
 
@@ -36,7 +33,6 @@ readonly isPremium = computed(() => this.userRole() === 'premium');
     }
   }
 
-  // Escuta alterações de login/logout em tempo real [1]
   private listenToAuthChanges() {
     this.supabase.auth.getSession().then(({ data: { session } }) => {
       this.handleSessionUpdate(session);
@@ -51,9 +47,8 @@ readonly isPremium = computed(() => this.userRole() === 'premium');
     this.session.set(session);
 
     if (session?.user) {
-      // 🟢 BACKDOOR: Mantém o bypass ativo se for localhost ou tiver a chave secreta [1.1.2]
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const hasMainframeOverride = localStorage.getItem('rqs_mainframe_override') === 'true';
+      const hasMainframeOverride = localStorage.getItem('rqs_mainframe_override') === 'false';
 
       if (isLocalhost || hasMainframeOverride) {
         this.userRole.set('premium');
@@ -73,18 +68,45 @@ readonly isPremium = computed(() => this.userRole() === 'premium');
         this.completedMasters.set(profile.completed_masters);
       }
     } else {
+      // 🟢 CASO ANÔNIMO (SOUNDCLOUD STYLE): Sincroniza a cota mensal salva no navegador [1.1.2]
       this.userRole.set('free');
-      this.completedMasters.set(0);
+      this.sincronizarCotaAnonimaLocal();
     }
   }
 
-  // Login Social de 1 Clique via Google ou GitHub [1.1, 1.1.9]
+  // 🟢 MOTOR DE COTA ANÔNIMA COM JANELA DESLIZANTE DE 30 DIAS [1.1.2]
+  private sincronizarCotaAnonimaLocal() {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const agora = new Date().getTime();
+    const trintaDiasEmMs = 30 * 24 * 60 * 60 * 1000;
+
+    const dataCriacao = localStorage.getItem('rqs_anon_quota_start_date');
+    const mastersLocais = localStorage.getItem('rqs_anon_completed_masters');
+
+    let dataInicio = dataCriacao ? parseInt(dataCriacao, 10) : agora;
+    let completed = mastersLocais ? parseInt(mastersLocais, 10) : 0;
+
+    // Se já se passaram 30 dias desde a criação da cota local, reseta o ciclo mensal! [1.1.2]
+    if (agora - dataInicio > trintaDiasEmMs) {
+      dataInicio = agora;
+      completed = 0;
+      localStorage.setItem('rqs_anon_quota_start_date', dataInicio.toString());
+      localStorage.setItem('rqs_anon_completed_masters', '0');
+    } else if (!dataCriacao) {
+      localStorage.setItem('rqs_anon_quota_start_date', dataInicio.toString());
+      localStorage.setItem('rqs_anon_completed_masters', '0');
+    }
+
+    this.completedMasters.set(completed);
+  }
+
   async loginWithProvider(provider: 'google' | 'github') {
     if (!this.supabase) return;
     await this.supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: window.location.origin // Redireciona de volta para a sua DAW após logar [1]
+        redirectTo: window.location.origin [1]
       }
     });
   }
@@ -92,21 +114,30 @@ readonly isPremium = computed(() => this.userRole() === 'premium');
   async logout() {
     if (!this.supabase) return;
     await this.supabase.auth.signOut();
-    localStorage.removeItem('rqs_mainframe_override'); // Limpa backdoor ao sair
+    localStorage.removeItem('rqs_mainframe_override');
   }
 
-  // Incrementa e salva a masterização diretamente no Banco de Dados [1]
+  // Incrementa e salva a masterização no banco (se logado) ou no cache local (se deslogado) [1]
   async registrarNovaMaster() {
     const activeSession = this.session();
-    if (activeSession?.user && this.userRole() !== 'premium') {
-      const nextCount = this.completedMasters() + 1;
+    const nextCount = this.completedMasters() + 1;
 
-      const { error } = await this.supabase
-        .from('profiles')
-        .update({ completed_masters: nextCount })
-        .eq('id', activeSession.user.id);
+    if (activeSession?.user) {
+      // 🟢 USUÁRIO LOGADO: Registra o consumo na conta em nuvem no Supabase [1]
+      if (this.userRole() !== 'premium') {
+        const { error } = await this.supabase
+          .from('profiles')
+          .update({ completed_masters: nextCount })
+          .eq('id', activeSession.user.id);
 
-      if (!error) {
+        if (!error) {
+          this.completedMasters.set(nextCount);
+        }
+      }
+    } else {
+      // 🟢 USUÁRIO ANÔNIMO: Registra o consumo localmente no navegador [1.1.2]
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem('rqs_anon_completed_masters', nextCount.toString());
         this.completedMasters.set(nextCount);
       }
     }
