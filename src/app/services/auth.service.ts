@@ -53,7 +53,7 @@ readonly isPremium = computed(() => this.userRole() === 'premium');
     if (session?.user) {
       // 🟢 BACKDOOR: Mantém o bypass ativo se for localhost ou tiver a chave secreta [1.1.2]
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const hasMainframeOverride = localStorage.getItem('rqs_mainframe_override') === 'false';
+      const hasMainframeOverride = localStorage.getItem('rqs_mainframe_override') === 'true';
 
       if (isLocalhost || hasMainframeOverride) {
         this.userRole.set('premium');
