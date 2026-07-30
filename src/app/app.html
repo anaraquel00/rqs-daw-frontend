@@ -17,26 +17,30 @@
         <button (click)="lang.setLanguage('en')" [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'">EN</button>
       </div>
 
-      <!-- Sessão de Login (Supabase Auth) [1] -->
-      <div class="user-session">
-        <!-- Se deslogado: Exibe botões de login social [1.1] -->
-        <div *ngIf="!auth.session()" class="auth-buttons">
-          <button (click)="auth.loginWithProvider('github')" class="btn-auth github">🐈 GITHUB</button>
-          <button (click)="auth.loginWithProvider('google')" class="btn-auth google">🌐 GOOGLE</button>
-        </div>
+<!-- Sessão de Login (Supabase Auth) [1] -->
+<div class="user-session">
 
-        <!-- Se logado: Exibe avatar, plano e botão de logout [1] -->
-        <div *ngIf="auth.session()" class="user-profile">
-          <div class="profile-info">
-            <p class="email">{{ auth.session().user.email }}</p>
-            <span class="badge" [style.color]="auth.userRole() === 'premium' ? '#00ff88' : '#888'">
-              {{ auth.userRole() === 'premium' ? 'RQS PRO' : 'FREE USER' }}
-            </span>
-          </div>
-          <img [src]="auth.session().user.user_metadata.avatar_url" class="avatar" alt="Avatar">
-          <button (click)="auth.logout()" class="btn-logout">⏏️</button>
-        </div>
+  @if (!auth.session()) {
+    <!-- Se deslogado: Exibe botões de login social [1.1] -->
+    <div class="auth-buttons">
+      <button (click)="auth.loginWithProvider('github')" class="btn-auth github">🐈 GITHUB</button>
+      <button (click)="auth.loginWithProvider('google')" class="btn-auth google">🌐 GOOGLE</button>
+    </div>
+  } @else {
+    <!-- Se logado: Exibe avatar, plano e botão de logout [1] -->
+    <div class="user-profile">
+      <div class="profile-info">
+        <p class="email">{{ auth.session()?.user?.email }}</p>
+        <span class="badge" [style.color]="auth.userRole() === 'premium' ? '#00ff88' : '#888'">
+          {{ auth.userRole() === 'premium' ? 'RQS PRO' : 'FREE USER' }}
+        </span>
       </div>
+      <img [src]="auth.session()?.user?.user_metadata?.avatar_url || 'assets/default-avatar.png'" class="avatar" alt="Avatar">
+      <button (click)="auth.logout()" class="btn-logout">⏏️</button>
+    </div>
+  }
+
+</div>
     </div>
 
     <!-- Direita: Status -->

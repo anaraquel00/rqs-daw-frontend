@@ -10,19 +10,20 @@ export class AuthService {
   private platformId = inject(PLATFORM_ID);
   private supabase!: SupabaseClient;
 
-  // Sinais Reativos do Estado do Usuário [1.1]
-  readonly session = signal<any | null>(null);
-  readonly userRole = signal<'free' | 'premium'>('free');
-  readonly completedMasters = signal<number>(0);
+ readonly session = signal<any | null>(null);
+ readonly userRole = signal<'free' | 'premium'>('free');
+ readonly completedMasters = signal<number>(0);
 
-  // Sinais Computados reativos para controle de Paywall [1.1]
-  readonly remainingMasters = computed(() => {
-    if (this.userRole() === 'premium') return Infinity;
-    return Math.max(0, 3 - this.completedMasters());
-  });
+// Sinais Computados reativos para controle de Paywall [1.1]
+ readonly remainingMasters = computed(() => {
+  if (this.userRole() === 'premium') return Infinity;
+  return Math.max(0, 3 - this.completedMasters());
+});
 
-  readonly canMaster = computed(() => this.userRole() === 'premium' || this.remainingMasters() > 0);
- isPremium: any;
+readonly canMaster = computed(() => this.userRole() === 'premium' || this.remainingMasters() > 0);
+
+// 🟢 CORREÇÃO: Transforma isPremium em um sinal computado reativo legítimo
+readonly isPremium = computed(() => this.userRole() === 'premium');
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
