@@ -4,6 +4,7 @@ import { DspService } from '../services/dsp';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { LanguageService } from '../services/language.service';
+import { AuthService } from '../services/auth.service';
 
 export interface RQSTrack {
   file: File;
@@ -33,6 +34,7 @@ export class MixPanelComponent implements OnDestroy {
   mixSuccess: boolean = false;
   setlistName: string = 'THE_BLUEPRINT_SESSIONS_Vol_XYZ';
   readonly lang = inject(LanguageService);
+  readonly auth = inject(AuthService);
 
   onDragOver(event: DragEvent) {
     event.preventDefault();

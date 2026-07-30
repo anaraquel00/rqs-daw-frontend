@@ -87,9 +87,10 @@
     </div>
   }
 
+    <!-- Bloqueia o botão se for usuário Free e tiver colocado mais de 3 tracks no deck -->
   <button class="btn-primary ignite-btn"
           (click)="igniteSetlist()"
-          [disabled]="isProcessing || tracks.length === 0">
-    {{ isProcessing ? lang.t().IGNITE_ACTIVE : lang.t().IGNITE_IDLE }}
+          [disabled]="isProcessing || (tracks.length === 0) || (auth.userRole() === 'free' && tracks.length > 3)">
+    {{ isProcessing ? lang.t().IGNITE_ACTIVE : (auth.userRole() === 'free' && tracks.length > 3 ? '🔒 APENAS PLANO PRO (>3 MUSICAS)' : lang.t().IGNITE_IDLE) }}
   </button>
 </div>

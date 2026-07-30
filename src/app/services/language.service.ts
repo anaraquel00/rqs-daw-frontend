@@ -62,6 +62,10 @@ export const PT_DICT = {
   FREQUENCY_SPECTRUM: "Análise de Espectro de Frequência",
   PHASE_CORRELATION: "Correlação de Fase & Imagem Estéreo",
 
+  LIMIT_EXCEEDED_ALERT: "Limite de masterizações gratuitas esgotado (3 de 3 consumidas). Faça o upgrade para o plano RQS PRO para obter masterizações de arquivos ilimitadas!",
+  FREE_USAGE_LABEL: "Masterizações gratuitas restantes",
+  PRO_USAGE_LABEL: "Plano: RQS PRO (Ilimitado)",
+
 FOOTER_TAGLINE: "Reator de inteligência acústica e engenharia DSP para música eletrônica e industrial.",
 FOOTER_TELEMETRY: "TELEMETRIA DO MAINFRAME",
 FOOTER_NODE: "Nó de Rede",
@@ -135,6 +139,10 @@ export const EN_DICT: typeof PT_DICT = {
   SIGNAL_ACTIVE: "AUDIO SIGNAL ACTIVE",
   FREQUENCY_SPECTRUM: "Frequency Spectrum Analysis",
   PHASE_CORRELATION: "Phase Correlation & Stereo Imaging",
+
+  LIMIT_EXCEEDED_ALERT: "Free mastering limit reached (3 of 3 used). Upgrade to the RQS PRO plan for unlimited high-resolution wav mastering!",
+  FREE_USAGE_LABEL: "Free masterings remaining",
+  PRO_USAGE_LABEL: "Plan: RQS PRO (Unlimited)",
 
 FOOTER_TAGLINE: "Acoustic intelligence and DSP engineering reactor for electronic and industrial music.",
 FOOTER_TELEMETRY: "MAINFRAME TELEMETRY",

@@ -5,6 +5,7 @@ import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
 import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
 import { forkJoin } from 'rxjs';
 import { LanguageService } from '../../services/language.service'; // 🟢 IMPORTANTE
+import { AuthService } from '../../services/auth.service';
 
 
 @Component({
@@ -20,6 +21,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   @ViewChild('terminalBody') private terminalScrollContainer!: ElementRef;
 
   readonly lang = inject(LanguageService);
+  readonly auth = inject(AuthService);
 
   isDragging = false;
   selectedFile: File | null = null;
@@ -137,6 +139,11 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
 
   processarMaster(config: { estilo: string, intensidade: string, preview: boolean }) {
     if (!this.selectedFile || !this.s3Key) return;
+    // 🟢 TRAVA DE SEGURANÇA: Se o usuário tentar masterizar a faixa inteira mas as 3 gratuitas já acabaram
+  if (!config.preview && !this.auth.canMaster()) {
+    alert(this.lang.t().LIMIT_EXCEEDED_ALERT);
+    return;
+  }
     this.isProcessing = true;
 
     // 🚀 ROTA 1: SE FOR PREVIEW (Bypass de 6MB: Envia apenas a chave do S3 para gerar os 4 testes de 15s!) [1]
@@ -175,35 +182,41 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         }
       });
     }
-   // 🔥 ROTA 2: SE FOR MASTERIZAÇÃO FINAL (Bypass de 6MB via S3) [1.2.6]
-    else {
-      this.addLog(`Disparando Masterização Final Completa no S3. Perfil: ${config.estilo.toUpperCase()}`);
+   // 🔥 ROTA 2: MASTERIZAÇÃO FINAL COMPLETA
+  else {
+    this.addLog(`Disparando Masterização Final Completa no S3. Perfil: ${config.estilo.toUpperCase()}`);
 
-      const formData = new FormData();
-      formData.append('s3Key', this.s3Key);
-      formData.append('estilo', config.estilo);
-      formData.append('intensidade', config.intensidade);
-      formData.append('preview', 'false');
+    const formData = new FormData();
+    formData.append('s3Key', this.s3Key);
+    formData.append('estilo', config.estilo);
+    formData.append('intensidade', config.intensidade);
+    formData.append('preview', 'false');
 
-      this.dspService.masterizeTrackS3(formData).subscribe({
-        next: (response: any) => {
-          this.isProcessing = false;
+    this.dspService.masterizeTrackS3(formData).subscribe({
+      next: (response: any) => {
+        this.isProcessing = false;
 
-          // 🟢 SALVA O PONTEIRO: Libera o áudio final para o reprodutor nativo e o EKG na tela! [1]
-          this.processedAudioUrl = response.downloadUrl;
-          this.processedAudioName = response.fileName;
+        // 🟢 REGISTRA O CONSUMO DA FRANQUIA NO SEU DISCO LOCAL [1]
+        this.auth.registrarNovaMaster();
 
-          // ❌ REMOVIDO: O bloco antigo de download automático ('a.click') foi excluído! [1]
-          // Isso impede que o navegador baixe o arquivo de 35MB de forma intrusiva e indesejada.
+        this.processedAudioUrl = response.downloadUrl;
+        this.processedAudioName = response.fileName;
 
-          this.addLog(`Masterização finalizada com sucesso! Use o player de A/B para audicionar o áudio masterizado e verifique a integridade sônica no EKG.`);
-        },
-        error: (err) => {
-          this.isProcessing = false;
-          this.addLog(`❌ FALHA CRÍTICA: O limitador ou reator Python falharam na master final.`);
-        }
-      });
-    }
+        const a = document.createElement('a');
+        a.href = response.downloadUrl;
+        a.download = response.fileName;
+        document.body.appendChild(a);
+        //a.click();
+        document.body.removeChild(a);
+
+        this.addLog(`Masterização finalizada com sucesso! Arquivo exportado: ${response.fileName}`);
+      },
+      error: (err) => {
+        this.isProcessing = false;
+        this.addLog(`❌ FALHA CRÍTICA: O limitador ou reator Python falharam na master final.`);
+      }
+    });
+  }
   }
 
   trocarPerfil(novoEstilo: string) {

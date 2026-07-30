@@ -79,12 +79,27 @@
     </div>
   </div>
 
-  <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 25px;">
+   <!-- 🟢 BADGE DO CONSUMO DO PLANO (Estilo Telemetria de Transmissão RQS) [1] -->
+  <div class="plan-usage-badge" style="margin-top: 20px; padding: 10px; background: rgba(0, 240, 255, 0.03); border: 1px dashed rgba(0, 240, 255, 0.15); border-radius: 6px; font-family: monospace; font-size: 11px; text-align: center;">
+    <span *ngIf="!auth.isPremium()" style="color: #8b949e;">
+      ⚡ {{ lang.t().FREE_USAGE_LABEL }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong>
+    </span>
+    <span *ngIf="auth.isPremium()" style="color: #00ff88; font-weight: bold; text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);">
+      💎 {{ lang.t().PRO_USAGE_LABEL }}
+    </span>
+  </div>
+
+  <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 20px;">
+    <!-- O preview de 15s está SEMPRE liberado para todos! -->
     <button class="btn-secondary" (click)="dispararPreview()" [disabled]="isProcessing">
       {{ isProcessing ? lang.t().ANALYZING : lang.t().HEAR_TEST }}
     </button>
 
-    <button class="btn-process" (click)="dispararProcessamento()" [disabled]="isProcessing">
+    <!-- O botão de master completa fica desativado se as 3 gratuitas acabarem e o usuário for Free -->
+    <button
+      class="btn-process"
+      (click)="dispararProcessamento()"
+      [disabled]="isProcessing || (!auth.canMaster())">
       {{ isProcessing ? lang.t().PROCESSING_ACUSTICO : lang.t().MASTER_FULL }}
     </button>
   </div>

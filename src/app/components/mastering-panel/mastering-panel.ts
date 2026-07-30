@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDes
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../services/language.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-mastering-panel',
@@ -27,6 +28,7 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
   volumeMatch: boolean = true;
 
   originalAudioUrl: string | null = null;
+  readonly auth = inject(AuthService);
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['originalFile'] && this.originalFile) {

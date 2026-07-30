@@ -6,6 +6,7 @@ import { LanguageService } from './services/language.service';
 import { Footer } from './footer/footer';
 import { UploadZoneComponent } from "./components/upload-zone/upload-zone";
 import { MixPanelComponent } from "./mix-panel/mix-panel"; // 🟢 Importa o FooterComponent! [2]
+import { AuthService } from './services/auth.service';
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -15,4 +16,5 @@ import { MixPanelComponent } from "./mix-panel/mix-panel"; // 🟢 Importa o Foo
 })
 export class AppComponent {
   readonly lang = inject(LanguageService);
+  readonly auth = inject(AuthService);
 }
