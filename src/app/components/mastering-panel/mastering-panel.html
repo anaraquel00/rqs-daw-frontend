@@ -80,14 +80,29 @@
   </div>
 
   <!-- 🟢 BADGE DO CONSUMO DO PLANO (Estilo Telemetria de Transmissão RQS) [1] -->
-  <div class="plan-usage-badge" style="margin-top: 20px; padding: 10px; background: rgba(0, 240, 255, 0.03); border: 1px dashed rgba(0, 240, 255, 0.15); border-radius: 6px; font-family: monospace; font-size: 11px; text-align: center;">
-    <span *ngIf="!auth.isPremium()" style="color: #8b949e;">
-      ⚡ {{ lang.t().FREE_USAGE_LABEL || 'Masterizações gratuitas restantes' }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong>
+  <div class="plan-usage-badge" style="margin-top: 20px; padding: 12px; background: rgba(0, 240, 255, 0.02); border: 1px dashed rgba(0, 240, 255, 0.15); border-radius: 8px; font-family: monospace; font-size: 11px; text-align: center; line-height: 1.4;">
+
+  <!-- CASO 1: Usuário é PRO -->
+  <span *ngIf="auth.isPremium()" style="color: #00ff88; font-weight: bold; text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);">
+    💎 {{ lang.t().PRO_USAGE_LABEL || 'CONEXÃO PREMIUM: RQS PRO UNLIMITED' }}
+  </span>
+
+  <!-- CASO 2: Usuário está logado e é um usuário Free normal -->
+  <span *ngIf="!auth.isPremium() && auth.session()" style="color: #8b949e;">
+    ⚡ {{ lang.t().FREE_USAGE_LABEL || 'Cota Mensal da Conta' }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong> restantes
+  </span>
+
+  <!-- CASO 3: Usuário está deslogado (Visitante Anônimo) -->
+  <div *ngIf="!auth.session()" style="display: flex; flex-direction: column; gap: 6px;">
+    <span style="color: #ffaa00; font-weight: bold;">
+      👤 MODO VISITANTE (ANÔNIMO): <strong style="color: #ffaa00;">{{ auth.remainingMasters() }} / 3</strong> masterizações restantes
     </span>
-    <span *ngIf="auth.isPremium()" style="color: #00ff88; font-weight: bold; text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);">
-      💎 {{ lang.t().PRO_USAGE_LABEL || 'RQS PRO ATIVO' }}
+    <span style="color: #8b949e; font-size: 10px; line-height: 1.3;">
+      Faça login gratuito com Google ou GitHub no topo da página para salvar as suas músicas masterizadas na sua conta!
     </span>
   </div>
+
+</div>
 
   <!-- 🟢 BANNER DE UPGRADE DINÂMICO (Exibe apenas quando a cota gratuita zerar e não for Premium) -->
   <div *ngIf="!auth.isPremium() && auth.remainingMasters() === 0" class="pro-upgrade-banner" style="margin-top: 15px; padding: 15px; background: rgba(255, 0, 85, 0.04); border: 1px solid rgba(255, 0, 85, 0.25); border-radius: 8px; text-align: center; font-family: monospace; animation: pulseBorder 2s infinite alternate;">

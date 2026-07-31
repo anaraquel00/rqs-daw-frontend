@@ -2,12 +2,6 @@
     <!-- 🌐 BARRA SUPERIOR: SELETOR DE IDIOMAS & CONSOLE DE LOGIN (CLERK/SUPABASE STYLE) [1.1, 1.1.9] -->
   <div class="header-auth-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(0,240,255,0.08); padding-bottom: 10px;">
 
-    <!-- Lado Esquerdo: Seletor de Idiomas -->
-    <div class="lang-selector" style="display: flex; gap: 8px;">
-      <button (click)="lang.setLanguage('pt')" [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'" style="background: none; border: none; font-weight: bold; cursor: pointer; font-size: 11px;">PT</button>
-      <span style="color: #333;">|</span>
-      <button (click)="lang.setLanguage('en')" [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'" style="background: none; border: none; font-weight: bold; cursor: pointer; font-size: 11px;">EN</button>
-    </div>
   </div>
 
   <div class="scanner-header">
