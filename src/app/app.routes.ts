@@ -3,9 +3,19 @@ import { Routes } from '@angular/router';
 import { TermsComponent } from './components/terms/terms';
 import { PrivacyComponent } from './components/privacy/privacy';
 import { WorkspaceComponent } from './workspace/workspace';
+import { LandingPageComponent } from './landing-page/landing-page';
 
 export const routes: Routes = [
-  { path: '', component: WorkspaceComponent }, // 🟢 Página inicial carrega o estúdio completo!
+  {
+    path: '',
+    component: LandingPageComponent,
+    title: 'RaQuel Synths - Intelligent Workstation'
+  },
+  {
+    path: 'studio', // 🟢 O estúdio completo (upload + mix-panel) passa a morar aqui!
+    component: WorkspaceComponent,
+    title: 'RQS Studio - DAW Mainframe'
+  },
   { path: 'terms', component: TermsComponent },
   { path: 'privacy', component: PrivacyComponent },
   { path: 'termos', redirectTo: 'terms' },

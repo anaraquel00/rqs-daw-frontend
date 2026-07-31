@@ -156,6 +156,48 @@ FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. All rights reserved."
 
  };
 
+ // Objeto de traduções em PORTUGUÊS
+export const PT_TRANSLATIONS = {
+  HERO_TITLE: "REESCREVA O CÓDIGO SÔNICO DAS SUAS MÚSICAS.",
+  HERO_SUB: "O RQS Studio é uma estação de trabalho inteligente em nuvem desenvolvida sob medida para produtores independentes, DJs e criadores de música por IA.",
+  HERO_CTA: "[ 🎛️ ENTRAR NO MAINFRAME DE GRAÇA ]",
+  HERO_NOTE: "*Teste suas 3 primeiras faixas sem precisar de cadastro ou cartão.",
+
+  DSP_TITLE: "DOMINE A ACÚSTICA DA INTELIGÊNCIA ARTIFICIAL",
+  DSP_DESC: "Músicas geradas por IA (Suno/Udio) sofrem de estridência e graves embolados. Nosso reator acústico em Python SciPy corrige a física do áudio em menos de 300 milissegundos.",
+
+  STEMS_TITLE: "SETLIST ENGINE & SEPARADOR DE STEMS",
+  STEMS_DESC: "Extraia vocais, baterias e sintetizadores em arquivos WAV separados. Unifique o volume médio de um álbum inteiro sob a norma EBU R128 automaticamente.",
+
+  MIXLAB_TITLE: "RQS MIXLAB: EMULADOR PIONEER DDJ-GRV6",
+  MIXLAB_DESC: "Acesse um emulador de DJ completo no seu navegador. Conecte sua controladora MIDI e grave seus mixsets em alta fidelidade com feedback de IA em tempo real.",
+
+  PRICE_TITLE: "MASTERIZAÇÃO ILIMITADA. PREÇO DE IMPULSO.",
+  PRICE_DESC: "Esqueça as assinaturas abusivas em dólar. Assine o plano RQS PRO por apenas R$ 39,90/mês e libere masterizações WAV ilimitadas e acesso total ao emulador MIDI.",
+  PRICE_CTA: "[ 💎 ADQUIRIR ACESSO RQS PRO ]"
+};
+
+// Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
+export const EN_TRANSLATIONS = {
+  HERO_TITLE: "REWRITE THE SONIC CODE OF YOUR MUSIC.",
+  HERO_SUB: "RQS Studio is an intelligent cloud workstation custom-built for independent producers, DJs, and generative AI creators.",
+  HERO_CTA: "[ 🎛️ ENTER THE MAINFRAME FOR FREE ]",
+  HERO_NOTE: "*Test your first 3 tracks with no registration or credit card required.",
+
+  DSP_TITLE: "TAMING GENERATIVE AI ACOUSTICS",
+  DSP_DESC: "AI-generated music (Suno/Udio) suffers from harshness and muddy low-ends. Our SciPy Python DSP engine fixes the audio physics in less than 300 milliseconds.",
+
+  STEMS_TITLE: "SETLIST ENGINE & STEMS SPLITTER",
+  STEMS_DESC: "Extract vocals, drums, and synths into high-res WAV files. Batch-normalize album loudness under the international EBU R128 broadcast standard automatically.",
+
+  MIXLAB_TITLE: "RQS MIXLAB: PIONEER DDJ-GRV6 EMULATOR",
+  MIXLAB_DESC: "Access a complete DJ emulator in your browser. Connect your MIDI hardware and record high-fidelity mixsets with real-time AI performance metrics.",
+
+  PRICE_TITLE: "UNLIMITED MASTERING. IMPULSE PRICING.",
+  PRICE_DESC: "Forget expensive USD subscriptions. Get the RQS PRO plan for just $8.00/mo to unlock unlimited WAV downloads and full MIDI support.",
+  PRICE_CTA: "[ 💎 UPGRADE TO RQS PRO ]"
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -165,6 +207,7 @@ export class LanguageService {
 
   // 2. Sinal Computado reativo que devolve o dicionário correto [1.1]
   readonly t = computed(() => this.currentLang() === 'pt' ? PT_DICT : EN_DICT);
+  readonly tr = computed(() => this.currentLang() === 'pt' ? PT_TRANSLATIONS : EN_TRANSLATIONS);
 
   constructor() {
     this.detectBrowserLanguage();

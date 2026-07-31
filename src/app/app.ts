@@ -10,7 +10,7 @@ import { AuthService } from './services/auth.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, Footer], // 🟢 Adicionados RouterOutlet e Footer!
+  imports: [CommonModule, RouterOutlet], // 🟢 Adicionados RouterOutlet e Footer!
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })

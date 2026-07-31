@@ -1,0 +1,209 @@
+/* src/app/components/landing-page/landing-page.component.scss */
+
+.landing-mainframe {
+  background-color: #060608;
+  background-image:
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 4px, 6px 100%;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Fira Code', 'Courier New', monospace;
+
+  /* Grade Cibernética Estilo Grid RQS */
+  &::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-image:
+      linear-gradient(rgba(0, 240, 255, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+/* Brilho neon no título */
+.text-shadow-glow {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.15), 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+/* Força o alinhamento centralizado do Hero */
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 20px;
+  min-height: 100vh;
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  h1 {
+    font-size: 2.2rem;
+    line-height: 1.3;
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+
+    @media (min-width: 768px) {
+      font-size: 3.5rem;
+    }
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #8b949e;
+    max-width: 650px;
+    margin: 0 auto 40px auto;
+    line-height: 1.6;
+  }
+}
+
+/* Seções de Recursos (Grids) */
+.feature-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 50px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 120px 24px; // 🟢 Aumentado de 80px para 120px para dar espaçamento de estúdio profissional
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  align-items: center;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #ffffff;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  p {
+    font-size: 0.85rem;
+    color: #8b949e;
+    line-height: 1.6;
+  }
+}
+
+/* 🟢 CORREÇÃO CRUCIAL: Caixas de Imagens Redimensionadas e Contidas */
+.visual-placeholder {
+  position: relative;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  height: 320px; // 🟢 Força uma altura estável de 320px para não esmagar as imagens
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95);
+  transition: all 0.3s ease-in-out;
+
+  /* Estilização da imagem filha */
+  img {
+    max-width: 95% !important;      // 🟢 Garante margem interna nas laterais (nunca toca a borda)
+    max-height: 90% !important;     // 🟢 Garante margem interna vertical
+    width: auto !important;         // 🟢 Impede o esticamento horizontal forçado do Tailwind
+    height: auto !important;        // 🟢 Impede o esticamento vertical forçado
+    object-fit: contain !important; // 🟢 CONTÉM a imagem inteira sem cortar nenhuma borda do mixer/UI!
+    border-radius: 6px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  &:hover {
+    border-color: currentColor !important; // Usa a cor de borda de cada seção (ciano, rosa, roxo)
+    img {
+      transform: scale(1.03); // Efeito zoom elegante ao passar o mouse
+      opacity: 1 !important;
+    }
+  }
+}
+
+/* Botão de Ação Primário (Cyber Ciano) */
+.btn-mainframe-primary {
+  display: inline-block;
+  background: rgba(0, 240, 255, 0.02);
+  border: 1px solid #00f0ff;
+  color: #00f0ff;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.1);
+
+  &:hover {
+    background: #00f0ff;
+    color: #000000;
+    box-shadow: 0 0 18px #00f0ff;
+    transform: translateY(-2px);
+  }
+}
+
+/* Botão de Compra Pro (Rosa Neon) */
+.btn-mainframe-pro {
+  display: inline-block;
+  background: #ff0055;
+  border: 1px solid #ff0055;
+  color: #ffffff;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+
+  &:hover {
+    background: #ff1a6c;
+    border-color: #ff1a6c;
+    box-shadow: 0 0 20px #ff0055;
+    transform: translateY(-2px);
+  }
+}
+
+/* Seção de Preços Centralizada */
+.pricing-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 20px;
+  max-width: 800px;
+  margin: 0 auto;
+
+  h2 {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #ffffff;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #8b949e;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+}

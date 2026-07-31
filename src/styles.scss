@@ -1,130 +1,203 @@
-body {
+/* src/styles.scss */
+
+/* 🟢 RESET GLOBAL DE PÁGINA (Garante fundo escuro e fontes consistentes) */
+html, body {
   margin: 0;
   padding: 0;
-  background-color: #060709;
-  font-family: 'Segoe UI', Roboto, sans-serif;
-  overflow-x: hidden; /* Corta vazamentos horizontais pela raiz */
-  box-sizing: border-box;
-}
-
-*, *::before, *::after {
-  box-sizing: inherit; /* Força todo o hardware a respeitar as bordas */
-}
-
-.rqs-mainframe {
-  padding: 20px;
+  width: 100%;
   min-height: 100vh;
+  background-color: #060608;
+  color: #8b949e;
+  font-family: 'Fira Code', 'Courier New', monospace;
   box-sizing: border-box;
+}
 
-  @media (max-width: 768px) {
-    padding: 10px; /* Recupera espaço útil nas bordas do celular */
+.rqs-mainframe-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+/* 🛰️ HEADER DA WORKSTATION PREMIUM (Disponível agora para o Workspace!) [1.1.2] */
+.rqs-mainframe-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
   }
 
-  .mainframe-header {
+  .header-branding {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid rgba(#00f0ff, 0.2);
-    padding-bottom: 15px;
-    margin-bottom: 25px;
+    gap: 12px;
 
-    h1 {
+    .satellite-icon {
+      font-size: 17px;
+      filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.4));
+    }
+
+    .header-title {
       margin: 0;
-      font-size: 18px;
-      color: #ffffff;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 17px;
+      font-weight: 900;
+      color: #c9d1d9;
       letter-spacing: 2px;
-      text-shadow: 0 0 8px rgba(#00f0ff, 0.4);
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+    }
+  }
+
+  /* LED de Status Ativo do Mainframe */
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 8px rgba(0, 255, 136, 0.05);
+
+    .status-led {
+      width: 6px;
+      height: 6px;
+      background: #00ff88;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #00ff88;
+      animation: statusPulse 2.5s infinite ease-in-out;
     }
 
-    .system-status {
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      color: #00f0ff;
-      background: rgba(#00f0ff, 0.05);
-      padding: 4px 10px;
-      border-radius: 4px;
-      border: 1px solid rgba(#00f0ff, 0.2);
+    .status-text {
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: bold;
+      color: #00ff88;
+      letter-spacing: 1px;
+      text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);
     }
-    /* 📱 PATCH MOBILE DO CABEÇALHO */
-    @media (max-width: 768px) {
-      flex-direction: column; /* Empilha o Título e o Status */
-      gap: 12px;
-      text-align: center;
+  }
+}
 
-      h1 {
-        font-size: 14px; /* Reduz a fonte na versão mobile */
-        line-height: 1.4;
+/* Animação de pulsação do LED */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.9); }
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.1);
+  padding: 6px 16px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+
+  .lang-selector {
+    display: flex;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: bold;
+
+    button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: color 0.2s;
+      &:hover { color: #fff; }
+    }
+    .divider { color: #222; }
+  }
+
+  .user-session {
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    padding-left: 15px;
+
+    .auth-buttons {
+      display: flex;
+      gap: 8px;
+
+      .btn-auth {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #8b949e;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 9px;
+        font-family: monospace;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          color: #fff;
+          border-color: rgba(255, 255, 255, 0.3);
+          background: rgba(255, 255, 255, 0.08);
+        }
       }
     }
-  }
 
-  // 🔥 A MÁGICA DOS PAINÉIS PARALELOS
-  .mainframe-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); // 🧠 Duas colunas com exatamente a mesma fração de tamanho!
-    gap: 25px; // Espaçamento simétrico entre os dois blocos
-    align-items: start; // Garante que eles comecem alinhados no topo
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
 
-    // Responsividade tática: se a tela for muito estreita (ex: notebook antigo), empilha
-    @media (max-width: 1024px) {
-      grid-template-columns: 1fr;
+      .profile-info {
+        text-align: right;
+        font-family: monospace;
+
+        .email {
+          margin: 0;
+          font-size: 9px;
+          color: #c9d1d9;
+          max-width: 140px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .badge {
+          font-size: 8px;
+          font-weight: bold;
+          letter-spacing: 0.5px;
+        }
+      }
+
+      .avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 1px solid #00f0ff;
+        box-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
+      }
+
+      .btn-logout {
+        background: none;
+        border: none;
+        color: #ff0055;
+        font-size: 10px;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        &:hover { opacity: 1; }
+      }
     }
-    @media (max-width: 768px) {
-      gap: 15px; // Reduz o espaço entre os painéis no celular
-    }
-  }
-
-  // Padronização dos Racks para manterem a consistência visual
-  .panel-rack {
-    width: 100%;
-    box-sizing: border-box;
-
-    // Força os componentes internos (mix-panel e upload-zone) a limparem margens externas automáticas
-    app-upload-zone, app-mix-panel {
-      display: block;
-      width: 100%;
-    }
-
-    // Remove as propriedades max-width antigas para os componentes preencherem o grid simetricamente
-    .mix-panel-container, .upload-container {
-      max-width: 100% !important;
-      margin: 0 !important;
-      min-height: 520px; // Altura mínima de segurança para as caixas ficarem gêmeas
-    }
-  }
-}
-/* 📱 PATCH DE BLINDAGEM MÁXIMA PARA MOBILE (ANTI-VAZAMENTO) */
-@media (max-width: 768px) {
-  /* 1. Força a Grelha Principal a colapsar numa Coluna Única */
-  .mainframe-grid {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    overflow-x: hidden !important;
-  }
-
-  /* 2. Destrói qualquer largura mínima que os painéis internos estejam a exigir */
-  .panel-rack,
-  app-mix-panel,
-  app-upload-zone {
-    width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
-  }
-
-  /* 3. Força todos os textos do cabeçalho a quebrarem de linha */
-  .mainframe-header {
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .mainframe-header h1,
-  .system-status {
-    font-size: 1.1rem !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-    text-align: center !important;
-    margin: 5px 0 !important;
   }
 }
