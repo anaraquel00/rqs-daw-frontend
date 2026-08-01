@@ -1,15 +1,15 @@
+<!-- src/app/workspace/mix-panel.html -->
 <div class="mix-panel-container">
-  <h2>{{ lang.t().SETLIST_ENGINE }}</h2>
+  <h2>{{ lang.t().SETLIST_ENGINE || 'RQS SETLIST ENGINE' }}</h2>
 
+  <!-- Zona de Drag & Drop -->
   <div
     class="dropzone"
     (drop)="onFileDrop($event)"
     (dragover)="onDragOver($event)"
     (click)="fileInput.click()">
-
     <span class="icon">📁</span>
-    <p>{{ lang.t().MIX_DROP_PROMPT }}<br>ou <strong>{{ lang.t().MIX_OR_CLICK }}</strong></p>
-
+    <p>{{ lang.t().MIX_DROP_PROMPT || 'Arraste suas faixas masterizadas aqui' }}<br>ou <strong>{{ lang.t().MIX_OR_CLICK || 'ou clique para abrir a pasta' }}</strong></p>
     <input
       type="file"
       #fileInput
@@ -20,15 +20,97 @@
   </div>
 
   @if (tracks.length > 0) {
+    <!-- CONSOLE DE VALIDAÇÃO TÉCNICA -->
+    <div class="validation-panel">
+      <h3 class="panel-title">🛡️ SETLIST VALIDATION & COMPLIANCE</h3>
+      <ul>
+        <li *ngIf="tracks.length < 2" class="status-item error">
+          ❌ Necessário pelo menos 2 faixas para gerar uma setlist.
+        </li>
+        <li *ngIf="!setlistName.trim()" class="status-item error">
+          ❌ O nome do arquivo de exportação é obrigatório.
+        </li>
+        <li *ngIf="detectarDiferentesSampleRates()" class="status-item warning">
+          ⚠️ Taxas de amostragem (Sample Rates) diferentes detectadas. O reator fará o resample automático para 44.1 kHz.
+        </li>
+        <li *ngIf="detectarDiferentesBitDepths()" class="status-item warning">
+          ⚠️ Bit Depths inconsistentes detectados. A setlist será exportada uniformemente em 24-bit.
+        </li>
+      </ul>
+    </div>
+
+    <!-- SUMÁRIO TÉCNICO DE EXPORTAÇÃO -->
+    <div class="summary-card">
+      <h3 class="panel-title">📊 ESTIMATED SETLIST SUMMARY</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span>Tracks:</span>
+          <strong>{{ tracks.length }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Total Source Time:</span>
+          <strong>{{ formatarTempo(calcularTempoTotalFontes()) }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Total Crossfade:</span>
+          <strong>{{ formatarTempo(calcularTotalCrossfades()) }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Estimated Output:</span>
+          <strong class="highlight-cyan">{{ formatarTempo(calcularTempoEstimadoOutput()) }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Output Format:</span>
+          <strong>WAV 24-bit / 44.1 kHz</strong>
+        </div>
+        <div class="summary-item">
+          <span>Estimated Size:</span>
+          <strong>{{ calcularTamanhoEstimadoMB() }} MB</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- EQUALIZADOR DE LOUDNESS PERCEBIDO -->
+    <div class="loudness-match-console">
+      <span class="console-label">⚡ EQUALIZADOR DE LOUDNESS PERCEBIDO:</span>
+      <div class="btn-group-match">
+        <button [class.active]="loudnessMatchMode === 'off'" (click)="setLoudnessMode('off')">DESATIVADO</button>
+        <button [class.active]="loudnessMatchMode === 'perceived'" (click)="setLoudnessMode('perceived')">EQUILIBRAR PERCEBIDO (LUFS)</button>
+        <button [class.active]="loudnessMatchMode === 'normalize'" (click)="setLoudnessMode('normalize')">NORMALIZAR AO ALVO (-14 LUFS)</button>
+      </div>
+    </div>
+
+    <!-- SELETOR GLOBAL DE CURVA DE CROSSFADE -->
+    <div class="curve-selection-console">
+      <span class="console-label">🎚️ CURVA DE TRANSIÇÃO (CROSSFADE CURVE):</span>
+      <div class="btn-group-match">
+        <button [class.active]="activeCurve === 'equal-power'" (click)="activeCurve = 'equal-power'">EQUAL POWER (SUAVE)</button>
+        <button [class.active]="activeCurve === 'linear'" (click)="activeCurve = 'linear'">LINEAR (FADE DIRETO)</button>
+        <button [class.active]="activeCurve === 'fast-cut'" (click)="activeCurve = 'fast-cut'">FAST CUT (CORTE RÁPIDO)</button>
+      </div>
+    </div>
+
+    <!-- REPRODUTOR DE PRÉVIA DE TRANSIÇÃO UNIFICADO -->
+    <div class="unified-preview-player" *ngIf="previewingIndex !== -1">
+      <div class="player-telemetry">
+        <span class="status-text blink-block">🔁 REPRODUZINDO TRANSIÇÃO: FAIXA {{ previewingIndex + 1 }} ➡️ FAIXA {{ previewingIndex + 2 }}</span>
+        <button class="btn-stop-preview" (click)="pararPreviewDeTransicao()">■ PARAR PRÉVIA</button>
+      </div>
+      <div class="preview-progress-bar">
+        <div class="progress-fill" [style.width.%]="previewProgress()"></div>
+      </div>
+    </div>
+
+    <!-- LINHA DO TEMPO DAS FAIXAS -->
     <div class="track-list">
-      <h3>{{ lang.t().TIMELINE_TITLE }} ({{ tracks.length }} {{ lang.t().TRACKS_COUNT }})</h3>
+      <h3>{{ lang.t().TIMELINE_TITLE || 'LINHA DO TEMPO DA SETLIST' }}</h3>
       <ul>
         @for (track of tracks; track track.rawUrl; let i = $index) {
           <li class="track-item">
             <div class="track-main-row">
               <div class="track-info">
                 <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
-                <audio controls [src]="track.previewUrl" class="cyber-player"></audio>
+                <span class="track-meta-tag">WAV 44.1 kHz · -11.4 LUFS</span>
               </div>
               <div class="controls">
                 <button (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
@@ -37,24 +119,50 @@
               </div>
             </div>
 
+            <!-- 🟢 NOVO: WAVEFORM DINÂMICA ESTILO AUDACITY INTEGRADA NA TRILHA (P1.1) [1.1.2] -->
+            <div class="waveform-lane-wrapper">
+              <div class="cyber-waveform">
+                @for (bar of getWaveformBarArray(); track b; let b = $index) {
+                  <div
+                    class="wave-bar"
+                    [ngStyle]="getWaveformBarStyles(i, b)">
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Ajuste de Crossfade entre faixas -->
             @if (i < tracks.length - 1) {
               <div class="custom-crossfade-bridge">
                 <div class="bridge-line"></div>
-                <label>{{ lang.t().CROSSFADE_TO }} [{{ i + 2 }}]:</label>
+
+                <div class="bridge-actions">
+                  <label>{{ lang.t().CROSSFADE_TO || 'FADE PARA' }} [{{ i + 2 }}]:</label>
+
+                  <!-- BOTÃO DE PREVIEW TRANSITION INDIVIDUAL -->
+                  <button
+                    class="btn-preview-transition"
+                    (click)="ouvirTransicao(i)"
+                    [disabled]="isProcessing || previewingIndex === i">
+                    🔁 {{ previewingIndex === i ? 'REPRODUZINDO...' : 'OUVIR TRANSIÇÃO (PREVIEW)' }}
+                  </button>
+                </div>
 
                 <div class="slider-container-mini">
                   <input
                     type="range" min="0" max="15" step="0.5"
                     [(ngModel)]="track.crossfadeNext"
+                    (ngModelChange)="atualizarCrossoverVisivel()"
                     class="cyber-slider-mini"
                     title="Ajuste o crossfade" aria-label="Ajuste o crossfade em segundos" />
 
                   <input
                     type="number" min="0" max="15" step="0.5"
                     [(ngModel)]="track.crossfadeNext"
+                    (ngModelChange)="atualizarCrossoverVisivel()"
                     class="cyber-number-input-mini"
                     title="Valor numérico" aria-label="Valor numérico do crossfade" />
-                  <span class="sec-label">{{ lang.t().SECONDS }}</span>
+                  <span class="sec-label">{{ lang.t().SECONDS || 'segundos' }}</span>
                 </div>
               </div>
             }
@@ -63,8 +171,9 @@
       </ul>
     </div>
 
+    <!-- Nome de exportação -->
     <div class="metadata-section">
-      <label for="exportName">{{ lang.t().DEPLOY_LABEL }}</label>
+      <label for="exportName">{{ lang.t().DEPLOY_LABEL || 'NOME DO SETLIST MASTER' }}</label>
       <input
         type="text"
         id="exportName"
@@ -74,23 +183,27 @@
     </div>
   }
 
+  <!-- Status de Processamento -->
   @if (isProcessing) {
     <div class="processing-status">
       <div class="spinner"></div>
-      <p>{{ lang.t().FFMPEG_PROCESSING }}</p>
+      <p>{{ lang.t().FFMPEG_PROCESSING || 'REATOR SÔNICO RQS OPERANDO AS TRANSIÇÕES... AGUARDE.' }}</p>
     </div>
   }
 
   @if (mixSuccess) {
     <div class="success-status">
-      <p>{{ lang.t().DEPLOY_COMPLETED }}</p>
+      <p>{{ lang.t().DEPLOY_COMPLETED || 'SETLIST EXPORTADA COM SUCESSO!' }}</p>
     </div>
   }
 
-    <!-- Bloqueia o botão se for usuário Free e tiver colocado mais de 3 tracks no deck -->
+  <!-- Botão de Ignição -->
   <button class="btn-primary ignite-btn"
           (click)="igniteSetlist()"
-          [disabled]="isProcessing || (tracks.length === 0) || (auth.userRole() === 'free' && tracks.length > 3)">
-    {{ isProcessing ? lang.t().IGNITE_ACTIVE : (auth.userRole() === 'free' && tracks.length > 3 ? '🔒 APENAS PLANO PRO (>3 MUSICAS)' : lang.t().IGNITE_IDLE) }}
+          [disabled]="isProcessing || (tracks.length < 2) || (auth.userRole() === 'free' && tracks.length > 3)">
+    {{ isProcessing ? (lang.t().IGNITE_ACTIVE || 'RQS_DEPLOY_ACTIVE...') : (auth.userRole() === 'free' && tracks.length > 3 ? '🔒 APENAS PLANO PRO (>3 FAIXAS)' : '🔥 RENDER & DEPLOY SETLIST') }}
   </button>
+  <p class="text-[9px] text-zinc-500 text-center font-mono mt-2" *ngIf="tracks.length > 0">
+    Creates one continuous WAV file with all configured transitions and curves.
+  </p>
 </div>

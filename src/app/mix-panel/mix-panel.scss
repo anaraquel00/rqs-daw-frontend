@@ -7,459 +7,459 @@ $danger-red: #ff0055; // Sangue Jonah
 $text-bright: #ffffff;
 $text-muted: #8b949e;
 
+/* src/app/workspace/mix-panel.scss */
+
 .mix-panel-container {
-  background-color: $bg-dark;
-  color: $text-bright;
-  padding: 30px;
+  width: 95%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 240, 255, 0.1);
+  padding: 24px;
   border-radius: 12px;
-  border: 1px solid rgba($border-neon, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  max-width: 800px;
-  margin: 20px auto;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.95);
+  font-family: 'Fira Code', 'Courier New', monospace;
 
   h2 {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-    color: $border-neon;
-    text-transform: uppercase;
-    text-shadow: 0 0 10px rgba($border-neon, 0.3);
-  }
-
-  // 📁 A ZONA HÍBRIDA (Drag & Drop + Click)
-  .dropzone {
-    border: 2px dashed rgba($border-neon, 0.4);
-    background-color: $bg-card;
-    border-radius: 8px;
-    padding: 40px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    margin-bottom: 30px;
-    position: relative;
-    overflow: hidden;
-
-    &:hover {
-      border-color: $border-neon;
-      background-color: rgba($border-neon, 0.03);
-      box-shadow: 0 0 15px rgba($border-neon, 0.2);
-      transform: translateY(-2px);
-
-      .icon {
-        transform: scale(1.1);
-        text-shadow: 0 0 10px $border-neon;
-      }
-    }
-
-    .icon {
-      font-size: 40px;
-      display: block;
-      margin-bottom: 10px;
-      transition: transform 0.2s ease;
-    }
-
-    p {
-      color: $text-muted;
-      font-size: 14px;
-      line-height: 1.5;
-      margin: 0;
-
-      strong {
-        color: $border-neon;
-        text-decoration: underline;
-      }
-    }
-  }
-
-  // 📋 A MESA DE MIXAGEM (Lista de Tracks)
-  .track-list {
-    background-color: rgba($bg-card, 0.6);
-    border-radius: 8px;
-    padding: 20px;
-    border: 1px solid rgba($text-muted, 0.1);
-
-    h3 {
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: $text-muted;
-      margin-top: 0;
-      margin-bottom: 15px;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    li.track-item {
-      display: flex;
-      flex-direction: column;
-      background-color: $bg-card;
-      border-radius: 6px;
-      border-left: 4px solid $accent-purple;
-      transition: border-color 0.2s ease, background-color 0.2s ease;
-      overflow: hidden;
-
-      &:hover {
-        background-color: rgba($bg-card, 1);
-        border-left-color: $border-neon;
-      }
-
-      .track-main-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 16px;
-        gap: 15px;
-      }
-
-      .track-info {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        min-width: 0; // Fixes flex overflow
-      }
-
-      .track-name {
-        display: inline-block; // <--- CORREÇÃO: Necessário para o ellipsis funcionar em spans!
-        vertical-align: middle;
-        width: 100%;           // <--- Garante limite espacial do truncamento
-        font-size: 13px;
-        font-family: 'Courier New', Courier, monospace;
-        color: rgba($text-bright, 0.9);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .cyber-player {
-        width: 100%;
-        height: 40px;
-        outline: none;
-        border-radius: 4px;
-        background: transparent;
-
-        &::-webkit-media-controls-panel {
-          background-color: rgba($bg-dark, 0.6);
-          border: 1px solid rgba($border-neon, 0.2);
-          border-radius: 4px;
-        }
-        &::-webkit-media-controls-current-time-display,
-        &::-webkit-media-controls-time-remaining-display {
-          color: $border-neon;
-          font-family: 'Courier New', Courier, monospace;
-        }
-      }
-
-      .controls {
-        display: flex;
-        gap: 6px;
-        flex-shrink: 0;
-
-        button {
-          background: rgba($text-bright, 0.05);
-          border: 1px solid rgba($text-bright, 0.1);
-          color: $text-bright;
-          padding: 6px 10px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 11px;
-          transition: all 0.15s ease;
-
-          &:hover:not([disabled]) {
-            background: rgba($text-bright, 0.15);
-            border-color: rgba($text-bright, 0.3);
-          }
-
-          &:disabled {
-            opacity: 0.2;
-            cursor: not-allowed;
-          }
-        }
-
-        .btn-danger {
-          background: rgba($danger-red, 0.1);
-          border: 1px solid rgba($danger-red, 0.3);
-          color: #ff4d7d;
-
-          &:hover {
-            background: $danger-red !important;
-            color: $text-bright;
-            box-shadow: 0 0 10px rgba($danger-red, 0.4);
-          }
-        }
-      }
-    }
-  }
-
-  // 🚀 BOTÃO DE IGNIÇÃO NUCLEAR
-  .ignite-btn {
-    width: 100%;
-    margin-top: 20px;
-    background: linear-gradient(135deg, $accent-purple, #cc00ff);
-    color: $text-bright;
-    border: none;
-    padding: 14px;
-    border-radius: 6px;
-    font-weight: 700;
     font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba($accent-purple, 0.3);
-
-    &:hover {
-      background: linear-gradient(135deg, #ad14ff, #db2eff);
-      box-shadow: 0 0 20px rgba(#cc00ff, 0.5);
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(1px);
-    }
-  }
-  // STATUS E TELEMETRIA
-  .processing-status {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-    padding: 15px;
-    background: rgba($border-neon, 0.05);
-    border: 1px dashed rgba($border-neon, 0.4);
-    border-radius: 6px;
-
-    p {
-      color: $border-neon;
-      font-family: 'Courier New', Courier, monospace;
-      margin: 0;
-      animation: pulse 1.5s infinite;
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba($border-neon, 0.3);
-      border-top-color: $border-neon;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-  }
-
-  .success-status {
-    text-align: center;
-    margin-top: 20px;
-    padding: 12px;
-    background: rgba(0, 255, 136, 0.1);
-    border-left: 4px solid #00ff88;
-    border-radius: 4px;
-
-    p {
-      color: #00ff88;
-      margin: 0;
-      font-size: 14px;
-    }
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  // CAMPO DE NOMENCLATURA
-  .metadata-section {
-    margin-top: 15px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    label {
-      font-size: 12px;
-      text-transform: uppercase;
-      color: $text-muted;
-      letter-spacing: 1px;
-    }
-
-    .cyber-input {
-      background-color: rgba($bg-dark, 0.8);
-      border: 1px solid rgba($border-neon, 0.3);
-      color: $border-neon;
-      padding: 12px;
-      border-radius: 6px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 14px;
-      outline: none;
-      transition: all 0.3s ease;
-
-      &:focus {
-        border-color: $border-neon;
-        box-shadow: 0 0 10px rgba($border-neon, 0.2);
-        background-color: $bg-dark;
-      }
-
-      &::placeholder {
-        color: rgba($text-muted, 0.5);
-      }
-    }
-  }
-}
-// 🎛️ ESTILOS DO MÓDULO RQS MIX ENGINE
-.mix-control-module {
-  margin: 25px 0;
-  padding: 20px;
-  border: 1px dashed rgba(0, 255, 204, 0.3); // Borda Ciano RQS
-  background: rgba(0, 15, 20, 0.4); // Fundo sutil do mainframe
-  border-radius: 8px;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-
-  .cyber-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #00ffcc;
-    font-size: 0.9rem;
-    font-family: 'Fira Code', 'Courier New', monospace;
     font-weight: bold;
-    margin-bottom: 15px;
-  }
-
-  .slider-container {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 12px;
-
-    span {
-      color: #777;
-      font-family: 'Fira Code', monospace;
-      font-size: 0.85rem;
-      font-weight: bold;
-    }
-
-    // O hardware do Slider
-    .cyber-slider {
-      flex-grow: 1;
-      -webkit-appearance: none;
-      background: rgba(0, 255, 204, 0.15);
-      height: 6px;
-      border-radius: 3px;
-      outline: none;
-      transition: all 0.3s ease;
-
-      &::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 4px; // Formato mais industrial
-        background: #cc00ff; // Roxo combinando com o botão de deploy
-        cursor: pointer;
-        border: 2px solid #fff;
-        box-shadow: 0 0 10px rgba(204, 0, 255, 0.8);
-        transition: transform 0.1s ease;
-
-        &:hover {
-          transform: scale(1.2);
-          box-shadow: 0 0 15px rgba(204, 0, 255, 1);
-        }
-      }
-    }
-
-    // O visor digital exato
-    .cyber-number-input {
-      width: 65px;
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid #00ffcc;
-      color: #00ffcc;
-      padding: 8px;
-      text-align: center;
-      border-radius: 4px;
-      font-family: 'Fira Code', monospace;
-      font-weight: bold;
-      font-size: 1rem;
-
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-        background: rgba(0, 255, 204, 0.1);
-      }
-    }
-  }
-
-  .tech-hint {
-    color: #555;
-    font-family: 'Fira Code', monospace;
-    font-size: 0.75rem;
-    display: block;
-    margin-top: 10px;
+    color: #00f0ff;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
   }
 }
-.custom-crossfade-bridge {
+
+/* 🟢 NOVO: TIMELINE DE WAVEFORM ESTILO AUDACITY NA TRILHA [1.1.2] */
+.waveform-lane-wrapper {
+  width: 100%;
+  height: 45px; // Altura estável da forma de onda dentro do card
+  background: #040406;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-top: 15px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.95);
+  box-sizing: border-box;
+}
+
+.cyber-waveform {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
-  gap: 15px;
-  background: rgba(0, 255, 204, 0.05);
-  padding: 8px 15px;
-  border-left: 3px dashed rgba(0, 255, 204, 0.3);
-  margin-left: 20px; /* Recuo para parecer uma hierarquia de conexão */
+  justify-content: space-between;
+  gap: 1px; // Espaçamento fino entre as barras verticais de espectro
+}
+
+.wave-bar {
+  flex: 1;
+  border-radius: 1px;
+  transition: height 0.3s ease, background-color 0.3s ease;
+}
+
+/* CONSOLE DE VALIDAÇÃO DE CONFORMIDADE */
+.validation-panel {
+  background: rgba(255, 0, 85, 0.02);
+  border: 1px dashed rgba(255, 0, 85, 0.2);
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+
+  .panel-title {
+    font-size: 10px;
+    color: #ff0055;
+    font-weight: bold;
+    margin: 0 0 8px 0;
+    letter-spacing: 0.5px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .status-item {
+    font-size: 9px;
+    margin-bottom: 4px;
+    line-height: 1.4;
+
+    &.error { color: #ff0055; }
+    &.warning { color: #ffaa00; }
+  }
+}
+
+/* CARD DE SUMÁRIO DA SETLIST */
+.summary-card {
+  background: rgba(0, 240, 255, 0.02);
+  border: 1px solid rgba(0, 240, 255, 0.12);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+
+  .panel-title {
+    font-size: 10px;
+    color: #00f0ff;
+    font-weight: bold;
+    margin: 0 0 8px 0;
+    letter-spacing: 0.5px;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+
+    @media (min-width: 600px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 9px;
+
+    span { color: #666; }
+    strong { color: #fff; }
+    .highlight-cyan {
+      color: #00f0ff;
+      text-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
+    }
+  }
+}
+
+/* Consoles de Equalizadores e Seleções */
+.loudness-match-console, .curve-selection-console {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+
+  .console-label {
+    font-size: 9px;
+    color: #666;
+    font-weight: bold;
+  }
+}
+
+.btn-group-match {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+
+  button {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8b949e;
+    padding: 8px;
+    font-size: 9px;
+    font-weight: bold;
+    font-family: monospace;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    &.active {
+      color: #fff;
+      border-color: #00f0ff;
+      background: rgba(0, 240, 255, 0.05);
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.15);
+    }
+  }
+}
+
+/* PLAYER DE TRANSIÇÃO UNIFICADO */
+.unified-preview-player {
+  background: #09090d;
+  border: 1px solid rgba(255, 0, 85, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  animation: borderPulse 1.5s infinite alternate;
+
+  .player-telemetry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .status-text {
+    font-size: 9px;
+    color: #ff0055;
+    font-weight: bold;
+  }
+
+  .btn-stop-preview {
+    background: none;
+    border: 1px solid #ff0055;
+    color: #ff0055;
+    font-size: 8px;
+    font-family: monospace;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(255, 0, 85, 0.05);
+      box-shadow: 0 0 6px #ff0055;
+    }
+  }
+
+  .preview-progress-bar {
+    width: 100%;
+    height: 3px;
+    background: #111;
+    border-radius: 1.5px;
+    overflow: hidden;
+
+    .progress-fill {
+      height: 100%;
+      background: #ff0055;
+      box-shadow: 0 0 6px #ff0055;
+      transition: width 0.1s linear;
+    }
+  }
+}
+
+/* REESTRUTURAÇÃO DOS BOTÕES DE PREVIEW INDIVIDUAL */
+.bridge-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 6px;
 
   label {
-    color: #b000ff; /* Tom roxo para diferenciar da música */
-    font-family: 'Fira Code', monospace;
-    font-size: 0.8rem;
+    font-size: 10px;
+    color: #666;
+  }
+}
+
+.btn-preview-transition {
+  background: none;
+  border: 1px solid #ff0055;
+  color: #ff0055;
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 0, 85, 0.05);
+    box-shadow: 0 0 8px #ff0055;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+/* Outros Estilos do Mix Panel */
+.dropzone {
+  border: 1px dashed rgba(0, 240, 255, 0.2);
+  background: rgba(0, 240, 255, 0.01);
+  padding: 30px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 25px;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #00f0ff;
+    background: rgba(0, 240, 255, 0.03);
+  }
+
+  .icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  p {
+    font-size: 11px;
+    color: #8b949e;
+    margin: 0;
+  }
+}
+
+.track-list h3 {
+  font-size: 11px;
+  color: #8b949e;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.track-item {
+  list-style: none;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.track-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .track-name {
+    font-size: 11px;
+    color: #fff;
     font-weight: bold;
-    white-space: nowrap;
   }
 
-  .slider-container-mini {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
+  .track-meta-tag {
+    font-size: 8px;
+    color: #666;
+  }
+}
 
-    .cyber-slider-mini {
-      flex-grow: 1;
-      height: 4px;
-      -webkit-appearance: none;
-      background: rgba(176, 0, 255, 0.2);
+.controls {
+  display: flex;
+  gap: 6px;
+
+  button {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+
+    &:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.custom-crossfade-bridge {
+  position: relative;
+  padding-top: 15px;
+  margin-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.slider-container-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cyber-slider-mini {
+  -webkit-appearance: none;
+  flex: 1;
+  height: 2px;
+  background: #111;
+  outline: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 8px;
+    height: 8px;
+    background: #ff0055;
+    box-shadow: 0 0 6px #ff0055;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+}
+
+.cyber-number-input-mini {
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  width: 45px;
+  text-align: center;
+  font-size: 10px;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.sec-label {
+  font-size: 9px;
+  color: #666;
+}
+
+.metadata-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 25px;
+
+  label {
+    font-size: 10px;
+    color: #666;
+  }
+
+  .cyber-input {
+    background: #000;
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: monospace;
+
+    &:focus {
+      border-color: #00f0ff;
       outline: none;
-
-      &::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 14px; height: 14px;
-        background: #00ffcc;
-        border-radius: 50%;
-        cursor: pointer;
-      }
-    }
-
-    .cyber-number-input-mini {
-      width: 55px;
-      background: #000;
-      border: 1px solid #b000ff;
-      color: #fff;
-      text-align: center;
-      padding: 4px;
-      font-size: 0.85rem;
-      font-family: monospace;
-    }
-
-    .sec-label {
-      color: #666;
-      font-size: 0.75rem;
     }
   }
+}
+
+.ignite-btn {
+  width: 100%;
+  background: #ff0055 !important;
+  color: #fff !important;
+  border: 1px solid #ff0055 !important;
+  font-weight: bold;
+  padding: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 25px;
+  transition: all 0.2s;
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);
+
+  &:hover:not(:disabled) {
+    background: #ff1a6c !important;
+    box-shadow: 0 0 18px #ff0055 !important;
+  }
+
+  &:disabled {
+    background: #222 !important;
+    border-color: #333 !important;
+    color: #666 !important;
+    cursor: not-allowed;
+    box-shadow: none !important;
+  }
+}
+
+@keyframes borderPulse {
+  from { border-color: rgba(255, 0, 85, 0.15); }
+  to { border-color: rgba(255, 0, 85, 0.4); }
 }
