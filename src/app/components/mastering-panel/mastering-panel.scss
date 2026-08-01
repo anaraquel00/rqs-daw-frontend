@@ -1,232 +1,362 @@
+/* src/app/components/mastering-panel/mastering-panel.component.scss */
+
 .mastering-board {
-  background: rgba(20, 25, 30, 0.6);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* O NOVO CONSOLE DE ÁUDIO UNIFICADO */
+.custom-audio-console {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(0, 240, 255, 0.15) !important;
+  padding: 16px;
   border-radius: 12px;
-  padding: 25px;
-  margin-top: 20px;
-  color: #fff;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
 }
 
-.player-section {
+/* Painel de Tempo e Telemetria */
+.console-telemetry {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
+  justify-content: space-between;
+  font-family: monospace;
+  font-size: 11px;
+  margin-bottom: 8px;
 
-  .cyber-player {
-    width: 100%;
-    height: 40px;
-    outline: none;
+  .currentTime {
+    color: #00f0ff;
+    text-shadow: 0 0 6px rgba(0, 240, 255, 0.2);
   }
-}
 
-.toggle-container {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-weight: bold;
-
-  .toggle-btn {
-    background: none;
-    border: none;
+  .status-mode {
     color: #666;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: 0.3s;
-
-    &.active { color: #00ffcc; text-shadow: 0 0 8px rgba(0, 255, 204, 0.5); }
-    &:disabled { cursor: not-allowed; opacity: 0.5; }
+    font-size: 9px;
+    letter-spacing: 1px;
   }
 
-  .switch {
-    width: 60px;
-    height: 30px;
-    background: #111;
-    border-radius: 15px;
-    position: relative;
+  .totalDuration {
+    color: #8b949e;
+  }
+}
+
+/* Recipiente do Scrubber */
+.scrubber-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+/* Scrubber Customizado Estilo Neon Ciano */
+.cyber-scrubber {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: #111;
+  border-radius: 2px;
+  outline: none;
+  border: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #00f0ff;
+    box-shadow: 0 0 8px #00f0ff;
     cursor: pointer;
-    border: 1px solid #333;
+    transition: transform 0.1s;
+    &:hover { transform: scale(1.25); }
+  }
+}
 
-    .slider {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 24px;
-      height: 24px;
-      background: #555;
-      border-radius: 50%;
-      transition: 0.3s;
+/* Indicador de Loop de 15s */
+.loop-indicator-bar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
 
-      &.on {
-        left: 32px;
-        background: #00ffcc;
-        box-shadow: 0 0 10px #00ffcc;
-      }
+  .loop-badge {
+    font-family: monospace;
+    font-size: 9px;
+    color: #ff0055;
+    background: rgba(255, 0, 85, 0.03);
+    border: 1px dashed rgba(255, 0, 85, 0.2);
+    padding: 3px 12px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+
+    // 🟢 Variante Esmeralda para quando a Masterização Completa estiver ativa! [1.1.2]
+    &.full-master-active {
+      color: #00ff88;
+      background: rgba(0, 255, 136, 0.03);
+      border-color: rgba(0, 255, 136, 0.2);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+    }
+  }
+}
+
+/* Controles de Transporte (Botões Play e Stop) [1.1.2] */
+.transport-controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.btn-transport {
+  background: none;
+  border: 1px solid #00f0ff;
+  color: #00f0ff;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 8px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.1);
+
+  /* 🟢 Estilização específica do botão de Stop */
+  &.btn-stop {
+    border-color: #ff0055 !important;
+    color: #ff0055 !important;
+
+    &:hover {
+      background: rgba(255, 0, 85, 0.05) !important;
+      box-shadow: 0 0 8px rgba(255, 0, 85, 0.2) !important;
+    }
+  }
+}
+
+/* Botões do Seletor A/B Unificados */
+.ab-toggle-console {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.ab-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8b949e;
+  padding: 8px 16px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &.active {
+    color: #fff;
+    border-color: #00f0ff;
+    background: rgba(0, 240, 255, 0.05);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.03);
+
+    &:hover .tooltip-lock {
+      opacity: 1;
+    }
+  }
+}
+
+/* Tooltip de Bloqueio da Prévia */
+.tooltip-lock {
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #06060c;
+  border: 1px solid #ff0055;
+  color: #ff0055;
+  font-size: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.15);
+  z-index: 10;
+}
+
+/* Switcher A/B Central (Estilo Hardware Analógico) */
+.switch {
+  width: 34px;
+  height: 18px;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: #00f0ff;
+  }
+
+  .slider {
+    width: 12px;
+    height: 12px;
+    background: #555;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.on {
+      left: 17px;
+      background: #00f0ff;
+      box-shadow: 0 0 6px #00f0ff;
     }
   }
 }
 
 .volume-match {
-  font-size: 0.8rem;
-  color: #888;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #666;
+
+  label {
+    cursor: not-allowed;
+  }
 }
 
 .cyber-divider {
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(0, 240, 255, 0.1);
   margin: 25px 0;
 }
 
-/* Controles de Engenharia */
+/* SEÇÕES DE CONTROLE ACÚSTICO PRESERVADAS */
 .controls-section {
   display: flex;
   flex-direction: column;
   gap: 20px;
 
-  h4 { margin: 0 0 10px 0; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-
-  .btn-group {
-    display: flex;
-    background: #0a0c10;
-    border-radius: 8px;
-    padding: 4px;
-    border: 1px solid #222;
-
-    button {
-      flex: 1;
-      padding: 10px;
-      background: none;
-      border: none;
-      color: #888;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-
-      &.selected {
-        background: #1a2b3c;
-        color: #00d4ff;
-        box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
-      }
-      &:hover:not(.selected) { color: #fff; }
-    }
+  h4 {
+    margin: 0 0 10px 0;
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #8b949e;
   }
 }
 
-/* Grid dos Perfis Acústicos */
-.profiles-grid {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.btn-group {
+  display: grid;
+  gap: 8px;
+  width: 100%;
 
   button {
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 13px;
-    padding: 12px 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8b949e;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
 
     &:hover {
-      box-shadow: inset 0 0 10px rgba(#00f0ff, 0.2);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    &.selected {
+      color: #fff;
+      border-color: #00f0ff;
+      background: rgba(0, 240, 255, 0.04);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
     }
   }
 }
 
-/* Seletor de Intensidade Dinâmica (Estilo Mixea) */
-.intensity-selector {
-  button {
-    font-size: 13px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+.profiles-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
 
-    &.selected {
-      /* Estilos de LED sutil baseados na compressão selecionada */
-      &:nth-child(1) {
-        background: rgba(0, 255, 136, 0.1);
-        color: #00ff88;
-        box-shadow: inset 0 0 8px rgba(0, 255, 136, 0.2), 0 0 12px rgba(0, 255, 136, 0.1);
-      }
-      &:nth-child(2) {
-        background: rgba(255, 170, 0, 0.1);
-        color: #ffa600;
-        box-shadow: inset 0 0 8px rgba(255, 170, 0, 0.2), 0 0 12px rgba(255, 170, 0, 0.1);
-      }
-      &:nth-child(3) {
-        background: rgba(255, 0, 85, 0.1);
-        color: #ff0055;
-        box-shadow: inset 0 0 8px rgba(255, 0, 85, 0.2), 0 0 12px rgba(255, 0, 85, 0.15);
-      }
-    }
+.intensity-selector {
+  grid-template-columns: repeat(3, 1fr);
+
+  button.selected {
+    border-color: #00f0ff;
+    background: rgba(0, 240, 255, 0.04);
   }
+}
+
+/* PLAN BADGE */
+.plan-usage-badge {
+  margin-top: 20px;
+  padding: 10px;
+  background: rgba(0, 240, 255, 0.03);
+  border: 1px dashed rgba(0, 240, 255, 0.15);
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 11px;
+  text-align: center;
+
+  .pro-badge {
+    color: #00ff88;
+    font-weight: bold;
+    text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);
+  }
+}
+
+/* BOTÕES DE AÇÃO INFERIORES */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  font-family: monospace;
 }
 
 .btn-secondary {
-  width: 100%;
+  flex: 1;
   padding: 12px;
-  background: rgba(0, 212, 255, 0.1);
-  border: none;
-  border-radius: 8px;
-  color: #00d4ff;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #8b949e !important;
+  border-radius: 6px;
   font-weight: bold;
-  font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
-  }
-
-  &:disabled {
-    background: #333;
-    color: #666;
-    cursor: not-allowed;
-  }
+  transition: all 0.2s;
 }
 
 .btn-process {
-  width: 100%;
+  flex: 1;
   padding: 12px;
-  background: linear-gradient(90deg, #00d4ff, #00ffcc);
-  border: none;
-  border-radius: 8px;
-  color: #000;
+  background: #00f0ff !important;
+  border: 1px solid #00f0ff !important;
+  color: #000 !important;
+  border-radius: 6px;
   font-weight: bold;
-  font-size: 1.1rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(0, 255, 204, 0.4);
-  }
-
-  &:disabled {
-    background: #333;
-    color: #666;
-    cursor: not-allowed;
-  }
+  transition: all 0.2s;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
 }
 
-@keyframes pulseBorder {
-  0% {
-    border-color: rgba(255, 0, 85, 0.2);
-    box-shadow: 0 0 5px rgba(255, 0, 85, 0.05);
-  }
-  100% {
-    border-color: rgba(255, 0, 85, 0.45);
-    box-shadow: 0 0 12px rgba(255, 0, 85, 0.15);
-  }
+.btn-transport:hover, .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+  border-color: #fff !important;
 }
 
-.btn-upgrade:hover {
-  transform: scale(1.03);
-  background: #ff1a6c !important;
+.btn-process:hover:not(:disabled) {
+  background: #1ae6ff !important;
+  box-shadow: 0 0 15px #00f0ff !important;
 }

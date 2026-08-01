@@ -51,13 +51,14 @@
 
   <!-- Painel de Masterização Principal -->
   <app-mastering-panel
-    *ngIf="selectedFile && !isProcessing && !isExtractingStems"
-    [originalFile]="selectedFile"
-    [isProcessing]="isProcessing || isUploadingS3"
-    [masteredAudioUrl]="processedAudioUrl"
-    (processMaster)="processarMaster($event)"
-    (estiloAlterado)="trocarPerfil($any($event))">
-  </app-mastering-panel>
+  *ngIf="selectedFile && !isProcessing && !isExtractingStems"
+  [originalFile]="selectedFile"
+  [isProcessing]="isProcessing || isUploadingS3"
+  [masteredAudioUrl]="processedAudioUrl"
+  [isFullMaster]="isFullMasterCompleted"
+  (processMaster)="processarMaster($event)"
+  (estiloAlterado)="trocarPerfil($any($event))">
+ </app-mastering-panel>
 
   <!-- 📟 TERMINAL DE TELEMETRIA RQS (Mainframe Logger) -->
   <div class="cyber-terminal" *ngIf="isProcessing || isUploadingS3 || isExtractingStems">
@@ -92,7 +93,10 @@
     </button>
   </div>
 
-  <app-ekg-monitor *ngIf="processedAudioUrl && !isProcessing" [audioUrl]="processedAudioUrl"></app-ekg-monitor>
+  <app-ekg-monitor
+  *ngIf="isFullMasterCompleted && !isProcessing"
+  [audioUrl]="processedAudioUrl">
+</app-ekg-monitor>
 
   </div>
 

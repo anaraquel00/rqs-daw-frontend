@@ -1,35 +1,81 @@
+<!-- src/app/components/mastering-panel/mastering-panel.component.html -->
 <div class="mastering-board" *ngIf="originalFile">
-  <!-- Reprodutor e Toggle A/B -->
-  <div class="player-section">
 
-    <!-- 💿 MOTOR ORIGINAL -->
-    <audio [src]="originalAudioUrl" controls class="cyber-player"
-           [style.display]="modoAudicao === 'original' ? 'block' : 'none'">
-    </audio>
+  <!-- 🎛️ REPRODUTOR UNIFICADO CUSTOMIZADO (RQS Cyberpunk Audio Console) -->
+  <div class="player-section custom-audio-console">
 
-    <!-- 🎛️ MOTOR MASTERIZADO -->
-    <audio *ngIf="masteredAudioUrl" [src]="masteredAudioUrl" controls class="cyber-player"
-           [style.display]="modoAudicao === 'master' ? 'block' : 'none'">
-    </audio>
+    <!-- Painel de Tempo e Telemetria de Transmissão -->
+    <div class="console-telemetry">
+      <span class="currentTime">
+        {{ formatarTempo(audioComparison.displayCurrentTime()) }}
+      </span>
+      <span class="status-mode">
+        {{ audioComparison.activeVariant() === 'original' ? 'A: ORIGINAL_SOURCE' : 'B: PROCESSED_SOURCE' }}
+      </span>
+      <span class="totalDuration">
+        {{ formatarTempo(audioComparison.displayDuration()) }}
+      </span>
+    </div>
 
-    <div class="cyber-player placeholder" *ngIf="modoAudicao === 'master' && !masteredAudioUrl" style="height: 40px;"></div>
+    <!-- Scrubber Customizado (Barra de Progresso) [1.1.2] -->
+    <div class="scrubber-container">
+      <input
+        type="range"
+        title="Audio Playback Scrubber"
+        aria-label="Audio Playback Scrubber"
+        min="0"
+        [max]="audioComparison.displayDuration()"
+        [value]="audioComparison.displayCurrentTime()"
+        (input)="onScrubberChange($event)"
+        class="cyber-scrubber">
+    </div>
 
-    <div class="toggle-container">
-      <button class="toggle-btn"
-              [class.active]="modoAudicao === 'original'"
-              (click)="alternarModo('original')">
-        {{ lang.t().ORIGINAL }}
+    <!-- 🟢 INDICADORES DINÂMICOS DE REPRODUÇÃO (SaaS Feedback) [1.1.2] -->
+    <div class="loop-indicator-bar" *ngIf="audioComparison.canUseMaster()">
+
+      <!-- Se for o loop de 15s da prévia rápida -->
+      <span class="loop-badge" *ngIf="audioComparison.playbackMode() === 'preview-15s'">
+        🔁 LOOP DE PRÉVIA COMPARAÇÃO A/B ATIVO (TRECHO: {{ previewWindowString() }})
+      </span>
+
+       <!-- 🟢 ALTERADO: Agora renderiza dinamicamente o novo alerta focado no download e reinício [1.1.2] -->
+      <span class="loop-badge full-master-active" *ngIf="audioComparison.playbackMode() === 'full-track'">
+        {{ lang.tr().FULL_MASTER_COMPLETED_ALERT }}
+      </span>
+
+    </div>
+
+    <!-- Botões de Transporte Centralizados -->
+    <div class="transport-controls">
+      <button (click)="audioComparison.togglePlayback()" class="btn-transport">
+        {{ audioComparison.isPlaying() ? '⏸ PAUSE' : '▶ PLAY' }}
+      </button>
+      <button (click)="pararReproducao()" class="btn-transport btn-stop">
+        ■ STOP
+      </button>
+    </div>
+
+    <!-- SELETOR A/B UNIFICADO (Com Crossfade analógico de 30ms) [1.1.2] -->
+    <div class="ab-toggle-console">
+
+      <button class="ab-btn"
+              [class.active]="audioComparison.activeVariant() === 'original'"
+              (click)="alternarAudicao('original')">
+        {{ lang.tr().ORIGINAL_LABEL }}
       </button>
 
-      <div class="switch" (click)="alternarModo(modoAudicao === 'original' ? 'master' : 'original')">
-        <div class="slider" [class.on]="modoAudicao === 'master'"></div>
+      <div class="switch" (click)="alternarAudicao(audioComparison.activeVariant() === 'original' ? 'master' : 'original')">
+        <div class="slider" [class.on]="audioComparison.activeVariant() === 'master'"></div>
       </div>
 
-      <button class="toggle-btn"
-              [class.active]="modoAudicao === 'master'"
-              [disabled]="!masteredAudioUrl"
-              (click)="alternarModo('master')">
-        {{ lang.t().MASTER }}
+      <button class="ab-btn"
+              [class.active]="audioComparison.activeVariant() === 'master'"
+              [disabled]="!audioComparison.canUseMaster()"
+              (click)="alternarAudicao('master')">
+        {{ lang.tr().MASTER_LABEL }} 🔒
+        <span *ngIf="!audioComparison.canUseMaster()" class="tooltip-lock">
+          {{ lang.tr().AB_PREVIEW_LOCK_NOTE }}
+        </span>
       </button>
     </div>
 
@@ -41,7 +87,7 @@
 
   <hr class="cyber-divider">
 
-  <!-- Controles de Engenharia -->
+  <!-- CONTROLES DE ENGENHARIA ACÚSTICA (Perfis e Intensidades) -->
   <div class="controls-section">
     <!-- Bloco 1: Perfil Acústico -->
     <div class="control-group">
@@ -79,53 +125,28 @@
     </div>
   </div>
 
-  <!-- 🟢 BADGE DO CONSUMO DO PLANO (Estilo Telemetria de Transmissão RQS) [1] -->
-  <div class="plan-usage-badge" style="margin-top: 20px; padding: 12px; background: rgba(0, 240, 255, 0.02); border: 1px dashed rgba(0, 240, 255, 0.15); border-radius: 8px; font-family: monospace; font-size: 11px; text-align: center; line-height: 1.4;">
-
-  <!-- CASO 1: Usuário é PRO -->
-  <span *ngIf="auth.isPremium()" style="color: #00ff88; font-weight: bold; text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);">
-    💎 {{ lang.t().PRO_USAGE_LABEL || 'CONEXÃO PREMIUM: RQS PRO UNLIMITED' }}
-  </span>
-
-  <!-- CASO 2: Usuário está logado e é um usuário Free normal -->
-  <span *ngIf="!auth.isPremium() && auth.session()" style="color: #8b949e;">
-    ⚡ {{ lang.t().FREE_USAGE_LABEL || 'Cota Mensal da Conta' }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong> restantes
-  </span>
-
-  <!-- CASO 3: Usuário está deslogado (Visitante Anônimo) -->
-  <div *ngIf="!auth.session()" style="display: flex; flex-direction: column; gap: 6px;">
-    <span style="color: #ffaa00; font-weight: bold;">
-      👤 MODO VISITANTE (ANÔNIMO): <strong style="color: #ffaa00;">{{ auth.remainingMasters() }} / 3</strong> masterizações restantes
+  <!-- BADGE DO PLANO -->
+  <div class="plan-usage-badge">
+    <span *ngIf="!auth.isPremium()">
+      ⚡ {{ lang.t().FREE_USAGE_LABEL }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong>
     </span>
-    <span style="color: #8b949e; font-size: 10px; line-height: 1.3;">
-      Faça login gratuito com Google ou GitHub no topo da página para salvar as suas músicas masterizadas na sua conta!
+    <span *ngIf="auth.isPremium()" class="pro-badge">
+      💎 {{ lang.t().PRO_USAGE_LABEL }}
     </span>
   </div>
 
-</div>
-
-  <!-- 🟢 BANNER DE UPGRADE DINÂMICO (Exibe apenas quando a cota gratuita zerar e não for Premium) -->
-  <div *ngIf="!auth.isPremium() && auth.remainingMasters() === 0" class="pro-upgrade-banner" style="margin-top: 15px; padding: 15px; background: rgba(255, 0, 85, 0.04); border: 1px solid rgba(255, 0, 85, 0.25); border-radius: 8px; text-align: center; font-family: monospace; animation: pulseBorder 2s infinite alternate;">
-    <p style="color: #ff0055; font-weight: bold; font-size: 12px; margin: 0 0 8px 0; letter-spacing: 1px;">⚠️ LIMITE OPERACIONAL ALCANÇADO</p>
-    <p style="color: #c9d1d9; font-size: 11px; margin: 0 0 15px 0; line-height: 1.4;">
-      Cadastre-se e mude para o plano Pro e tenha masterizações ilimitadas por apenas R$ 49,90 ou 10 dólares!
-    </p>
-    <!-- Cole aqui o Link de Pagamento da Stripe que você criou -->
-    <a href="https://buy.stripe.com/test_aFa00bdzW3Qmgt9dT7djO00" target="_blank" class="btn-upgrade" rel="noopener noreferrer" style="display: inline-block; padding: 8px 16px; background: #ff0055; color: #fff; font-weight: bold; font-size: 11px; border-radius: 6px; text-decoration: none; box-shadow: 0 0 10px rgba(255, 0, 85, 0.4); transition: transform 0.2s;">
-      ⚡ ADQUIRIR PLANO PRO UNLIMITED
-    </a>
-  </div>
-
-  <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 20px;">
-    <!-- O preview de 15s está SEMPRE liberado para todos! -->
-    <button class="btn-secondary" (click)="dispararPreview()" [disabled]="isProcessing">
-      {{ isProcessing ? lang.t().ANALYZING : lang.t().HEAR_TEST }}
+  <!-- BOTÕES DE AÇÃO REATIVOS -->
+  <div class="action-buttons">
+    <button
+      class="btn-secondary"
+      (click)="dispararPreview()"
+      [disabled]="isProcessing || audioComparison.previewStatus() === 'processing'">
+      {{ audioComparison.previewStatus() === 'processing' ? lang.tr().AB_PREVIEW_GENERATING : lang.tr().BTN_GENERATE_PREVIEW }}
     </button>
 
-    <!-- O botão de master completa fica desativado se as 3 gratuitas acabarem e o usuário for Free -->
     <button
       class="btn-process"
-      (click)="dispararProcessamento()"
+      (click)="dispararProcessamentoCompleto()"
       [disabled]="isProcessing || (!auth.canMaster())">
       {{ isProcessing ? lang.t().PROCESSING_ACUSTICO : lang.t().MASTER_FULL }}
     </button>

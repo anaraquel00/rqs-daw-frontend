@@ -19,7 +19,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
 
   // Referência para rolar o terminal de logs automaticamente para o final
   @ViewChild('terminalBody') private terminalScrollContainer!: ElementRef;
-
+  isFullMasterCompleted = false;
   readonly lang = inject(LanguageService);
   readonly auth = inject(AuthService);
 
@@ -202,6 +202,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         this.processedAudioUrl = response.downloadUrl;
         this.processedAudioName = response.fileName;
 
+        this.isFullMasterCompleted = true;
+
         const a = document.createElement('a');
         a.href = response.downloadUrl;
         a.download = response.fileName;
@@ -236,7 +238,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.s3Key = null;
     this.isProcessing = false;
     this.systemLogs = [];
-
+    this.isFullMasterCompleted = false;
     console.log('[ALFA CORE] Deck limpo.');
   }
 

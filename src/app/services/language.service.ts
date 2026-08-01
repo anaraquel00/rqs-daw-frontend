@@ -144,15 +144,15 @@ export const EN_DICT: typeof PT_DICT = {
   FREE_USAGE_LABEL: "Free masterings remaining",
   PRO_USAGE_LABEL: "Plan: RQS PRO (Unlimited)",
 
-FOOTER_TAGLINE: "Acoustic intelligence and DSP engineering reactor for electronic and industrial music.",
-FOOTER_TELEMETRY: "MAINFRAME TELEMETRY",
-FOOTER_NODE: "Network Node",
-FOOTER_COMPLIANCE: "Compliance",
-FOOTER_TERMS: "Terms of Service",
-FOOTER_PRIVACY: "Privacy Policy",
-FOOTER_SA_EAST: "São Paulo (sa-east-1) - Ultra-Low Latency",
-FOOTER_EBU_R128: "EBU R128 & Apple ADM Compliant",
-FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. All rights reserved."
+  FOOTER_TAGLINE: "Acoustic intelligence and DSP engineering reactor for electronic and industrial music.",
+  FOOTER_TELEMETRY: "MAINFRAME TELEMETRY",
+  FOOTER_NODE: "Network Node",
+  FOOTER_COMPLIANCE: "Compliance",
+  FOOTER_TERMS: "Terms of Service",
+  FOOTER_PRIVACY: "Privacy Policy",
+  FOOTER_SA_EAST: "São Paulo (sa-east-1) - Ultra-Low Latency",
+  FOOTER_EBU_R128: "EBU R128 & Apple ADM Compliant",
+  FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. All rights reserved."
 
  };
 
@@ -174,7 +174,15 @@ export const PT_TRANSLATIONS = {
 
   PRICE_TITLE: "MASTERIZAÇÃO ILIMITADA. PREÇO DE IMPULSO.",
   PRICE_DESC: "Esqueça as assinaturas abusivas em dólar. Assine o plano RQS PRO por apenas R$ 39,90/mês e libere masterizações WAV ilimitadas e acesso total ao emulador MIDI.",
-  PRICE_CTA: "[ 💎 ADQUIRIR ACESSO RQS PRO ]"
+  PRICE_CTA: "[ 💎 ADQUIRIR ACESSO RQS PRO ]",
+
+  AB_PREVIEW_LOCK_NOTE: "Gere uma prévia de 15s para habilitar a comparação A/B.",
+  AB_PREVIEW_GENERATING: "GERANDO PRÉVIA DA VERSÃO MASTER...",
+  BTN_GENERATE_PREVIEW: "[ ⚡ GERAR PRÉVIA DE 15 SEGUNDOS ]",
+  VOLUME_MATCH: "Correspondência de Volume",
+  ORIGINAL_LABEL: "A - ORIGINAL",
+  MASTER_LABEL: "B - MASTER PREVIEW",
+  FULL_MASTER_COMPLETED_ALERT: "💎 MASTERIZAÇÃO COMPLETA CONCLUÍDA! (CLIQUE EM DOWNLOAD ÁUDIO PARA LIBERAR O DECK)"
 };
 
 // Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
@@ -195,7 +203,16 @@ export const EN_TRANSLATIONS = {
 
   PRICE_TITLE: "UNLIMITED MASTERING. IMPULSE PRICING.",
   PRICE_DESC: "Forget expensive USD subscriptions. Get the RQS PRO plan for just $8.00/mo to unlock unlimited WAV downloads and full MIDI support.",
-  PRICE_CTA: "[ 💎 UPGRADE TO RQS PRO ]"
+  PRICE_CTA: "[ 💎 UPGRADE TO RQS PRO ]",
+
+  AB_PREVIEW_LOCK_NOTE: "Gere uma prévia de 15s para habilitar a comparação A/B.",
+  AB_PREVIEW_GENERATING: "GERANDO PRÉVIA DA VERSÃO MASTER...",
+  BTN_GENERATE_PREVIEW: "[ ⚡ GERAR PRÉVIA DE 15 SEGUNDOS ]",
+  VOLUME_MATCH: "Correspondência de Volume",
+  ORIGINAL_LABEL: "A - ORIGINAL",
+  MASTER_LABEL: "B - MASTER PREVIEW",
+  FULL_MASTER_COMPLETED_ALERT: "💎 FULL MASTER COMPLETED! (CLICK DOWNLOAD AUDIO TO RELEASE THE DECK)"
+
 };
 
 @Injectable({
