@@ -169,7 +169,7 @@ export const PT_TRANSLATIONS = {
   STEMS_TITLE: "SETLIST ENGINE & SEPARADOR DE STEMS",
   STEMS_DESC: "Extraia vocais, baterias e sintetizadores em arquivos WAV separados. Unifique o volume médio de um álbum inteiro sob a norma EBU R128 automaticamente.",
 
-  MIXLAB_TITLE: "RQS MIXLAB: EMULADOR PIONEER DDJ-GRV6",
+  MIXLAB_TITLE: "RQS MIXLAB: SIMULADOR DE DJ PROFISSIONAL",
   MIXLAB_DESC: "Acesse um emulador de DJ completo no seu navegador. Conecte sua controladora MIDI e grave seus mixsets em alta fidelidade com feedback de IA em tempo real.",
 
   PRICE_TITLE: "MASTERIZAÇÃO ILIMITADA. PREÇO DE IMPULSO.",
@@ -190,7 +190,7 @@ export const EN_TRANSLATIONS = {
   STEMS_TITLE: "SETLIST ENGINE & STEMS SPLITTER",
   STEMS_DESC: "Extract vocals, drums, and synths into high-res WAV files. Batch-normalize album loudness under the international EBU R128 broadcast standard automatically.",
 
-  MIXLAB_TITLE: "RQS MIXLAB: PIONEER DDJ-GRV6 EMULATOR",
+  MIXLAB_TITLE: "RQS MIXLAB: PROFESSIONAL DJ SIMULATOR",
   MIXLAB_DESC: "Access a complete DJ emulator in your browser. Connect your MIDI hardware and record high-fidelity mixsets with real-time AI performance metrics.",
 
   PRICE_TITLE: "UNLIMITED MASTERING. IMPULSE PRICING.",
