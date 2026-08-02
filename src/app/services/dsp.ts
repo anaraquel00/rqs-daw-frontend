@@ -81,12 +81,11 @@ export class DspService {
   }
   // No seu dsp.service.ts:
 
-// 1. Solicita a URL pré-assinada de upload
-getPresignedUrl(filename: string): Observable<any> {
-  return this.http.get(`${this.baseUrl}/mastering/presigned-url`, {
-    params: { filename }
-  });
-}
+ getPresignedUrl(filename: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/mastering/presigned-url`, {
+      params: { filename }
+    });
+  }
 
 // No seu dsp.service.ts:
 uploadToS3(uploadUrl: string, file: File): Observable<any> {
