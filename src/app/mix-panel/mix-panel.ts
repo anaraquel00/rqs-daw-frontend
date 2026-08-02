@@ -3,7 +3,7 @@ import { Component, inject, OnDestroy, DestroyRef, signal } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DspService } from '../services/dsp';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common'; // 🟢 Adicionado para o ngStyle e diretivas estruturais
+import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { LanguageService } from '../services/language.service';
 import { AuthService } from '../services/auth.service';
@@ -25,7 +25,7 @@ export type LoudnessMatchMode = 'off' | 'perceived' | 'normalize';
 @Component({
   selector: 'app-mix-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule], // 🟢 Adicionado CommonModule
+  imports: [CommonModule, FormsModule],
   templateUrl: './mix-panel.html',
   styleUrls: ['./mix-panel.scss']
 })
@@ -87,10 +87,6 @@ export class MixPanelComponent implements OnDestroy {
     this.gainNode2.connect(this.audioCtx.destination);
   }
 
-  atualizarCrossoverVisivel() {
-  this.tracks = [...this.tracks];
-}
-
   onDragOver(event: DragEvent) {
     event.preventDefault();
     event.stopPropagation();
@@ -111,47 +107,45 @@ export class MixPanelComponent implements OnDestroy {
     }
   }
 
-  // No seu mix-panel.ts, atualize o método addFiles e crie o método de upload:
-
   private addFiles(newFiles: File[]) {
     const validFiles = newFiles.filter(f => f.name.endsWith('.wav') || f.name.endsWith('.mp3'));
 
     validFiles.forEach(f => {
       const url = URL.createObjectURL(f);
+
+      const track: RQSTrack = {
+        file: f,
+        name: f.name,
+        crossfadeNext: 8.0,
+        rawUrl: url,
+        previewUrl: this.sanitizer.bypassSecurityTrustUrl(url),
+        duration: 240,
+        s3Key: null,
+        isUploadingS3: false
+      };
+
+      this.tracks.push(track);
+      this.uploadFaixaParaS3Silencioso(track);
+
       const tempAudio = new Audio(url);
-
       tempAudio.addEventListener('loadedmetadata', () => {
-        const track: RQSTrack = {
-          file: f,
-          name: f.name,
-          crossfadeNext: 8.0,
-          rawUrl: url,
-          previewUrl: this.sanitizer.bypassSecurityTrustUrl(url),
-          duration: tempAudio.duration || 240,
-          s3Key: null,            // 🟢 Inicia nulo
-          isUploadingS3: false    // 🟢 Inicia falso
-        };
-
-        this.tracks.push(track);
-
-        // 🟢 INICIA O UPLOAD SILENCIOSO DIRETO PARA O S3 BUNKER! [1.1.2]
-        this.uploadFaixaParaS3Silencioso(track);
+        track.duration = tempAudio.duration || 240;
+        this.atualizarCrossoverVisivel();
       });
+      tempAudio.load();
     });
   }
 
-  // 🟢 ENGENHARIA DE UPLOAD EM LOTE: Envia cada track de forma independente e assíncrona
   private uploadFaixaParaS3Silencioso(track: RQSTrack) {
     track.isUploadingS3 = true;
     console.log(`[RQS SETLIST] Iniciando handshake S3 para a faixa: ${track.name}`);
 
     this.dspService.getPresignedUrl(track.file.name).subscribe({
       next: (s3Response) => {
-        // Envia o arquivo de 100MB direto ao S3, bypassando o limite de 6MB da Lambda [1.1.2]
         this.dspService.uploadToS3(s3Response.uploadUrl, track.file).subscribe({
           next: () => {
             track.isUploadingS3 = false;
-            track.s3Key = s3Response.s3Key; // Vincula a chave gerada pelo S3 ao card da música [1.1.2]
+            track.s3Key = s3Response.s3Key;
             console.log(`[RQS SETLIST] Faixa persistida com sucesso no S3. Chave: ${s3Response.s3Key}`);
           },
           error: (err) => {
@@ -167,12 +161,10 @@ export class MixPanelComponent implements OnDestroy {
     });
   }
 
-  // 🟢 RETORNA UM ARRAY ESTÁTICO DE 80 ELEMENTOS PARA RENDERIZAR OS SLITS DE FORMA DE ONDA [1.1.2]
   getWaveformBarArray(): number[] {
     return Array(80).fill(0);
   }
 
-  // 🟢 GERADOR DE PEAKS DETERMINÍSTICO COM BASE NO HASH DO NOME DO ARQUIVO [1.1.2]
   getCachedPeaks(trackName: string): number[] {
     if (this.peakCache.has(trackName)) {
       return this.peakCache.get(trackName)!;
@@ -184,11 +176,10 @@ export class MixPanelComponent implements OnDestroy {
       hash = trackName.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    // Gera 80 barras com alturas variadas simulando uma onda de áudio real
     for (let i = 0; i < 80; i++) {
       const seed = Math.sin(hash + i) * 10000;
       const r = seed - Math.floor(seed);
-      const baseHeight = 15 + Math.floor(r * 80); // Alturas entre 15% e 95%
+      const baseHeight = 15 + Math.floor(r * 80);
       peaks.push(baseHeight);
     }
 
@@ -196,7 +187,6 @@ export class MixPanelComponent implements OnDestroy {
     return peaks;
   }
 
-  // 🟢 CÁLCULO DE OPACIDADE E BRILHO DAS BARRAS COM BASE NO CONTROLE DE CROSSFADE [1.1.2]
   getWaveformBarStyles(trackIndex: number, barIndex: number, totalBars: number = 80): { [key: string]: string } {
     const track = this.tracks[trackIndex];
     const duration = track.duration || 240;
@@ -204,7 +194,6 @@ export class MixPanelComponent implements OnDestroy {
 
     let opacity = 1.0;
 
-    // 1. Desvanecimento de Entrada (Fade-In): Baseado no crossfade da faixa anterior
     if (trackIndex > 0) {
       const prevTrack = this.tracks[trackIndex - 1];
       const prevCrossfade = prevTrack.crossfadeNext;
@@ -212,11 +201,10 @@ export class MixPanelComponent implements OnDestroy {
       const fadeInBars = totalBars * fadeInPercent;
 
       if (barIndex < fadeInBars) {
-        opacity = barIndex / fadeInBars; // Escurece as barras iniciais de forma gradual
+        opacity = barIndex / fadeInBars;
       }
     }
 
-    // 2. Desvanecimento de Saída (Fade-Out): Baseado no crossfade desta faixa para a próxima
     if (trackIndex < this.tracks.length - 1) {
       const crossfade = track.crossfadeNext;
       const fadeOutPercent = crossfade / duration;
@@ -224,16 +212,15 @@ export class MixPanelComponent implements OnDestroy {
       const fadeOutStartBar = totalBars - fadeOutBars;
 
       if (barIndex >= fadeOutStartBar) {
-        opacity = (totalBars - barIndex) / fadeOutBars; // Escurece as barras finais de forma gradual
+        opacity = (totalBars - barIndex) / fadeOutBars;
       }
     }
 
-    // Cores estéticas contrastantes do mix-panel (Ciano / Rosa)
     const color = trackIndex % 2 === 0 ? '0, 240, 255' : '255, 0, 85';
 
     return {
       'height': `${peak}%`,
-      'background-color': `rgba(${color}, ${0.15 + (opacity * 0.65)})`, // Diminui o canal Alpha na borda
+      'background-color': `rgba(${color}, ${0.15 + (opacity * 0.65)})`,
       'box-shadow': opacity > 0.4 ? `0 0 4px rgba(${color}, ${opacity * 0.15})` : 'none'
     };
   }
@@ -391,39 +378,28 @@ export class MixPanelComponent implements OnDestroy {
     this.pararPreviewDeTransicao();
   }
 
-// No seu mix-panel.ts, atualize o método igniteSetlist():
-
   igniteSetlist() {
     if (this.tracks.length < 2) return;
-
-    // Garante que todas as faixas já completaram o upload em background antes de iniciar a mixagem
-    const temUploadPendente = this.tracks.some(t => t.isUploadingS3 || !t.s3Key);
-    if (temUploadPendente) {
-      alert("Aguarde a sincronização de todas as faixas com o bunker S3 antes de renderizar a setlist.");
-      return;
-    }
 
     this.isProcessing = true;
     this.mixSuccess = false;
     this.pararPreviewDeTransicao();
 
-    // Extrai apenas as chaves do S3 e os tempos de crossfade [1.1.2]
-    const s3KeysArray = this.tracks.map(t => t.s3Key!);
     const crossfadesArray = this.tracks.slice(0, -1).map(track => {
       return track.crossfadeNext !== undefined ? track.crossfadeNext : 8.0;
     });
 
-    // 🟢 MONTA O PAYLOAD MINÚSCULO DE APENAS 1 KB! [1.1.2]
+    const s3KeysArray = this.tracks.map(t => t.s3Key!);
+
     const payload = {
-      s3Keys: s3KeysArray,          // Ex: ["uploads/123_track1.wav", "uploads/456_track2.wav"]
-      crossfades: crossfadesArray,  // Ex: [8.0]
-      curva: this.activeCurve,      // Ex: "equal-power"
+      s3Keys: s3KeysArray,
+      crossfades: crossfadesArray,
+      curva: this.activeCurve,
       loudness: this.loudnessMatchMode,
       exportName: this.setlistName
     };
 
-    // Dispara a requisição limpa para a Lambda
-    this.dspService.generateMixS3(payload) // Crie essa chamada leve no seu dspService!
+    this.dspService.generateMixS3(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response: any) => {
@@ -432,7 +408,6 @@ export class MixPanelComponent implements OnDestroy {
 
           const safeName = this.setlistName.trim().replace(/[^a-zA-Z0-9_-]/g, '_') || 'RQS_SETLIST_MASTER';
 
-          // Faz o download do WAV contínuo processado gerado pela Lambda [1.1.2]
           const a = document.createElement('a');
           a.href = response.downloadUrl;
           a.download = `${safeName}.wav`;
@@ -449,11 +424,17 @@ export class MixPanelComponent implements OnDestroy {
       });
   }
 
+  // 🟢 MÉTODO 1: FORMATAR TEMPO (GARANTIDO DENTRO DA CLASSE!) [1.1.2]
   formatarTempo(segundos: number): string {
     if (isNaN(segundos) || segundos < 0) return '00:00';
     const mins = Math.floor(segundos / 60);
     const secs = Math.floor(segundos % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // 🟢 MÉTODO 2: ATUALIZAR CROSSOVER VISIVEL (GARANTIDO DENTRO DA CLASSE!) [1.1.2]
+  atualizarCrossoverVisivel() {
+    this.tracks = [...this.tracks];
   }
 
   ngOnDestroy() {
