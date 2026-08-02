@@ -11,7 +11,6 @@ import { inject } from '@angular/core';
 export class DspService {
 
   private baseUrl = environment.baseUrl;
-  private readonly apiUrl = 'https://m2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws';
 
   constructor(private http: HttpClient) { }
 
@@ -23,7 +22,7 @@ export class DspService {
     exportName: string;
   }): Observable<{ success: boolean; downloadUrl: string; }> {
 
-    const endpoint = `${this.apiUrl}/mix/generate-s3`;
+    const endpoint = `${this.baseUrl}/mix/generate-s3`;
 
     // Dispara a requisição HTTP POST enviando o JSON leve de apenas 1 KB [1.1.2]
     return this.http.post<{ success: boolean; downloadUrl: string; }>(endpoint, payload);
