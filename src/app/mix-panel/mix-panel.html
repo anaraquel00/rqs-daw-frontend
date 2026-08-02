@@ -126,7 +126,15 @@
             <div class="track-main-row">
               <div class="track-info">
                 <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
-                <span class="track-meta-tag">WAV 44.1 kHz · -11.4 LUFS</span>
+                 <span class="track-meta-tag" style="display: flex; align-items: center; gap: 6px;">
+                  WAV 44.1 kHz ·
+                  <span *ngIf="track.isUploadingS3" style="color: #ffaa00; font-family: monospace;" class="blink-block">
+                    {{ lang.tr().SYNCING_WITH_S3_BUNKER }}
+                  </span>
+                  <span *ngIf="!track.isUploadingS3 && track.s3Key" style="color: #00ff88; font-family: monospace;">
+                    {{ lang.tr().PROTECTED_IN_BUNKER }}
+                  </span>
+                </span>
               </div>
               <div class="controls">
                 <button (click)="moveUp(i)" [disabled]="i === 0">🔼</button>

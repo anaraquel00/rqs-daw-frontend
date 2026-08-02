@@ -15,6 +15,8 @@ export interface RQSTrack {
   previewUrl: SafeUrl;
   rawUrl: string;
   duration: number;
+  s3Key: string | null;
+  isUploadingS3: boolean;
 }
 
 export type CrossfadeCurve = 'linear' | 'equal-power' | 'fast-cut';
@@ -109,6 +111,8 @@ export class MixPanelComponent implements OnDestroy {
     }
   }
 
+  // No seu mix-panel.ts, atualize o método addFiles e crie o método de upload:
+
   private addFiles(newFiles: File[]) {
     const validFiles = newFiles.filter(f => f.name.endsWith('.wav') || f.name.endsWith('.mp3'));
 
@@ -123,10 +127,43 @@ export class MixPanelComponent implements OnDestroy {
           crossfadeNext: 8.0,
           rawUrl: url,
           previewUrl: this.sanitizer.bypassSecurityTrustUrl(url),
-          duration: tempAudio.duration || 240
+          duration: tempAudio.duration || 240,
+          s3Key: null,            // 🟢 Inicia nulo
+          isUploadingS3: false    // 🟢 Inicia falso
         };
+
         this.tracks.push(track);
+
+        // 🟢 INICIA O UPLOAD SILENCIOSO DIRETO PARA O S3 BUNKER! [1.1.2]
+        this.uploadFaixaParaS3Silencioso(track);
       });
+    });
+  }
+
+  // 🟢 ENGENHARIA DE UPLOAD EM LOTE: Envia cada track de forma independente e assíncrona
+  private uploadFaixaParaS3Silencioso(track: RQSTrack) {
+    track.isUploadingS3 = true;
+    console.log(`[RQS SETLIST] Iniciando handshake S3 para a faixa: ${track.name}`);
+
+    this.dspService.getPresignedUrl(track.file.name).subscribe({
+      next: (s3Response) => {
+        // Envia o arquivo de 100MB direto ao S3, bypassando o limite de 6MB da Lambda [1.1.2]
+        this.dspService.uploadToS3(s3Response.uploadUrl, track.file).subscribe({
+          next: () => {
+            track.isUploadingS3 = false;
+            track.s3Key = s3Response.s3Key; // Vincula a chave gerada pelo S3 ao card da música [1.1.2]
+            console.log(`[RQS SETLIST] Faixa persistida com sucesso no S3. Chave: ${s3Response.s3Key}`);
+          },
+          error: (err) => {
+            track.isUploadingS3 = false;
+            console.error(`[CRITICAL] Falha ao enviar bytes de ${track.name} para o bunker S3.`);
+          }
+        });
+      },
+      error: (err) => {
+        track.isUploadingS3 = false;
+        console.error(`[CRITICAL] Gateway do S3 rejeitou a pré-assinatura de URL para ${track.name}`);
+      }
     });
   }
 
@@ -354,34 +391,54 @@ export class MixPanelComponent implements OnDestroy {
     this.pararPreviewDeTransicao();
   }
 
+// No seu mix-panel.ts, atualize o método igniteSetlist():
+
   igniteSetlist() {
     if (this.tracks.length < 2) return;
+
+    // Garante que todas as faixas já completaram o upload em background antes de iniciar a mixagem
+    const temUploadPendente = this.tracks.some(t => t.isUploadingS3 || !t.s3Key);
+    if (temUploadPendente) {
+      alert("Aguarde a sincronização de todas as faixas com o bunker S3 antes de renderizar a setlist.");
+      return;
+    }
 
     this.isProcessing = true;
     this.mixSuccess = false;
     this.pararPreviewDeTransicao();
 
+    // Extrai apenas as chaves do S3 e os tempos de crossfade [1.1.2]
+    const s3KeysArray = this.tracks.map(t => t.s3Key!);
     const crossfadesArray = this.tracks.slice(0, -1).map(track => {
       return track.crossfadeNext !== undefined ? track.crossfadeNext : 8.0;
     });
 
-    const fileArray = this.tracks.map(t => t.file);
+    // 🟢 MONTA O PAYLOAD MINÚSCULO DE APENAS 1 KB! [1.1.2]
+    const payload = {
+      s3Keys: s3KeysArray,          // Ex: ["uploads/123_track1.wav", "uploads/456_track2.wav"]
+      crossfades: crossfadesArray,  // Ex: [8.0]
+      curva: this.activeCurve,      // Ex: "equal-power"
+      loudness: this.loudnessMatchMode,
+      exportName: this.setlistName
+    };
 
-    this.dspService.generateMix(fileArray, crossfadesArray)
+    // Dispara a requisição limpa para a Lambda
+    this.dspService.generateMixS3(payload) // Crie essa chamada leve no seu dspService!
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (blob: Blob) => {
+        next: (response: any) => {
           this.isProcessing = false;
           this.mixSuccess = true;
 
           const safeName = this.setlistName.trim().replace(/[^a-zA-Z0-9_-]/g, '_') || 'RQS_SETLIST_MASTER';
 
-          const url = window.URL.createObjectURL(blob);
+          // Faz o download do WAV contínuo processado gerado pela Lambda [1.1.2]
           const a = document.createElement('a');
-          a.href = url;
+          a.href = response.downloadUrl;
           a.download = `${safeName}.wav`;
+          document.body.appendChild(a);
           a.click();
-          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
 
           setTimeout(() => this.mixSuccess = false, 5000);
         },

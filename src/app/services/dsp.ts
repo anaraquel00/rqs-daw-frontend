@@ -2,14 +2,32 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { CrossfadeCurve, LoudnessMatchMode } from '../mix-panel/mix-panel';
+import { inject } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DspService {
+
   private baseUrl = environment.baseUrl;
+  private readonly apiUrl = 'https://m2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws';
 
   constructor(private http: HttpClient) { }
+
+  generateMixS3(payload: {
+    s3Keys: string[];
+    crossfades: number[];
+    curva: string;
+    loudness: string;
+    exportName: string;
+  }): Observable<{ success: boolean; downloadUrl: string; }> {
+
+    const endpoint = `${this.apiUrl}/mix/generate-s3`;
+
+    // Dispara a requisição HTTP POST enviando o JSON leve de apenas 1 KB [1.1.2]
+    return this.http.post<{ success: boolean; downloadUrl: string; }>(endpoint, payload);
+  }
 
   // 1. Dispara para o motor de Masterização (Módulo Alfa - Em lote ou final)
   masterizeTrack(formData: FormData): Observable<any> {

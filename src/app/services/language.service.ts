@@ -173,7 +173,7 @@ export const PT_TRANSLATIONS = {
   MIXLAB_DESC: "Acesse um emulador de DJ completo no seu navegador. Conecte sua controladora MIDI e grave seus mixsets em alta fidelidade com feedback de IA em tempo real.",
 
   PRICE_TITLE: "MASTERIZAÇÃO ILIMITADA. PREÇO DE IMPULSO.",
-  PRICE_DESC: "Esqueça as assinaturas abusivas em dólar. Assine o plano RQS PRO por apenas R$ 39,90/mês e libere masterizações WAV ilimitadas e acesso total ao emulador MIDI.",
+  PRICE_DESC: "Esqueça as assinaturas abusivas em dólar. Assine o plano RQS PRO por apenas R$ 49,90/mês e libere masterizações WAV ilimitadas e acesso total ao emulador MIDI.",
   PRICE_CTA: "[ 💎 ADQUIRIR ACESSO RQS PRO ]",
 
   AB_PREVIEW_LOCK_NOTE: "Gere uma prévia de 15s para habilitar a comparação A/B.",
@@ -221,9 +221,10 @@ export const PT_TRANSLATIONS = {
   IGNITE_ACTIVE: "RQS_DEPLOY_ATIVO...",
   IGNITE_LIMIT_ALERT: "🔒 APENAS PLANO PRO (>3 FAIXAS)",
   IGNITE_IDLE: "🔥 RENDER & DEPLOY SETLIST",
-  SETLIST_HELPER_NOTE: "Gera um único arquivo contínuo WAV com todas as transições e curvas configuradas."
+  SETLIST_HELPER_NOTE: "Gera um único arquivo contínuo WAV com todas as transições e curvas configuradas.",
 
-
+  SYNCING_WITH_S3_BUNKER: "SINCRONIZANDO COM O BUNKER...",
+  PROTECTED_IN_BUNKER: "PROTEGIDO NO BUNKER"
 };
 
 // Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
@@ -243,7 +244,7 @@ export const EN_TRANSLATIONS = {
   MIXLAB_DESC: "Access a complete DJ emulator in your browser. Connect your MIDI hardware and record high-fidelity mixsets with real-time AI performance metrics.",
 
   PRICE_TITLE: "UNLIMITED MASTERING. IMPULSE PRICING.",
-  PRICE_DESC: "Forget expensive USD subscriptions. Get the RQS PRO plan for just $8.00/mo to unlock unlimited WAV downloads and full MIDI support.",
+  PRICE_DESC: "Forget expensive USD subscriptions. Get the RQS PRO plan for just $9.90/mo to unlock unlimited WAV downloads and full MIDI support.",
   PRICE_CTA: "[ 💎 UPGRADE TO RQS PRO ]",
 
     AB_PREVIEW_LOCK_NOTE: "Generate a 15s preview to enable A/B comparison.",
@@ -291,7 +292,10 @@ export const EN_TRANSLATIONS = {
   IGNITE_ACTIVE: "RQS_DEPLOY_ACTIVE...",
   IGNITE_LIMIT_ALERT: "🔒 PRO PLAN ONLY (>3 TRACKS)",
   IGNITE_IDLE: "🔥 RENDER & DEPLOY SETLIST",
-  SETLIST_HELPER_NOTE: "Creates one continuous WAV file with all configured transitions and curves."
+  SETLIST_HELPER_NOTE: "Creates one continuous WAV file with all configured transitions and curves.",
+
+  SYNCING_WITH_S3_BUNKER: "SYNCING WITH BUNKER...",
+  PROTECTED_IN_BUNKER: "PROTECTED IN BUNKER"
 
 };
 
