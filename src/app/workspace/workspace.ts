@@ -35,7 +35,7 @@ import { LanguageService } from '../services/language.service';
           <!-- Sessão de Login (Supabase Auth) [1] -->
           <div class="user-session">
             @if (!auth.session()) {
-              <div class="auth-helper-container" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-right: 12px;">
+              <div class="auth-helper-container" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-right: 10px;">
                 <span style="font-size: 9px; font-family: monospace; color: #8b949e; letter-spacing: 0.5px;">SALVAR HISTÓRICO & EXPORTAR WAV:</span>
                 <div class="auth-buttons">
                   <button (click)="auth.loginWithProvider('github')" class="btn-auth github">🐈 GITHUB</button>
@@ -65,7 +65,7 @@ import { LanguageService } from '../services/language.service';
       </header>
 
       <!-- 🎛️ A GRADE DE ENGENHARIA PRINCIPAL DA WORKSTATION (Lado a lado) -->
-      <div class="workspace-grid" style="margin-bottom: 30px;">
+      <div class="workspace-grid" style="margin-bottom: 25px;">
          <app-upload-zone></app-upload-zone>
          <app-mix-panel></app-mix-panel>
       </div>
@@ -79,10 +79,13 @@ import { LanguageService } from '../services/language.service';
       display: grid;
       grid-template-columns: 1fr;
       gap: 20px;
+      width: 100%;
+      max-width: 95%; /* 🟢 AJUSTE: Expande a workstation para ocupar todo o desktop, eliminando os espaços vazios nas laterais */
     }
-    @media (min-width: 900px) {
+    @media (min-width: 768px) {
       .workspace-grid {
-        grid-template-columns: 1fr 1fr; /* Lado a lado em telas grandes */
+        grid-template-columns: 1fr 1fr; /* Divide a tela em duas metades exatas de 50% */
+        gap: 24px; /* 🟢 AJUSTE: Mantém uma proximidade e separação confortável de apenas 24px entre os dois módulos no centro */
       }
     }
   `]
