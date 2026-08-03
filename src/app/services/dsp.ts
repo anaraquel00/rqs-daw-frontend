@@ -87,11 +87,20 @@ export class DspService {
   });
 }
 
-// No seu dsp.service.ts:
-uploadToS3(uploadUrl: string, file: File): Observable<any> {
-  // 🟢 CORREÇÃO CRÍTICA S3: Envia o Content-Type exato na requisição PUT [1.2.7]
+ // No seu dsp.service.ts:
+ uploadToS3(uploadUrl: string, file: File): Observable<any> {
+  const fileName = file.name.toLowerCase();
+  let contentType = 'audio/wav'; // Fallback padrão de estúdio
+
+  if (fileName.endsWith('.mp3')) {
+    contentType = 'audio/mpeg';
+  } else if (fileName.endsWith('.wav')) {
+    contentType = 'audio/wav';
+  }
+
+  // Força o cabeçalho HTTP exato que a Lambda usou para assinar a transação [1.1.2]
   return this.http.put(uploadUrl, file, {
-    headers: { 'Content-Type': file.type }
+    headers: { 'Content-Type': contentType }
   });
 }
 
