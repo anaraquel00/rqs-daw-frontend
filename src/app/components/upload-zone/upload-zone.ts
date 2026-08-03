@@ -258,28 +258,30 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.previewsCache = { thunder: '', clear_sky: '', sunroof: '', aurora: '' };
   }
 
+// No seu upload-zone.ts, atualize o método extrairStems():
+
   isExtractingStems = false;
   extrairStems() {
-    if (!this.selectedFile) return;
+    if (!this.selectedFile || !this.s3Key) return;
 
     this.isExtractingStems = true;
-    this.addLog(`Iniciando dissecação acústica de 6 canais (Demucs) para: ${this.selectedFile.name}`);
+    this.addLog(`Iniciando dissecação acústica de 6 canais (Demucs) via S3 para: ${this.selectedFile.name}`);
 
-    this.dspService.extractStems(this.selectedFile).subscribe({
-      next: (blob: Blob) => {
+    // 🟢 CORREÇÃO: Dispara a rota S3 enviando apenas a chave de texto de 1KB! [1.1.2]
+    this.dspService.extractStemsS3(this.s3Key).subscribe({
+      next: (response: any) => {
         this.isExtractingStems = false;
-        this.addLog(`Divisão multi-pista concluída com sucesso! Compactando arquivos...`);
+        this.addLog(`Divisão multi-pista concluída com sucesso! Baixando arquivo ZIP...`);
 
-        const url = window.URL.createObjectURL(blob);
+        // Executa o download direto da URL pré-assinada do S3 [1.1.2, 1.2.6]
         const a = document.createElement('a');
-        a.href = url;
+        a.href = response.downloadUrl;
         const originalName = this.selectedFile!.name.replace(/\.[^/.]+$/, "");
         a.download = `RQS_6_STEMS_${originalName}.zip`;
 
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
 
         this.addLog(`ZIP de 6 canais entregue com sucesso!`);
       },

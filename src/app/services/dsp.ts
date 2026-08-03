@@ -78,6 +78,11 @@ export class DspService {
       responseType: 'blob'
     });
   }
+
+  // 🟢 NOVA ROTA S3: Processa o isolamento de Stems enviando apenas o JSON com a chave [1.1.2]
+  extractStemsS3(s3Key: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/stems/split-s3`, { s3Key });
+  }
   // No seu dsp.service.ts:
 
 // 1. Solicita a URL pré-assinada de upload
