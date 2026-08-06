@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { LanguageService } from '../services/language.service';
 import { AuthService } from '../services/auth.service';
+import { AudioComparisonService } from '../services/audio-comparison.service';
 
 export interface RQSTrack {
   file: File;
@@ -30,6 +31,8 @@ export type LoudnessMatchMode = 'off' | 'perceived' | 'normalize';
   styleUrls: ['./mix-panel.scss']
 })
 export class MixPanelComponent implements OnDestroy {
+  private audioComparison = inject(AudioComparisonService);
+
 
   private dspService = inject(DspService);
   private sanitizer = inject(DomSanitizer);
@@ -385,6 +388,10 @@ export class MixPanelComponent implements OnDestroy {
     this.mixSuccess = false;
     this.pararPreviewDeTransicao();
 
+    const safeName = this.setlistName.trim().replace(/[^a-zA-Z0-9_-]/g, '_') || 'RQS_SETLIST_MASTER';
+    this.audioComparison.audioProcessed.set(true);
+    this.audioComparison.processedFilename.set(`${safeName}.wav`); // Now safeName is defined
+
     const crossfadesArray = this.tracks.slice(0, -1).map(track => {
       return track.crossfadeNext !== undefined ? track.crossfadeNext : 8.0;
     });
@@ -405,8 +412,6 @@ export class MixPanelComponent implements OnDestroy {
         next: (response: any) => {
           this.isProcessing = false;
           this.mixSuccess = true;
-
-          const safeName = this.setlistName.trim().replace(/[^a-zA-Z0-9_-]/g, '_') || 'RQS_SETLIST_MASTER';
 
           const a = document.createElement('a');
           a.href = response.downloadUrl;

@@ -6,13 +6,14 @@ import { UploadZoneComponent } from "../components/upload-zone/upload-zone";
 import { Footer } from '../footer/footer';
 import { AuthService } from '../services/auth.service';
 import { LanguageService } from '../services/language.service';
+import { RqsUplinkEngineComponent } from "../rqs-uplink-engine/rqs-uplink-engine";
 
 @Component({
   selector: 'app-workspace',
   standalone: true,
-  imports: [CommonModule, MixPanelComponent, UploadZoneComponent, Footer],
+  imports: [CommonModule, MixPanelComponent, UploadZoneComponent, Footer, RqsUplinkEngineComponent],
   template: `
-    <!-- 🛰️ ENVELOPE DO MAINFRAME DA DAW (Movido para cá!) [1.1.2] -->
+    <!-- 🛰️ ENVELOPE DO MAINFRAME DA DAW [1.1.2] -->
     <div class="rqs-mainframe-container" style="padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between;">
 
       <!-- 🛰️ RQS GLOBAL WORKSTATION HEADER -->
@@ -64,10 +65,18 @@ import { LanguageService } from '../services/language.service';
         </div>
       </header>
 
-      <!-- 🎛️ A GRADE DE ENGENHARIA PRINCIPAL DA WORKSTATION (Lado a lado) -->
+      <!-- 🎛️ A GRADE DE ENGENHARIA PRINCIPAL DA WORKSTATION -->
       <div class="workspace-grid" style="margin-bottom: 25px;">
+
+         <!-- Coluna da Esquerda: Core de Masterização e Processamento DSP -->
          <app-upload-zone></app-upload-zone>
-         <app-mix-panel></app-mix-panel>
+
+         <!-- 🟢 Coluna da Direita: Setlists e Marketing de Deploys Empilhados! [1.1.2] -->
+         <div class="right-workstation-column">
+           <app-mix-panel></app-mix-panel>
+           <app-uplink-engine></app-uplink-engine>
+         </div>
+
       </div>
 
       <!-- Rodapé do Studio -->
@@ -80,13 +89,22 @@ import { LanguageService } from '../services/language.service';
       grid-template-columns: 1fr;
       gap: 20px;
       width: 100%;
-      max-width: 95%; /* 🟢 AJUSTE: Expande a workstation para ocupar todo o desktop, eliminando os espaços vazios nas laterais */
+      max-width: 95%; /* Expande a workstation para ocupar todo o desktop */
     }
+
     @media (min-width: 768px) {
       .workspace-grid {
         grid-template-columns: 1fr 1fr; /* Divide a tela em duas metades exatas de 50% */
-        gap: 24px; /* 🟢 AJUSTE: Mantém uma proximidade e separação confortável de apenas 24px entre os dois módulos no centro */
+        gap: 24px; /* Separação confortável de 24px entre os dois módulos no centro */
       }
+    }
+
+    /* 🟢 NOVO: Estilização do barramento vertical da coluna da direita [1.1.2] */
+    .right-workstation-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px; /* Mantém um espaçamento vertical confortável de 20px entre o Setlist e o Uplink */
+      width: 100%;
     }
   `]
 })

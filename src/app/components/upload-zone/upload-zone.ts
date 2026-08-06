@@ -42,6 +42,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   };
 
   private dspService = inject(DspService);
+  audioComparison: any;
 
   // Auto-scroll do terminal a cada nova linha adicionada
   ngAfterViewChecked() {
@@ -203,6 +204,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         this.processedAudioName = response.fileName;
 
         this.isFullMasterCompleted = true;
+
+        this.audioComparison.audioProcessed.set(true);
+        this.audioComparison.processedFilename.set(response.fileName);
 
         const a = document.createElement('a');
         a.href = response.downloadUrl;

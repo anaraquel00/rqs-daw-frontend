@@ -11,6 +11,9 @@ export type PlaybackMode = 'full-track' | 'preview-15s'; // 🟢 NOVO: Diferenci
   providedIn: 'root'
 })
 export class AudioComparisonService implements OnDestroy {
+  readonly audioProcessed = signal<boolean>(false);
+  readonly processedFilename = signal<string>('');
+
   private platformId = inject(PLATFORM_ID);
 
   readonly activeVariant = signal<AudioVariant>('original');
