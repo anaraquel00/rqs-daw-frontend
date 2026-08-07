@@ -6,7 +6,7 @@ import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
 import { forkJoin } from 'rxjs';
 import { LanguageService } from '../../services/language.service'; // 🟢 IMPORTANTE
 import { AuthService } from '../../services/auth.service';
-
+import { AudioComparisonService } from '../../services/audio-comparison.service';
 
 @Component({
   selector: 'app-upload-zone',
@@ -22,6 +22,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   isFullMasterCompleted = false;
   readonly lang = inject(LanguageService);
   readonly auth = inject(AuthService);
+  readonly audioComparison = inject(AudioComparisonService);
+
 
   isDragging = false;
   selectedFile: File | null = null;
@@ -42,7 +44,6 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   };
 
   private dspService = inject(DspService);
-  audioComparison: any;
 
   // Auto-scroll do terminal a cada nova linha adicionada
   ngAfterViewChecked() {

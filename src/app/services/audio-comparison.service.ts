@@ -59,7 +59,9 @@ export class AudioComparisonService implements OnDestroy {
 
   private inicializarMídias() {
     this.originalAudio = new Audio();
+    this.originalAudio.crossOrigin = 'anonymous';
     this.masterAudio = new Audio();
+    this.masterAudio.crossOrigin = 'anonymous';
 
     this.originalAudio.addEventListener('durationchange', () => {
       const total = this.originalAudio.duration || 0;
