@@ -1,10 +1,12 @@
 // src/app/components/mastering-panel/mastering-panel.component.ts
+
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService, AudioVariant } from '../../services/audio-comparison.service';
+import { MasteringService } from '../../services/mastering.service';
 
 @Component({
   selector: 'app-mastering-panel',
@@ -18,23 +20,80 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
   readonly auth = inject(AuthService);
   readonly audioComparison = inject(AudioComparisonService);
 
+  // Injeta o serviço unificado de DSP [5.3]
+  private readonly masteringService = inject(MasteringService);
+
   @Input() originalFile: File | null = null;
   @Input() isProcessing = false;
   @Input() masteredAudioUrl: string | null = null;
-  @Input() isFullMaster = false; // 🟢 NOVO: Sabe se o arquivo recebido é a prévia ou a master completa! [1.1.2]
+  @Input() isFullMaster = false; // Sabe se o arquivo recebido é a prévia ou a master completa! [1.1.2]
 
-  @Output() processMaster = new EventEmitter<{estilo: string, intensidade: string, preview: boolean}>();
+  // Enriquecemos a assinatura do Output para repassar os customParams de DSP para o componente pai
+  @Output() processMaster = new EventEmitter<{
+    estilo: string,
+    intensidade: string,
+    preview: boolean,
+    customParams?: any
+  }>();
   @Output() estiloAlterado = new EventEmitter<string>();
 
   estiloSelecionado: string = 'clear_sky';
   intensidadeSelecionada: string = 'media';
   volumeMatch: boolean = true;
 
+  // --- SIGNALS VINCULADOS AO SERVIÇO DE DSP [5.3] ---
+  readonly lowCutoff = this.masteringService.lowCutoff;
+  readonly highCutoff = this.masteringService.highCutoff;
+  readonly stereoWidth = this.masteringService.stereoWidth;
+  readonly satAmount = this.masteringService.satAmount;
+  readonly monoBassHz = this.masteringService.monoBassHz;
+  readonly ceiling = this.masteringService.ceiling;
+  readonly threshold = this.masteringService.threshold;
+
+  // Signal computado para a porcentagem de saturação
+  readonly satAmountPercent = computed(() => Math.round(this.satAmount() * 100));
+
   readonly previewWindowString = computed(() => {
     const start = this.audioComparison.previewStart();
     const end = this.audioComparison.previewEnd();
     return `${this.formatarTempo(start)} – ${this.formatarTempo(end)}`;
   });
+
+  // --- COMPORTAMENTOS DOS CONTROLES DO SLIDER ---
+  updateLowCutoff(event: Event) {
+    const value = +(event.target as HTMLInputElement).value;
+    this.masteringService.setLowCutoff(value);
+  }
+
+  updateHighCutoff(event: Event) {
+    const value = +(event.target as HTMLInputElement).value;
+    this.masteringService.setHighCutoff(value);
+  }
+
+  updateStereoWidth(event: Event) {
+    const value = +(event.target as HTMLInputElement).value;
+    this.masteringService.setStereoWidth(value);
+  }
+
+  updateSatAmount(event: Event) {
+    const value = +(event.target as HTMLInputElement).value / 100;
+    this.masteringService.setSatAmount(value);
+  }
+
+  updateMonoBass(event: Event) {
+    const value = +(event.target as HTMLInputElement).value;
+    this.masteringService.setMonoBass(value);
+  }
+
+  updateCeiling(event: Event) {
+    const value = +(event.target as HTMLInputElement).value;
+    this.masteringService.setCeiling(value);
+  }
+
+  updateThreshold(event: Event) {
+    const value = +(event.target as HTMLInputElement).value;
+    this.masteringService.setThreshold(value);
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['originalFile'] && this.originalFile) {
@@ -43,7 +102,7 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
     }
 
     if (changes['masteredAudioUrl'] && this.masteredAudioUrl) {
-      // 🟢 O S3 devolveu o áudio! Decide o modo com base na flag isFullMaster [1.1.2]
+      // O S3 devolveu o áudio! Decide o modo com base na flag isFullMaster [1.1.2]
       const mode = this.isFullMaster ? 'full-track' : 'preview-15s';
       this.audioComparison.setMasterSrc(this.masteredAudioUrl, mode);
     }
@@ -67,7 +126,8 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
     this.processMaster.emit({
       estilo: this.estiloSelecionado,
       intensidade: this.intensidadeSelecionada,
-      preview: true
+      preview: true,
+      customParams: this.masteringService.getMasteringPayload() // Passa o payload dinâmico ajustado
     });
   }
 
@@ -75,7 +135,8 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
     this.processMaster.emit({
       estilo: this.estiloSelecionado,
       intensidade: this.intensidadeSelecionada,
-      preview: false
+      preview: false,
+      customParams: this.masteringService.getMasteringPayload() // Passa o payload dinâmico ajustado
     });
   }
 

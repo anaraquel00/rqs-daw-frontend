@@ -126,3 +126,63 @@ Olhe para a sua track crua vinda do Suno e se pergunte: **"Qual é o elemento ma
 
 ### Resumo prático para o seu fluxo no Frontend:
 Se você estiver na dúvida entre os quatro, **a regra geral para Progressive House moderno é usar o `Clear Sky` para faixas melódicas/vocais e o `Thunder` para faixas instrumentais de pista.** Deixe o `Sunroof` estritamente para quando você precisar de volume ensurdecedor de rádio e o `Aurora` para músicas introspectivas e espaciais.
+
+---
+
+# 🎛️ Manual de Referência Acústica - RQS DSP Core
+
+Este manual descreve a física de processamento digital de sinais (DSP), a arquitetura do motor de áudio e o fluxo de trabalho (*workflow*) iterativo de estúdio projetado para os **Ajustes de Precisão (DSP Engine)** da **RaQuel Synths DAW (RQS-DAW)**.
+
+---
+
+## 1. Filosofia de Arquitetura: Processamento Híbrido em Nuvem
+
+O motor de masterização da RQS-DAW opera em uma arquitetura híbrida de alto desempenho [5.2]:
+1.  **Por que no Servidor (Backend)?** Os processos de alta fidelidade (como a reamostragem polifásica de $4\times$ para prevenção de aliasing, a filtragem bidirecional de fase zero no crossover LR4 e o detector de picos por janela lookahead vetorizado) são extremamente exigentes para o processador [8.3, 8.4]. Executá-los diretamente no navegador do usuário via JavaScript consumiria 100% da CPU do computador do cliente, causando engasgos, estalos acústicos (*buffer underruns*) e degradando a experiência de mixagem [11].
+2.  **Como contornar a latência?** Criamos o algoritmo **Zero Latency Preview (ZLP)** [11]. O backend lê estritamente os metadados do arquivo original na AWS e processa em milissegundos apenas uma janela central de 15 segundos utilizando os parâmetros de precisão ajustados pelo usuário [5.2]. O arquivo resultante é transmitido rapidamente para o player do frontend Angular para comparação imediata [5.3].
+
+---
+
+## 2. O Workflow de Masterização Iterativa (A/B Testing)
+
+Para obter resultados de áudio profissionais, os utilizadores da DAW devem seguir o seguinte fluxo de trabalho dinâmico no console de áudio:
+
+```texto
+[Ajuste dos Sliders] 
+  → [Clique em "Gerar Prévia" (ZLP 15s)] 
+  → [Reprodução em Loop do Trecho] 
+  → [Comparação Ativa A/B (Alternação Instantânea)]
+  → [Refinamento de Parâmetros se Necessário] 
+  → [Clique em "Masterização Completa" (Exportação)]
+```
+
+### O Segredo da Comparação A/B Ativa
+Durante a reprodução do loop de prévia de 15 segundos, o utilizador pode alternar instantaneamente entre o áudio **Original (A)** e o áudio **Masterizado (B)** utilizando o seletor unificado do console [5.3]. 
+O serviço `AudioComparisonService` executa um **crossfade analógico linear de 30ms** [1.1.2]. Isso permite que o ouvido humano compare as sutis alterações de amplitude, fase, largura estéreo e saturação de forma síncrona na mesma amostra de tempo, sem cliques ou silêncios que quebrem a percepção acústica do engenheiro de som.
+
+---
+
+## 3. Guia dos Parâmetros do Painel de Precisão
+
+Cada controle do painel de precisão atua de forma cirúrgica sobre a física da onda sonora:
+
+### A. Crossover Espectral Complementar (LR4)
+*   **O que faz:** Fatiou o espectro de áudio em três sub-bandas (Baixa, Média e Alta) utilizando filtros de **Linkwitz-Riley de 4ª ordem (24 dB/oitava)** com fase zero (filtragem bidirecional `filtfilt`) [8.4, 8.5].
+*   **Como utilizar:** 
+    *   *Sub-Graves / Médios (Frequência Baixa):* Ajustável entre `80 Hz` e `400 Hz`. Permite isolar toda a energia rítmica (kick, sub-bass) na banda baixa para processamento focado, protegendo os vocais.
+    *   *Médios / Agudos (Frequência Alta):* Ajustável entre `1500 Hz` e `6000 Hz`. Isola as frequências críticas de sibilância, presença vocal e brilho espectral dos pratos.
+*   **Garantia Técnica:** O design LR4 complementar garante que, quando as três bandas são somadas de volta, a reconstrução de amplitude e de fase seja perfeitamente plana (erro de reconstrução absoluto abaixo de $-100\text{ dB}$ no *Null Test*), prevenindo qualquer coloração tímbrica indesejada [16.2].
+
+### B. Imagem Estéreo & Calor Analógico Mid/Side (M/S)
+*   **Largura de Campo Estéreo (Stereo Width):** Multiplica dinamicamente o ganho do canal lateral ($Side$) em relação ao canal central ($Mid$) [8.6]. Permite abrir a imagem de mixagens de IA generativa que costumam vir muito fechadas em mono.
+*   **Saturação Harmônica Lateral:** Aplica uma curva não-linear controlada de tangente hiperbólica (`tanh`) sobre as frequências acima de $5\text{ kHz}$ do canal lateral ($Side$) [6.3]. Isso adiciona calor e "ar analógico" nas pontas da mixagem. O motor realiza **sobreamostragem de 4×** antes de saturar, garantindo que nenhum ruído de *aliasing* contamine as altas frequências [8.7].
+*   **Mono-ização de Graves (Mono Bass):** Filtro passa-altas de fase zero aplicado estritamente sobre o canal lateral ($Side$) na frequência selecionada (ex: `120 Hz`) [8.6]. Ele remove qualquer componente de graves das laterais da música, centralizando toda a energia de subgraves estritamente no centro (mono). Isso estabiliza a reprodução em caixas de som comuns, sistemas de som de clubes (PA) e protege a música de IA contra flutuações de fase indesejadas na região de graves.
+*   **Garantia Técnica (Salvaguarda de Correlação):** O motor monitora instantaneamente o coeficiente de correlação estéreo. Caso as alterações estéreo derrubem a correlação para níveis críticos de fase fora de fase ($< 0.15$), o algoritmo atenua reativamente o canal lateral para restaurar a compatibilidade mono de forma estável [8.6].
+
+### C. Limitador de Pico Verdadeiro (True Peak Limiter)
+*   **Teto de Saída (Ceiling):** Configura o limite máximo de amplitude física contínua permitida no arquivo final (geralmente ajustado entre `-1.0 dBTP` e `-2.0 dBTP` dependendo dos requisitos do Spotify, Apple Music e agregadoras digitais) [8.3].
+*   **Ganho de Entrada (Threshold):** Puxa o volume geral do áudio para cima de forma integrada contra o limitador [8.1]. Isso aumenta a densidade de volume subjetiva da música (LUFS) sem ceifar de forma abrupta a forma de onda.
+*   **Garantia Técnica (Salvaguarda de Rebote de Pico):** Ao reamostrar e filtrar de volta para a taxa de amostragem nativa para salvar o arquivo de saída final WAV, pode ocorrer o rebote de pico (*peak regrowth*). O nosso limitador mede de forma independente o pico verdadeiro final e aplica um fator de correção compensatório preciso para assegurar que o teto em **dBTP** nunca seja violado [8.3].
+```
+
+---

@@ -38,7 +38,7 @@
         🔁 LOOP DE PRÉVIA COMPARAÇÃO A/B ATIVO (TRECHO: {{ previewWindowString() }})
       </span>
 
-       <!-- 🟢 ALTERADO: Agora renderiza dinamicamente o novo alerta focado no download e reinício [1.1.2] -->
+       <!-- 🟢 ALERTAS DE CONCURSÃO DE MASTERIZAÇÃO [1.1.2] -->
       <span class="loop-badge full-master-active" *ngIf="audioComparison.playbackMode() === 'full-track'">
         {{ lang.tr().FULL_MASTER_COMPLETED_ALERT }}
       </span>
@@ -121,6 +121,111 @@
         <button [class.selected]="intensidadeSelecionada === 'alta'" (click)="selecionarIntensidade('alta')">
           {{ lang.t().ALTA }}
         </button>
+      </div>
+    </div>
+  </div>
+
+  <hr class="cyber-divider">
+<!-- 🎛️ PAINEL DE ENGENHARIA DE PRECISÃO (AJUSTES FINOS DSP) [5.3] -->
+  <div class="engineering-panel">
+    <h3>Ajustes de Precisão (DSP Engine)</h3>
+
+    <!-- Subseção A: Crossover Multibanda -->
+    <div class="eng-section">
+      <h5>Crossover Espectral (LR4 complementary)</h5>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Sub-Graves / Médios</span>
+          <span class="slider-value">{{ lowCutoff() }} Hz</span>
+        </div>
+        <input type="range" min="80" max="400" step="10"
+               title="Frequência de Corte Baixa do Crossover"
+               aria-label="Frequência de Corte Baixa do Crossover"
+               [value]="lowCutoff()"
+               (input)="updateLowCutoff($event)"
+               class="cyber-scrubber">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Médios / Agudos</span>
+          <span class="slider-value">{{ highCutoff() }} Hz</span>
+        </div>
+        <input type="range" min="1500" max="6000" step="100"
+               title="Frequência de Corte Alta do Crossover"
+               aria-label="Frequência de Corte Alta do Crossover"
+               [value]="highCutoff()"
+               (input)="updateHighCutoff($event)"
+               class="cyber-scrubber">
+      </div>
+    </div>
+
+    <!-- Subseção B: Imagem Estéreo Mid/Side -->
+    <div class="eng-section">
+      <h5>Imagem Estéreo & Calor Analógico M/S</h5>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Largura de Campo Estéreo</span>
+          <span class="slider-value">x{{ stereoWidth() }}</span>
+        </div>
+        <input type="range" min="0.5" max="2.0" step="0.1"
+               title="Ajuste de Largura de Campo Estéreo"
+               aria-label="Ajuste de Largura de Campo Estéreo"
+               [value]="stereoWidth()"
+               (input)="updateStereoWidth($event)"
+               class="cyber-scrubber">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Saturação Harmônica Lateral</span>
+          <span class="slider-value">{{ satAmountPercent() }}%</span>
+        </div>
+        <input type="range" min="0" max="100" step="5"
+               title="Intensidade de Saturação Harmônica Lateral"
+               aria-label="Intensidade de Saturação Harmônica Lateral"
+               [value]="satAmountPercent()"
+               (input)="updateSatAmount($event)"
+               class="cyber-scrubber">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Mono-ização de Graves (Mono Bass)</span>
+          <span class="slider-value">{{ monoBassHz() }} Hz</span>
+        </div>
+        <input type="range" min="80" max="200" step="10"
+               title="Corte de Frequência do Mono Bass"
+               aria-label="Corte de Frequência do Mono Bass"
+               [value]="monoBassHz()"
+               (input)="updateMonoBass($event)"
+               class="cyber-scrubber">
+      </div>
+    </div>
+
+    <!-- Subseção C: Limitador de Pico Verdadeiro -->
+    <div class="eng-section">
+      <h5>Limitador de Pico Verdadeiro (dBTP)</h5>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Teto de Saída (Ceiling)</span>
+          <span class="slider-value">{{ ceiling() }} dBTP</span>
+        </div>
+        <input type="range" min="-3.0" max="-0.1" step="0.1"
+               title="Teto de Saída do Limitador em dBTP"
+               aria-label="Teto de Saída do Limitador em dBTP"
+               [value]="ceiling()"
+               (input)="updateCeiling($event)"
+               class="cyber-scrubber">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span>Ganho de Entrada (Threshold)</span>
+          <span class="slider-value">{{ threshold() }} dB</span>
+        </div>
+        <input type="range" min="-18.0" max="0.0" step="0.5"
+               title="Ganho de Entrada do Limitador"
+               aria-label="Ganho de Entrada do Limitador"
+               [value]="threshold()"
+               (input)="updateThreshold($event)"
+               class="cyber-scrubber">
       </div>
     </div>
   </div>
