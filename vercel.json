@@ -9,6 +9,10 @@
       ],
       "source": "/(.*)",
       "destination": "https://ucearnthodrltkvkmhit.supabase.co/functions/v1/rqs-router/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
