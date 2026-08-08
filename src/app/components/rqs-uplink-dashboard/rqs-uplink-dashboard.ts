@@ -26,7 +26,7 @@ import { LanguageService } from '../../services/language.service';
               <div class="link-main-info">
                 <div class="slug-row">
                   <span class="platform-tag">{{ link.platform | uppercase }}</span>
-                  <span class="short-url">rqs.link/<strong>{{ link.customSlug }}</strong></span>
+                  <span class="short-url">go.raquelsynths.com/<strong>{{ link.customSlug }}</strong></span>
                 </div>
                 <a [href]="link.targetUrl" target="_blank" class="target-link">{{ link.targetUrl }}</a>
               </div>
@@ -77,7 +77,7 @@ export class RqsUplinkDashboardComponent implements OnInit {
   }
 
   copyLink(slug: string) {
-    const url = `https://rqs.link/${slug}`;
+    const url = `https://go.raquelsynths.com/${slug}`;
     navigator.clipboard.writeText(url);
     alert(`Link copiado para a área de transferência: ${url}`);
   }
