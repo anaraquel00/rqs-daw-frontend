@@ -26,12 +26,12 @@ export class RqsUplinkEngineComponent {
 
   errorMessage = signal<string>('');
 
-  compileLink(): void {
+  async compileLink(): Promise<void> {
     this.errorMessage.set('');
     if (!this.targetUrl()) return;
 
     const slug = this.customSlug();
-    const result = this.deepLinkService.compileAndRegisterLink(this.targetUrl(), slug);
+    const result = await this.deepLinkService.compileAndRegisterLink(this.targetUrl(), this.customSlug());
 
     if (!result.success) {
       this.errorMessage.set(result.error || 'Erro ao compilar link.');
