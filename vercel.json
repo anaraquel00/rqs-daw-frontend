@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "has": [
+        {
+          "type": "host",
+          "value": "go.raquelsynths.com"
+        }
+      ],
+      "source": "/(.*)",
+      "destination": "https://ucearnthodrltkvkmhit.supabase.co/functions/v1/rqs-router/$1"
+    }
+  ]
+}
