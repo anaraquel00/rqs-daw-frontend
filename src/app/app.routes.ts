@@ -4,6 +4,7 @@ import { TermsComponent } from './components/terms/terms';
 import { PrivacyComponent } from './components/privacy/privacy';
 import { WorkspaceComponent } from './workspace/workspace';
 import { LandingPageComponent } from './landing-page/landing-page';
+import { RedirectSimulatorComponent } from './components/redirect-simulator/redirect-simulator';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,10 @@ export const routes: Routes = [
     component: WorkspaceComponent,
     title: 'RQS Studio - DAW Mainframe'
   },
+  {
+  path: 'simulate-redirect/:platform/:id',
+  component: RedirectSimulatorComponent // Crie este componente simples
+},
   { path: 'terms', component: TermsComponent },
   { path: 'privacy', component: PrivacyComponent },
   { path: 'termos', redirectTo: 'terms' },

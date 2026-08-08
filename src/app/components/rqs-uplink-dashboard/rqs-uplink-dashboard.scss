@@ -1,0 +1,196 @@
+.rqs-dashboard-panel {
+  background: #0f0f13;
+  border: 1px solid #2a2a3c;
+  border-radius: 12px;
+  padding: 24px;
+  color: #e0e0e8;
+  max-width: 680px;
+  margin: 24px auto 0 auto;
+  font-family: monospace, sans-serif;
+
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    h3 {
+      color: #ff007f;
+      margin: 0;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+    }
+
+    .badge-active {
+      background: rgba(0, 255, 204, 0.15);
+      color: #00ffcc;
+      border: 1px solid #00ffcc;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+  }
+
+  p.desc {
+    font-size: 0.85rem;
+    color: #9ba1a6;
+    margin-bottom: 20px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #666688;
+    background: #14141c;
+    border-radius: 8px;
+    border: 1px dashed #2a2a3c;
+    font-size: 0.85rem;
+  }
+
+  .links-table-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .link-card-item {
+      background: #14141c;
+      border: 1px solid #252538;
+      border-radius: 8px;
+      padding: 16px;
+      transition: border-color 0.2s;
+
+      &:hover {
+        border-color: #ff007f;
+      }
+
+      .link-main-info {
+        margin-bottom: 12px;
+
+        .slug-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 4px;
+
+          .platform-tag {
+            font-size: 0.7rem;
+            background: rgba(255, 0, 127, 0.2);
+            color: #ff007f;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+          }
+
+          .short-url {
+            font-size: 0.95rem;
+            color: #fff;
+          }
+
+          .distributor-tag {
+            font-size: 0.7rem;
+            background: #222233;
+            color: #aaa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: auto;
+          }
+        }
+
+        .target-link {
+          font-size: 0.75rem;
+          color: #666688;
+          text-decoration: none;
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          &:hover {
+            color: #00ffcc;
+          }
+        }
+      }
+
+      .metrics-grid-mini {
+        display: grid;
+        grid-template-columns: 80px 100px 1fr;
+        gap: 12px;
+        background: #0f0f13;
+        padding: 10px;
+        border-radius: 6px;
+        align-items: center;
+        margin-bottom: 12px;
+
+        .metric-box {
+          display: flex;
+          flex-direction: column;
+
+          .label {
+            font-size: 0.65rem;
+            color: #777799;
+            text-transform: uppercase;
+          }
+
+          .value {
+            font-size: 0.95rem;
+            color: #fff;
+            font-weight: bold;
+
+            &.highlight {
+              color: #00ffcc;
+            }
+          }
+        }
+
+        .metric-sources {
+          .label {
+            font-size: 0.65rem;
+            color: #777799;
+            display: block;
+            margin-bottom: 2px;
+          }
+
+          .sources-pills {
+            display: flex;
+            gap: 8px;
+            font-size: 0.7rem;
+            color: #bbbbcc;
+
+            span {
+              background: #1a1a26;
+              padding: 2px 5px;
+              border-radius: 3px;
+              border: 1px solid #33334d;
+            }
+          }
+        }
+      }
+
+      .card-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+
+        .btn-action {
+          background: #1e1e2f;
+          border: 1px solid #33334d;
+          color: #fff;
+          padding: 6px 12px;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          cursor: pointer;
+
+          &.copy:hover {
+            background: #ff007f;
+            border-color: #ff007f;
+          }
+
+          &.delete:hover {
+            background: #ff3333;
+            border-color: #ff3333;
+          }
+        }
+      }
+    }
+  }
+}

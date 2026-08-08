@@ -1,70 +1,51 @@
-<!-- src/app/components/uplink-engine/uplink-engine.component.html -->
-<div class="rqs-uplink-panel">
+<div class="rqs-linktwin-panel">
+  <h3>🔗 {{ lang.tr().uplinkTitle }}</h3>
 
-  <div class="panel-header">
-    <h3>{{ lang.tr().UPLINK_TITLE }}</h3>
-    <span class="status-indicator active">{{ lang.tr().UPLINK_STATUS }}</span>
+  <div class="status-badge">
+    <span class="pulse">●</span> {{ lang.tr().uplinkBadge }}
   </div>
 
-  <p class="panel-desc">
-    {{ lang.tr().UPLINK_DESC }}
-  </p>
+  <p class="desc">{{ lang.tr().uplinkDesc }}</p>
 
-  <!-- 🟢 ESTADO DINÂMICO: Áudio Processado Detectado no Mainframe [1.1.2] -->
-  <div class="audio-detected-alert" *ngIf="audioProcessed()">
-    <p class="alert-text">{{ lang.tr().UPLINK_DETECTED }}</p>
-    <button class="btn-uplink-accent" (click)="generateInstantLink()">
-      {{ lang.tr().BTN_INSTANT_DEPLOY }}
-    </button>
+  <div class="platform-indicators">
+    <span class="platform-icon" [class.active]="detectedPlatform() === 'spotify'">Spotify</span>
+    <span class="platform-icon" [class.active]="detectedPlatform() === 'soundcloud'">SoundCloud</span>
+    <span class="platform-icon" [class.active]="detectedPlatform() === 'youtube'">YouTube</span>
+    <span class="platform-icon" [class.active]="detectedPlatform() === 'bandcamp'">Bandcamp</span>
   </div>
 
-  <!-- ESTADO PADRÃO: Gerador de Links -->
-  <div class="default-link-generator" *ngIf="!audioProcessed()">
-    <div class="input-group">
-      <label for="destinationUrlInput" class="rqs-label">{{ lang.tr().DEPLOY_LABELURL }}</label>
-      <input
-        type="text"
-        id="destinationUrlInput"
-        [placeholder]="lang.tr().UPLINK_INPUT_PLACEHOLDER"
-        [title]="lang.tr().UPLINK_INPUT_PLACEHOLDER"
-        [(ngModel)]="destinationUrl"
-        class="rqs-input">
+  <div class="input-group">
+    <label>{{ lang.tr().urlLabel }}</label>
+    <input
+      type="text"
+      [ngModel]="targetUrl()"
+      (ngModelChange)="targetUrl.set($event)"
+      placeholder="https://open.spotify.com/track/...">
+  </div>
 
-      <div class="slug-pixel-row" *ngIf="destinationUrl().trim()">
-        <label for="customSlugInput" class="rqs-label-mini">{{ lang.tr().CUSTOM_SLUG_LABEL }}</label>
-        <input type="text" id="customSlugInput" placeholder="CUSTOM_SLUG" title="CUSTOM_SLUG" [(ngModel)]="customSlug" class="rqs-input-mini">
-        <label for="pixelIdInput" class="rqs-label-mini">{{ lang.tr().META_PIXEL_ID_LABEL }}</label>
-        <input type="text" id="pixelIdInput" placeholder="META_PIXEL_ID (OPTIONAL)" title="META_PIXEL_ID (OPTIONAL)" [(ngModel)]="pixelId" class="rqs-input-mini">
-      </div>
+  <div class="input-group">
+    <label>{{ lang.tr().slugLabel }}</label>
+    <input
+      type="text"
+      [ngModel]="customSlug()"
+      (ngModelChange)="customSlug.set($event)"
+      placeholder="ex: minha-nova-faixa">
+  </div>
+
+  <button class="btn-magenta" (click)="compileLink()">{{ lang.tr().compileBtn }}</button>
+
+ @if (errorMessage()) {
+    <div class="error-banner" style="background: rgba(255, 0, 85, 0.15); border: 1px solid #ff0055; color: #ff0055; padding: 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px;">
+      ⚠️ {{ errorMessage() }}
     </div>
+  }
 
-    <button class="btn-compile" (click)="compileLink()" [disabled]="!destinationUrl().trim() || isCompiling()">
-      {{ isCompiling() ? 'COMPILING_UPLINK...' : lang.tr().BTN_COMPILE_LINK }}
-    </button>
-  </div>
-
-  <!-- Resultado do Link Gerado -->
-  <div class="result-link-box" *ngIf="shortUrl()">
-    <span class="label">UPLINK ATIVO:</span>
-    <a [href]="shortUrl()" target="_blank" class="short-url">{{ shortUrl() }}</a>
-  </div>
-
-  <!-- 📊 QUICK ANALYTICS MINI DASHBOARD (P0) [1.1.2] -->
-  <div class="quick-analytics-grid">
-    <div class="metric-card">
-      <span class="title">{{ lang.tr().ANALYTICS_CLICKS }}</span>
-      <strong class="value cyan-glow">{{ clicksCount() }}</strong>
+  @if (compiledLink()) {
+    <div class="output-box">
+      <span class="url-result">{{ compiledLink() }}</span>
+      <button class="btn-copy" (click)="copyToClipboard()">
+        {{ copied() ? lang.tr().copiedLink : lang.tr().copyLink }}
+      </button>
     </div>
-    <div class="metric-card">
-      <span class="title">{{ lang.tr().ANALYTICS_CONVERSION }}</span>
-      <strong class="value magenta-glow">{{ conversionRate() }}%</strong>
-    </div>
-    <div class="metric-card">
-      <span class="title">{{ lang.tr().ANALYTICS_PIXEL }}</span>
-      <strong class="value" [style.color]="pixelStatus() === 'ACTIVE' ? '#00ff88' : '#666'">
-        {{ pixelStatus() === 'ACTIVE' ? lang.tr().PIXEL_ACTIVE : lang.tr().PIXEL_INACTIVE }}
-      </strong>
-    </div>
-  </div>
-
+  }
 </div>

@@ -23,6 +23,14 @@ export class AuthService {
   readonly canMaster = computed(() => this.userRole() === 'premium' || this.remainingMasters() > 0);
   readonly isPremium = computed(() => this.userRole() === 'premium');
 
+  readonly maxFreeLinks = 3;
+
+  // Retorna quantos links o usuário ainda pode criar com base no plano
+  canCreateLink(currentLinksCount: number): boolean {
+    if (this.isPremium()) return true;
+    return currentLinksCount < this.maxFreeLinks;
+  }
+
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       const supabaseUrl = 'https://ucearnthodrltkvkmhit.supabase.co';

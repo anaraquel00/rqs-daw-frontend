@@ -242,7 +242,28 @@ export const PT_TRANSLATIONS = {
   ANALYTICS_CONVERSION: "TAXA DE CONVERSÃO",
   ANALYTICS_PIXEL: "STATUS DO PIXEL",
   PIXEL_ACTIVE: "ATIVO",
-  PIXEL_INACTIVE: "INATIVO"
+  PIXEL_INACTIVE: "INATIVO",
+
+  // RQS Uplink Engine & Dashboard
+  uplinkTitle: 'RQS UPLINK ENGINE',
+  uplinkBadge: 'DEEP LINK BYPASS ACTIVE: Sem Barreiras de Login',
+  uplinkDesc: 'Cole o link da sua faixa no Spotify, SoundCloud ou YouTube. Nosso motor gera um link curto inteligente que força a abertura imediata do aplicativo oficial, eliminando o bloqueio de login dos navegadores internos do Instagram e TikTok.',
+  urlLabel: 'URL DA FAIXA (STREAMING)',
+  slugLabel: 'SLUG PERSONALIZADO (OPCIONAL)',
+  compileBtn: '[ COMPILAR DEEP LINK SEGURO ]',
+  copyLink: 'Copiar Link',
+  copiedLink: '✓ Copiado!',
+
+  // Dashboard
+  dashTitle: 'RQS UPLINK ANALYTICS & DEEP LINKS',
+  activeLinks: 'Links Ativos',
+  dashDesc: 'Gerencie seus deep links publicados no Instagram, TikTok, Facebook e YouTube. Acompanhe cliques e taxas de conversão em tempo real.',
+  emptyLinks: 'Nenhum deep link compilado ainda. Use o Uplink Engine acima para gerar o seu primeiro link de rastreio.',
+  clicksLabel: 'Cliques',
+  conversionLabel: 'Conversão',
+  trafficSources: 'Fontes de Tráfego:',
+  copyUrl: 'Copiar URL',
+  deleteBtn: 'Excluir'
 };
 
 // Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
@@ -332,8 +353,28 @@ export const EN_TRANSLATIONS = {
   ANALYTICS_CONVERSION: "CONVERSION RATE",
   ANALYTICS_PIXEL: "PIXEL STATUS",
   PIXEL_ACTIVE: "ACTIVE",
-  PIXEL_INACTIVE: "INACTIVE"
+  PIXEL_INACTIVE: "INACTIVE",
 
+  // RQS Uplink Engine & Dashboard
+  uplinkTitle: 'RQS UPLINK ENGINE',
+  uplinkBadge: 'DEEP LINK BYPASS ACTIVE: No Login Barriers',
+  uplinkDesc: 'Paste your track link from Spotify, SoundCloud or YouTube. Our engine generates a smart short link that forces the official app to open immediately, eliminating login blocks from Instagram and TikTok in-app browsers.',
+  urlLabel: 'TRACK URL (STREAMING)',
+  slugLabel: 'CUSTOM SLUG (OPTIONAL)',
+  compileBtn: '[ COMPILE SECURE DEEP LINK ]',
+  copyLink: 'Copy Link',
+  copiedLink: '✓ Copied!',
+
+  // Dashboard
+  dashTitle: 'RQS UPLINK ANALYTICS & DEEP LINKS',
+  activeLinks: 'Active Links',
+  dashDesc: 'Manage your deep links published on Instagram, TikTok, Facebook and YouTube. Track clicks and conversion rates in real time.',
+  emptyLinks: 'No deep links compiled yet. Use the Uplink Engine above to generate your first tracking link.',
+  clicksLabel: 'Clicks',
+  conversionLabel: 'Conversion',
+  trafficSources: 'Traffic Sources:',
+  copyUrl: 'Copy URL',
+  deleteBtn: 'Delete'
 };
 
 @Injectable({

@@ -7,11 +7,12 @@ import { Footer } from '../footer/footer';
 import { AuthService } from '../services/auth.service';
 import { LanguageService } from '../services/language.service';
 import { RqsUplinkEngineComponent } from "../rqs-uplink-engine/rqs-uplink-engine";
+import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/rqs-uplink-dashboard';
 
 @Component({
   selector: 'app-workspace',
   standalone: true,
-  imports: [CommonModule, MixPanelComponent, UploadZoneComponent, Footer, RqsUplinkEngineComponent],
+  imports: [CommonModule, MixPanelComponent, UploadZoneComponent, Footer, RqsUplinkEngineComponent, RqsUplinkDashboardComponent],
   template: `
     <!-- 🛰️ ENVELOPE DO MAINFRAME DA DAW [1.1.2] -->
     <div class="rqs-mainframe-container" style="padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between;">
@@ -65,16 +66,19 @@ import { RqsUplinkEngineComponent } from "../rqs-uplink-engine/rqs-uplink-engine
         </div>
       </header>
 
-      <!-- 🎛️ A GRADE DE ENGENHARIA PRINCIPAL DA WORKSTATION -->
+      <!-- 🎛️ A GRADE DE ENGENHARIA PRINCIPAL DA WORKSTATION (Layout 50/50 Otimizado) -->
       <div class="workspace-grid" style="margin-bottom: 25px;">
 
-         <!-- Coluna da Esquerda: Core de Masterização e Processamento DSP -->
-         <app-upload-zone></app-upload-zone>
+         <!-- Coluna da Esquerda: Core de Masterização e Processamento DSP (Fixa ao rolar) -->
+         <div class="left-workstation-column">
+           <app-upload-zone></app-upload-zone>
+         </div>
 
-         <!-- 🟢 Coluna da Direita: Setlists e Marketing de Deploys Empilhados! [1.1.2] -->
+         <!-- 🟢 Coluna da Direita: Setlists, Uplink Engine e Analytics Integrados [1.1.2] -->
          <div class="right-workstation-column">
            <app-mix-panel></app-mix-panel>
-           <app-uplink-engine></app-uplink-engine>
+           <app-rqs-uplink-engine></app-rqs-uplink-engine>
+           <app-rqs-uplink-dashboard></app-rqs-uplink-dashboard>
          </div>
 
       </div>
@@ -89,21 +93,30 @@ import { RqsUplinkEngineComponent } from "../rqs-uplink-engine/rqs-uplink-engine
       grid-template-columns: 1fr;
       gap: 20px;
       width: 100%;
-      max-width: 95%; /* Expande a workstation para ocupar todo o desktop */
+      max-width: 98%; /* Expande o estúdio de forma fluida */
+      margin: 0 auto;
+      align-items: start; /* Impede que colunas disformes estiquem o grid */
     }
 
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .workspace-grid {
-        grid-template-columns: 1fr 1fr; /* Divide a tela em duas metades exatas de 50% */
-        gap: 24px; /* Separação confortável de 24px entre os dois módulos no centro */
+        grid-template-columns: 1fr 1fr; /* Divide perfeitamente a tela em duas metades de 50% */
+        gap: 24px;
       }
     }
 
-    /* 🟢 NOVO: Estilização do barramento vertical da coluna da direita [1.1.2] */
+    /* 📌 Coluna Esquerda Fixa (Sticky Core) */
+    .left-workstation-column {
+      position: sticky;
+      top: 20px;
+      width: 100%;
+    }
+
+    /* 🟢 Barramento Vertical da Coluna da Direita [1.1.2] */
     .right-workstation-column {
       display: flex;
       flex-direction: column;
-      gap: 20px; /* Mantém um espaçamento vertical confortável de 20px entre o Setlist e o Uplink */
+      gap: 24px; /* Espaçamento simétrico entre os módulos de setlist, engine e analytics */
       width: 100%;
     }
   `]
