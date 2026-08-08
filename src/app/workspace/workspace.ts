@@ -93,33 +93,37 @@ import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/
       grid-template-columns: 1fr;
       gap: 20px;
       width: 100%;
-      max-width: 98%; /* Expande o estúdio de forma fluida */
+      max-width: 98%;
       margin: 0 auto;
-      align-items: start; /* Impede que colunas disformes estiquem o grid */
+      align-items: start;
     }
 
-    @media (min-width: 1024px) {
+    /* 🖥️ Ajuste de Breakpoint para Tablets e Desktops (A partir de 768px a divisão é ativada) */
+    @media (min-width: 768px) {
       .workspace-grid {
-        grid-template-columns: 1fr 1fr; /* Divide perfeitamente a tela em duas metades de 50% */
+        grid-template-columns: 1fr 1fr;
         gap: 24px;
+      }
+
+      /* Sticky Core ativado estritamente em telas maiores para evitar conflito de fluxo */
+      .left-workstation-column {
+        position: sticky;
+        top: 20px;
       }
     }
 
-    /* 📌 Coluna Esquerda Fixa (Sticky Core) */
     .left-workstation-column {
-      position: sticky;
-      top: 20px;
       width: 100%;
     }
 
-    /* 🟢 Barramento Vertical da Coluna da Direita [1.1.2] */
+    /* 🟢 Barramento Vertical da Coluna da Direita */
     .right-workstation-column {
       display: flex;
       flex-direction: column;
-      gap: 24px; /* Espaçamento simétrico entre os módulos de setlist, engine e analytics */
+      gap: 24px;
       width: 100%;
     }
-  `]
+`]
 })
 export class WorkspaceComponent {
   // Injeta os serviços reativos necessários para o funcionamento do cabeçalho
