@@ -45,7 +45,7 @@ export class DeepLinkService {
     return data ? JSON.parse(data) : [];
   }
 
-compileAndRegisterLink(targetUrl: string, customSlug: string): { success: boolean; url?: string; error?: string } {
+  compileAndRegisterLink(targetUrl: string, customSlug: string): { success: boolean; url?: string; error?: string } {
     const links = this.getAllLinks();
 
     // 🔒 VERIFICAÇÃO DE PAYWALL / LIMITES DO PLANO FREE
@@ -81,10 +81,8 @@ compileAndRegisterLink(targetUrl: string, customSlug: string): { success: boolea
 
     localStorage.setItem(this.storageKey, JSON.stringify(links));
 
-    const idMatch = targetUrl.match(/(track|album|artist)\/([a-zA-Z0-9]+)/);
-    const id = idMatch ? idMatch[2] : '';
-
-    const finalUrl = `${window.location.origin}/simulate-redirect/${platform}/${id}?slug=${slug}`;
+    // 🚀 CANAL DE PRODUÇÃO ATIVADO: O link gerado agora aponta para o encurtador oficial
+    const finalUrl = `https://go.raquelsynths.com/${slug}`;
     return { success: true, url: finalUrl };
   }
 
