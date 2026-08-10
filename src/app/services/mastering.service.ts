@@ -1,70 +1,70 @@
-// daw-frontend/src/app/services/mastering.service.ts
-
-import { Injectable, signal, WritableSignal } from '@angular/core';
+import { Injectable, WritableSignal, signal } from '@angular/core';
+import {
+  MasteringAtmosphere,
+  MasteringDestination,
+  MasteringPlatform,
+  MasteringV2Request,
+  SoundCloudMode,
+} from './mastering-types';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class MasteringService {
-  // --- 1. CONFIGURAÇÕES DE CROSSOVER MULTIBANDA [Fase 2] ---
-  public lowCutoff: WritableSignal<number> = signal(200);
-  public highCutoff: WritableSignal<number> = signal(3000);
+  readonly destination: WritableSignal<MasteringDestination> = signal('streaming');
+  readonly platform: WritableSignal<MasteringPlatform | null> = signal('spotify');
+  readonly atmosphere: WritableSignal<MasteringAtmosphere> = signal('clear_sky');
+  readonly intensityPercent: WritableSignal<number> = signal(50);
+  readonly requestedLufs: WritableSignal<number | null> = signal(null);
+  readonly soundcloudMode: WritableSignal<SoundCloudMode> = signal('standard');
 
-  // --- 2. CONFIGURAÇÕES DE IMAGEM ESTÉREO MID/SIDE [Fase 3] ---
-  public stereoWidth: WritableSignal<number> = signal(1.0);
-  public satAmount: WritableSignal<number> = signal(0.3);
-  public monoBassHz: WritableSignal<number> = signal(120);
+  setDestination(value: MasteringDestination): void {
+    this.destination.set(value);
+    this.requestedLufs.set(null);
 
-  // --- 3. CONFIGURAÇÕES DO LIMITADOR DE PICO VERDADEIRO [Fase 5] ---
-  // ceiling: Teto máximo de saída em dBTP (padrão -1.0 dBTP)
-  public ceiling: WritableSignal<number> = signal(-1.0);
-  // threshold: Ganho de entrada de limitação em dB (padrão 0.0 dB)
-  public threshold: WritableSignal<number> = signal(0.0);
-
-  // --- SETTERS REATIVOS PARA AJUSTE DE CROSSOVER ---
-  public setLowCutoff(value: number): void {
-    this.lowCutoff.set(value);
+    if (value === 'streaming') {
+      if (this.platform() === null) this.platform.set('spotify');
+    } else {
+      this.platform.set(null);
+      this.soundcloudMode.set('standard');
+    }
   }
 
-  public setHighCutoff(value: number): void {
-    this.highCutoff.set(value);
+  setPlatform(value: MasteringPlatform): void {
+    if (this.destination() !== 'streaming') return;
+    this.platform.set(value);
+    this.requestedLufs.set(null);
+    if (value !== 'soundcloud') this.soundcloudMode.set('standard');
   }
 
-  // --- SETTERS REATIVOS PARA AJUSTE ESTÉREO ---
-  public setStereoWidth(value: number): void {
-    this.stereoWidth.set(value);
+  setAtmosphere(value: MasteringAtmosphere): void {
+    this.atmosphere.set(value);
   }
 
-  public setSatAmount(value: number): void {
-    this.satAmount.set(value);
+  setIntensityPercent(value: number): void {
+    const normalized = Math.max(0, Math.min(100, Math.round(value)));
+    this.intensityPercent.set(normalized);
   }
 
-  public setMonoBass(value: number): void {
-    this.monoBassHz.set(value);
+  setRequestedLufs(value: number | null): void {
+    this.requestedLufs.set(value);
   }
 
-  // --- SETTERS REATIVOS PARA AJUSTE DO LIMITADOR ---
-  public setCeiling(value: number): void {
-    this.ceiling.set(value);
+  setSoundCloudMode(value: SoundCloudMode): void {
+    if (this.destination() === 'streaming' && this.platform() === 'soundcloud') {
+      this.soundcloudMode.set(value);
+      this.requestedLufs.set(null);
+    }
   }
 
-  public setThreshold(value: number): void {
-    this.threshold.set(value);
-  }
-
-  /**
-   * Retorna o payload completo de parâmetros reativos formatados
-   * no padrão exato exigido pelas classes Pydantic do backend FastAPI.
-   */
-  public getMasteringPayload() {
+  getRequest(): MasteringV2Request {
     return {
-      low_cutoff_hz: this.lowCutoff(),
-      high_cutoff_hz: this.highCutoff(),
-      stereo_width: this.stereoWidth(),
-      saturation_amount: this.satAmount(),
-      mono_bass_frequency_hz: this.monoBassHz(),
-      ceiling_dbtp: this.ceiling(),
-      threshold_db: this.threshold()
+      destination: this.destination(),
+      platform: this.destination() === 'streaming' ? this.platform() : null,
+      atmosphere: this.atmosphere(),
+      intensityPercent: this.intensityPercent(),
+      requestedLufs: this.requestedLufs(),
+      soundcloudMode: this.soundcloudMode(),
     };
   }
 }

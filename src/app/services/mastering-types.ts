@@ -1,17 +1,69 @@
-// daw-frontend/src/app/services/mastering-types.ts
+export type MasteringDestination = 'streaming' | 'club' | 'festival';
+export type MasteringPlatform = 'spotify' | 'apple_music' | 'youtube' | 'soundcloud' | 'generic';
+export type MasteringAtmosphere = 'clear_sky' | 'thunder' | 'sunroof' | 'aurora';
+export type SoundCloudMode = 'standard' | 'loud';
 
-export interface AudioMetrics {
-  integrated_lufs: number;
-  true_peak_dbtp: number;
-  sample_peak_dbfs: number;
-  loudness_range_lra: number;
-  crest_factor_db: number;
-  plr: number;
-  dc_offset: number;
-  stereo_correlation: number;
+export interface MasteringV2Request {
+  destination: MasteringDestination;
+  platform: MasteringPlatform | null;
+  atmosphere: MasteringAtmosphere;
+  intensityPercent: number;
+  requestedLufs: number | null;
+  soundcloudMode: SoundCloudMode;
 }
 
-export interface CrossoverSettings {
-  lowCutoffHz: number;
-  highCutoffHz: number;
+export interface MasteringProcessCommand {
+  request: MasteringV2Request;
+  preview: boolean;
+}
+
+export interface MasteringDeliveryTargetCapabilities {
+  target_lufs: number;
+  min_lufs: number;
+  max_lufs: number;
+  true_peak_ceiling_dbtp: number;
+  min_plr_lu: number;
+  min_lra_retention: number;
+  max_crest_loss_db: number;
+  policy_source: string;
+}
+
+export interface MasteringAtmosphereCapability {
+  id: MasteringAtmosphere;
+  label: string;
+  subtitle: string;
+}
+
+export interface MasteringV2Capabilities {
+  engine: string;
+  release: string;
+  preview_seconds: number;
+  intensity: {
+    min: number;
+    max: number;
+    step: number;
+    default: number;
+  };
+  atmospheres: MasteringAtmosphereCapability[];
+  destinations: {
+    streaming: {
+      platform_required: true;
+      platforms: Record<MasteringPlatform, Partial<Record<SoundCloudMode, MasteringDeliveryTargetCapabilities>>>;
+    };
+    club: {
+      platform_required: false;
+      target: MasteringDeliveryTargetCapabilities;
+    };
+    festival: {
+      platform_required: false;
+      target: MasteringDeliveryTargetCapabilities;
+    };
+  };
+}
+
+export interface MasteringV2FinalResponse {
+  success: boolean;
+  engine: string;
+  downloadUrl: string;
+  fileName: string;
 }

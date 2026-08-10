@@ -1,57 +1,64 @@
-// src/app/components/mastering-panel/mastering-panel.component.ts
-
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDestroy, inject, computed } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService, AudioVariant } from '../../services/audio-comparison.service';
+import { DspService } from '../../services/dsp';
 import { MasteringService } from '../../services/mastering.service';
+import {
+  MasteringAtmosphere,
+  MasteringDeliveryTargetCapabilities,
+  MasteringDestination,
+  MasteringPlatform,
+  MasteringProcessCommand,
+  MasteringV2Capabilities,
+  SoundCloudMode,
+} from '../../services/mastering-types';
 
 @Component({
   selector: 'app-mastering-panel',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './mastering-panel.html',
-  styleUrls: ['./mastering-panel.scss']
+  styleUrls: ['./mastering-panel.scss'],
 })
-export class MasteringPanelComponent implements OnChanges, OnDestroy {
+export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   readonly lang = inject(LanguageService);
   readonly auth = inject(AuthService);
   readonly audioComparison = inject(AudioComparisonService);
-
-  // Injeta o serviço unificado de DSP [5.3]
+  private readonly dspService = inject(DspService);
   private readonly masteringService = inject(MasteringService);
 
   @Input() originalFile: File | null = null;
   @Input() isProcessing = false;
   @Input() masteredAudioUrl: string | null = null;
-  @Input() isFullMaster = false; // Sabe se o arquivo recebido é a prévia ou a master completa! [1.1.2]
+  @Input() isFullMaster = false;
 
-  // Enriquecemos a assinatura do Output para repassar os customParams de DSP para o componente pai
-  @Output() processMaster = new EventEmitter<{
-    estilo: string,
-    intensidade: string,
-    preview: boolean,
-    customParams?: any
-  }>();
-  @Output() estiloAlterado = new EventEmitter<string>();
+  @Output() processMaster = new EventEmitter<MasteringProcessCommand>();
+  @Output() configChanged = new EventEmitter<void>();
 
-  estiloSelecionado: string = 'clear_sky';
-  intensidadeSelecionada: string = 'media';
-  volumeMatch: boolean = true;
+  readonly destination = this.masteringService.destination;
+  readonly platform = this.masteringService.platform;
+  readonly atmosphere = this.masteringService.atmosphere;
+  readonly intensityPercent = this.masteringService.intensityPercent;
+  readonly requestedLufs = this.masteringService.requestedLufs;
+  readonly soundcloudMode = this.masteringService.soundcloudMode;
 
-  // --- SIGNALS VINCULADOS AO SERVIÇO DE DSP [5.3] ---
-  readonly lowCutoff = this.masteringService.lowCutoff;
-  readonly highCutoff = this.masteringService.highCutoff;
-  readonly stereoWidth = this.masteringService.stereoWidth;
-  readonly satAmount = this.masteringService.satAmount;
-  readonly monoBassHz = this.masteringService.monoBassHz;
-  readonly ceiling = this.masteringService.ceiling;
-  readonly threshold = this.masteringService.threshold;
-
-  // Signal computado para a porcentagem de saturação
-  readonly satAmountPercent = computed(() => Math.round(this.satAmount() * 100));
+  readonly capabilities = signal<MasteringV2Capabilities | null>(null);
+  readonly capabilitiesError = signal(false);
 
   readonly previewWindowString = computed(() => {
     const start = this.audioComparison.previewStart();
@@ -59,111 +66,125 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
     return `${this.formatarTempo(start)} – ${this.formatarTempo(end)}`;
   });
 
-  // --- COMPORTAMENTOS DOS CONTROLES DO SLIDER ---
-  updateLowCutoff(event: Event) {
-    const value = +(event.target as HTMLInputElement).value;
-    this.masteringService.setLowCutoff(value);
+  readonly activeTarget = computed<MasteringDeliveryTargetCapabilities | null>(() => {
+    const capabilities = this.capabilities();
+    if (!capabilities) return null;
+
+    const destination = this.destination();
+    if (destination === 'club' || destination === 'festival') {
+      return capabilities.destinations[destination].target;
+    }
+
+    const platform = this.platform();
+    if (!platform) return null;
+    const mode: SoundCloudMode = platform === 'soundcloud' ? this.soundcloudMode() : 'standard';
+    return capabilities.destinations.streaming.platforms[platform][mode] ?? null;
+  });
+
+  ngOnInit(): void {
+    this.dspService.getMasteringV2Capabilities().subscribe({
+      next: (capabilities) => {
+        this.capabilities.set(capabilities);
+        this.capabilitiesError.set(false);
+      },
+      error: () => this.capabilitiesError.set(true),
+    });
   }
 
-  updateHighCutoff(event: Event) {
-    const value = +(event.target as HTMLInputElement).value;
-    this.masteringService.setHighCutoff(value);
-  }
-
-  updateStereoWidth(event: Event) {
-    const value = +(event.target as HTMLInputElement).value;
-    this.masteringService.setStereoWidth(value);
-  }
-
-  updateSatAmount(event: Event) {
-    const value = +(event.target as HTMLInputElement).value / 100;
-    this.masteringService.setSatAmount(value);
-  }
-
-  updateMonoBass(event: Event) {
-    const value = +(event.target as HTMLInputElement).value;
-    this.masteringService.setMonoBass(value);
-  }
-
-  updateCeiling(event: Event) {
-    const value = +(event.target as HTMLInputElement).value;
-    this.masteringService.setCeiling(value);
-  }
-
-  updateThreshold(event: Event) {
-    const value = +(event.target as HTMLInputElement).value;
-    this.masteringService.setThreshold(value);
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges(changes: SimpleChanges): void {
     if (changes['originalFile'] && this.originalFile) {
       const url = window.URL.createObjectURL(this.originalFile);
       this.audioComparison.setOriginalSrc(url);
     }
 
     if (changes['masteredAudioUrl'] && this.masteredAudioUrl) {
-      // O S3 devolveu o áudio! Decide o modo com base na flag isFullMaster [1.1.2]
       const mode = this.isFullMaster ? 'full-track' : 'preview-15s';
       this.audioComparison.setMasterSrc(this.masteredAudioUrl, mode);
     }
   }
 
-  selecionarEstilo(estilo: string) {
-    this.estiloSelecionado = estilo;
-    this.estiloAlterado.emit(estilo);
+  selectDestination(value: MasteringDestination): void {
+    this.masteringService.setDestination(value);
+    this.notifyConfigChanged();
   }
 
-  selecionarIntensidade(intensidade: string) {
-    this.intensidadeSelecionada = intensidade;
+  selectPlatform(value: MasteringPlatform): void {
+    this.masteringService.setPlatform(value);
+    this.notifyConfigChanged();
   }
 
-  alternarAudicao(variant: AudioVariant) {
-    this.audioComparison.switchVariant(variant);
+  selectAtmosphere(value: MasteringAtmosphere): void {
+    this.masteringService.setAtmosphere(value);
+    this.notifyConfigChanged();
   }
 
-  dispararPreview() {
+  selectSoundCloudMode(value: SoundCloudMode): void {
+    this.masteringService.setSoundCloudMode(value);
+    this.notifyConfigChanged();
+  }
+
+  updateIntensity(event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value);
+    this.masteringService.setIntensityPercent(value);
+    this.notifyConfigChanged();
+  }
+
+  updateRequestedLufs(value: string | number | null): void {
+    if (value === null || value === '') {
+      this.masteringService.setRequestedLufs(null);
+    } else {
+      const parsed = Number(value);
+      this.masteringService.setRequestedLufs(Number.isFinite(parsed) ? parsed : null);
+    }
+    this.notifyConfigChanged();
+  }
+
+  usePolicyLufs(): void {
+    this.masteringService.setRequestedLufs(null);
+    this.notifyConfigChanged();
+  }
+
+  alternarAudicao(variant: AudioVariant): void {
+    void this.audioComparison.switchVariant(variant);
+  }
+
+  dispararPreview(): void {
     this.audioComparison.previewStatus.set('processing');
-    this.processMaster.emit({
-      estilo: this.estiloSelecionado,
-      intensidade: this.intensidadeSelecionada,
-      preview: true,
-      customParams: this.masteringService.getMasteringPayload() // Passa o payload dinâmico ajustado
-    });
+    this.processMaster.emit({ request: this.masteringService.getRequest(), preview: true });
   }
 
-  dispararProcessamentoCompleto() {
-    this.processMaster.emit({
-      estilo: this.estiloSelecionado,
-      intensidade: this.intensidadeSelecionada,
-      preview: false,
-      customParams: this.masteringService.getMasteringPayload() // Passa o payload dinâmico ajustado
-    });
+  dispararProcessamentoCompleto(): void {
+    this.processMaster.emit({ request: this.masteringService.getRequest(), preview: false });
   }
 
-  pararReproducao() {
+  pararReproducao(): void {
     this.audioComparison.stopAndReset();
   }
 
   formatarTempo(segundos: number): string {
-    if (isNaN(segundos)) return '00:00';
+    if (Number.isNaN(segundos)) return '00:00';
     const mins = Math.floor(segundos / 60);
     const secs = Math.floor(segundos % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  onScrubberChange(event: Event) {
+  onScrubberChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const val = parseFloat(input.value);
+    const val = Number.parseFloat(input.value);
 
     if (this.audioComparison.activeVariant() === 'master' && this.audioComparison.playbackMode() === 'preview-15s') {
-      const targetInOriginal = this.audioComparison.previewStart() + val;
-      this.audioComparison.seek(targetInOriginal);
+      this.audioComparison.seek(this.audioComparison.previewStart() + val);
     } else {
       this.audioComparison.seek(val);
     }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.audioComparison.resetAll();
+  }
+
+  private notifyConfigChanged(): void {
+    this.audioComparison.previewStatus.set('not-generated');
+    this.configChanged.emit();
   }
 }

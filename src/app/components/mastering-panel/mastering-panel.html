@@ -1,23 +1,13 @@
-<!-- src/app/components/mastering-panel/mastering-panel.component.html -->
 <div class="mastering-board" *ngIf="originalFile">
-
-  <!-- 🎛️ REPRODUTOR UNIFICADO CUSTOMIZADO (RQS Cyberpunk Audio Console) -->
   <div class="player-section custom-audio-console">
-
-    <!-- Painel de Tempo e Telemetria de Transmissão -->
     <div class="console-telemetry">
-      <span class="currentTime">
-        {{ formatarTempo(audioComparison.displayCurrentTime()) }}
-      </span>
+      <span class="currentTime">{{ formatarTempo(audioComparison.displayCurrentTime()) }}</span>
       <span class="status-mode">
-        {{ audioComparison.activeVariant() === 'original' ? 'A: ORIGINAL_SOURCE' : 'B: PROCESSED_SOURCE' }}
+        {{ audioComparison.activeVariant() === 'original' ? 'A: ORIGINAL_SOURCE' : 'B: MASTERING_V2' }}
       </span>
-      <span class="totalDuration">
-        {{ formatarTempo(audioComparison.displayDuration()) }}
-      </span>
+      <span class="totalDuration">{{ formatarTempo(audioComparison.displayDuration()) }}</span>
     </div>
 
-    <!-- Scrubber Customizado (Barra de Progresso) [1.1.2] -->
     <div class="scrubber-container">
       <input
         type="range"
@@ -30,217 +20,126 @@
         class="cyber-scrubber">
     </div>
 
-    <!-- 🟢 INDICADORES DINÂMICOS DE REPRODUÇÃO (SaaS Feedback) [1.1.2] -->
     <div class="loop-indicator-bar" *ngIf="audioComparison.canUseMaster()">
-
-      <!-- Se for o loop de 15s da prévia rápida -->
       <span class="loop-badge" *ngIf="audioComparison.playbackMode() === 'preview-15s'">
-        🔁 LOOP DE PRÉVIA COMPARAÇÃO A/B ATIVO (TRECHO: {{ previewWindowString() }})
+        🔁 MASTERING V2 PREVIEW {{ previewWindowString() }}
       </span>
-
-       <!-- 🟢 ALERTAS DE CONCURSÃO DE MASTERIZAÇÃO [1.1.2] -->
       <span class="loop-badge full-master-active" *ngIf="audioComparison.playbackMode() === 'full-track'">
         {{ lang.tr().FULL_MASTER_COMPLETED_ALERT }}
       </span>
-
     </div>
 
-    <!-- Botões de Transporte Centralizados -->
     <div class="transport-controls">
       <button (click)="audioComparison.togglePlayback()" class="btn-transport">
         {{ audioComparison.isPlaying() ? '⏸ PAUSE' : '▶ PLAY' }}
       </button>
-      <button (click)="pararReproducao()" class="btn-transport btn-stop">
-        ■ STOP
-      </button>
+      <button (click)="pararReproducao()" class="btn-transport btn-stop">■ STOP</button>
     </div>
 
-    <!-- SELETOR A/B UNIFICADO (Com Crossfade analógico de 30ms) [1.1.2] -->
     <div class="ab-toggle-console">
-
       <button class="ab-btn"
               [class.active]="audioComparison.activeVariant() === 'original'"
               (click)="alternarAudicao('original')">
         {{ lang.tr().ORIGINAL_LABEL }}
       </button>
-
       <div class="switch" (click)="alternarAudicao(audioComparison.activeVariant() === 'original' ? 'master' : 'original')">
         <div class="slider" [class.on]="audioComparison.activeVariant() === 'master'"></div>
       </div>
-
       <button class="ab-btn"
               [class.active]="audioComparison.activeVariant() === 'master'"
               [disabled]="!audioComparison.canUseMaster()"
               (click)="alternarAudicao('master')">
         {{ lang.tr().MASTER_LABEL }} 🔒
-        <span *ngIf="!audioComparison.canUseMaster()" class="tooltip-lock">
-          {{ lang.tr().AB_PREVIEW_LOCK_NOTE }}
-        </span>
       </button>
     </div>
-
-    <div class="volume-match">
-      <input type="checkbox" id="volMatch" [(ngModel)]="volumeMatch" disabled>
-      <label for="volMatch">{{ lang.t().VOLUME_MATCH }}</label>
-    </div>
   </div>
 
   <hr class="cyber-divider">
 
-  <!-- CONTROLES DE ENGENHARIA ACÚSTICA (Perfis e Intensidades) -->
   <div class="controls-section">
-    <!-- Bloco 1: Perfil Acústico -->
     <div class="control-group">
-      <h4>{{ lang.t().PERFIL_ACUSTICO }}</h4>
+      <h4>DESTINATION</h4>
       <div class="btn-group profiles-grid">
-        <button [class.selected]="estiloSelecionado === 'thunder'" (click)="selecionarEstilo('thunder')">
-          {{ lang.t().THUNDER }}
-        </button>
-        <button [class.selected]="estiloSelecionado === 'clear_sky'" (click)="selecionarEstilo('clear_sky')">
-          {{ lang.t().CLEAR_SKY }}
-        </button>
-        <button [class.selected]="estiloSelecionado === 'sunroof'" (click)="selecionarEstilo('sunroof')">
-          {{ lang.t().SUNROOF }}
-        </button>
-        <button [class.selected]="estiloSelecionado === 'aurora'" (click)="selecionarEstilo('aurora')">
-          {{ lang.t().AURORA }}
-        </button>
+        <button [class.selected]="destination() === 'streaming'" (click)="selectDestination('streaming')">Streaming</button>
+        <button [class.selected]="destination() === 'club'" (click)="selectDestination('club')">Club</button>
+        <button [class.selected]="destination() === 'festival'" (click)="selectDestination('festival')">Festival</button>
       </div>
     </div>
 
-    <!-- Bloco 2: Controle de Intensidade -->
-    <div class="control-group">
-      <h4>{{ lang.t().INTENSIDADE_MASTER }}</h4>
+    <div class="control-group" *ngIf="destination() === 'streaming'">
+      <h4>PLATFORM</h4>
+      <div class="btn-group profiles-grid">
+        <button [class.selected]="platform() === 'spotify'" (click)="selectPlatform('spotify')">Spotify</button>
+        <button [class.selected]="platform() === 'apple_music'" (click)="selectPlatform('apple_music')">Apple Music</button>
+        <button [class.selected]="platform() === 'youtube'" (click)="selectPlatform('youtube')">YouTube</button>
+        <button [class.selected]="platform() === 'soundcloud'" (click)="selectPlatform('soundcloud')">SoundCloud</button>
+        <button [class.selected]="platform() === 'generic'" (click)="selectPlatform('generic')">Generic</button>
+      </div>
+    </div>
+
+    <div class="control-group" *ngIf="destination() === 'streaming' && platform() === 'soundcloud'">
+      <h4>SOUNDCLOUD MODE</h4>
       <div class="btn-group intensity-selector">
-        <button [class.selected]="intensidadeSelecionada === 'baixa'" (click)="selecionarIntensidade('baixa')">
-          {{ lang.t().BAIXA }}
-        </button>
-        <button [class.selected]="intensidadeSelecionada === 'media'" (click)="selecionarIntensidade('media')">
-          {{ lang.t().MEDIA }}
-        </button>
-        <button [class.selected]="intensidadeSelecionada === 'alta'" (click)="selecionarIntensidade('alta')">
-          {{ lang.t().ALTA }}
-        </button>
+        <button [class.selected]="soundcloudMode() === 'standard'" (click)="selectSoundCloudMode('standard')">Standard</button>
+        <button [class.selected]="soundcloudMode() === 'loud'" (click)="selectSoundCloudMode('loud')">Loud</button>
       </div>
+    </div>
+
+    <div class="control-group">
+      <h4>ATMOSPHERE</h4>
+      <div class="btn-group profiles-grid">
+        <button [class.selected]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
+        <button [class.selected]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
+        <button [class.selected]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
+        <button [class.selected]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h4>CHARACTER INTENSITY — {{ intensityPercent() }}%</h4>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        [value]="intensityPercent()"
+        (input)="updateIntensity($event)"
+        class="cyber-scrubber"
+        aria-label="Mastering V2 intensity">
+      <p class="helper-text">0% = delivery-only. 100% = pełny poziom charakteru V2.</p>
+    </div>
+
+    <div class="control-group">
+      <h4>DELIVERY POLICY</h4>
+      <div *ngIf="activeTarget() as target" class="policy-card">
+        <div>Default: <strong>{{ target.target_lufs }} LUFS</strong></div>
+        <div>Allowed: {{ target.min_lufs }} … {{ target.max_lufs }} LUFS</div>
+        <div>True Peak policy: {{ target.true_peak_ceiling_dbtp }} dBTP</div>
+        <label>
+          Requested LUFS (optional)
+          <input
+            type="number"
+            step="0.1"
+            [min]="target.min_lufs"
+            [max]="target.max_lufs"
+            [ngModel]="requestedLufs()"
+            (ngModelChange)="updateRequestedLufs($event)">
+        </label>
+        <button type="button" class="btn-secondary" (click)="usePolicyLufs()">Use policy default</button>
+      </div>
+      <p class="helper-text" *ngIf="capabilitiesError()">
+        Nie udało się pobrać capabilities V2. Render pozostaje zablokowany przez walidację backendu.
+      </p>
     </div>
   </div>
 
-  <hr class="cyber-divider">
-<!-- 🎛️ PAINEL DE ENGENHARIA DE PRECISÃO (AJUSTES FINOS DSP) [5.3] -->
-  <div class="engineering-panel">
-    <h3>Ajustes de Precisão (DSP Engine)</h3>
-
-    <!-- Subseção A: Crossover Multibanda -->
-    <div class="eng-section">
-      <h5>Crossover Espectral (LR4 complementary)</h5>
-      <div class="slider-row">
-        <div class="slider-header">
-          <span>Sub-Graves / Médios</span>
-          <span class="slider-value">{{ lowCutoff() }} Hz</span>
-        </div>
-        <input type="range" min="80" max="400" step="10"
-               title="Frequência de Corte Baixa do Crossover"
-               aria-label="Frequência de Corte Baixa do Crossover"
-               [value]="lowCutoff()"
-               (input)="updateLowCutoff($event)"
-               class="cyber-scrubber">
-      </div>
-      <div class="slider-row">
-        <div class="slider-header">
-          <span>Médios / Agudos</span>
-          <span class="slider-value">{{ highCutoff() }} Hz</span>
-        </div>
-        <input type="range" min="1500" max="6000" step="100"
-               title="Frequência de Corte Alta do Crossover"
-               aria-label="Frequência de Corte Alta do Crossover"
-               [value]="highCutoff()"
-               (input)="updateHighCutoff($event)"
-               class="cyber-scrubber">
-      </div>
-    </div>
-
-    <!-- Subseção B: Imagem Estéreo Mid/Side -->
-    <div class="eng-section">
-      <h5>Imagem Estéreo & Calor Analógico M/S</h5>
-      <div class="slider-row">
-        <div class="slider-header">
-          <span>Largura de Campo Estéreo</span>
-          <span class="slider-value">x{{ stereoWidth() }}</span>
-        </div>
-        <input type="range" min="0.5" max="2.0" step="0.1"
-               title="Ajuste de Largura de Campo Estéreo"
-               aria-label="Ajuste de Largura de Campo Estéreo"
-               [value]="stereoWidth()"
-               (input)="updateStereoWidth($event)"
-               class="cyber-scrubber">
-      </div>
-      <div class="slider-row">
-        <div class="slider-header">
-          <span>Saturação Harmônica Lateral</span>
-          <span class="slider-value">{{ satAmountPercent() }}%</span>
-        </div>
-        <input type="range" min="0" max="100" step="5"
-               title="Intensidade de Saturação Harmônica Lateral"
-               aria-label="Intensidade de Saturação Harmônica Lateral"
-               [value]="satAmountPercent()"
-               (input)="updateSatAmount($event)"
-               class="cyber-scrubber">
-      </div>
-      <div class="slider-row">
-        <div class="slider-header">
-          <span>Mono-ização de Graves (Mono Bass)</span>
-          <span class="slider-value">{{ monoBassHz() }} Hz</span>
-        </div>
-        <input type="range" min="80" max="200" step="10"
-               title="Corte de Frequência do Mono Bass"
-               aria-label="Corte de Frequência do Mono Bass"
-               [value]="monoBassHz()"
-               (input)="updateMonoBass($event)"
-               class="cyber-scrubber">
-      </div>
-    </div>
-
-    <!-- Subseção C: Limitador de Pico Verdadeiro -->
-    <div class="eng-section">
-      <h5>Limitador de Pico Verdadeiro (dBTP)</h5>
-      <div class="slider-row">
-        <div class="slider-header">
-          <span>Teto de Saída (Ceiling)</span>
-          <span class="slider-value">{{ ceiling() }} dBTP</span>
-        </div>
-        <input type="range" min="-3.0" max="-0.1" step="0.1"
-               title="Teto de Saída do Limitador em dBTP"
-               aria-label="Teto de Saída do Limitador em dBTP"
-               [value]="ceiling()"
-               (input)="updateCeiling($event)"
-               class="cyber-scrubber">
-      </div>
-      <div class="slider-row">
-        <div class="slider-header">
-          <span>Ganho de Entrada (Threshold)</span>
-          <span class="slider-value">{{ threshold() }} dB</span>
-        </div>
-        <input type="range" min="-18.0" max="0.0" step="0.5"
-               title="Ganho de Entrada do Limitador"
-               aria-label="Ganho de Entrada do Limitador"
-               [value]="threshold()"
-               (input)="updateThreshold($event)"
-               class="cyber-scrubber">
-      </div>
-    </div>
-  </div>
-
-  <!-- BADGE DO PLANO -->
   <div class="plan-usage-badge">
     <span *ngIf="!auth.isPremium()">
       ⚡ {{ lang.t().FREE_USAGE_LABEL }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong>
     </span>
-    <span *ngIf="auth.isPremium()" class="pro-badge">
-      💎 {{ lang.t().PRO_USAGE_LABEL }}
-    </span>
+    <span *ngIf="auth.isPremium()" class="pro-badge">💎 {{ lang.t().PRO_USAGE_LABEL }}</span>
   </div>
 
-  <!-- BOTÕES DE AÇÃO REATIVOS -->
   <div class="action-buttons">
     <button
       class="btn-secondary"
@@ -248,7 +147,6 @@
       [disabled]="isProcessing || audioComparison.previewStatus() === 'processing'">
       {{ audioComparison.previewStatus() === 'processing' ? lang.tr().AB_PREVIEW_GENERATING : lang.tr().BTN_GENERATE_PREVIEW }}
     </button>
-
     <button
       class="btn-process"
       (click)="dispararProcessamentoCompleto()"
