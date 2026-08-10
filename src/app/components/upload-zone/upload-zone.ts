@@ -7,6 +7,7 @@ import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
 import { MasteringProcessCommand, MasteringV2Request } from '../../services/mastering-types';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-upload-zone',
@@ -22,6 +23,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   readonly lang = inject(LanguageService);
   readonly auth = inject(AuthService);
   readonly audioComparison = inject(AudioComparisonService);
+  readonly masteringV2DirectUpload = environment.masteringV2DirectUpload;
   private readonly dspService = inject(DspService);
 
   isDragging = false;
@@ -98,7 +100,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   }
 
   processarMaster(command: MasteringProcessCommand): void {
-    if (!this.selectedFile || !this.s3Key) return;
+    if (!this.selectedFile) return;
+    if (!this.masteringV2DirectUpload && !this.s3Key) return;
 
     if (!command.preview && !this.auth.canMaster()) {
       alert(this.lang.t().LIMIT_EXCEEDED_ALERT);
@@ -218,12 +221,25 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isFullMasterCompleted = false;
     this.systemLogs = [];
     this.addLog(`Track engatada: ${file.name}`);
+
+    if (this.masteringV2DirectUpload) {
+      this.isUploadingS3 = false;
+      this.addLog('Modo local Mastering V2: upload direto ao backend, sem S3.');
+      return;
+    }
+
     this.iniciarUploadS3Silencioso(file);
   }
 
   private buildMasteringV2FormData(request: MasteringV2Request, preview: boolean): FormData {
     const formData = new FormData();
-    formData.append('s3Key', this.s3Key ?? '');
+
+    if (this.masteringV2DirectUpload && this.selectedFile) {
+      formData.append('audio', this.selectedFile, this.selectedFile.name);
+    } else {
+      formData.append('s3Key', this.s3Key ?? '');
+    }
+
     formData.append('destination', request.destination);
     if (request.platform) formData.append('platform', request.platform);
     formData.append('atmosphere', request.atmosphere);
