@@ -30,3 +30,12 @@ jobs:
 
       - name: Build Angular production application
         run: npm run build
+
+      - name: Verify production API isolation
+        run: |
+          if grep -R -F -q 'http://localhost:8080' dist/rqs-daw; then
+            echo 'ERROR: local Mastering V2 API URL leaked into production bundle.'
+            exit 1
+          fi
+          grep -R -F -q 'https://m2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws' dist/rqs-daw
+          echo 'PRODUCTION_API_ISOLATION: PASS'
