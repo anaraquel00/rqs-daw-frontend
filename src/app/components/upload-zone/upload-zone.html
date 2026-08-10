@@ -25,7 +25,7 @@
     <button
       class="btn-stem-extract"
       (click)="extrairStems()"
-      [disabled]="!selectedFile || isProcessing || isExtractingStems || isUploadingS3">
+      [disabled]="!selectedFile || masteringV2DirectUpload || isProcessing || isExtractingStems || isUploadingS3">
       {{ isExtractingStems ? lang.t().DISSECTING_MINI : lang.t().EXTRACT_STEMS }}
     </button>
     <p class="text-[10px] text-zinc-500 text-center mt-1.5 font-mono" *ngIf="!selectedFile">
