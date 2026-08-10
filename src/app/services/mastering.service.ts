@@ -11,12 +11,24 @@ import {
   providedIn: 'root',
 })
 export class MasteringService {
+  // Validated Mastering V2 request state.
   readonly destination: WritableSignal<MasteringDestination> = signal('streaming');
   readonly platform: WritableSignal<MasteringPlatform | null> = signal('spotify');
   readonly atmosphere: WritableSignal<MasteringAtmosphere> = signal('clear_sky');
   readonly intensityPercent: WritableSignal<number> = signal(50);
   readonly requestedLufs: WritableSignal<number | null> = signal(null);
   readonly soundcloudMode: WritableSignal<SoundCloudMode> = signal('standard');
+
+  // Legacy component compatibility only. These signals keep standalone legacy
+  // control components compilable, but they are intentionally NOT serialized
+  // by getRequest() and therefore cannot alter the validated V2 contract.
+  readonly lowCutoff: WritableSignal<number> = signal(200);
+  readonly highCutoff: WritableSignal<number> = signal(3000);
+  readonly stereoWidth: WritableSignal<number> = signal(1.0);
+  readonly satAmount: WritableSignal<number> = signal(0.3);
+  readonly monoBassHz: WritableSignal<number> = signal(120);
+  readonly ceiling: WritableSignal<number> = signal(-1.0);
+  readonly threshold: WritableSignal<number> = signal(0.0);
 
   setDestination(value: MasteringDestination): void {
     this.destination.set(value);
@@ -55,6 +67,34 @@ export class MasteringService {
       this.soundcloudMode.set(value);
       this.requestedLufs.set(null);
     }
+  }
+
+  setLowCutoff(value: number): void {
+    this.lowCutoff.set(value);
+  }
+
+  setHighCutoff(value: number): void {
+    this.highCutoff.set(value);
+  }
+
+  setStereoWidth(value: number): void {
+    this.stereoWidth.set(value);
+  }
+
+  setSatAmount(value: number): void {
+    this.satAmount.set(value);
+  }
+
+  setMonoBass(value: number): void {
+    this.monoBassHz.set(value);
+  }
+
+  setCeiling(value: number): void {
+    this.ceiling.set(value);
+  }
+
+  setThreshold(value: number): void {
+    this.threshold.set(value);
   }
 
   getRequest(): MasteringV2Request {
