@@ -27,6 +27,7 @@ import {
   MasteringV2Capabilities,
   SoundCloudMode,
 } from '../../services/mastering-types';
+import { MasteringHelpTopic, masteringEducation } from './mastering-education';
 
 @Component({
   selector: 'app-mastering-panel',
@@ -59,14 +60,23 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   readonly capabilities = signal<MasteringV2Capabilities | null>(null);
   readonly capabilitiesError = signal<string | null>(null);
+  readonly activeHelpTopic = signal<MasteringHelpTopic | null>(null);
+  readonly guideOpen = signal(false);
+  readonly configInvalidatedResult = signal(false);
   private originalObjectUrl: string | null = null;
 
+  readonly education = computed(() => masteringEducation(this.lang.currentLang()));
   readonly capabilitiesLoading = computed(() => this.capabilities() === null && this.capabilitiesError() === null);
 
   readonly previewWindowString = computed(() => {
     const start = this.audioComparison.previewStart();
     const end = this.audioComparison.previewEnd();
     return `${this.formatarTempo(start)} – ${this.formatarTempo(end)}`;
+  });
+
+  readonly activeHelp = computed(() => {
+    const topic = this.activeHelpTopic();
+    return topic ? this.education().controls[topic] : null;
   });
 
   readonly activeTarget = computed<MasteringDeliveryTargetCapabilities | null>(() => {
@@ -89,7 +99,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     const requested = this.requestedLufs();
     if (!target || requested === null) return null;
     if (requested < target.min_lufs || requested > target.max_lufs) {
-      return `Requested LUFS must be between ${target.min_lufs} and ${target.max_lufs}.`;
+      return this.education().invalidLufs(target.min_lufs, target.max_lufs);
     }
     return null;
   });
@@ -99,6 +109,21 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
       && this.capabilitiesError() === null
       && this.activeTarget() !== null
       && this.requestedLufsError() === null;
+  });
+
+  readonly renderBlockReason = computed<string | null>(() => {
+    if (this.capabilitiesLoading()) {
+      if (this.lang.currentLang() === 'pl') return 'Ładowanie polityki masteringu z backendu…';
+      if (this.lang.currentLang() === 'pt') return 'Carregando a política de masterização do backend…';
+      return 'Loading the mastering policy from the backend…';
+    }
+    if (this.capabilitiesError()) return this.capabilitiesError();
+    if (!this.activeTarget()) {
+      if (this.lang.currentLang() === 'pl') return 'Nie znaleziono polityki dla wybranego zastosowania.';
+      if (this.lang.currentLang() === 'pt') return 'A política do destino selecionado não está disponível.';
+      return 'The selected destination policy is unavailable.';
+    }
+    return this.requestedLufsError();
   });
 
   ngOnInit(): void {
@@ -114,7 +139,13 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
       },
       error: () => {
         this.capabilities.set(null);
-        this.capabilitiesError.set('Mastering V2 contract is unavailable.');
+        if (this.lang.currentLang() === 'pl') {
+          this.capabilitiesError.set('Nie można pobrać kontraktu Mastering V2.');
+        } else if (this.lang.currentLang() === 'pt') {
+          this.capabilitiesError.set('Não foi possível carregar o contrato Mastering V2.');
+        } else {
+          this.capabilitiesError.set('Mastering V2 contract is unavailable.');
+        }
       },
     });
   }
@@ -122,6 +153,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['originalFile']) {
       this.releaseOriginalObjectUrl();
+      this.configInvalidatedResult.set(false);
       if (this.originalFile) {
         this.originalObjectUrl = window.URL.createObjectURL(this.originalFile);
         this.audioComparison.setOriginalSrc(this.originalObjectUrl);
@@ -132,6 +164,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
       if (this.masteredAudioUrl) {
         const mode = this.isFullMaster ? 'full-track' : 'preview-15s';
         this.audioComparison.setMasterSrc(this.masteredAudioUrl, mode);
+        this.configInvalidatedResult.set(false);
       } else {
         this.audioComparison.clearMasterSrc();
       }
@@ -191,18 +224,28 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     this.notifyConfigChanged();
   }
 
+  toggleHelp(topic: MasteringHelpTopic): void {
+    this.activeHelpTopic.set(this.activeHelpTopic() === topic ? null : topic);
+  }
+
+  toggleGuide(): void {
+    this.guideOpen.update((value) => !value);
+  }
+
   alternarAudicao(variant: AudioVariant): void {
     void this.audioComparison.switchVariant(variant);
   }
 
   dispararPreview(): void {
     if (this.isProcessing || !this.requestReady()) return;
+    this.configInvalidatedResult.set(false);
     this.audioComparison.previewStatus.set('processing');
     this.processMaster.emit({ request: this.masteringService.getRequest(), preview: true });
   }
 
   dispararProcessamentoCompleto(): void {
     if (this.isProcessing || !this.requestReady()) return;
+    this.configInvalidatedResult.set(false);
     this.processMaster.emit({ request: this.masteringService.getRequest(), preview: false });
   }
 
@@ -235,7 +278,9 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private notifyConfigChanged(): void {
+    const hadMaster = this.audioComparison.canUseMaster();
     this.audioComparison.clearMasterSrc();
+    if (hadMaster) this.configInvalidatedResult.set(true);
     this.configChanged.emit();
   }
 
