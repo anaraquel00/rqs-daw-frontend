@@ -30,7 +30,8 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/stage4-ux.scss"
             ]
           },
           "configurations": {
@@ -94,7 +95,8 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/stage4-ux.scss"
             ]
           }
         }
