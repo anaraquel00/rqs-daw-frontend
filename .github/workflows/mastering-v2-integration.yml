@@ -25,11 +25,11 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Install dependencies from committed lock
-        run: npm ci
+      - name: Regenerate lock from approved manifest
+        run: npm install --package-lock-only --ignore-scripts
 
-      - name: Refresh lockfile with non-breaking security updates
-        run: npm audit fix --package-lock-only
+      - name: Apply non-breaking lockfile security updates
+        run: npm audit fix --package-lock-only --ignore-scripts || true
 
       - name: Commit refreshed lockfile when changed
         if: github.event_name == 'push'
@@ -38,6 +38,11 @@ jobs:
             echo 'LOCKFILE_SECURITY_REFRESH: NO_CHANGE'
             exit 0
           fi
+          if ! git diff --quiet -- . ':!package-lock.json'; then
+            echo 'ERROR: unexpected files changed during lock refresh.'
+            git status --short
+            exit 1
+          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add package-lock.json
@@ -45,7 +50,7 @@ jobs:
           git push origin HEAD:feat/mastering-v2-integration
           echo 'LOCKFILE_SECURITY_REFRESH: COMMITTED'
 
-      - name: Reinstall from refreshed lock
+      - name: Install exact refreshed dependencies
         run: npm ci
 
       - name: Gate production dependency vulnerabilities
