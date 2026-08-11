@@ -176,9 +176,10 @@ export const PT_TRANSLATIONS = {
   MIXLAB_TITLE: "RQS MIXLAB: SIMULADOR DE DJ PROFISSIONAL",
   MIXLAB_DESC: "Acesse um emulador de DJ completo no seu navegador. Conecte sua controladora MIDI e grave seus mixsets em alta fidelidade com feedback de IA em tempo real.",
 
-  PRICE_TITLE: "MASTERIZAÇÃO ILIMITADA. PREÇO DE IMPULSO.",
-  PRICE_DESC: "Esqueça as assinaturas abusivas em dólar. Assine o plano RQS PRO por apenas R$ 49,90/mês e libere masterizações WAV ilimitadas e acesso total ao emulador MIDI.",
-  PRICE_CTA: "[ 💎 ADQUIRIR ACESSO RQS PRO ]",
+  PRICE_BETA_BADGE: "[ BETA FINAL // VALIDAÇÃO DO SISTEMA ]",
+  PRICE_TITLE: "RQS PRO ESTÁ CHEGANDO.",
+  PRICE_DESC: "O RQS Studio está em fase final de testes de produção. As ferramentas principais já estão disponíveis para avaliação gratuita enquanto o sistema de assinatura RQS PRO é preparado para o lançamento público. Preço planejado de lançamento: R$ 49,90/mês.",
+  PRICE_CTA: "[ 💎 RQS PRO // EM BREVE ]",
 
   AB_PREVIEW_LOCK_NOTE: "Gere uma prévia de 15s para habilitar a comparação A/B.",
   AB_PREVIEW_GENERATING: "GERANDO PRÉVIA DA VERSÃO MASTER...",
@@ -267,7 +268,11 @@ export const PT_TRANSLATIONS = {
   conversionLabel: 'Conversão',
   trafficSources: 'Fontes de Tráfego:',
   copyUrl: 'Copiar URL',
-  deleteBtn: 'Excluir'
+  deleteBtn: 'Excluir',
+
+  UPLINK_LOGIN_REQUIRED:'LOGIN_REQUIRED: Você precisa estar logado para criar deep links. Por favor, faça login na sua conta para continuar.',
+  UPLINK_LIMIT_REACHED:
+  'LIMIT_REACHED: O plano Free permite apenas 3 Deep Links ativos. Faça login para vincular sua conta e assine o RQS Pro para liberar links ilimitados.',
 };
 
 // Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
@@ -286,9 +291,10 @@ export const EN_TRANSLATIONS = {
   MIXLAB_TITLE: "RQS MIXLAB: PROFESSIONAL DJ SIMULATOR",
   MIXLAB_DESC: "Access a complete DJ emulator in your browser. Connect your MIDI hardware and record high-fidelity mixsets with real-time AI performance metrics.",
 
-  PRICE_TITLE: "UNLIMITED MASTERING. IMPULSE PRICING.",
-  PRICE_DESC: "Forget expensive USD subscriptions. Get the RQS PRO plan for just $9.90/mo to unlock unlimited WAV downloads and full MIDI support.",
-  PRICE_CTA: "[ 💎 UPGRADE TO RQS PRO ]",
+  PRICE_BETA_BADGE: "[ FINAL BETA // SYSTEM VALIDATION ]",
+  PRICE_TITLE: "RQS PRO IS COMING.",
+  PRICE_DESC: "RQS Studio is currently undergoing final production testing. Core tools are already available for free evaluation while the RQS PRO subscription system is prepared for public release. Planned launch price: $9.90/month.",
+  PRICE_CTA: "[ 💎 RQS PRO // COMING SOON ]",
 
     AB_PREVIEW_LOCK_NOTE: "Generate a 15s preview to enable A/B comparison.",
     AB_PREVIEW_GENERATING: "GENERATING MASTER VERSION PREVIEW...",
@@ -378,7 +384,13 @@ export const EN_TRANSLATIONS = {
   conversionLabel: 'Conversion',
   trafficSources: 'Traffic Sources:',
   copyUrl: 'Copy URL',
-  deleteBtn: 'Delete'
+  deleteBtn: 'Delete',
+
+  UPLINK_LOGIN_REQUIRED:'LOGIN_REQUIRED: You must be logged in to create deep links. Please sign in to your account to continue.',
+  UPLINK_LIMIT_REACHED:
+  'LIMIT_REACHED: The Free plan allows up to 3 active Deep Links. Sign in to link your account and subscribe to RQS Pro to unlock unlimited links.',
+
+
 };
 
 @Injectable({

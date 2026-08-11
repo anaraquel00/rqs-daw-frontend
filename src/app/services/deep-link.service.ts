@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
+import { LanguageService } from './language.service';
 export interface DeepLinkRecord {
   id: string;
   targetUrl: string;
@@ -25,12 +24,10 @@ export interface DeepLinkRecord {
 export class DeepLinkService {
   private storageKey = 'rqs_uplink_database';
   private auth = inject(AuthService);
-
-  // 🔌 Cliente Supabase conectado ao projeto
-  private supabase: SupabaseClient = createClient(
-    'https://ucearnthodrltkvkmhit.supabase.co',
-    'sb_publishable_v2YYX5ksPlYxbh2Xf4HwwQ_UEc5NZyR' // Substitua pela sua chave anon pública do projeto
-  );
+  private lang = inject(LanguageService);
+  private get supabase() {
+  return this.auth.getSupabaseClient();
+   }
 
   private regexPatterns = {
     spotify: /open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(track|album|artist)\/([a-zA-Z0-9]+)/,
@@ -52,61 +49,111 @@ export class DeepLinkService {
     return data ? JSON.parse(data) : [];
   }
 
-  async compileAndRegisterLink(targetUrl: string, customSlug: string): Promise<{ success: boolean; url?: string; error?: string }> {
-    const links = this.getAllLinks();
+ async compileAndRegisterLink(
+  targetUrl: string,
+  customSlug: string
+): Promise<{
+  success: boolean;
+  url?: string;
+  error?: string;
+}> {
 
-    // 🔒 VERIFICAÇÃO DE PAYWALL / LIMITES DO PLANO FREE
-    const isUserPremium = this.auth.isPremium();
-    if (!isUserPremium && links.length >= 3) {
-      return {
-        success: false,
-        error: 'LIMIT_REACHED: O plano Free permite apenas 3 Deep Links ativos. Faça login com GitHub/Google ou assine o RQS Pro para links ilimitados.'
-      };
-    }
+  const session = this.auth.session();
 
-    const platform = this.detectPlatform(targetUrl);
-    const slug = customSlug.trim() || `rqs-${Math.random().toString(36).substring(2, 8)}`;
-    const finalUrl = `https://go.raquelsynths.com/${slug}`;
+  console.log('[RQS UPLINK SESSION]', session);
 
-    const newRecord: DeepLinkRecord = {
-      id: crypto.randomUUID(),
-      targetUrl,
-      customSlug: slug,
-      platform,
-      createdAt: new Date().toLocaleDateString('pt-BR'),
-      clicks: 0, // Inicia zerado na nuvem
-      conversionRate: '0.0%',
-      sources: { instagram: 0, tiktok: 0, facebook: 0, youtube: 0, direct: 0 }
+  // 🔐 LOGIN OBRIGATÓRIO
+  if (!session?.user) {
+    return {
+      success: false,
+      error: this.lang.tr().UPLINK_LOGIN_REQUIRED
     };
-
-    // 💾 SALVA NA TABELA DO SUPABASE PARA A EDGE FUNCTION ENCONTRAR
-    const { error: dbError } = await this.supabase
-      .from('rqs_uplinks')
-      .insert([
-        {
-          custom_slug: slug,
-          target_url: targetUrl,
-          platform: platform,
-          clicks: 0,
-          source_instagram: 0,
-          source_tiktok: 0,
-          source_facebook: 0,
-          source_youtube: 0,
-          source_direct: 0
-        }
-      ]);
-
-    if (dbError) {
-      console.error('Erro ao sincronizar com o Supabase:', dbError.message);
-      return { success: false, error: `DB_ERROR: ${dbError.message}` };
-    }
-
-    // Salva localmente no cache da UI
-    links.unshift(newRecord);
-    localStorage.setItem(this.storageKey, JSON.stringify(links));
-
-    return { success: true, url: finalUrl };
   }
+
+  const links = this.getAllLinks();
+
+  const isUserPremium =
+    this.auth.isPremium();
+
+  if (!isUserPremium && links.length >= 3) {
+    return {
+      success: false,
+      error: this.lang.tr().UPLINK_LIMIT_REACHED
+    };
+  }
+
+  const platform =
+    this.detectPlatform(targetUrl);
+
+  const slug =
+    customSlug.trim() ||
+    `rqs-${Math.random().toString(36).substring(2, 8)}`;
+
+  const finalUrl =
+    `https://go.raquelsynths.com/${slug}`;
+
+  const newRecord: DeepLinkRecord = {
+    id: crypto.randomUUID(),
+    targetUrl,
+    customSlug: slug,
+    platform,
+    createdAt: new Date().toLocaleDateString('pt-BR'),
+    clicks: 0,
+    conversionRate: '0.0%',
+    sources: {
+      instagram: 0,
+      tiktok: 0,
+      facebook: 0,
+      youtube: 0,
+      direct: 0
+    }
+  };
+
+ const { error: dbError } =
+  await this.supabase
+    .from('rqs_uplinks')
+    .insert([
+      {
+        user_id: session.user.id,
+
+        custom_slug: slug,
+        target_url: targetUrl,
+        platform,
+
+        clicks: 0,
+
+        source_instagram: 0,
+        source_tiktok: 0,
+        source_facebook: 0,
+        source_youtube: 0,
+        source_direct: 0
+      }
+    ]);
+
+  if (dbError) {
+    console.error(
+      'Erro ao sincronizar com o Supabase:',
+      dbError.message
+    );
+
+    return {
+      success: false,
+      error: `DB_ERROR: ${dbError.message}`
+    };
+  }
+
+  links.unshift(newRecord);
+
+  localStorage.setItem(
+    this.storageKey,
+    JSON.stringify(links)
+  );
+
+  return {
+    success: true,
+    url: finalUrl
+  };
+}
 
   incrementClick(slug: string): void {
     const links = this.getAllLinks();
