@@ -2,7 +2,7 @@
   "name": "rqs-daw",
   "version": "0.0.0",
   "scripts": {
-    "ng": "ng serve",
+    "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
