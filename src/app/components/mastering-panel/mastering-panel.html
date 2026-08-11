@@ -22,18 +22,28 @@
 
     <div class="loop-indicator-bar" *ngIf="audioComparison.canUseMaster()">
       <span class="loop-badge" *ngIf="audioComparison.playbackMode() === 'preview-15s'">
-        🔁 MASTERING V2 PREVIEW {{ previewWindowString() }}
+        🔁 PREVIEW 00:00–{{ formatarTempo(audioComparison.displayDuration()) }} ·
+        {{ education().previewSourceWindow }} {{ previewWindowString() }}
       </span>
       <span class="loop-badge full-master-active" *ngIf="audioComparison.playbackMode() === 'full-track'">
         {{ lang.tr().FULL_MASTER_COMPLETED_ALERT }}
       </span>
     </div>
 
+    <p class="preview-relative-note" *ngIf="audioComparison.playbackMode() === 'preview-15s' && audioComparison.canUseMaster()">
+      {{ education().previewRelative }}
+    </p>
+
     <div class="transport-controls">
       <button (click)="audioComparison.togglePlayback()" class="btn-transport">
         {{ audioComparison.isPlaying() ? '⏸ PAUSE' : '▶ PLAY' }}
       </button>
       <button (click)="pararReproducao()" class="btn-transport btn-stop">■ STOP</button>
+    </div>
+
+    <div class="ab-heading">
+      <span>{{ education().controls.ab.title }}</span>
+      <button class="help-dot" type="button" (click)="toggleHelp('ab')" [attr.title]="education().controls.ab.short">?</button>
     </div>
 
     <div class="ab-toggle-console">
@@ -54,11 +64,73 @@
     </div>
   </div>
 
+  <div class="mastering-help-toolbar">
+    <button class="guide-button" type="button" (click)="toggleGuide()">
+      ⓘ {{ education().help }} · {{ education().guideTitle }}
+    </button>
+  </div>
+
+  <div class="context-help-card" *ngIf="activeHelp() as helpEntry">
+    <div class="context-help-header">
+      <strong>{{ helpEntry.title }}</strong>
+      <button type="button" class="context-close" (click)="activeHelpTopic.set(null)">×</button>
+    </div>
+    <p>{{ helpEntry.short }}</p>
+    <small>{{ helpEntry.details }}</small>
+  </div>
+
+  <div class="mastering-guide" *ngIf="guideOpen()">
+    <div class="guide-header">
+      <div>
+        <h3>{{ education().guideTitle }}</h3>
+        <p>{{ education().guideIntro }}</p>
+      </div>
+      <button type="button" class="context-close" (click)="toggleGuide()">×</button>
+    </div>
+
+    <details>
+      <summary>{{ education().controls.destination.title }}</summary>
+      <p>{{ education().controls.destination.details }}</p>
+    </details>
+    <details>
+      <summary>{{ education().controls.platform.title }}</summary>
+      <p>{{ education().controls.platform.details }}</p>
+    </details>
+    <details>
+      <summary>{{ education().controls.atmosphere.title }}</summary>
+      <p>{{ education().controls.atmosphere.details }}</p>
+    </details>
+    <details>
+      <summary>{{ education().controls.intensity.title }}</summary>
+      <p>{{ education().controls.intensity.details }}</p>
+    </details>
+    <details>
+      <summary>{{ education().controls.lufs.title }}</summary>
+      <p>{{ education().controls.lufs.details }}</p>
+    </details>
+    <details>
+      <summary>{{ education().controls.truePeak.title }}</summary>
+      <p>{{ education().controls.truePeak.details }}</p>
+    </details>
+    <details>
+      <summary>{{ education().controls.preview.title }}</summary>
+      <p>{{ education().controls.preview.details }}</p>
+    </details>
+    <details>
+      <summary>{{ education().controls.ab.title }}</summary>
+      <p>{{ education().controls.ab.details }}</p>
+    </details>
+  </div>
+
   <hr class="cyber-divider">
 
   <div class="controls-section">
     <div class="control-group">
-      <h4>DESTINATION</h4>
+      <div class="control-title-row">
+        <h4>{{ education().controls.destination.title }}</h4>
+        <button class="help-dot" type="button" (click)="toggleHelp('destination')" [attr.title]="education().controls.destination.short">?</button>
+      </div>
+      <p class="control-explainer">{{ education().controls.destination.short }}</p>
       <div class="btn-group profiles-grid">
         <button [disabled]="isProcessing" [class.selected]="destination() === 'streaming'" (click)="selectDestination('streaming')">Streaming</button>
         <button [disabled]="isProcessing" [class.selected]="destination() === 'club'" (click)="selectDestination('club')">Club</button>
@@ -67,7 +139,11 @@
     </div>
 
     <div class="control-group" *ngIf="destination() === 'streaming'">
-      <h4>PLATFORM</h4>
+      <div class="control-title-row">
+        <h4>{{ education().controls.platform.title }}</h4>
+        <button class="help-dot" type="button" (click)="toggleHelp('platform')" [attr.title]="education().controls.platform.short">?</button>
+      </div>
+      <p class="control-explainer">{{ education().controls.platform.short }}</p>
       <div class="btn-group profiles-grid">
         <button [disabled]="isProcessing" [class.selected]="platform() === 'spotify'" (click)="selectPlatform('spotify')">Spotify</button>
         <button [disabled]="isProcessing" [class.selected]="platform() === 'apple_music'" (click)="selectPlatform('apple_music')">Apple Music</button>
@@ -86,7 +162,11 @@
     </div>
 
     <div class="control-group">
-      <h4>ATMOSPHERE</h4>
+      <div class="control-title-row">
+        <h4>{{ education().controls.atmosphere.title }}</h4>
+        <button class="help-dot" type="button" (click)="toggleHelp('atmosphere')" [attr.title]="education().controls.atmosphere.short">?</button>
+      </div>
+      <p class="control-explainer atmosphere-truth">{{ education().controls.atmosphere.short }}</p>
       <div class="btn-group profiles-grid">
         <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
         <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
@@ -96,7 +176,10 @@
     </div>
 
     <div class="control-group">
-      <h4>CHARACTER INTENSITY — {{ intensityPercent() }}%</h4>
+      <div class="control-title-row">
+        <h4>{{ education().controls.intensity.title }} — {{ intensityPercent() }}%</h4>
+        <button class="help-dot" type="button" (click)="toggleHelp('intensity')" [attr.title]="education().controls.intensity.short">?</button>
+      </div>
       <input
         type="range"
         min="0"
@@ -107,20 +190,30 @@
         (input)="updateIntensity($event)"
         class="cyber-scrubber"
         aria-label="Mastering V2 intensity">
-      <p class="helper-text">0% = delivery-only. 100% = pełny poziom charakteru V2.</p>
+      <p class="control-explainer">{{ education().controls.intensity.short }}</p>
     </div>
 
     <div class="control-group">
-      <h4>DELIVERY POLICY</h4>
+      <div class="control-title-row">
+        <h4>DELIVERY POLICY</h4>
+        <button class="help-dot" type="button" (click)="toggleHelp('lufs')" [attr.title]="education().controls.lufs.short">?</button>
+      </div>
 
       <p class="helper-text" *ngIf="capabilitiesLoading()">
-        Loading Mastering V2 delivery contract…
+        {{ renderBlockReason() }}
       </p>
 
       <div *ngIf="activeTarget() as target" class="policy-card">
-        <div>Default: <strong>{{ target.target_lufs }} LUFS</strong></div>
+        <div class="policy-main">
+          <span>{{ education().currentTarget }}:</span>
+          <strong>{{ target.target_lufs }} LUFS</strong>
+        </div>
         <div>Allowed: {{ target.min_lufs }} … {{ target.max_lufs }} LUFS</div>
-        <div>True Peak policy: {{ target.true_peak_ceiling_dbtp }} dBTP</div>
+        <div class="policy-inline-help">
+          <span>True Peak: {{ target.true_peak_ceiling_dbtp }} dBTP</span>
+          <button class="help-dot small" type="button" (click)="toggleHelp('truePeak')" [attr.title]="education().controls.truePeak.short">?</button>
+        </div>
+        <p class="control-explainer">{{ education().controls.lufs.short }}</p>
         <label>
           Requested LUFS (optional)
           <input
@@ -129,11 +222,13 @@
             [disabled]="isProcessing"
             [min]="target.min_lufs"
             [max]="target.max_lufs"
+            [class.input-invalid]="requestedLufsError()"
             [attr.aria-invalid]="requestedLufsError() ? 'true' : 'false'"
             [ngModel]="requestedLufs()"
             (ngModelChange)="updateRequestedLufs($event)">
         </label>
-        <p class="helper-text" *ngIf="requestedLufsError() as error">⚠ {{ error }}</p>
+        <p class="validation-error" *ngIf="requestedLufsError() as error">⚠ {{ error }}</p>
+        <p class="policy-recommendation">{{ education().policyDefault }}</p>
         <button
           type="button"
           class="btn-secondary"
@@ -143,17 +238,31 @@
         </button>
       </div>
 
-      <p class="helper-text" *ngIf="capabilitiesError() as error">
-        ⚠ {{ error }} Render is disabled until the V2 contract is available.
+      <p class="helper-text validation-error" *ngIf="capabilitiesError() as error">
+        ⚠ {{ error }}
       </p>
     </div>
   </div>
 
+  <div class="config-invalidated" *ngIf="configInvalidatedResult()">
+    ⚠
+    <span *ngIf="lang.currentLang() === 'en'">Settings changed. The previous Preview/Master was cleared. Generate a new one.</span>
+    <span *ngIf="lang.currentLang() === 'pt'">As configurações mudaram. A prévia/master anterior foi removida. Gere uma nova.</span>
+    <span *ngIf="lang.currentLang() === 'pl'">Ustawienia zostały zmienione. Poprzedni Preview/Master został usunięty. Wygeneruj nowy.</span>
+  </div>
+
   <div class="plan-usage-badge">
     <span *ngIf="!auth.isPremium()">
-      ⚡ {{ lang.t().FREE_USAGE_LABEL }}: <strong style="color: #00f0ff;">{{ auth.remainingMasters() }} / 3</strong>
+      ⚡ {{ lang.t().FREE_USAGE_LABEL }}: <strong>{{ auth.remainingMasters() }} / 3</strong>
     </span>
     <span *ngIf="auth.isPremium()" class="pro-badge">💎 {{ lang.t().PRO_USAGE_LABEL }}</span>
+  </div>
+
+  <div class="render-status" [class.blocked]="!requestReady()">
+    <strong *ngIf="requestReady()">✓ {{ education().ready }}</strong>
+    <span *ngIf="!requestReady() && renderBlockReason() as reason">
+      ⛔ {{ education().whyBlocked }} {{ reason }}
+    </span>
   </div>
 
   <div class="action-buttons">
