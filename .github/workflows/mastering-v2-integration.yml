@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
@@ -25,34 +25,7 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Regenerate lock from approved manifest
-        run: |
-          rm -f package-lock.json
-          npm install --package-lock-only --ignore-scripts
-
-      - name: Apply non-breaking lockfile security updates
-        run: npm audit fix --package-lock-only --ignore-scripts || true
-
-      - name: Commit refreshed lockfile when changed
-        if: github.event_name == 'push'
-        run: |
-          if git diff --quiet -- package-lock.json; then
-            echo 'LOCKFILE_SECURITY_REFRESH: NO_CHANGE'
-            exit 0
-          fi
-          if ! git diff --quiet -- . ':!package-lock.json'; then
-            echo 'ERROR: unexpected files changed during lock refresh.'
-            git status --short
-            exit 1
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add package-lock.json
-          git commit -m 'chore(security): refresh dependency lock'
-          git push origin HEAD:feat/mastering-v2-integration
-          echo 'LOCKFILE_SECURITY_REFRESH: COMMITTED'
-
-      - name: Install exact refreshed dependencies
+      - name: Install exact dependencies
         run: npm ci
 
       - name: Gate production dependency vulnerabilities
