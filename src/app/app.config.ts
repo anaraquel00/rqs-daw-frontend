@@ -4,6 +4,7 @@ import { routes } from './app.routes';
 
 // 📡 A PEÇA QUE FALTAVA: O módulo oficial de comunicação do Angular
 import { provideHttpClient } from '@angular/common/http';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -11,6 +12,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
 
     // 🛡️ O cabo de rede oficial liberado pela Diretoria!
-    provideHttpClient()
+    provideHttpClient(), provideClientHydration(withEventReplay())
   ]
 };

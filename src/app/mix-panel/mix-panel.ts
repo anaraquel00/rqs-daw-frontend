@@ -1,5 +1,12 @@
 // src/app/workspace/mix-panel.ts
-import { Component, inject, OnDestroy, DestroyRef, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  DestroyRef,
+  signal,
+  afterNextRender
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DspService } from '../services/dsp';
 import { FormsModule } from '@angular/forms';
@@ -65,8 +72,10 @@ export class MixPanelComponent implements OnDestroy {
   private previewIntervalId: any;
 
   constructor() {
+  afterNextRender(() => {
     this.inicializarPlayersDeTransicao();
-  }
+  });
+}
 
   private inicializarPlayersDeTransicao() {
     this.playerElement1 = new Audio();
