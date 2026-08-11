@@ -25,6 +25,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Gate production dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Report complete dependency audit
+        run: npm audit || true
+
+      - name: Verify client-side privilege override stays removed
+        run: |
+          if grep -R -F -q 'rqs_mainframe_override' src/app; then
+            echo 'ERROR: client-side premium override marker returned.'
+            exit 1
+          fi
+          echo 'CLIENT_PRIVILEGE_OVERRIDE_CHECK: PASS'
+
       - name: Run Mastering V2 frontend tests
         run: npm test -- --watch=false --browsers=ChromeHeadless
 
