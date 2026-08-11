@@ -86,22 +86,25 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
             this.s3Key = s3Response.s3Key;
             this.addLog(`Upload concluído! Arquivo persistido em: ${s3Response.s3Key}`);
           },
-          error: () => {
+          error: (error: unknown) => {
             this.isUploadingS3 = false;
-            this.addLog('❌ ERRO CRÍTICO S3: Falha ao enviar bytes do arquivo para o bunker.');
+            this.addLog(`❌ ERRO CRÍTICO S3: ${this.errorMessage(error)}`);
           },
         });
       },
-      error: () => {
+      error: (error: unknown) => {
         this.isUploadingS3 = false;
-        this.addLog('❌ ERRO DE PROTOCOLO: A API de gateway rejeitou a URL pré-assinada.');
+        this.addLog(`❌ ERRO DE PROTOCOLO S3: ${this.errorMessage(error)}`);
       },
     });
   }
 
   processarMaster(command: MasteringProcessCommand): void {
-    if (!this.selectedFile) return;
-    if (!this.masteringV2DirectUpload && !this.s3Key) return;
+    if (this.isProcessing || !this.selectedFile) return;
+    if (!this.masteringV2DirectUpload && !this.s3Key) {
+      this.addLog('❌ MASTERING V2: source upload is not ready yet.');
+      return;
+    }
 
     if (!command.preview && !this.auth.canMaster()) {
       alert(this.lang.t().LIMIT_EXCEEDED_ALERT);
@@ -160,8 +163,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.processedAudioUrl = null;
     this.processedAudioName = '';
     this.isFullMasterCompleted = false;
-    this.audioComparison.previewStatus.set('not-generated');
+    this.audioComparison.clearMasterSrc();
     this.audioComparison.audioProcessed.set(false);
+    this.audioComparison.processedFilename.set('');
   }
 
   ejetarFaixa(): void {
@@ -174,6 +178,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.systemLogs = [];
     this.isFullMasterCompleted = false;
     this.audioComparison.resetAll();
+    this.audioComparison.audioProcessed.set(false);
+    this.audioComparison.processedFilename.set('');
   }
 
   extrairStems(): void {
@@ -194,9 +200,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         document.body.removeChild(a);
         this.addLog('ZIP de 6 canais entregue com sucesso!');
       },
-      error: () => {
+      error: (error: unknown) => {
         this.isExtractingStems = false;
-        this.addLog('❌ ERRO DE DISSECAÇÃO: O motor Demucs excedeu os limites operacionais.');
+        this.addLog(`❌ ERRO DE DISSECAÇÃO: ${this.errorMessage(error)}`);
       },
     });
   }
@@ -220,6 +226,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isProcessing = false;
     this.isFullMasterCompleted = false;
     this.systemLogs = [];
+    this.audioComparison.audioProcessed.set(false);
+    this.audioComparison.processedFilename.set('');
     this.addLog(`Track engatada: ${file.name}`);
 
     if (this.masteringV2DirectUpload) {
@@ -264,9 +272,28 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   }
 
   private errorMessage(error: unknown): string {
-    if (typeof error === 'object' && error !== null && 'message' in error) {
-      return String((error as { message: unknown }).message);
+    if (typeof error !== 'object' || error === null) return 'unknown error';
+
+    const candidate = error as {
+      message?: unknown;
+      error?: unknown;
+    };
+
+    if (typeof candidate.error === 'string' && candidate.error.trim()) {
+      return candidate.error.trim();
     }
+
+    if (typeof candidate.error === 'object' && candidate.error !== null) {
+      const payload = candidate.error as { details?: unknown; error?: unknown; message?: unknown };
+      for (const value of [payload.details, payload.error, payload.message]) {
+        if (typeof value === 'string' && value.trim()) return value.trim();
+      }
+    }
+
+    if (typeof candidate.message === 'string' && candidate.message.trim()) {
+      return candidate.message.trim();
+    }
+
     return 'unknown error';
   }
 }
