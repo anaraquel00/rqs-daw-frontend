@@ -1,5 +1,5 @@
 // src/app/workspace/workspace.ts
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MixPanelComponent } from '../mix-panel/mix-panel';
 import { UploadZoneComponent } from "../components/upload-zone/upload-zone";
@@ -8,6 +8,7 @@ import { AuthService } from '../services/auth.service';
 import { LanguageService } from '../services/language.service';
 import { RqsUplinkEngineComponent } from "../rqs-uplink-engine/rqs-uplink-engine";
 import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/rqs-uplink-dashboard';
+import { SeoService } from '../services/seo.service';
 
 @Component({
   selector: 'app-workspace',
@@ -126,7 +127,79 @@ import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/
 `]
 })
 export class WorkspaceComponent {
-  // Injeta os serviços reativos necessários para o funcionamento do cabeçalho
+
   readonly auth = inject(AuthService);
   readonly lang = inject(LanguageService);
+
+  private seo = inject(SeoService);
+
+  constructor() {
+
+    effect(() => {
+
+      const isPt =
+        this.lang.currentLang() === 'pt';
+
+      const canonicalUrl =
+        'https://studio.raquelsynths.com/app';
+
+      this.seo.update({
+        title: isPt
+          ? 'RQS Studio | Masterização, DSP, Setlists e Deep Links'
+          : 'RQS Studio | Mastering, DSP, Setlists & Deep Links',
+
+        description: isPt
+          ? 'Acesse o RQS Studio: masterização inteligente de áudio, RQS DSP Core, Setlist Engine e Uplink Engine em uma workstation musical integrada.'
+          : 'Access RQS Studio: intelligent audio mastering, RQS DSP Core, Setlist Engine and Uplink Engine in one integrated music workstation.',
+
+        url: canonicalUrl,
+
+        type: 'website',
+
+        locale: isPt
+          ? 'pt_BR'
+          : 'en_US',
+
+        siteName: 'RQS Studio',
+
+        robots: 'index, follow',
+
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+
+          name: 'RQS Studio',
+
+          alternateName:
+            'RaQuel Synths Digital Audio Workstation',
+
+          applicationCategory:
+            'MultimediaApplication',
+
+          applicationSubCategory:
+            'Digital Audio Workstation',
+
+          operatingSystem:
+            'Web Browser',
+
+          url: canonicalUrl,
+
+          description: isPt
+            ? 'Workstation musical web com masterização DSP, organização de setlists e geração de deep links.'
+            : 'Web music workstation featuring DSP mastering, setlist organization and deep-link generation.',
+
+          creator: {
+            '@type': 'Organization',
+            name: 'RaQuel Synths',
+            url: 'https://raquelsynths.com'
+          },
+
+          offers: {
+            '@type': 'Offer',
+            category: 'SaaS'
+          }
+        }
+      });
+    });
+  }
 }

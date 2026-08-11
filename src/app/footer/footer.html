@@ -45,12 +45,33 @@
     <hr class="footer-divider">
 
     <!-- Bottom Bar (Copyright & Legal) -->
-    <div class="footer-bottom">
-      <p class="copyright">{{ lang.t().FOOTER_COPYRIGHT }}</p>
-      <div class="legal-links">
-        <a routerLink="/terms">{{ lang.t().FOOTER_TERMS }}</a>
-        <span class="dot">•</span>
-        <a routerLink="/privacy">{{ lang.t().FOOTER_PRIVACY }}</a>
-      </div>
-    </div>
+ <div class="footer-bottom">
+
+  <p class="copyright">
+    {{ lang.t().FOOTER_COPYRIGHT }}
+  </p>
+
+  <div class="legal-links">
+    <a
+      href="https://raquelsynths.com/contato"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {{ lang.t().FOOTER_CONTACT }}
+    </a>
+
+    <span class="dot">•</span>
+
+    <a routerLink="/terms">
+      {{ lang.t().FOOTER_TERMS }}
+    </a>
+
+    <span class="dot">•</span>
+
+    <a routerLink="/privacy">
+      {{ lang.t().FOOTER_PRIVACY }}
+    </a>
+  </div>
+
+</div>
   </footer>

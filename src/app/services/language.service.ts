@@ -75,6 +75,8 @@ FOOTER_PRIVACY: "Política de Privacidade",
 FOOTER_SA_EAST: "São Paulo (sa-east-1) - Latência Mínima",
 FOOTER_EBU_R128: "EBU R128 & Apple ADM Compliant",
 FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. Todos os direitos reservados.",
+
+FOOTER_CONTACT: "Fale Conosco",
 };
 
 
@@ -152,7 +154,9 @@ export const EN_DICT: typeof PT_DICT = {
   FOOTER_PRIVACY: "Privacy Policy",
   FOOTER_SA_EAST: "São Paulo (sa-east-1) - Ultra-Low Latency",
   FOOTER_EBU_R128: "EBU R128 & Apple ADM Compliant",
-  FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. All rights reserved."
+  FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. All rights reserved.",
+
+  FOOTER_CONTACT: "Contact Us",
 
  };
 
@@ -246,8 +250,8 @@ export const PT_TRANSLATIONS = {
 
   // RQS Uplink Engine & Dashboard
   uplinkTitle: 'RQS UPLINK ENGINE',
-  uplinkBadge: 'DEEP LINK BYPASS ACTIVE: Sem Barreiras de Login',
-  uplinkDesc: 'Cole o link da sua faixa no Spotify, SoundCloud ou YouTube. Nosso motor gera um link curto inteligente que força a abertura imediata do aplicativo oficial, eliminando o bloqueio de login dos navegadores internos do Instagram e TikTok.',
+  uplinkBadge: 'DEEP LINK BYPASS ACTIVE: Acesso Direto',
+  uplinkDesc: 'Cole o link da sua faixa no Spotify, SoundCloud ou YouTube. Nosso motor gera um link curto inteligente que tenta abrir o conteúdo diretamente no aplicativo oficial compatível, reduzindo a fricção causada por navegadores internos de redes sociais — sem exigir suas credenciais das plataformas musicais.',
   urlLabel: 'URL DA FAIXA (STREAMING)',
   slugLabel: 'SLUG PERSONALIZADO (OPCIONAL)',
   compileBtn: '[ COMPILAR DEEP LINK SEGURO ]',
@@ -357,8 +361,8 @@ export const EN_TRANSLATIONS = {
 
   // RQS Uplink Engine & Dashboard
   uplinkTitle: 'RQS UPLINK ENGINE',
-  uplinkBadge: 'DEEP LINK BYPASS ACTIVE: No Login Barriers',
-  uplinkDesc: 'Paste your track link from Spotify, SoundCloud or YouTube. Our engine generates a smart short link that forces the official app to open immediately, eliminating login blocks from Instagram and TikTok in-app browsers.',
+  uplinkBadge: 'DEEP LINK BYPASS ACTIVE: Direct Access',
+  uplinkDesc: 'Paste the link to your track from Spotify, SoundCloud, or YouTube. Our engine generates a smart short link that attempts to open the content directly in the compatible official app, reducing friction caused by in-app social media browsers—without requiring your music platform credentials.',
   urlLabel: 'TRACK URL (STREAMING)',
   slugLabel: 'CUSTOM SLUG (OPTIONAL)',
   compileBtn: '[ COMPILE SECURE DEEP LINK ]',

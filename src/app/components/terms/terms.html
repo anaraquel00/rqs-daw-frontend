@@ -19,6 +19,58 @@
     <h2>2. Uso e Processamento de Áudio</h2>
     <p>Para viabilizar a masterização de alta velocidade em arquivos WAV, todos os buffers de áudio são gravados e processados estritamente na pasta efêmera segura <code>/tmp</code> e no bucket do Amazon S3 de São Paulo (sa-east-1).</p>
     <p class="highlight">Todos os seus uploads e faixas masterizadas são deletados permanentemente de nossos servidores após 24 horas.</p>
+
+     <h2>3. Componentes da Plataforma</h2>
+
+<p>
+A plataforma RQS Studio pode disponibilizar diferentes módulos operacionais,
+incluindo o <strong>RQS DSP CORE</strong>, o <strong>RQS SETLIST ENGINE</strong>
+e o <strong>RQS UPLINK ENGINE</strong>.
+</p>
+
+      <h3>3.1. RQS DSP CORE</h3>
+      <p>
+      O RQS DSP CORE realiza análise e processamento automatizado de áudio.
+      Os resultados dependem das características do arquivo de origem,
+      dos parâmetros selecionados pelo usuário e das limitações técnicas
+      inerentes ao processamento digital de sinais.
+      </p>
+
+      <h3>3.2. RQS SETLIST ENGINE</h3>
+      <p>
+      O RQS SETLIST ENGINE auxilia na organização, ordenação e preparação
+      de faixas e setlists. As recomendações e resultados produzidos pelo
+      sistema possuem caráter assistivo e não garantem desempenho artístico,
+      comercial ou técnico específico.
+      </p>
+
+      <h3>3.3. RQS UPLINK ENGINE</h3>
+
+      <p>
+      O RQS UPLINK ENGINE é uma ferramenta de geração e redirecionamento
+      de deep links para serviços externos de música e mídia, como Spotify,
+      SoundCloud e YouTube.
+      </p>
+
+      <p>
+      O usuário fornece voluntariamente a URL pública de uma faixa ou conteúdo,
+      e o sistema gera um link de redirecionamento destinado a facilitar a
+      abertura do conteúdo no aplicativo oficial correspondente, quando
+      tecnicamente suportado pelo dispositivo, navegador e plataforma de destino.
+      </p>
+
+      <p>
+      O RQS UPLINK ENGINE não exige que o usuário forneça à RaQuel Synths
+      credenciais, senhas ou dados de autenticação de suas contas nas plataformas
+      de destino. A disponibilidade, abertura do aplicativo, reprodução do conteúdo
+      e eventual autenticação continuam sujeitas às regras e ao funcionamento
+      da plataforma externa correspondente.
+      </p>
+
+      <p>
+      A RaQuel Synths não é afiliada, patrocinada ou endossada pelo Spotify,
+      SoundCloud ou YouTube, salvo quando expressamente indicado.
+      </p>
   } @else {
     <!-- 🇺🇸 CONTRATO EM INGLÊS (GOOGLE ADSENSE READY) -->
     <h1>Terms of Service</h1>
@@ -32,10 +84,62 @@
     <h2>2. Audio Processing and Usage</h2>
     <p>To enable high-speed mastering of heavy WAV files, all audio buffers are processed strictly in the secure ephemeral <code>/tmp</code> directory and our Amazon S3 bucket in São Paulo (sa-east-1).</p>
     <p class="highlight">All your uploads and mastered tracks are permanently deleted from our servers after 24 hours.</p>
+
+    <h2>3. Platform Components</h2>
+
+    <p>
+    RQS Studio may provide several operational modules, including
+    <strong>RQS DSP CORE</strong>, <strong>RQS SETLIST ENGINE</strong>,
+    and <strong>RQS UPLINK ENGINE</strong>.
+    </p>
+
+    <h3>3.1. RQS DSP CORE</h3>
+    <p>
+    RQS DSP CORE performs automated audio analysis and processing.
+    Results depend on the characteristics of the source file,
+    the parameters selected by the user, and the technical limitations
+    inherent to digital signal processing.
+    </p>
+
+    <h3>3.2. RQS SETLIST ENGINE</h3>
+    <p>
+    RQS SETLIST ENGINE assists users in organizing, sequencing, and
+    preparing tracks and setlists. Its recommendations and outputs are
+    assistive in nature and do not guarantee any specific artistic,
+    commercial, or technical outcome.
+    </p>
+
+    <h3>3.3. RQS UPLINK ENGINE</h3>
+
+    <p>
+    RQS UPLINK ENGINE is a deep-link generation and redirection tool
+    for third-party music and media services such as Spotify,
+    SoundCloud, and YouTube.
+    </p>
+
+    <p>
+    Users voluntarily provide a public URL for a track or other content,
+    and the system generates a redirect link designed to facilitate opening
+    that content in the corresponding official application, when technically
+    supported by the device, browser, and destination platform.
+    </p>
+
+    <p>
+    RQS UPLINK ENGINE does not require users to provide RaQuel Synths
+    with account credentials, passwords, or authentication data for destination
+    platforms. App availability, content playback, and any authentication
+    requirements remain subject to the operation and policies of the
+    corresponding third-party platform.
+    </p>
+
+    <p>
+    RaQuel Synths is not affiliated with, sponsored by, or endorsed by Spotify,
+    SoundCloud, or YouTube unless expressly stated otherwise.
+    </p>
   }
 
   <div class="bottom-nav">
-    <a routerLink="/" class="primary">Voltar ao Estúdio / Back to Studio</a>
+    <a routerLink="/app" class="primary">Voltar ao Estúdio / Back to Studio</a>
     <a routerLink="/privacy" class="secondary">Política de Privacidade / Privacy Policy</a>
   </div>
 </div>
