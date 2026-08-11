@@ -71,11 +71,18 @@ const capabilities: MasteringV2Capabilities = {
   },
 };
 
-describe('MasteringPanelComponent V2 request gate', () => {
+describe('MasteringPanelComponent V2 request gate and guidance', () => {
   let panel: MasteringPanelComponent;
   let masteringService: MasteringService;
+  const currentLang = signal<'en' | 'pt' | 'pl'>('en');
+  const canUseMaster = signal(false);
+  let clearCalls = 0;
 
   beforeEach(() => {
+    clearCalls = 0;
+    canUseMaster.set(false);
+    currentLang.set('en');
+
     const audioComparisonStub = {
       previewStart: signal(0),
       previewEnd: signal(15),
@@ -83,12 +90,12 @@ describe('MasteringPanelComponent V2 request gate', () => {
       playbackMode: signal('full-track'),
       activeVariant: signal('original'),
       displayCurrentTime: signal(0),
-      displayDuration: signal(0),
-      canUseMaster: signal(false),
+      displayDuration: signal(15),
+      canUseMaster,
       isPlaying: signal(false),
       setOriginalSrc: () => undefined,
       setMasterSrc: () => undefined,
-      clearMasterSrc: () => undefined,
+      clearMasterSrc: () => { clearCalls += 1; canUseMaster.set(false); },
       resetAll: () => undefined,
       switchVariant: async () => undefined,
       stopAndReset: () => undefined,
@@ -101,7 +108,7 @@ describe('MasteringPanelComponent V2 request gate', () => {
         MasteringService,
         { provide: DspService, useValue: { getMasteringV2Capabilities: () => of(capabilities) } },
         { provide: AudioComparisonService, useValue: audioComparisonStub },
-        { provide: LanguageService, useValue: {} },
+        { provide: LanguageService, useValue: { currentLang } },
         { provide: AuthService, useValue: {} },
       ],
     });
@@ -118,6 +125,16 @@ describe('MasteringPanelComponent V2 request gate', () => {
     expect(panel.requestedLufsError()).toContain('-11.5');
     expect(panel.requestedLufsError()).toContain('-10');
     expect(panel.requestReady()).toBeFalse();
+    expect(panel.renderBlockReason()).toContain('-11.5');
+  });
+
+  it('explains LUFS in Polish without presenting louder as automatically better', () => {
+    currentLang.set('pl');
+    const help = panel.education().controls.lufs;
+
+    expect(help.short).toContain('bliżej 0');
+    expect(help.details).toContain('-1 LUFS');
+    expect(help.details).toContain('nie jest „lepsze”');
   });
 
   it('allows the backend policy default and a valid custom club target', () => {
@@ -128,5 +145,16 @@ describe('MasteringPanelComponent V2 request gate', () => {
     masteringService.setRequestedLufs(-10.8);
     expect(panel.requestedLufsError()).toBeNull();
     expect(panel.requestReady()).toBeTrue();
+  });
+
+  it('invalidates a ready master after a configuration change and records a notice', () => {
+    canUseMaster.set(true);
+    masteringService.setIntensityPercent(50);
+
+    panel.updateIntensity({ target: { value: '51' } } as unknown as Event);
+
+    expect(clearCalls).toBe(1);
+    expect(panel.configInvalidatedResult()).toBeTrue();
+    expect(canUseMaster()).toBeFalse();
   });
 });
