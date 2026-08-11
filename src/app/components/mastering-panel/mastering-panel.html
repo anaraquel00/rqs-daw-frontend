@@ -49,7 +49,7 @@
               [class.active]="audioComparison.activeVariant() === 'master'"
               [disabled]="!audioComparison.canUseMaster()"
               (click)="alternarAudicao('master')">
-        {{ lang.tr().MASTER_LABEL }} 🔒
+        {{ lang.tr().MASTER_LABEL }} <span *ngIf="!audioComparison.canUseMaster()">🔒</span>
       </button>
     </div>
   </div>
@@ -60,38 +60,38 @@
     <div class="control-group">
       <h4>DESTINATION</h4>
       <div class="btn-group profiles-grid">
-        <button [class.selected]="destination() === 'streaming'" (click)="selectDestination('streaming')">Streaming</button>
-        <button [class.selected]="destination() === 'club'" (click)="selectDestination('club')">Club</button>
-        <button [class.selected]="destination() === 'festival'" (click)="selectDestination('festival')">Festival</button>
+        <button [disabled]="isProcessing" [class.selected]="destination() === 'streaming'" (click)="selectDestination('streaming')">Streaming</button>
+        <button [disabled]="isProcessing" [class.selected]="destination() === 'club'" (click)="selectDestination('club')">Club</button>
+        <button [disabled]="isProcessing" [class.selected]="destination() === 'festival'" (click)="selectDestination('festival')">Festival</button>
       </div>
     </div>
 
     <div class="control-group" *ngIf="destination() === 'streaming'">
       <h4>PLATFORM</h4>
       <div class="btn-group profiles-grid">
-        <button [class.selected]="platform() === 'spotify'" (click)="selectPlatform('spotify')">Spotify</button>
-        <button [class.selected]="platform() === 'apple_music'" (click)="selectPlatform('apple_music')">Apple Music</button>
-        <button [class.selected]="platform() === 'youtube'" (click)="selectPlatform('youtube')">YouTube</button>
-        <button [class.selected]="platform() === 'soundcloud'" (click)="selectPlatform('soundcloud')">SoundCloud</button>
-        <button [class.selected]="platform() === 'generic'" (click)="selectPlatform('generic')">Generic</button>
+        <button [disabled]="isProcessing" [class.selected]="platform() === 'spotify'" (click)="selectPlatform('spotify')">Spotify</button>
+        <button [disabled]="isProcessing" [class.selected]="platform() === 'apple_music'" (click)="selectPlatform('apple_music')">Apple Music</button>
+        <button [disabled]="isProcessing" [class.selected]="platform() === 'youtube'" (click)="selectPlatform('youtube')">YouTube</button>
+        <button [disabled]="isProcessing" [class.selected]="platform() === 'soundcloud'" (click)="selectPlatform('soundcloud')">SoundCloud</button>
+        <button [disabled]="isProcessing" [class.selected]="platform() === 'generic'" (click)="selectPlatform('generic')">Generic</button>
       </div>
     </div>
 
     <div class="control-group" *ngIf="destination() === 'streaming' && platform() === 'soundcloud'">
       <h4>SOUNDCLOUD MODE</h4>
       <div class="btn-group intensity-selector">
-        <button [class.selected]="soundcloudMode() === 'standard'" (click)="selectSoundCloudMode('standard')">Standard</button>
-        <button [class.selected]="soundcloudMode() === 'loud'" (click)="selectSoundCloudMode('loud')">Loud</button>
+        <button [disabled]="isProcessing" [class.selected]="soundcloudMode() === 'standard'" (click)="selectSoundCloudMode('standard')">Standard</button>
+        <button [disabled]="isProcessing" [class.selected]="soundcloudMode() === 'loud'" (click)="selectSoundCloudMode('loud')">Loud</button>
       </div>
     </div>
 
     <div class="control-group">
       <h4>ATMOSPHERE</h4>
       <div class="btn-group profiles-grid">
-        <button [class.selected]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
-        <button [class.selected]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
-        <button [class.selected]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
-        <button [class.selected]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
       </div>
     </div>
 
@@ -102,6 +102,7 @@
         min="0"
         max="100"
         step="1"
+        [disabled]="isProcessing"
         [value]="intensityPercent()"
         (input)="updateIntensity($event)"
         class="cyber-scrubber"
@@ -111,6 +112,11 @@
 
     <div class="control-group">
       <h4>DELIVERY POLICY</h4>
+
+      <p class="helper-text" *ngIf="capabilitiesLoading()">
+        Loading Mastering V2 delivery contract…
+      </p>
+
       <div *ngIf="activeTarget() as target" class="policy-card">
         <div>Default: <strong>{{ target.target_lufs }} LUFS</strong></div>
         <div>Allowed: {{ target.min_lufs }} … {{ target.max_lufs }} LUFS</div>
@@ -120,15 +126,25 @@
           <input
             type="number"
             step="0.1"
+            [disabled]="isProcessing"
             [min]="target.min_lufs"
             [max]="target.max_lufs"
+            [attr.aria-invalid]="requestedLufsError() ? 'true' : 'false'"
             [ngModel]="requestedLufs()"
             (ngModelChange)="updateRequestedLufs($event)">
         </label>
-        <button type="button" class="btn-secondary" (click)="usePolicyLufs()">Use policy default</button>
+        <p class="helper-text" *ngIf="requestedLufsError() as error">⚠ {{ error }}</p>
+        <button
+          type="button"
+          class="btn-secondary"
+          [disabled]="isProcessing || requestedLufs() === null"
+          (click)="usePolicyLufs()">
+          Use policy default
+        </button>
       </div>
-      <p class="helper-text" *ngIf="capabilitiesError()">
-        Nie udało się pobrać capabilities V2. Render pozostaje zablokowany przez walidację backendu.
+
+      <p class="helper-text" *ngIf="capabilitiesError() as error">
+        ⚠ {{ error }} Render is disabled until the V2 contract is available.
       </p>
     </div>
   </div>
@@ -144,13 +160,13 @@
     <button
       class="btn-secondary"
       (click)="dispararPreview()"
-      [disabled]="isProcessing || audioComparison.previewStatus() === 'processing'">
+      [disabled]="isProcessing || !requestReady() || audioComparison.previewStatus() === 'processing'">
       {{ audioComparison.previewStatus() === 'processing' ? lang.tr().AB_PREVIEW_GENERATING : lang.tr().BTN_GENERATE_PREVIEW }}
     </button>
     <button
       class="btn-process"
       (click)="dispararProcessamentoCompleto()"
-      [disabled]="isProcessing || (!auth.canMaster())">
+      [disabled]="isProcessing || !requestReady() || (!auth.canMaster())">
       {{ isProcessing ? lang.t().PROCESSING_ACUSTICO : lang.t().MASTER_FULL }}
     </button>
   </div>
