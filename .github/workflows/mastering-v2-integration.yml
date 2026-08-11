@@ -9,6 +9,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -22,7 +25,27 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Install dependencies
+      - name: Install dependencies from committed lock
+        run: npm ci
+
+      - name: Refresh lockfile with non-breaking security updates
+        run: npm audit fix --package-lock-only
+
+      - name: Commit refreshed lockfile when changed
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo 'LOCKFILE_SECURITY_REFRESH: NO_CHANGE'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package-lock.json
+          git commit -m 'chore(security): refresh dependency lock'
+          git push origin HEAD:feat/mastering-v2-integration
+          echo 'LOCKFILE_SECURITY_REFRESH: COMMITTED'
+
+      - name: Reinstall from refreshed lock
         run: npm ci
 
       - name: Gate production dependency vulnerabilities
