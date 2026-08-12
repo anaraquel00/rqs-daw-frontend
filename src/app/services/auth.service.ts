@@ -166,134 +166,65 @@ export class AuthService {
   // PERFIL / ROLE
   // =================================================
 
-  private async handleSessionUpdate(
-    session: any | null
-  ): Promise<void> {
+private async handleSessionUpdate(
+  session: any | null
+): Promise<void> {
 
-    this.session.set(session);
+  this.session.set(session);
 
+  if (session?.user) {
 
-    // ===============================================
-    // USUÁRIO LOGADO
-    // ===============================================
+     const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
 
-    if (session?.user) {
+    if (isLocalhost) {
+      this.userRole.set('premium');
+      this.completedMasters.set(0);
+      return;
+    }
 
-      /*
-       * Override SOMENTE no ambiente local.
-       *
-       * Isso permite testar recursos PRO
-       * durante desenvolvimento sem colocar
-       * e-mail ou identificador pessoal no bundle.
-       */
-      const isLocalhost =
-        window.location.hostname ===
-          'localhost' ||
-        window.location.hostname ===
-          '127.0.0.1';
+    const {
+      data: profile,
+      error
+    } =
+      await this.supabase
+        .from('profiles')
+        .select('role, completed_masters')
+        .eq('id', session.user.id)
+        .single();
 
-
-      if (isLocalhost) {
-
-        this.userRole.set(
-          'premium'
-        );
-
-        this.completedMasters.set(
-          0
-        );
-
-        return;
-      }
-
-
-      /*
-       * PRODUÇÃO:
-       *
-       * O Supabase é a única autoridade
-       * para decidir se a conta é FREE ou PRO.
-       */
-      const {
-        data: profile,
-        error
-      } =
-        await this.supabase
-          .from('profiles')
-          .select(
-            'role, completed_masters'
-          )
-          .eq(
-            'id',
-            session.user.id
-          )
-          .single();
-
-
-      /*
-       * FAIL CLOSED:
-       *
-       * Se o perfil não puder ser carregado,
-       * jamais conceder Premium.
-       */
-      if (
-        error ||
-        !profile
-      ) {
-
-        console.error(
-          '[RQS AUTH] Erro ao carregar perfil:',
-          error?.message ??
-            'Profile not found'
-        );
-
-
-        this.userRole.set(
-          'free'
-        );
-
-        this.completedMasters.set(
-          0
-        );
-
-        return;
-      }
-
-
-      /*
-       * Nunca confiar cegamente no conteúdo
-       * do campo role.
-       *
-       * Só "premium" libera o PRO.
-       * Qualquer outro valor vira FREE.
-       */
-      this.userRole.set(
-        profile.role === 'premium'
-          ? 'premium'
-          : 'free'
+    if (
+      error ||
+      !profile
+    ) {
+      console.error(
+        '[RQS AUTH] Erro ao carregar perfil:',
+        error?.message ?? 'Profile not found'
       );
 
-
-      this.completedMasters.set(
-        profile.completed_masters ??
-          0
-      );
-
+      this.userRole.set('free');
+      this.completedMasters.set(0);
 
       return;
     }
 
-
-    // ===============================================
-    // USUÁRIO ANÔNIMO
-    // ===============================================
-
     this.userRole.set(
-      'free'
+      profile.role === 'premium'
+        ? 'premium'
+        : 'free'
     );
 
+    this.completedMasters.set(
+      profile.completed_masters ?? 0
+    );
 
-    this.sincronizarCotaAnonimaLocal();
+    return;
   }
+
+  this.userRole.set('free');
+  this.sincronizarCotaAnonimaLocal();
+}
 
 
   // =================================================
@@ -429,7 +360,7 @@ export class AuthService {
           options: {
 
             redirectTo:
-              window.location.origin
+               `${window.location.origin}/app`
           }
         });
 
@@ -448,43 +379,27 @@ export class AuthService {
   // LOGOUT
   // =================================================
 
-  async logout():
-    Promise<void> {
-
-    if (!this.supabase) {
-      return;
-    }
-
-
-    const {
-      error
-    } =
-      await this.supabase.auth
-        .signOut();
-
-
-    if (error) {
-
-      console.error(
-        '[RQS AUTH] Logout error:',
-        error.message
-      );
-    }
-
-
-    /*
-     * Estado local defensivo.
-     */
-    this.session.set(
-      null
-    );
-
-    this.userRole.set(
-      'free'
-    );
-
-    this.sincronizarCotaAnonimaLocal();
+  async logout(): Promise<void> {
+  if (!this.supabase) {
+    return;
   }
+
+  const { error } =
+    await this.supabase.auth.signOut({
+      scope: 'local'
+    });
+
+  if (error) {
+    console.error(
+      '[RQS AUTH] Logout error:',
+      error.message
+    );
+  }
+
+  this.session.set(null);
+  this.userRole.set('free');
+  this.sincronizarCotaAnonimaLocal();
+}
 
 
   // =================================================
