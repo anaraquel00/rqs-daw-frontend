@@ -291,10 +291,15 @@
     </button>
 
     <button
-      class="btn-process"
-      (click)="dispararProcessamentoCompleto()"
-      [disabled]="isProcessing || (!auth.canMaster())">
-      {{ isProcessing ? lang.t().PROCESSING_ACUSTICO : lang.t().MASTER_FULL }}
-    </button>
+    *ngIf="auth.canMaster()"
+    class="btn-process"
+    (click)="dispararProcessamentoCompleto()"
+    [disabled]="isProcessing">
+    {{
+      isProcessing
+        ? lang.t().PROCESSING_ACUSTICO
+        : lang.t().MASTER_FULL
+    }}
+   </button>
   </div>
 </div>
