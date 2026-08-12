@@ -15,6 +15,7 @@ export interface MasteringV2Request {
 export interface MasteringProcessCommand {
   request: MasteringV2Request;
   preview: boolean;
+  previewStartSeconds?: number;
 }
 
 export interface MasteringDeliveryTargetCapabilities {

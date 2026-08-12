@@ -26,6 +26,7 @@ export class AudioComparisonService implements OnDestroy {
   readonly previewStart = signal<number>(0);
   readonly previewEnd = signal<number>(15);
 
+  private preferredPreviewStart: number | null = null;
   private originalAudio!: HTMLAudioElement;
   private masterAudio!: HTMLAudioElement;
   private audioCtx!: AudioContext | null;
@@ -36,14 +37,14 @@ export class AudioComparisonService implements OnDestroy {
   readonly canUseMaster = computed(() => this.previewStatus() === 'ready');
 
   readonly displayDuration = computed(() => {
-    if (this.canUseMaster() && this.playbackMode() === 'preview-15s') {
+    if (this.playbackMode() === 'preview-15s') {
       return Math.max(0, this.previewEnd() - this.previewStart());
     }
     return this.duration();
   });
 
   readonly displayCurrentTime = computed(() => {
-    if (this.canUseMaster() && this.playbackMode() === 'preview-15s') {
+    if (this.playbackMode() === 'preview-15s') {
       return Math.max(0, Math.min(this.displayDuration(), this.currentTime() - this.previewStart()));
     }
     return this.currentTime();
@@ -66,9 +67,9 @@ export class AudioComparisonService implements OnDestroy {
       this.duration.set(total);
 
       const previewLength = Math.min(15, total);
-      const start = Math.max(0, (total - previewLength) / 2);
-      this.previewStart.set(start);
-      this.previewEnd.set(start + previewLength);
+      const defaultStart = Math.max(0, (total - previewLength) / 2);
+      const start = this.preferredPreviewStart ?? defaultStart;
+      this.setPreviewStart(start);
     });
 
     this.originalAudio.addEventListener('timeupdate', () => {
@@ -108,10 +109,24 @@ export class AudioComparisonService implements OnDestroy {
     this.gainMaster.gain.setValueAtTime(0.0, this.audioCtx.currentTime);
   }
 
-  setOriginalSrc(url: string): void {
+  setOriginalSrc(url: string, preferredPreviewStart: number | null = null): void {
     this.resetAll();
+    this.preferredPreviewStart = preferredPreviewStart;
+    this.playbackMode.set('preview-15s');
     this.originalAudio.src = url;
     this.originalAudio.load();
+  }
+
+  setPreviewStart(startSeconds: number): void {
+    const total = this.duration();
+    if (!Number.isFinite(startSeconds) || total <= 0) return;
+
+    const previewLength = Math.min(15, total);
+    const maxStart = Math.max(0, total - previewLength);
+    const normalized = Math.max(0, Math.min(startSeconds, maxStart));
+    this.preferredPreviewStart = normalized;
+    this.previewStart.set(normalized);
+    this.previewEnd.set(normalized + previewLength);
   }
 
   setMasterSrc(url: string, mode: PlaybackMode): void {
@@ -127,7 +142,7 @@ export class AudioComparisonService implements OnDestroy {
     this.masterAudio.removeAttribute('src');
     this.masterAudio.load();
     this.previewStatus.set('not-generated');
-    this.playbackMode.set('full-track');
+    this.playbackMode.set('preview-15s');
     this.activeVariant.set('original');
 
     if (this.audioCtx && this.gainOriginal && this.gainMaster) {
@@ -137,11 +152,14 @@ export class AudioComparisonService implements OnDestroy {
       this.gainOriginal.gain.setValueAtTime(1.0, now);
       this.gainMaster.gain.setValueAtTime(0.0, now);
     }
+
+    this.stopAndReset();
   }
 
   private verificarFimDaPrevia(): void {
-    if (this.canUseMaster() && this.playbackMode() === 'preview-15s') {
-      if (this.originalAudio.currentTime >= this.previewEnd()) {
+    if (this.playbackMode() === 'preview-15s') {
+      const current = this.originalAudio.currentTime;
+      if (current < this.previewStart() || current >= this.previewEnd()) {
         this.stopAndReset();
       }
     }
@@ -164,12 +182,16 @@ export class AudioComparisonService implements OnDestroy {
     const isMasterReady = this.canUseMaster();
     const mode = this.playbackMode();
 
+    if (mode === 'preview-15s') {
+      const current = this.originalAudio.currentTime;
+      if (current < this.previewStart() || current >= this.previewEnd()) {
+        this.originalAudio.currentTime = this.previewStart();
+        this.currentTime.set(this.previewStart());
+      }
+    }
+
     if (isMasterReady) {
       if (mode === 'preview-15s') {
-        const current = this.originalAudio.currentTime;
-        if (current < this.previewStart() || current > this.previewEnd()) {
-          this.originalAudio.currentTime = this.previewStart();
-        }
         this.masterAudio.currentTime = Math.max(0, this.originalAudio.currentTime - this.previewStart());
       } else {
         this.masterAudio.currentTime = this.originalAudio.currentTime;
@@ -191,7 +213,7 @@ export class AudioComparisonService implements OnDestroy {
 
   stopAndReset(): void {
     this.pauseAll();
-    if (this.canUseMaster() && this.playbackMode() === 'preview-15s') {
+    if (this.playbackMode() === 'preview-15s') {
       this.originalAudio.currentTime = this.previewStart();
       this.masterAudio.currentTime = 0;
       this.currentTime.set(this.previewStart());
@@ -278,10 +300,12 @@ export class AudioComparisonService implements OnDestroy {
   }
 
   seek(seconds: number): void {
-    if (this.canUseMaster() && this.playbackMode() === 'preview-15s') {
+    if (this.playbackMode() === 'preview-15s') {
       const target = Math.max(this.previewStart(), Math.min(seconds, this.previewEnd()));
       this.originalAudio.currentTime = target;
-      this.masterAudio.currentTime = Math.max(0, Math.min(target - this.previewStart(), this.displayDuration()));
+      if (this.canUseMaster()) {
+        this.masterAudio.currentTime = Math.max(0, Math.min(target - this.previewStart(), this.displayDuration()));
+      }
       this.currentTime.set(target);
       return;
     }
@@ -303,6 +327,7 @@ export class AudioComparisonService implements OnDestroy {
     this.duration.set(0);
     this.previewStart.set(0);
     this.previewEnd.set(15);
+    this.preferredPreviewStart = null;
   }
 
   ngOnDestroy(): void {

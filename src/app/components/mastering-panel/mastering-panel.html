@@ -9,15 +9,21 @@
     </div>
 
     <div class="scrubber-container">
-      <input
-        type="range"
-        title="Audio Playback Scrubber"
-        aria-label="Audio Playback Scrubber"
-        min="0"
-        [max]="audioComparison.displayDuration()"
-        [value]="audioComparison.displayCurrentTime()"
-        (input)="onScrubberChange($event)"
-        class="cyber-scrubber">
+      <app-preview-waveform
+        [file]="originalFile"
+        [duration]="audioComparison.duration()"
+        [currentTime]="audioComparison.currentTime()"
+        [previewStart]="audioComparison.previewStart()"
+        [previewEnd]="audioComparison.previewEnd()"
+        [disabled]="isProcessing"
+        (rangeStartChange)="onPreviewRangeStartChange($event)"
+        (seekTo)="onWaveformSeek($event)">
+      </app-preview-waveform>
+      <p class="preview-relative-note">
+        <span *ngIf="lang.currentLang() === 'en'">Drag the highlighted 15-second window to choose the Preview source · {{ education().previewSourceWindow }} {{ previewWindowString() }}</span>
+        <span *ngIf="lang.currentLang() === 'pt'">Arraste a janela destacada de 15 segundos para escolher a prévia · {{ education().previewSourceWindow }} {{ previewWindowString() }}</span>
+        <span *ngIf="lang.currentLang() === 'pl'">Przeciągnij podświetlone okno 15 s, aby wybrać fragment Preview · {{ education().previewSourceWindow }} {{ previewWindowString() }}</span>
+      </p>
     </div>
 
     <div class="loop-indicator-bar" *ngIf="audioComparison.canUseMaster()">
@@ -59,7 +65,7 @@
               [class.active]="audioComparison.activeVariant() === 'master'"
               [disabled]="!audioComparison.canUseMaster()"
               (click)="alternarAudicao('master')">
-        {{ lang.tr().MASTER_LABEL }} <span *ngIf="!audioComparison.canUseMaster()">🔒</span>
+        {{ masterVariantLabel() }} <span *ngIf="!audioComparison.canUseMaster()">🔒</span>
       </button>
     </div>
   </div>
@@ -259,7 +265,7 @@
   </div>
 
   <div class="render-status" [class.blocked]="!requestReady()">
-    <strong *ngIf="requestReady()">✓ {{ education().ready }}</strong>
+    <strong *ngIf="requestReady()">✓ {{ workflowStatusText() }}</strong>
     <span *ngIf="!requestReady() && renderBlockReason() as reason">
       ⛔ {{ education().whyBlocked }} {{ reason }}
     </span>
@@ -269,13 +275,13 @@
     <button
       class="btn-secondary"
       (click)="dispararPreview()"
-      [disabled]="isProcessing || !requestReady() || audioComparison.previewStatus() === 'processing'">
+      [disabled]="!canGeneratePreview()">
       {{ audioComparison.previewStatus() === 'processing' ? lang.tr().AB_PREVIEW_GENERATING : lang.tr().BTN_GENERATE_PREVIEW }}
     </button>
     <button
       class="btn-process"
       (click)="dispararProcessamentoCompleto()"
-      [disabled]="isProcessing || !requestReady() || (!auth.canMaster())">
+      [disabled]="!canGenerateFullMaster()">
       {{ isProcessing ? lang.t().PROCESSING_ACUSTICO : lang.t().MASTER_FULL }}
     </button>
   </div>

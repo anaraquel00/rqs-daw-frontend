@@ -18,6 +18,7 @@ export class MasteringService {
   readonly intensityPercent: WritableSignal<number> = signal(50);
   readonly requestedLufs: WritableSignal<number | null> = signal(null);
   readonly soundcloudMode: WritableSignal<SoundCloudMode> = signal('standard');
+  readonly previewStartSeconds: WritableSignal<number | null> = signal(null);
 
   // Legacy component compatibility only. These signals keep standalone legacy
   // control components compilable, but they are intentionally NOT serialized
@@ -67,6 +68,19 @@ export class MasteringService {
       this.soundcloudMode.set(value);
       this.requestedLufs.set(null);
     }
+  }
+
+  setPreviewStartSeconds(value: number | null): void {
+    if (value === null) {
+      this.previewStartSeconds.set(null);
+      return;
+    }
+    if (!Number.isFinite(value)) return;
+    this.previewStartSeconds.set(Math.max(0, Math.round(value * 1000) / 1000));
+  }
+
+  resetPreviewStartSeconds(): void {
+    this.previewStartSeconds.set(null);
   }
 
   setLowCutoff(value: number): void {

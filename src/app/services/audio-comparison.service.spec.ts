@@ -39,7 +39,9 @@ describe('AudioComparisonService V2 preview mapping', () => {
     expect(media.masterAudio.currentTime).toBeCloseTo(15, 3);
   });
 
-  it('clears stale master state when the mastering configuration changes', () => {
+  it('clears stale master state and returns to selected Preview audition', () => {
+    service.duration.set(60);
+    service.setPreviewStart(18);
     service.previewStatus.set('ready');
     service.playbackMode.set('preview-15s');
     service.activeVariant.set('master');
@@ -47,9 +49,10 @@ describe('AudioComparisonService V2 preview mapping', () => {
     service.clearMasterSrc();
 
     expect(service.previewStatus()).toBe('not-generated');
-    expect(service.playbackMode()).toBe('full-track');
+    expect(service.playbackMode()).toBe('preview-15s');
     expect(service.activeVariant()).toBe('original');
     expect(service.canUseMaster()).toBeFalse();
+    expect(service.currentTime()).toBeCloseTo(18, 3);
   });
 
   it('uses the actual preview duration for tracks shorter than fifteen seconds', () => {
@@ -60,4 +63,38 @@ describe('AudioComparisonService V2 preview mapping', () => {
 
     expect(service.displayDuration()).toBeCloseTo(8.25, 3);
   });
+
+  it('constrains source-only audition to the selected Preview range before a master exists', async () => {
+    service.duration.set(60);
+    service.setPreviewStart(20);
+    service.previewStatus.set('not-generated');
+    service.playbackMode.set('preview-15s');
+
+    const media = service as unknown as {
+      originalAudio: HTMLAudioElement;
+    };
+    const internal = service as unknown as {
+      playActiveSource(): Promise<void>;
+    };
+
+    spyOn(media.originalAudio, 'play').and.returnValue(Promise.resolve());
+    media.originalAudio.currentTime = 0;
+
+    await internal.playActiveSource();
+
+    expect(media.originalAudio.currentTime).toBeCloseTo(20, 3);
+    expect(service.displayCurrentTime()).toBeCloseTo(0, 3);
+    expect(service.displayDuration()).toBeCloseTo(15, 3);
+
+    service.seek(0);
+    expect(media.originalAudio.currentTime).toBeCloseTo(20, 3);
+
+    service.seek(59);
+    expect(media.originalAudio.currentTime).toBeCloseTo(35, 3);
+
+    service.stopAndReset();
+    expect(media.originalAudio.currentTime).toBeCloseTo(20, 3);
+    expect(service.currentTime()).toBeCloseTo(20, 3);
+  });
+
 });

@@ -55,7 +55,7 @@
       <div class="terminal-line active-status">
         <span class="prompt">>></span>
         <span class="status-text">
-          {{ isUploadingS3 ? lang.t().SYNCHRONIZING : (isExtractingStems ? lang.t().DISSECTING : lang.t().REACTOR_PROCESSING) }}
+          {{ isUploadingS3 ? lang.t().SYNCHRONIZING : (isExtractingStems ? lang.t().DISSECTING : renderProgressStatus()) }}
         </span>
         <span class="blink-block">█</span>
       </div>
@@ -63,7 +63,11 @@
   </div>
 
   <div class="download-section" *ngIf="processedAudioUrl && !isProcessing">
-    <a [href]="processedAudioUrl" [download]="processedAudioName" class="btn-download">
+    <a
+      *ngIf="isFullMasterCompleted"
+      [href]="processedAudioUrl"
+      [download]="processedAudioName"
+      class="btn-download">
       {{ lang.t().MASTER_COMPLETED }}
     </a>
     <button class="btn-danger" (click)="ejetarFaixa()">{{ lang.t().EJECT_DECK }}</button>

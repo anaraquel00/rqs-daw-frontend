@@ -28,11 +28,12 @@ import {
   SoundCloudMode,
 } from '../../services/mastering-types';
 import { MasteringHelpTopic, masteringEducation } from './mastering-education';
+import { PreviewWaveformComponent } from './preview-waveform';
 
 @Component({
   selector: 'app-mastering-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PreviewWaveformComponent],
   templateUrl: './mastering-panel.html',
   styleUrls: ['./mastering-panel.scss'],
 })
@@ -156,7 +157,10 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
       this.configInvalidatedResult.set(false);
       if (this.originalFile) {
         this.originalObjectUrl = window.URL.createObjectURL(this.originalFile);
-        this.audioComparison.setOriginalSrc(this.originalObjectUrl);
+        this.audioComparison.setOriginalSrc(
+          this.originalObjectUrl,
+          this.masteringService.previewStartSeconds(),
+        );
       }
     }
 
@@ -236,15 +240,94 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     void this.audioComparison.switchVariant(variant);
   }
 
+  hasCurrentPreview(): boolean {
+    return !this.isFullMaster
+      && this.audioComparison.canUseMaster()
+      && this.audioComparison.playbackMode() === 'preview-15s';
+  }
+
+  hasCurrentFullMaster(): boolean {
+    return this.isFullMaster
+      && this.audioComparison.canUseMaster()
+      && this.audioComparison.playbackMode() === 'full-track';
+  }
+
+  canGeneratePreview(): boolean {
+    return !this.isProcessing
+      && this.requestReady()
+      && this.audioComparison.previewStatus() !== 'processing'
+      && !this.hasCurrentPreview()
+      && !this.hasCurrentFullMaster();
+  }
+
+  canGenerateFullMaster(): boolean {
+    return !this.isProcessing
+      && this.requestReady()
+      && this.hasCurrentPreview()
+      && this.auth.canMaster();
+  }
+
+  workflowStatusText(): string {
+    const language = this.lang.currentLang();
+    if (this.hasCurrentFullMaster()) {
+      if (language === 'pl') return 'Pełny Master jest aktualny. Plik jest gotowy do pobrania.';
+      if (language === 'pt') return 'O Master completo está atual. O arquivo está pronto para download.';
+      return 'The Full Master is current. The file is ready to download.';
+    }
+    if (this.hasCurrentPreview()) {
+      if (language === 'pl') return 'Preview jest aktualny. Możesz teraz wykonać pełny Master, jeśli pozwala na to plan.';
+      if (language === 'pt') return 'A prévia está atual. Agora você pode gerar o Master completo se o plano permitir.';
+      return 'The Preview is current. You can now render the Full Master if your plan allows it.';
+    }
+    if (language === 'pl') return 'Ustawienia są prawidłowe. Najpierw wygeneruj 15-sekundowy Preview.';
+    if (language === 'pt') return 'As configurações estão válidas. Gere primeiro a prévia de 15 segundos.';
+    return 'Settings are valid. Generate the 15-second Preview first.';
+  }
+
+  onPreviewRangeStartChange(startSeconds: number): void {
+    if (this.isProcessing || !Number.isFinite(startSeconds)) return;
+    const normalized = Math.max(0, Math.round(startSeconds * 1000) / 1000);
+    if (Math.abs(normalized - this.audioComparison.previewStart()) < 0.005) return;
+
+    const hadCurrentResult = this.audioComparison.canUseMaster() || this.isFullMaster;
+    this.masteringService.setPreviewStartSeconds(normalized);
+    this.audioComparison.setPreviewStart(normalized);
+
+    if (hadCurrentResult) {
+      this.audioComparison.clearMasterSrc();
+      this.configInvalidatedResult.set(true);
+      this.configChanged.emit();
+    } else {
+      this.audioComparison.stopAndReset();
+    }
+  }
+
+  masterVariantLabel(): string {
+    if (!this.isFullMaster) return this.lang.tr().MASTER_LABEL;
+    if (this.lang.currentLang() === 'pl') return 'B - PEŁNY MASTER';
+    if (this.lang.currentLang() === 'pt') return 'B - MASTER COMPLETO';
+    return 'B - FULL MASTER';
+  }
+
+  onWaveformSeek(seconds: number): void {
+    this.audioComparison.seek(seconds);
+  }
+
   dispararPreview(): void {
-    if (this.isProcessing || !this.requestReady()) return;
+    if (!this.canGeneratePreview()) return;
+    const previewStartSeconds = this.audioComparison.previewStart();
+    this.masteringService.setPreviewStartSeconds(previewStartSeconds);
     this.configInvalidatedResult.set(false);
     this.audioComparison.previewStatus.set('processing');
-    this.processMaster.emit({ request: this.masteringService.getRequest(), preview: true });
+    this.processMaster.emit({
+      request: this.masteringService.getRequest(),
+      preview: true,
+      previewStartSeconds,
+    });
   }
 
   dispararProcessamentoCompleto(): void {
-    if (this.isProcessing || !this.requestReady()) return;
+    if (!this.canGenerateFullMaster()) return;
     this.configInvalidatedResult.set(false);
     this.processMaster.emit({ request: this.masteringService.getRequest(), preview: false });
   }

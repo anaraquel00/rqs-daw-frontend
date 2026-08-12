@@ -492,7 +492,7 @@ export class LanguageService {
   }
 
   private detectLanguage(): void {
-    if (typeof window === 'undefined' || !window.navigator) return;
+    if (typeof window === 'undefined') return;
 
     const stored = window.localStorage.getItem('rqs_language');
     if (stored === 'en' || stored === 'pt' || stored === 'pl') {
@@ -500,13 +500,8 @@ export class LanguageService {
       return;
     }
 
-    const browserLang = window.navigator.language.toLowerCase();
-    if (browserLang.startsWith('pl')) {
-      this.currentLang.set('pl');
-    } else if (browserLang.startsWith('pt')) {
-      this.currentLang.set('pt');
-    } else {
-      this.currentLang.set('en');
-    }
+    // Product contract: English is the deterministic first-run language.
+    // Browser locale must never silently override the primary UI language.
+    this.currentLang.set('en');
   }
 }

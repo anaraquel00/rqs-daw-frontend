@@ -7,6 +7,7 @@ import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
 import { MasteringProcessCommand, MasteringV2Request } from '../../services/mastering-types';
+import { MasteringService } from '../../services/mastering.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -25,6 +26,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   readonly audioComparison = inject(AudioComparisonService);
   readonly masteringV2DirectUpload = environment.masteringV2DirectUpload;
   private readonly dspService = inject(DspService);
+  private readonly masteringService = inject(MasteringService);
 
   isDragging = false;
   selectedFile: File | null = null;
@@ -35,6 +37,10 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   s3Key: string | null = null;
   isUploadingS3 = false;
   isExtractingStems = false;
+  renderProgressPercent = 0;
+  private renderProgressPreview = false;
+  private renderProgressStartedAt = 0;
+  private renderProgressTimer: ReturnType<typeof setInterval> | undefined;
 
   ngAfterViewChecked(): void {
     const element = this.terminalScrollContainer?.nativeElement;
@@ -112,7 +118,12 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     }
 
     this.isProcessing = true;
-    const formData = this.buildMasteringV2FormData(command.request, command.preview);
+    this.startEstimatedRenderProgress(command.preview);
+    const formData = this.buildMasteringV2FormData(
+      command.request,
+      command.preview,
+      command.previewStartSeconds,
+    );
 
     if (command.preview) {
       this.addLog(
@@ -120,6 +131,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       );
       this.dspService.masterizeV2Preview(formData).subscribe({
         next: (blob) => {
+          this.completeRenderProgress();
           this.isProcessing = false;
           this.releaseProcessedBlobUrl();
           this.processedAudioUrl = window.URL.createObjectURL(blob);
@@ -129,6 +141,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
           this.addLog('Mastering V2 preview concluído com sucesso.');
         },
         error: (error: unknown) => {
+          this.stopEstimatedRenderProgress();
           this.isProcessing = false;
           this.audioComparison.previewStatus.set('error');
           this.addLog(`❌ MASTERING V2 PREVIEW ERROR: ${this.errorMessage(error)}`);
@@ -140,6 +153,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.addLog(`Mastering V2 final: ${this.describeRequest(command.request)} | ${command.request.intensityPercent}%`);
     this.dspService.masterizeV2Final(formData).subscribe({
       next: (response) => {
+        this.completeRenderProgress();
         this.isProcessing = false;
         this.auth.registrarNovaMaster();
         this.releaseProcessedBlobUrl();
@@ -151,6 +165,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         this.addLog(`Mastering V2 finalizado: ${response.fileName}`);
       },
       error: (error: unknown) => {
+        this.stopEstimatedRenderProgress();
         this.isProcessing = false;
         this.addLog(`❌ MASTERING V2 FINAL ERROR: ${this.errorMessage(error)}`);
       },
@@ -177,6 +192,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isProcessing = false;
     this.systemLogs = [];
     this.isFullMasterCompleted = false;
+    this.masteringService.resetPreviewStartSeconds();
+    this.stopEstimatedRenderProgress();
     this.audioComparison.resetAll();
     this.audioComparison.audioProcessed.set(false);
     this.audioComparison.processedFilename.set('');
@@ -208,6 +225,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   }
 
   ngOnDestroy(): void {
+    this.stopEstimatedRenderProgress();
     this.releaseProcessedBlobUrl();
   }
 
@@ -226,6 +244,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isProcessing = false;
     this.isFullMasterCompleted = false;
     this.systemLogs = [];
+    this.masteringService.resetPreviewStartSeconds();
     this.audioComparison.audioProcessed.set(false);
     this.audioComparison.processedFilename.set('');
     this.addLog(`Track engatada: ${file.name}`);
@@ -239,7 +258,11 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.iniciarUploadS3Silencioso(file);
   }
 
-  private buildMasteringV2FormData(request: MasteringV2Request, preview: boolean): FormData {
+  private buildMasteringV2FormData(
+    request: MasteringV2Request,
+    preview: boolean,
+    previewStartSeconds?: number,
+  ): FormData {
     const formData = new FormData();
 
     if (this.masteringV2DirectUpload && this.selectedFile) {
@@ -254,8 +277,72 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     formData.append('intensity_percent', String(request.intensityPercent));
     formData.append('soundcloud_mode', request.soundcloudMode);
     if (request.requestedLufs !== null) formData.append('requested_lufs', String(request.requestedLufs));
+    if (preview && previewStartSeconds !== undefined && Number.isFinite(previewStartSeconds)) {
+      formData.append('preview_start_seconds', String(Math.max(0, previewStartSeconds)));
+    }
     formData.append('preview', preview ? 'true' : 'false');
     return formData;
+  }
+
+  renderProgressStatus(): string {
+    const language = this.lang.currentLang();
+    const phase = this.renderProgressPhaseText();
+    if (language === 'pl') return `SZAC. ${this.renderProgressPercent}% · ${phase}`;
+    if (language === 'pt') return `EST. ${this.renderProgressPercent}% · ${phase}`;
+    return `EST. ${this.renderProgressPercent}% · ${phase}`;
+  }
+
+  private startEstimatedRenderProgress(preview: boolean): void {
+    this.stopEstimatedRenderProgress();
+    this.renderProgressPreview = preview;
+    this.renderProgressStartedAt = Date.now();
+    this.renderProgressPercent = 5;
+    this.renderProgressTimer = setInterval(() => {
+      const elapsedSeconds = Math.max(0, (Date.now() - this.renderProgressStartedAt) / 1000);
+      const cap = preview ? 90 : 92;
+      const timeConstant = preview ? 6 : 75;
+      const estimate = Math.floor(5 + (cap - 5) * (1 - Math.exp(-elapsedSeconds / timeConstant)));
+      this.renderProgressPercent = Math.max(this.renderProgressPercent, Math.min(cap, estimate));
+    }, 1000);
+  }
+
+  private completeRenderProgress(): void {
+    this.stopEstimatedRenderProgress(false);
+    this.renderProgressPercent = 100;
+  }
+
+  private stopEstimatedRenderProgress(reset = true): void {
+    if (this.renderProgressTimer !== undefined) {
+      clearInterval(this.renderProgressTimer);
+      this.renderProgressTimer = undefined;
+    }
+    if (reset) this.renderProgressPercent = 0;
+  }
+
+  private renderProgressPhaseText(): string {
+    const language = this.lang.currentLang();
+    const percent = this.renderProgressPercent;
+    const preview = this.renderProgressPreview;
+
+    if (language === 'pl') {
+      if (percent < 15) return preview ? 'Przygotowanie fragmentu Preview' : 'Przygotowanie pełnego utworu';
+      if (percent < 35) return 'Analiza i przygotowanie audio';
+      if (percent < 78) return 'Przetwarzanie DSP';
+      if (percent < 90) return 'Finalizacja LUFS / True Peak';
+      return 'Kodowanie i finalizacja pliku';
+    }
+    if (language === 'pt') {
+      if (percent < 15) return preview ? 'Preparando o trecho da prévia' : 'Preparando a faixa completa';
+      if (percent < 35) return 'Analisando e preparando o áudio';
+      if (percent < 78) return 'Processamento DSP';
+      if (percent < 90) return 'Finalizando LUFS / True Peak';
+      return 'Codificando e finalizando o arquivo';
+    }
+    if (percent < 15) return preview ? 'Preparing the Preview segment' : 'Preparing the full track';
+    if (percent < 35) return 'Analyzing and preparing audio';
+    if (percent < 78) return 'DSP processing';
+    if (percent < 90) return 'LUFS / True Peak finalization';
+    return 'Encoding and finalizing the file';
   }
 
   private describeRequest(request: MasteringV2Request): string {

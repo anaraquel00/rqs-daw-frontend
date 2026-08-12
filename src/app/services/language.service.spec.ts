@@ -28,4 +28,8 @@ describe('LanguageService', () => {
     service.setLanguage('pl');
     expect(window.localStorage.getItem('rqs_language')).toBe('pl');
   });
+it('defaults to English when there is no explicit stored language choice', () => {
+  expect(window.localStorage.getItem('rqs_language')).toBeNull();
+  expect(service.currentLang()).toBe('en');
+});
 });

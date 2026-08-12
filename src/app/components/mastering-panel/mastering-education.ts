@@ -89,9 +89,9 @@ const EN: MasteringEducationCopy = {
     },
     preview: {
       title: '15-second Preview',
-      short: 'Renders only the validated center segment so you can check the settings before a full master.',
+      short: 'Renders the highlighted 15-second waveform region so you can check the settings before a full master.',
       details:
-        'The preview player displays a relative 00:00–00:15 timeline. That timeline belongs to the generated preview segment. The source window label shows where that segment comes from in the complete song. Changing a mastering setting invalidates the old preview so you never compare against stale settings.',
+        'Drag the highlighted region on the full-track waveform to choose the source excerpt. The Preview player uses a relative 00:00–00:15 timeline, while the source-window label shows the exact position in the complete song. Changing settings or moving the region invalidates the old Preview so you never compare against stale settings.',
     },
   },
 };
@@ -154,9 +154,9 @@ const PT: MasteringEducationCopy = {
     },
     preview: {
       title: 'Prévia de 15 segundos',
-      short: 'Renderiza apenas o trecho central validado antes do master completo.',
+      short: 'Renderiza a região destacada de 15 segundos da forma de onda antes do master completo.',
       details:
-        'O player mostra uma linha do tempo relativa de 00:00 a 00:15. O rótulo do trecho de origem mostra a posição real dentro da música. Qualquer mudança de configuração invalida a prévia anterior.',
+        'Arraste a região destacada na forma de onda da faixa completa para escolher o trecho. O player da prévia usa uma linha do tempo relativa de 00:00 a 00:15, enquanto o trecho de origem mostra a posição exata na música. Alterar configurações ou mover a região invalida a prévia anterior.',
     },
   },
 };
@@ -219,9 +219,9 @@ const PL: MasteringEducationCopy = {
     },
     preview: {
       title: 'Preview 15 sekund',
-      short: 'Renderuje zwalidowany środkowy fragment, aby sprawdzić ustawienia przed pełnym masteringiem.',
+      short: 'Renderuje podświetlony 15-sekundowy zakres waveformu przed pełnym masteringiem.',
       details:
-        'Player pokazuje czas względny 00:00–00:15 dla samego Preview. Etykieta fragmentu źródłowego pokazuje rzeczywiste miejsce w pełnym utworze. Zmiana dowolnego ustawienia unieważnia poprzedni Preview, więc nie porównujesz starego masteru z nową konfiguracją.',
+        'Przeciągnij podświetlony zakres na waveformie całego utworu, aby wybrać fragment. Player Preview pokazuje względne 00:00–00:15, a etykieta fragmentu źródłowego pokazuje dokładne miejsce w utworze. Zmiana ustawień lub przesunięcie zakresu unieważnia poprzedni Preview.',
     },
   },
 };
