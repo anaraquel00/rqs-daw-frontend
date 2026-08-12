@@ -53,7 +53,7 @@ import { SeoService } from '../services/seo.service';
                     {{ auth.userRole() === 'premium' ? 'RQS PRO' : 'FREE USER' }}
                   </span>
                 </div>
-                <img [src]="auth.session()?.user?.user_metadata?.avatar_url || 'assets/default-avatar.png'" class="avatar" alt="Avatar">
+                <img [src]="auth.session()?.user?.user_metadata?.[avatar_url] || 'assets/default-avatar.png'" class="avatar" alt="Avatar">
                 <button (click)="auth.logout()" class="btn-logout">⏏️</button>
               </div>
             }
@@ -132,6 +132,10 @@ export class WorkspaceComponent {
   readonly lang = inject(LanguageService);
 
   private seo = inject(SeoService);
+  avatarUrl =
+  this.auth.session()?.user?.user_metadata?.['avatar_url'] ||
+  'assets/default-avatar.png';
+  avatar_url: string = 'avatar_url';
 
   constructor() {
 

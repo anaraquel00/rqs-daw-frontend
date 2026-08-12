@@ -239,6 +239,22 @@
       💎 {{ lang.t().PRO_USAGE_LABEL }}
     </span>
   </div>
+  <div
+  class="upgrade-paywall"
+  *ngIf="!auth.isPremium() && auth.remainingMasters() === 0"
+>
+  <p>
+    {{ lang.tr().MASTER_LIMIT_REACHED }}
+  </p>
+
+  <button
+    type="button"
+    class="btn-pro-upgrade"
+    disabled
+  >
+    {{ lang.tr().MASTER_PRO_COMING_SOON }}
+  </button>
+</div>
 
   <!-- BOTÕES DE AÇÃO REATIVOS -->
   <div class="action-buttons">

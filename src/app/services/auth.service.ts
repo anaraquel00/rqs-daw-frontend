@@ -12,7 +12,8 @@ import {
 
 import {
   createClient,
-  SupabaseClient
+  SupabaseClient,
+  Session
 } from '@supabase/supabase-js';
 
 
@@ -26,7 +27,7 @@ export class AuthService {
   private supabase!: SupabaseClient;
 
 
-  readonly session = signal<any | null>(null);
+  readonly session = signal<Session | null>(null);
 
   readonly userRole =
     signal<'free' | 'premium'>('free');
@@ -167,7 +168,7 @@ export class AuthService {
   // =================================================
 
 private async handleSessionUpdate(
-  session: any | null
+  session: Session | null
 ): Promise<void> {
 
   this.session.set(session);
@@ -225,7 +226,6 @@ private async handleSessionUpdate(
   this.userRole.set('free');
   this.sincronizarCotaAnonimaLocal();
 }
-
 
   // =================================================
   // COTA ANÔNIMA DE MASTERIZAÇÃO

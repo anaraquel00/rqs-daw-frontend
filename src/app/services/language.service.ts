@@ -271,8 +271,13 @@ export const PT_TRANSLATIONS = {
   deleteBtn: 'Excluir',
 
   UPLINK_LOGIN_REQUIRED:'LOGIN_REQUIRED: Você precisa estar logado para criar deep links. Por favor, faça login na sua conta para continuar.',
-  UPLINK_LIMIT_REACHED:
-  'LIMIT_REACHED: O plano Free permite apenas 3 Deep Links ativos. Faça login para vincular sua conta e assine o RQS Pro para liberar links ilimitados.',
+  UPLINK_LIMIT_REACHED: 'LIMIT_REACHED: O plano Free permite apenas 3 Deep Links ativos. Faça login para vincular sua conta e assine o RQS Pro para liberar links ilimitados.',
+
+  MASTER_LIMIT_REACHED:
+  "Você atingiu o limite de 3 masterizações gratuitas.",
+
+  MASTER_PRO_COMING_SOON:
+  "[ 💎 RQS PRO // EM BREVE ]",
 };
 
 // Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
@@ -390,7 +395,11 @@ export const EN_TRANSLATIONS = {
   UPLINK_LIMIT_REACHED:
   'LIMIT_REACHED: The Free plan allows up to 3 active Deep Links. Sign in to link your account and subscribe to RQS Pro to unlock unlimited links.',
 
+  MASTER_LIMIT_REACHED:
+  "You have reached the limit of 3 free masterings.",
 
+  MASTER_PRO_COMING_SOON:
+  "[ 💎 RQS PRO // COMING SOON ]",
 };
 
 @Injectable({
