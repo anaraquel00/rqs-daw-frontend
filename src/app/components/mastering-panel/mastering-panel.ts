@@ -22,6 +22,9 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
 
   // Injeta o serviço unificado de DSP [5.3]
   private readonly masteringService = inject(MasteringService);
+  joiningWaitlist = false;
+  joinedWaitlist = false;
+  waitlistError = false;
 
   @Input() originalFile: File | null = null;
   @Input() isProcessing = false;
@@ -162,6 +165,56 @@ export class MasteringPanelComponent implements OnChanges, OnDestroy {
       this.audioComparison.seek(val);
     }
   }
+
+  async joinProWaitlist(): Promise<void> {
+
+  const email =
+    this.auth.session()?.user?.email;
+
+  if (!email) {
+    this.waitlistError = true;
+    return;
+  }
+
+  this.joiningWaitlist = true;
+  this.waitlistError = false;
+
+  try {
+
+    const response = await fetch(
+      '/api/waitlist',
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+          email,
+          source: 'studio.raquelsynths.com',
+          language: this.lang.currentLang(),
+          website: ''
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      this.waitlistError = true;
+      return;
+    }
+
+    this.joinedWaitlist = true;
+
+  } catch {
+    this.waitlistError = true;
+
+  } finally {
+    this.joiningWaitlist = false;
+  }
+}
 
   ngOnDestroy() {
     this.audioComparison.resetAll();

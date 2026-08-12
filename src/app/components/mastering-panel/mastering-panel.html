@@ -248,12 +248,25 @@
   </p>
 
   <button
+    *ngIf="!joinedWaitlist"
     type="button"
     class="btn-pro-upgrade"
-    disabled
+    (click)="joinProWaitlist()"
+    [disabled]="joiningWaitlist"
   >
-    {{ lang.tr().MASTER_PRO_COMING_SOON }}
+    {{ joiningWaitlist
+      ? '...'
+      : lang.tr().PRO_WAITLIST_CTA
+    }}
   </button>
+
+  <p *ngIf="joinedWaitlist">
+    {{ lang.tr().PRO_WAITLIST_SUCCESS }}
+  </p>
+
+  <p *ngIf="waitlistError">
+    {{ lang.tr().PRO_WAITLIST_ERROR }}
+  </p>
 </div>
 
   <!-- BOTÕES DE AÇÃO REATIVOS -->
