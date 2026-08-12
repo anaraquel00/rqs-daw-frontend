@@ -227,7 +227,13 @@ export default async function handler(req, res) {
       });
     }
 
+    const BREVO_KEY =
+      process.env.BREVO_API_KEY;
 
+    const BREVO_WAITLIST_LIST_ID =
+      Number(
+        process.env.BREVO_WAITLIST_LIST_ID
+      );
     // =================================================
     // 8. ERRO FIRESTORE
     // =================================================
@@ -276,3 +282,4 @@ export default async function handler(req, res) {
     });
   }
 }
+

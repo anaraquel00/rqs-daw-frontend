@@ -240,33 +240,45 @@
     </span>
   </div>
   <div
-  class="upgrade-paywall"
+  class="pro-limit-card"
   *ngIf="!auth.isPremium() && auth.remainingMasters() === 0"
 >
-  <p>
-    {{ lang.tr().MASTER_LIMIT_REACHED }}
-  </p>
+  <div class="pro-limit-header">
+    <span class="pro-limit-icon">💎</span>
+
+    <div>
+      <h4>{{ lang.tr().MASTER_LIMIT_REACHED }}</h4>
+      <p>{{ lang.tr().PRO_WAITLIST_NOTE }}</p>
+    </div>
+  </div>
 
   <button
     *ngIf="!joinedWaitlist"
     type="button"
-    class="btn-pro-upgrade"
+    class="btn-pro-waitlist"
     (click)="joinProWaitlist()"
     [disabled]="joiningWaitlist"
   >
-    {{ joiningWaitlist
-      ? '...'
-      : lang.tr().PRO_WAITLIST_CTA
+    {{
+      joiningWaitlist
+        ? lang.tr().PRO_WAITLIST_JOINING
+        : lang.tr().PRO_WAITLIST_CTA
     }}
   </button>
 
-  <p *ngIf="joinedWaitlist">
-    {{ lang.tr().PRO_WAITLIST_SUCCESS }}
-  </p>
+  <div
+    *ngIf="joinedWaitlist"
+    class="waitlist-success"
+  >
+    ✅ {{ lang.tr().PRO_WAITLIST_SUCCESS }}
+  </div>
 
-  <p *ngIf="waitlistError">
-    {{ lang.tr().PRO_WAITLIST_ERROR }}
-  </p>
+  <div
+    *ngIf="waitlistError"
+    class="waitlist-error"
+  >
+    ⚠️ {{ lang.tr().PRO_WAITLIST_ERROR }}
+  </div>
 </div>
 
   <!-- BOTÕES DE AÇÃO REATIVOS -->

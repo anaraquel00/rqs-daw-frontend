@@ -274,15 +274,22 @@ export const PT_TRANSLATIONS = {
   UPLINK_LIMIT_REACHED: 'LIMIT_REACHED: O plano Free permite apenas 3 Deep Links ativos. Faça login para vincular sua conta e assine o RQS Pro para liberar links ilimitados.',
 
   MASTER_LIMIT_REACHED:
-  "Você atingiu o limite de 3 masterizações gratuitas.",
+  "Limite gratuito atingido",
 
-  MASTER_PRO_COMING_SOON:
-  "[ 💎 RQS PRO // EM BREVE ]",
+PRO_WAITLIST_NOTE:
+  "Entre na lista de lançamento do RQS PRO e seja avisado quando o plano estiver disponível.",
 
-  PRO_WAITLIST_CTA: "[ 💎 RQS PRO // JÁ ESTOU NA LISTA DE ESPERA ]",
-  PRO_WAITLIST_SUCCESS: "[ 💎 RQS PRO // VOCÊ ESTÁ NA LISTA DE ESPERA ]",
+PRO_WAITLIST_CTA:
+  "[ 🔔 ENTRAR NA LISTA DE LANÇAMENTO ]",
 
-  PRO_WAITLIST_ERROR: "[ 💎 RQS PRO // ERRO AO ENTRAR NA LISTA DE ESPERA ]"
+PRO_WAITLIST_JOINING:
+  "[ SINCRONIZANDO... ]",
+
+PRO_WAITLIST_SUCCESS:
+  "Você está na lista de lançamento do RQS PRO.",
+
+PRO_WAITLIST_ERROR:
+  "Não foi possível entrar na lista agora. Tente novamente."
 };
 
 // Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
@@ -401,15 +408,22 @@ export const EN_TRANSLATIONS = {
   'LIMIT_REACHED: The Free plan allows up to 3 active Deep Links. Sign in to link your account and subscribe to RQS Pro to unlock unlimited links.',
 
   MASTER_LIMIT_REACHED:
-  "You have reached the limit of 3 free masterings.",
+  "Free limit reached",
 
-  MASTER_PRO_COMING_SOON:
-  "[ 💎 RQS PRO // COMING SOON ]",
+  PRO_WAITLIST_NOTE:
+  "Join the RQS PRO launch list and get notified when the plan becomes available.",
 
-  PRO_WAITLIST_CTA: "[ 💎 RQS PRO // JOIN WAITLIST ]",
-  PRO_WAITLIST_SUCCESS: "[ 💎 RQS PRO // YOU ARE ON THE WAITLIST ]",
+  PRO_WAITLIST_CTA:
+  "[ 🔔 JOIN THE LAUNCH LIST ]",
 
-  PRO_WAITLIST_ERROR: "[ 💎 RQS PRO // ERROR JOINING WAITLIST ]"
+  PRO_WAITLIST_JOINING:
+  "[ SYNCHRONIZING... ]",
+
+  PRO_WAITLIST_SUCCESS:
+  "You are on the RQS PRO launch list.",
+
+  PRO_WAITLIST_ERROR:
+  "Unable to join the list right now. Please try again."
 };
 
 @Injectable({
