@@ -39,19 +39,16 @@ export default async function handler(req, res) {
     'Content-Type'
   );
 
-  // Preflight do navegador
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
 
-  // Somente POST
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
       error: 'Method not allowed'
     });
   }
-
 
   // =================================================
   // 2. BODY
@@ -64,9 +61,8 @@ export default async function handler(req, res) {
     website
   } = req.body || {};
 
-
   // =================================================
-  // 3. HONEYPOT ANTI-BOT
+  // 3. HONEYPOT
   // =================================================
 
   if (website) {
@@ -74,7 +70,6 @@ export default async function handler(req, res) {
       success: true
     });
   }
-
 
   // =================================================
   // 4. VALIDAÇÃO
@@ -95,17 +90,12 @@ export default async function handler(req, res) {
   const emailRegex =
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  if (
-    !emailRegex.test(
-      normalizedEmail
-    )
-  ) {
+  if (!emailRegex.test(normalizedEmail)) {
     return res.status(400).json({
       success: false,
       error: 'Invalid email'
     });
   }
-
 
   // =================================================
   // 5. NORMALIZAÇÃO
@@ -124,45 +114,55 @@ export default async function handler(req, res) {
   const now =
     new Date().toISOString();
 
-
   // =================================================
-  // 6. FIRESTORE
+  // 6. CONFIGURAÇÃO
   // =================================================
 
   const projectId =
     'raquel-synths-platform';
 
-  /*
-   * Gera um ID determinístico a partir do e-mail.
-   *
-   * Resultado:
-   * mesmo e-mail = mesmo documento.
-   *
-   * SHA-256 também evita deixar o e-mail
-   * diretamente visível no ID do documento.
-   */
+  const BREVO_KEY =
+    process.env.BREVO_API_KEY;
+
+  const BREVO_WAITLIST_LIST_ID =
+    Number(
+      process.env.BREVO_WAITLIST_LIST_ID
+    );
+
+  if (
+    !BREVO_KEY ||
+    !Number.isInteger(BREVO_WAITLIST_LIST_ID) ||
+    BREVO_WAITLIST_LIST_ID <= 0
+  ) {
+    console.error(
+      '[RQS PRO WAITLIST] Missing Brevo configuration'
+    );
+
+    return res.status(500).json({
+      success: false,
+      error: 'Server configuration error'
+    });
+  }
+
+  // =================================================
+  // 7. ID DETERMINÍSTICO
+  // =================================================
+
   const waitlistId =
     createHash('sha256')
       .update(normalizedEmail)
       .digest('hex');
 
-
-  /*
-   * POST com documentId.
-   *
-   * Diferente de PATCH:
-   * se o documento já existir,
-   * o Firestore retorna conflito.
-   *
-   * Assim preservamos createdAt original.
-   */
   const firestoreUrl =
     `https://firestore.googleapis.com/v1/projects/` +
     `${projectId}/databases/(default)/documents/` +
     `pro_waitlist?documentId=${waitlistId}`;
 
-
   try {
+
+    // =================================================
+    // 8. FIRESTORE
+    // =================================================
 
     const firestoreResponse =
       await fetch(
@@ -207,39 +207,12 @@ export default async function handler(req, res) {
         }
       );
 
-
-    // =================================================
-    // 7. JÁ ESTÁ NA LISTA
-    // =================================================
-
-    /*
-     * Mesmo e-mail tenta cadastrar novamente.
-     *
-     * Não tratamos isso como erro para o usuário.
-     */
-    if (
-      firestoreResponse.status === 409
-    ) {
-      return res.status(200).json({
-        success: true,
-        waitlisted: true,
-        alreadyJoined: true
-      });
-    }
-
-    const BREVO_KEY =
-      process.env.BREVO_API_KEY;
-
-    const BREVO_WAITLIST_LIST_ID =
-      Number(
-        process.env.BREVO_WAITLIST_LIST_ID
-      );
-    // =================================================
-    // 8. ERRO FIRESTORE
-    // =================================================
+    const alreadyJoined =
+      firestoreResponse.status === 409;
 
     if (
-      !firestoreResponse.ok
+      !firestoreResponse.ok &&
+      !alreadyJoined
     ) {
 
       const firestoreError =
@@ -252,22 +225,73 @@ export default async function handler(req, res) {
 
       return res.status(500).json({
         success: false,
-        error:
-          'Unable to join waitlist'
+        error: 'Unable to join waitlist'
       });
     }
 
+    // =================================================
+    // 9. BREVO
+    // =================================================
+
+    const brevoResponse =
+      await fetch(
+        'https://api.brevo.com/v3/contacts',
+        {
+          method: 'POST',
+
+          headers: {
+            accept:
+              'application/json',
+
+            'Content-Type':
+              'application/json',
+
+            'api-key':
+              BREVO_KEY
+          },
+
+          body: JSON.stringify({
+          email: normalizedEmail,
+
+          attributes: {
+            RQS_LANGUAGE: normalizedLanguage
+          },
+
+          listIds: [
+            BREVO_WAITLIST_LIST_ID
+          ],
+
+          updateEnabled: true
+        })
+        }
+      );
+
+    if (!brevoResponse.ok) {
+
+      const brevoError =
+        await brevoResponse.text();
+
+      console.error(
+        '[RQS PRO WAITLIST] Brevo error:',
+        brevoError
+      );
+
+      return res.status(500).json({
+        success: false,
+        error:
+          'Unable to subscribe to launch notifications'
+      });
+    }
 
     // =================================================
-    // 9. SUCESSO
+    // 10. SUCESSO
     // =================================================
 
     return res.status(200).json({
       success: true,
       waitlisted: true,
-      alreadyJoined: false
+      alreadyJoined
     });
-
 
   } catch (error) {
 
@@ -282,4 +306,3 @@ export default async function handler(req, res) {
     });
   }
 }
-
