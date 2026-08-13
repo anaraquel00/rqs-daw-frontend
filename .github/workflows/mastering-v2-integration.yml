@@ -3,7 +3,7 @@ name: Mastering V2 Frontend Integration
 on:
   push:
     branches:
-      - feat/mastering-v2-integration
+      - integration/mastering-v2-final-beta-20260812-frontend
   pull_request:
     branches:
       - main
