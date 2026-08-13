@@ -29,17 +29,27 @@ import { SeoService } from '../services/seo.service';
         <!-- Centro: Central de Controle de Acesso e Idiomas Global [1, 1.1] -->
         <div class="header-controls">
           <!-- Seletor de Idiomas -->
-          <div class="lang-selector">
-            <button (click)="lang.setLanguage('pt')" [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'">PT</button>
+          <div class="lang-selector" aria-label="Interface language">
+            <button type="button" (click)="lang.setLanguage('en')"
+              [attr.aria-pressed]="lang.currentLang() === 'en'"
+              [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'">EN</button>
             <span class="divider">|</span>
-            <button (click)="lang.setLanguage('en')" [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'">EN</button>
+            <button type="button" (click)="lang.setLanguage('pt')"
+              [attr.aria-pressed]="lang.currentLang() === 'pt'"
+              [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'">PT-BR</button>
+            <span class="divider">|</span>
+            <button type="button" (click)="lang.setLanguage('pl')"
+              [attr.aria-pressed]="lang.currentLang() === 'pl'"
+              [style.color]="lang.currentLang() === 'pl' ? '#00ffcc' : '#666'">PL</button>
           </div>
 
           <!-- Sessão de Login (Supabase Auth) [1] -->
           <div class="user-session">
             @if (!auth.session()) {
               <div class="auth-helper-container" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-right: 10px;">
-                <span style="font-size: 9px; font-family: monospace; color: #8b949e; letter-spacing: 0.5px;">SALVAR HISTÓRICO & EXPORTAR WAV:</span>
+                <span style="font-size: 9px; font-family: monospace; color: #8b949e; letter-spacing: 0.5px;">
+                  {{ lang.currentLang() === 'pl' ? 'ZAPISZ HISTORIĘ I EKSPORTUJ WAV:' : (lang.currentLang() === 'pt' ? 'SALVAR HISTÓRICO & EXPORTAR WAV:' : 'SAVE HISTORY & EXPORT WAV:') }}
+                </span>
                 <div class="auth-buttons">
                   <button (click)="auth.loginWithProvider('github')" class="btn-auth github">🐈 GITHUB</button>
                   <button (click)="auth.loginWithProvider('google')" class="btn-auth google">🌐 GOOGLE</button>

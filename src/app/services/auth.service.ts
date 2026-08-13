@@ -359,8 +359,7 @@ private async handleSessionUpdate(
 
           options: {
 
-            redirectTo:
-               `${window.location.origin}/app`
+            redirectTo: window.location.origin
           }
         });
 

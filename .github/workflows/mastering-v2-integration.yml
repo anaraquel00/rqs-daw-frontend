@@ -1,0 +1,58 @@
+name: Mastering V2 Frontend Integration
+
+on:
+  push:
+    branches:
+      - feat/mastering-v2-integration
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Gate production dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Report complete dependency audit
+        run: npm audit || true
+
+      - name: Verify client-side privilege override stays removed
+        run: |
+          if grep -R -F -q 'rqs_mainframe_override' src/app; then
+            echo 'ERROR: client-side premium override marker returned.'
+            exit 1
+          fi
+          echo 'CLIENT_PRIVILEGE_OVERRIDE_CHECK: PASS'
+
+      - name: Run Mastering V2 frontend tests
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+
+      - name: Build Angular production application
+        run: npm run build
+
+      - name: Verify production API isolation
+        run: |
+          if grep -R -F -q 'http://localhost:8080' dist/rqs-daw; then
+            echo 'ERROR: local Mastering V2 API URL leaked into production bundle.'
+            exit 1
+          fi
+          grep -R -F -q 'https://m2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws' dist/rqs-daw
+          echo 'PRODUCTION_API_ISOLATION: PASS'
