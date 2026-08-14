@@ -6,12 +6,13 @@ import {
   OnDestroy,
   OnInit,
   Output,
+  PLATFORM_ID,
   SimpleChanges,
   computed,
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
@@ -43,6 +44,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   readonly audioComparison = inject(AudioComparisonService);
   private readonly dspService = inject(DspService);
   private readonly masteringService = inject(MasteringService);
+  private readonly platformId = inject(PLATFORM_ID);
   joiningWaitlist = false;
   joinedWaitlist = false;
   waitlistError = false;
@@ -158,7 +160,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     if (changes['originalFile']) {
       this.releaseOriginalObjectUrl();
       this.configInvalidatedResult.set(false);
-      if (this.originalFile) {
+      if (this.originalFile && isPlatformBrowser(this.platformId)) {
         this.originalObjectUrl = window.URL.createObjectURL(this.originalFile);
         this.audioComparison.setOriginalSrc(
           this.originalObjectUrl,
@@ -406,7 +408,9 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   private releaseOriginalObjectUrl(): void {
     if (!this.originalObjectUrl) return;
-    window.URL.revokeObjectURL(this.originalObjectUrl);
+    if (isPlatformBrowser(this.platformId)) {
+      window.URL.revokeObjectURL(this.originalObjectUrl);
+    }
     this.originalObjectUrl = null;
   }
 }
