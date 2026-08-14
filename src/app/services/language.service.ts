@@ -170,8 +170,8 @@ export const PT_TRANSLATIONS = {
   DSP_TITLE: "DOMINE A ACÚSTICA DA INTELIGÊNCIA ARTIFICIAL",
   DSP_DESC: "Músicas geradas por IA (Suno/Udio) sofrem de estridência e graves embolados. Nosso reator acústico em Python SciPy corrige a física do áudio em menos de 300 milissegundos.",
 
-  STEMS_TITLE: "SETLIST ENGINE & SEPARADOR DE STEMS",
-  STEMS_DESC: "Extraia vocais, baterias e sintetizadores em arquivos WAV separados. Unifique o volume médio de um álbum inteiro sob a norma EBU R128 automaticamente.",
+  SETLIST_TITLE: "DJ SETLIST ENGINE",
+  SETLIST_DESC:  "Monte sets contínuos com vinheta de abertura, ordem personalizada, crossfades, ajuste de loudness e preview das transições. Exporte tudo em um único WAV pronto para tocar.",
 
   MIXLAB_TITLE: "RQS MIXLAB: SIMULADOR DE DJ PROFISSIONAL",
   MIXLAB_DESC: "Acesse um emulador de DJ completo no seu navegador. Conecte sua controladora MIDI e grave seus mixsets em alta fidelidade com feedback de IA em tempo real.",
@@ -224,7 +224,7 @@ export const PT_TRANSLATIONS = {
   FFMPEG_PROCESSING: "REATOR SÔNICO RQS OPERANDO AS TRANSIÇÕES... AGUARDE.",
   DEPLOY_COMPLETED: "SETLIST EXPORTADA COM SUCESSO!",
   IGNITE_ACTIVE: "RQS_DEPLOY_ATIVO...",
-  IGNITE_LIMIT_ALERT: "🔒 APENAS PLANO PRO (>3 FAIXAS)",
+  IGNITE_LIMIT_ALERT: "🔒 SETS COM MAIS DE 3 FAIXAS — RQS PRO",
   IGNITE_IDLE: "🔥 RENDER & DEPLOY SETLIST",
   SETLIST_HELPER_NOTE: "Gera um único arquivo contínuo WAV com todas as transições e curvas configuradas.",
 
@@ -302,8 +302,8 @@ export const EN_TRANSLATIONS = {
   DSP_TITLE: "TAMING GENERATIVE AI ACOUSTICS",
   DSP_DESC: "AI-generated music (Suno/Udio) suffers from harshness and muddy low-ends. Our SciPy Python DSP engine fixes the audio physics in less than 300 milliseconds.",
 
-  STEMS_TITLE: "SETLIST ENGINE & STEMS SPLITTER",
-  STEMS_DESC: "Extract vocals, drums, and synths into high-res WAV files. Batch-normalize album loudness under the international EBU R128 broadcast standard automatically.",
+  SETLIST_TITLE: "DJ SETLIST ENGINE",
+  SETLIST_DESC:  "Build continuous sets with an opening vignette, custom track order, crossfades, loudness adjustment and transition previews. Export everything as a single WAV ready to play.",
 
   MIXLAB_TITLE: "RQS MIXLAB: PROFESSIONAL DJ SIMULATOR",
   MIXLAB_DESC: "Access a complete DJ emulator in your browser. Connect your MIDI hardware and record high-fidelity mixsets with real-time AI performance metrics.",
@@ -356,7 +356,7 @@ export const EN_TRANSLATIONS = {
   FFMPEG_PROCESSING: "RQS SONIC REACTOR PROCESSING TRANSITIONS... PLEASE WAIT.",
   DEPLOY_COMPLETED: "SETLIST EXPORTED SUCCESSFULLY!",
   IGNITE_ACTIVE: "RQS_DEPLOY_ACTIVE...",
-  IGNITE_LIMIT_ALERT: "🔒 PRO PLAN ONLY (>3 TRACKS)",
+  IGNITE_LIMIT_ALERT: "🔒 SETS WITH MORE THAN 3 TRACKS — RQS PRO",
   IGNITE_IDLE: "🔥 RENDER & DEPLOY SETLIST",
   SETLIST_HELPER_NOTE: "Creates one continuous WAV file with all configured transitions and curves.",
 

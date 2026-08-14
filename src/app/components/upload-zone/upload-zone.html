@@ -35,7 +35,7 @@
       style="display: none;">
   </div>
 
-  <!-- 🧬 PAINEL DE STEMS SEMPRE VISÍVEL (Marketing e Usabilidade Ativos!) [1] -->
+  <!--  🧬 PAINEL DE STEMS NÃO VISÍVEL (Marketing e Usabilidade Inativos!) [1]
   <div class="stem-action-panel" style="margin-top: 15px; margin-bottom: 15px;">
     <button
       class="btn-stem-extract"
@@ -43,11 +43,11 @@
       [disabled]="!selectedFile || isProcessing || isExtractingStems || isUploadingS3">
       {{ isExtractingStems ? lang.t().DISSECTING_MINI : lang.t().EXTRACT_STEMS }}
     </button>
-    <!-- Helper Text indica o que o usuário deve fazer para liberar a extração -->
+     Helper Text indica o que o usuário deve fazer para liberar a extração
     <p class="text-[10px] text-zinc-500 text-center mt-1.5 font-mono" *ngIf="!selectedFile">
       * {{ lang.t().UPLOAD_FIRST_STEMS }}
     </p>
-  </div>
+  </div> -->
 
   <!-- Painel de Masterização Principal -->
   <app-mastering-panel
