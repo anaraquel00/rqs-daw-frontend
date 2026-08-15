@@ -2,17 +2,32 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { CrossfadeCurve, LoudnessMatchMode } from '../mix-panel/mix-panel';
-import { inject } from '@angular/core';
+import {
+  MasteringV2Capabilities,
+  MasteringV2FinalResponse,
+} from './mastering-types';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DspService {
+  private readonly baseUrl = environment.baseUrl;
 
-  private baseUrl = environment.baseUrl;
+  constructor(private readonly http: HttpClient) {}
 
-  constructor(private http: HttpClient) { }
+  getMasteringV2Capabilities(): Observable<MasteringV2Capabilities> {
+    return this.http.get<MasteringV2Capabilities>(`${this.baseUrl}/mastering/v2/capabilities`);
+  }
+
+  masterizeV2Preview(formData: FormData): Observable<Blob> {
+    return this.http.post(`${this.baseUrl}/mastering/v2/process`, formData, {
+      responseType: 'blob',
+    });
+  }
+
+  masterizeV2Final(formData: FormData): Observable<MasteringV2FinalResponse> {
+    return this.http.post<MasteringV2FinalResponse>(`${this.baseUrl}/mastering/v2/process`, formData);
+  }
 
   generateMixS3(payload: {
     s3Keys: string[];
@@ -20,93 +35,58 @@ export class DspService {
     curva: string;
     loudness: string;
     exportName: string;
-  }): Observable<{ success: boolean; downloadUrl: string; }> {
-
-    const endpoint = `${this.baseUrl}/mix/generate-s3`;
-
-    // Dispara a requisição HTTP POST enviando o JSON leve de apenas 1 KB [1.1.2]
-    return this.http.post<{ success: boolean; downloadUrl: string; }>(endpoint, payload);
+  }): Observable<{ success: boolean; downloadUrl: string }> {
+    return this.http.post<{ success: boolean; downloadUrl: string }>(`${this.baseUrl}/mix/generate-s3`, payload);
   }
 
-  // 1. Dispara para o motor de Masterização (Módulo Alfa - Em lote ou final)
-  masterizeTrack(formData: FormData): Observable<any> {
-    return this.http.post(`${this.baseUrl}/mastering/process`, formData, {
-      responseType: 'blob'
-    });
-  }
-  // 🟢 NOVA ROTA S3: Processa a master final e recebe a resposta JSON com a URL do S3 (Sem forçar blob!) [1, 1.1.2]
-  masterizeTrackS3(formData: FormData): Observable<any> {
-    return this.http.post(`${this.baseUrl}/mastering/process`, formData); // Retorno padrão em JSON [1]
+  masterizeTrack(formData: FormData): Observable<Blob> {
+    return this.http.post(`${this.baseUrl}/mastering/process`, formData, { responseType: 'blob' });
   }
 
-  // 2. Dispara para o motor de DSP individual (com controle de intensidade/volume) [1]
-  processMastering(file: File, estilo: string = 'clear_sky', intensidade: string = 'media'): Observable<any> {
+  masterizeTrackS3(formData: FormData): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/mastering/process`, formData);
+  }
+
+  processMastering(file: File, estilo = 'clear_sky', intensidade = 'media'): Observable<Blob> {
     const formData = new FormData();
     formData.append('audio', file);
     formData.append('estilo', estilo);
-    formData.append('intensidade', intensidade); // Garante que a intensidade chegue ao reator
-
-    return this.http.post(`${this.baseUrl}/mastering/process`, formData, {
-      responseType: 'blob'
-    });
+    formData.append('intensidade', intensidade);
+    return this.http.post(`${this.baseUrl}/mastering/process`, formData, { responseType: 'blob' });
   }
 
-  // 3. Dispara para o motor de Setlist/Mixer (FFmpeg)
-  generateMix(files: File[], crossfades: number[]): Observable<any> {
+  generateMix(files: File[], crossfades: number[]): Observable<Blob> {
     const formData = new FormData();
-    files.forEach(f => formData.append('tracks', f));
+    files.forEach((file) => formData.append('tracks', file));
     formData.append('crossfades', JSON.stringify(crossfades));
-
-    return this.http.post(`${this.baseUrl}/mix/generate`, formData, {
-      responseType: 'blob'
-    });
+    return this.http.post(`${this.baseUrl}/mix/generate`, formData, { responseType: 'blob' });
   }
 
-  // 4. Dispara para a renderização de Vídeo (Jonah Mod)
-  renderVideo(audioUrl: string, preset: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/video/render`, { audioUrl, preset }, {
-      responseType: 'blob'
-    });
+  renderVideo(audioUrl: string, preset: string): Observable<Blob> {
+    return this.http.post(`${this.baseUrl}/video/render`, { audioUrl, preset }, { responseType: 'blob' });
   }
 
-  // 5. Dispara para o motor de Separação de Stems (Demucs 6 Canais)
-  extractStems(file: File): Observable<any> {
+  extractStems(file: File): Observable<Blob> {
     const formData = new FormData();
     formData.append('audio', file);
+    return this.http.post(`${this.baseUrl}/stems/split`, formData, { responseType: 'blob' });
+  }
 
-    return this.http.post(`${this.baseUrl}/stems/split`, formData, {
-      responseType: 'blob'
+  extractStemsS3(s3Key: string): Observable<{ success: boolean; downloadUrl: string }> {
+    return this.http.post<{ success: boolean; downloadUrl: string }>(`${this.baseUrl}/stems/split-s3`, { s3Key });
+  }
+
+  getPresignedUrl(filename: string): Observable<{ uploadUrl: string; s3Key: string }> {
+    return this.http.get<{ uploadUrl: string; s3Key: string }>(`${this.baseUrl}/mastering/presigned-url`, {
+      params: { filename },
     });
   }
 
-  // 🟢 NOVA ROTA S3: Processa o isolamento de Stems enviando apenas o JSON com a chave [1.1.2]
-  extractStemsS3(s3Key: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/stems/split-s3`, { s3Key });
+  uploadToS3(uploadUrl: string, file: File): Observable<unknown> {
+    const fileName = file.name.toLowerCase();
+    const contentType = fileName.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav';
+    return this.http.put(uploadUrl, file, {
+      headers: { 'Content-Type': contentType },
+    });
   }
-  // No seu dsp.service.ts:
-
-// 1. Solicita a URL pré-assinada de upload
- getPresignedUrl(filename: string): Observable<any> {
-  return this.http.get(`${this.baseUrl}/mastering/presigned-url`, {
-    params: { filename }
-  });
-}
-
- // No seu dsp.service.ts:
- uploadToS3(uploadUrl: string, file: File): Observable<any> {
-  const fileName = file.name.toLowerCase();
-  let contentType = 'audio/wav'; // Fallback padrão de estúdio
-
-  if (fileName.endsWith('.mp3')) {
-    contentType = 'audio/mpeg';
-  } else if (fileName.endsWith('.wav')) {
-    contentType = 'audio/wav';
-  }
-
-  // Força o cabeçalho HTTP exato que a Lambda usou para assinar a transação [1.1.2]
-  return this.http.put(uploadUrl, file, {
-    headers: { 'Content-Type': contentType }
-  });
-}
-
 }

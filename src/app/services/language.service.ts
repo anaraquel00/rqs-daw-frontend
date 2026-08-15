@@ -1,5 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 
+export type UiLanguage = 'en' | 'pt' | 'pl';
+
 // 🇧🇷 Dicionário de Tradução: Português
 export const PT_DICT = {
   RQS_DSP_CORE: "RQS DSP CORE",
@@ -159,6 +161,62 @@ export const EN_DICT: typeof PT_DICT = {
   FOOTER_CONTACT: "Contact Us",
 
  };
+
+export const PL_DICT: typeof PT_DICT = {
+  ...EN_DICT,
+  SUBTITLE: 'Przeciągnij utwór, aby rozpocząć analizę i mastering',
+  DROP_PROMPT: 'Upuść tutaj plik WAV lub MP3',
+  OR_CLICK: 'lub kliknij, aby wybrać plik',
+  FILE_INTERCEPTED: 'załadowany.',
+  EXTRACT_STEMS: '🧬 WYDZIEL 6 STEMÓW',
+  DISSECTING: '🧬 Demucs rozdziela nagranie na 6 ścieżek... Może to potrwać kilka minut. Nie zamykaj karty.',
+  REACTOR_PROCESSING: '⚙️ RQS analizuje i przetwarza audio... Proszę czekać.',
+  MASTER_COMPLETED: '✅ Mastering zakończony! [Pobierz audio]',
+  EJECT_DECK: '⏏️ USUŃ UTWÓR I WYCZYŚĆ PANEL',
+  SYNCHRONIZING: '⚡ Synchronizacja audio... Proszę czekać.',
+  DISSECTING_MINI: '🧬 WYDZIELANIE...',
+  UPLOAD_FIRST_STEMS: 'Najpierw załaduj utwór, aby odblokować separację stemów',
+  ORIGINAL: 'Oryginał',
+  MASTER: 'Master',
+  VOLUME_MATCH: 'Wyrównanie głośności (w przygotowaniu)',
+  PERFIL_ACUSTICO: 'Profil masteringu',
+  INTENSIDADE_MASTER: 'Intensywność charakteru masteringu',
+  BAIXA: '🟢 Niska (dynamiczna)',
+  MEDIA: '🟡 Średnia (zbalansowana)',
+  ALTA: '🔴 Wysoka (mocna)',
+  HEAR_TEST: '🎧 ODSŁUCHAJ TEST (15 s)',
+  MASTER_FULL: '🔥 MASTERUJ CAŁY UTWÓR',
+  ANALYZING: 'Analiza...',
+  PROCESSING_ACUSTICO: 'Przetwarzanie audio...',
+  SETLIST_ENGINE: '🎛️ RQS Setlist Engine',
+  MIX_DROP_PROMPT: 'Przeciągnij tutaj zmasterowane utwory',
+  MIX_OR_CLICK: 'lub kliknij, aby otworzyć folder',
+  TIMELINE_TITLE: 'Oś czasu',
+  TRACKS_COUNT: 'utworów',
+  CROSSFADE_TO: '↳ Crossfade do utworu',
+  SECONDS: 'sekund',
+  DEPLOY_LABEL: 'Nazwa pliku wynikowego (.WAV):',
+  FFMPEG_PROCESSING: '⚙️ RQS FFmpeg renderuje przejścia... Proszę czekać.',
+  DEPLOY_COMPLETED: '✅ Render setlisty zakończony.',
+  IGNITE_IDLE: '🔥 RENDERUJ SETLISTĘ',
+  IGNITE_ACTIVE: '🔥 RENDEROWANIE...',
+  EKG_MONITOR_TITLE: '📟 MONITOR SYGNAŁU AUDIO',
+  SIGNAL_ACTIVE: 'SYGNAŁ AUDIO AKTYWNY',
+  FREQUENCY_SPECTRUM: 'Widmo częstotliwości',
+  PHASE_CORRELATION: 'Korelacja fazy i obraz stereo',
+  LIMIT_EXCEEDED_ALERT: 'Wykorzystano limit bezpłatnych masteringów (3/3). Plan RQS PRO odblokowuje nielimitowane mastery.',
+  FREE_USAGE_LABEL: 'Pozostałe bezpłatne mastery',
+  PRO_USAGE_LABEL: 'Plan: RQS PRO (bez limitu)',
+  FOOTER_TAGLINE: 'Inteligentny mastering i narzędzia DSP dla twórców muzyki.',
+  FOOTER_TELEMETRY: 'TELEMETRIA SYSTEMU',
+  FOOTER_NODE: 'Węzeł sieci',
+  FOOTER_COMPLIANCE: 'Zgodność',
+  FOOTER_TERMS: 'Warunki korzystania',
+  FOOTER_PRIVACY: 'Polityka prywatności',
+  FOOTER_SA_EAST: 'São Paulo (sa-east-1)',
+  FOOTER_COPYRIGHT: '© 2026 RaQuel Synths. Wszelkie prawa zastrzeżone.',
+  FOOTER_CONTACT: 'Kontakt',
+};
 
  // Objeto de traduções em PORTUGUÊS
 export const PT_TRANSLATIONS = {
@@ -426,32 +484,150 @@ export const EN_TRANSLATIONS = {
   "Unable to join the list right now. Please try again."
 };
 
-@Injectable({
-  providedIn: 'root'
-})
-export class LanguageService {
-  // 1. Sinal Writable que armazena o idioma ativo ('pt' ou 'en')
-  readonly currentLang = signal<'pt' | 'en'>('en');
+export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
+  ...EN_TRANSLATIONS,
+  HERO_TITLE: 'NADAJ SWOJEJ MUZYCE GOTOWE BRZMIENIE.',
+  HERO_SUB: 'RQS Studio to inteligentne narzędzia masteringu, setlist i DSP dla producentów, DJ-ów i twórców muzyki generowanej przez AI.',
+  HERO_CTA: '[ 🎛️ WEJDŹ DO RQS STUDIO ]',
+  HERO_NOTE: '*Pierwsze 3 mastery możesz przetestować bez karty.',
+  DSP_TITLE: 'INTELIGENTNY MASTERING I DSP',
+  DSP_DESC: 'RQS stosuje kontrolowane przetwarzanie i polityki dostarczania, aby przygotować materiał do streamingu, klubu lub festiwalu.',
+  STEMS_TITLE: 'SETLIST ENGINE I SEPARACJA STEMÓW',
+  STEMS_DESC: 'Wydziel wokal, perkusję i pozostałe stem-y oraz przygotuj ciągłą setlistę.',
+  MIXLAB_TITLE: 'RQS MIXLAB: NARZĘDZIA DJ',
+  MIXLAB_DESC: 'Narzędzia performance, setlist i audio działające w przeglądarce.',
 
-  // 2. Sinal Computado reativo que devolve o dicionário correto [1.1]
-  readonly t = computed(() => this.currentLang() === 'pt' ? PT_DICT : EN_DICT);
-  readonly tr = computed(() => this.currentLang() === 'pt' ? PT_TRANSLATIONS : EN_TRANSLATIONS);
+  AB_PREVIEW_LOCK_NOTE: 'Wygeneruj 15-sekundowy podgląd, aby włączyć porównanie A/B.',
+  AB_PREVIEW_GENERATING: 'GENEROWANIE PODGLĄDU MASTERU...',
+  BTN_GENERATE_PREVIEW: '[ ⚡ GENERUJ PODGLĄD 15 S ]',
+  VOLUME_MATCH: 'Wyrównanie głośności',
+  ORIGINAL_LABEL: 'A - ORYGINAŁ',
+  MASTER_LABEL: 'B - PODGLĄD MASTERU',
+  FULL_MASTER_COMPLETED_ALERT: '💎 PEŁNY MASTER GOTOWY!',
+  SETLIST_ENGINE: 'RQS SETLIST ENGINE',
+  MIX_DROP_PROMPT: 'Przeciągnij tutaj zmasterowane utwory',
+  MIX_OR_CLICK: 'lub kliknij, aby otworzyć folder',
+  VALIDATION_TITLE: '🛡️ WALIDACJA SETLISTY',
+  VALIDATION_MIN_TRACKS: '❌ Potrzebne są co najmniej 2 utwory.',
+  VALIDATION_NAME_REQUIRED: '❌ Podaj nazwę pliku wynikowego.',
+  VALIDATION_SR_MISMATCH: '⚠️ Wykryto różne sample rate. Silnik wykona resampling.',
+  VALIDATION_BD_MISMATCH: '⚠️ Wykryto różne bit depth. Wyjście zostanie ujednolicone.',
+  SUMMARY_TITLE: '📊 PODSUMOWANIE SETLISTY',
+  SUMMARY_TRACKS: 'Utwory:',
+  SUMMARY_TOTAL_SOURCE: 'Łączny czas źródeł:',
+  SUMMARY_TOTAL_FADE: 'Łączny crossfade:',
+  SUMMARY_EST_OUTPUT: 'Szacowane wyjście:',
+  SUMMARY_OUT_FORMAT: 'Format wyjściowy:',
+  SUMMARY_EST_SIZE: 'Szacowany rozmiar:',
+  LOUDNESS_MATCH_LABEL: '⚡ WYRÓWNANIE ODCZUWALNEJ GŁOŚNOŚCI:',
+  LOUDNESS_OFF: 'WYŁĄCZONE',
+  LOUDNESS_PERCEIVED: 'WYRÓWNAJ GŁOŚNOŚĆ (LUFS)',
+  LOUDNESS_NORMALIZE: 'NORMALIZUJ DO -14 LUFS',
+  CROSSFADE_CURVE_LABEL: '🎚️ KRZYWA PRZEJŚCIA:',
+  CURVE_EQUAL_POWER: 'EQUAL POWER (ŁAGODNIE)',
+  CURVE_LINEAR: 'LINEARNA',
+  CURVE_FAST_CUT: 'FAST CUT',
+  PREVIEWING_TRANSITION: '🔁 ODSŁUCH PRZEJŚCIA: UTWÓR',
+  TRACK_LABEL: 'UTWÓR',
+  BTN_STOP_PREVIEW: '■ ZATRZYMAJ',
+  TIMELINE_TITLE: 'OŚ CZASU SETLISTY',
+  CROSSFADE_TO: 'PRZEJŚCIE DO',
+  SECONDS: 'sekund',
+  PREVIEW_ACTIVE: 'ODTWARZANIE...',
+  BTN_PREVIEW_TRANSITION: 'ODSŁUCHAJ PRZEJŚCIE',
+  DEPLOY_LABEL: 'NAZWA PLIKU SETLIST MASTER (.WAV)',
+  FFMPEG_PROCESSING: 'RQS RENDERUJE PRZEJŚCIA... PROSZĘ CZEKAĆ.',
+  DEPLOY_COMPLETED: 'SETLISTA WYEKSPORTOWANA!',
+  IGNITE_ACTIVE: 'RENDEROWANIE...',
+  IGNITE_LIMIT_ALERT: '🔒 TYLKO PLAN PRO (>3 UTWORY)',
+  IGNITE_IDLE: '🔥 RENDERUJ SETLISTĘ',
+  SETLIST_HELPER_NOTE: 'Tworzy jeden ciągły plik WAV z ustawionymi przejściami.',
+  SYNCING_WITH_S3_BUNKER: 'SYNCHRONIZACJA...',
+  PROTECTED_IN_BUNKER: 'ZABEZPIECZONE',
+  UPLINK_TITLE: '📡 RQS UPLINK ENGINE',
+  UPLINK_STATUS: 'POŁĄCZENIE STABILNE',
+  UPLINK_DESC: 'Twórz deep linki do platform streamingowych.',
+  UPLINK_DETECTED: '⚡ WYKRYTO NOWY PLIK AUDIO',
+  BTN_INSTANT_DEPLOY: '[ SZYBKI DEPLOY MARKETINGOWY ]',
+  BTN_COMPILE_LINK: '[ UTWÓRZ BEZPIECZNY LINK ]',
+  UPLINK_INPUT_PLACEHOLDER: 'URL DO SPOTIFY / YOUTUBE...',
+  DEPLOY_LABELURL: 'URL DOCELOWY',
+  CUSTOM_SLUG_LABEL: 'WŁASNY SLUG',
+  META_PIXEL_ID_LABEL: 'META PIXEL ID (OPCJONALNIE)',
+  ANALYTICS_CLICKS: 'KLIKNIĘCIA',
+  ANALYTICS_CONVERSION: 'KONWERSJA',
+  ANALYTICS_PIXEL: 'STATUS PIXELA',
+  PIXEL_ACTIVE: 'AKTYWNY',
+  PIXEL_INACTIVE: 'NIEAKTYWNY',
+  uplinkTitle: 'RQS UPLINK ENGINE',
+  uplinkBadge: 'DEEP LINK ACTIVE',
+  uplinkDesc: 'Wklej adres utworu, aby wygenerować deep link.',
+  urlLabel: 'URL UTWORU',
+  slugLabel: 'WŁASNY SLUG (OPCJONALNIE)',
+  compileBtn: '[ UTWÓRZ DEEP LINK ]',
+  copyLink: 'Kopiuj link',
+  copiedLink: '✓ Skopiowano!',
+  dashTitle: 'RQS UPLINK ANALYTICS',
+  activeLinks: 'Aktywne linki',
+  dashDesc: 'Zarządzaj linkami i statystykami.',
+  emptyLinks: 'Brak utworzonych linków.',
+  clicksLabel: 'Kliknięcia',
+  conversionLabel: 'Konwersja',
+  trafficSources: 'Źródła ruchu:',
+  copyUrl: 'Kopiuj URL',
+  deleteBtn: 'Usuń',
+  PRICE_BETA_BADGE: '[ FINAL BETA // WALIDACJA SYSTEMU ]',
+  PRICE_TITLE: 'RQS PRO JUŻ WKRÓTCE.',
+  PRICE_DESC: 'RQS Studio przechodzi końcowe testy produkcyjne. Główne narzędzia są dostępne bezpłatnie do testów, a plan RQS PRO jest przygotowywany do publicznego uruchomienia.',
+  PRICE_CTA: '[ 💎 RQS PRO // WKRÓTCE ]',
+  UPLINK_LOGIN_REQUIRED: 'LOGIN_REQUIRED: Musisz być zalogowany, aby tworzyć deep linki. Zaloguj się, aby kontynuować.',
+  UPLINK_LIMIT_REACHED: 'LIMIT_REACHED: Plan Free pozwala na maksymalnie 3 aktywne Deep Linki. RQS PRO odblokuje nielimitowane linki.',
+  MASTER_LIMIT_REACHED: 'Osiągnięto bezpłatny limit',
+  PRO_WAITLIST_NOTE: 'Dołącz do listy startowej RQS PRO i otrzymaj powiadomienie, gdy plan będzie dostępny.',
+  PRO_WAITLIST_CTA: '[ 🔔 DOŁĄCZ DO LISTY STARTOWEJ ]',
+  PRO_WAITLIST_JOINING: '[ SYNCHRONIZACJA... ]',
+  PRO_WAITLIST_SUCCESS: 'Jesteś na liście startowej RQS PRO.',
+  PRO_WAITLIST_ERROR: 'Nie udało się teraz dołączyć do listy. Spróbuj ponownie.',
+};
+
+@Injectable({ providedIn: 'root' })
+export class LanguageService {
+  readonly currentLang = signal<UiLanguage>('en');
+
+  readonly t = computed(() => {
+    if (this.currentLang() === 'pt') return PT_DICT;
+    if (this.currentLang() === 'pl') return PL_DICT;
+    return EN_DICT;
+  });
+
+  readonly tr = computed(() => {
+    if (this.currentLang() === 'pt') return PT_TRANSLATIONS;
+    if (this.currentLang() === 'pl') return PL_TRANSLATIONS;
+    return EN_TRANSLATIONS;
+  });
 
   constructor() {
-    this.detectBrowserLanguage();
+    this.detectLanguage();
   }
 
-  // Detecta automaticamente a linguagem do navegador do usuário
-  private detectBrowserLanguage() {
-    if (typeof window !== 'undefined' && window.navigator) {
-      const browserLang = window.navigator.language.toLowerCase();
-      // Se o navegador iniciar com 'pt' (pt-BR, pt-PT), ativa português. Caso contrário, inglês.
-      this.currentLang.set(browserLang.startsWith('pt') ? 'pt' : 'en');
+  setLanguage(lang: UiLanguage): void {
+    this.currentLang.set(lang);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('rqs_language', lang);
     }
   }
 
-  // Método manual de alternar idioma na barra de topo
-  setLanguage(lang: 'pt' | 'en') {
-    this.currentLang.set(lang);
+  private detectLanguage(): void {
+    if (typeof window === 'undefined') return;
+
+    const stored = window.localStorage.getItem('rqs_language');
+    if (stored === 'en' || stored === 'pt' || stored === 'pl') {
+      this.currentLang.set(stored);
+      return;
+    }
+
+    // Product contract: English is the deterministic first-run language.
+    // Browser locale must never silently override the primary UI language.
+    this.currentLang.set('en');
   }
 }
