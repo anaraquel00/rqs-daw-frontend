@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:rqs-daw": "node dist/rqs-daw/server/server.mjs"
+    "serve:ssr:rqs-daw": "node dist/rqs-daw/server/server.mjs",
+    "build:staging": "ng build --configuration staging"
   },
   "prettier": {
     "printWidth": 100,
