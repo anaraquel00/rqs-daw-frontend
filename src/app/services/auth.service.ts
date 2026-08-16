@@ -126,6 +126,11 @@ export class AuthService {
   }
 
 
+  async refreshProfile(): Promise<void> {
+    await this.handleSessionUpdate(this.session());
+  }
+
+
   // =================================================
   // AUTH SESSION
   // =================================================
