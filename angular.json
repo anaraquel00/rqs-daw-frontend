@@ -64,6 +64,18 @@
                 }
               ]
             },
+            "staging": {
+              "optimization": true,
+              "extractLicenses": true,
+              "sourceMap": false,
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.staging.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -77,6 +89,9 @@
           "configurations": {
             "production": {
               "buildTarget": "rqs-daw:build:production"
+            },
+            "staging": {
+              "buildTarget": "rqs-daw:build:staging"
             },
             "development": {
               "buildTarget": "rqs-daw:build:development"
