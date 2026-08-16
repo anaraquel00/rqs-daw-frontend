@@ -1,0 +1,107 @@
+name: Phase A Full Frontend Regression
+
+on:
+  push:
+    branches:
+      - phase-a/staging-code-20260816
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact Phase A head
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Gate production dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Report complete dependency audit
+        run: npm audit || true
+
+      - name: Verify secure frontend contract
+        run: |
+          if grep -R -F -q 'rqs_mainframe_override' src/app; then
+            echo 'ERROR: client-side premium override marker returned.'
+            exit 1
+          fi
+          grep -F -q '/mastering/v2/presigned-url' src/app/services/dsp.ts
+          grep -F -q 'Authorization' src/app/services/dsp.ts
+          grep -F -q 'getMasteringV2PresignedUrl' src/app/components/upload-zone/upload-zone.ts
+          grep -F -q 'refreshProfile' src/app/components/upload-zone/upload-zone.ts
+          if grep -F -q 'this.auth.registrarNovaMaster()' src/app/components/upload-zone/upload-zone.ts; then
+            echo 'ERROR: Mastering V2 success path still mutates quota from the client.'
+            exit 1
+          fi
+          grep -F -q 'environment.supabaseUrl' src/app/services/auth.service.ts
+          grep -F -q 'environment.supabasePublishableKey' src/app/services/auth.service.ts
+          grep -F -q 'environment.localAuthProfileBypass' src/app/services/auth.service.ts
+          echo 'PHASE_A_FRONTEND_SECURITY_CONTRACT: PASS'
+
+      - name: Run Angular tests
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+
+      - name: Build production application
+        run: npm run build -- --configuration production --output-path dist/phase-a-prod
+
+      - name: Verify production environment isolation
+        run: |
+          grep -R -F -q 'ucearnthodrltkvkmhit' dist/phase-a-prod
+          grep -R -F -q 'https://m2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws' dist/phase-a-prod
+          if grep -R -F -q 'uwrqbywapomuloresoek' dist/phase-a-prod; then
+            echo 'ERROR: staging Supabase ref leaked into production bundle.'
+            exit 1
+          fi
+          if grep -R -F -q 'http://localhost:8080' dist/phase-a-prod; then
+            echo 'ERROR: local backend URL leaked into production bundle.'
+            exit 1
+          fi
+          echo 'PHASE_A_PRODUCTION_ENV_ISOLATION: PASS'
+
+      - name: Build deterministic staging application
+        run: npm run build:staging -- --output-path dist/phase-a-staging
+
+      - name: Verify staging environment isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGING_BACKEND_URL="$(
+            sed -n "s/^[[:space:]]*baseUrl:[[:space:]]*'\([^']*\)'.*/\1/p" \
+              src/environments/environment.staging.ts | head -n 1
+          )"
+          test -n "$STAGING_BACKEND_URL"
+          grep -R -F -q 'uwrqbywapomuloresoek' dist/phase-a-staging
+          grep -R -F -q "$STAGING_BACKEND_URL" dist/phase-a-staging
+          if grep -R -F -q 'ucearnthodrltkvkmhit' dist/phase-a-staging; then
+            echo 'ERROR: production Supabase ref leaked into staging bundle.'
+            exit 1
+          fi
+          if grep -R -F -q 'm2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws' dist/phase-a-staging; then
+            echo 'ERROR: production backend URL leaked into staging bundle.'
+            exit 1
+          fi
+          echo "PHASE_A_STAGING_BACKEND_BOUNDARY: $STAGING_BACKEND_URL"
+          echo 'PHASE_A_STAGING_ENV_ISOLATION: PASS'
+
+      - name: Verify deterministic staging script remains explicit
+        run: |
+          node -e "const p=require('./package.json'); if(p.scripts['build:staging']!=='ng build --configuration staging') process.exit(1)"
+          echo 'PHASE_A_DETERMINISTIC_BUILD_SCRIPT: PASS'
+
+      - name: Phase A regression verdict
+        run: |
+          echo 'PHASE_A_FRONTEND_FULL_REGRESSION: PASS'
+          echo 'PRODUCTION_MUTATION: NONE'
