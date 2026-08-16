@@ -347,7 +347,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
 
   private describeRequest(request: MasteringV2Request): string {
     const delivery = request.destination === 'streaming' ? `${request.destination}/${request.platform}` : request.destination;
-    const soundCloud = request.platform === 'soundcloud' ? `/${request.soundCloudMode}` : '';
+    const soundCloud = request.platform === 'soundcloud' ? `/${request.soundcloudMode}` : '';
     const lufs = request.requestedLufs === null ? 'policy-LUFS' : `${request.requestedLufs} LUFS`;
     return `${delivery}${soundCloud} | ${request.atmosphere} | ${lufs}`;
   }
