@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 import {
   MasteringV2Capabilities,
   MasteringV2FinalResponse,
@@ -13,7 +14,10 @@ import {
 export class DspService {
   private readonly baseUrl = environment.baseUrl;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly auth: AuthService,
+  ) {}
 
   getMasteringV2Capabilities(): Observable<MasteringV2Capabilities> {
     return this.http.get<MasteringV2Capabilities>(`${this.baseUrl}/mastering/v2/capabilities`);
@@ -22,11 +26,14 @@ export class DspService {
   masterizeV2Preview(formData: FormData): Observable<Blob> {
     return this.http.post(`${this.baseUrl}/mastering/v2/process`, formData, {
       responseType: 'blob',
+      headers: this.masteringV2Headers(),
     });
   }
 
   masterizeV2Final(formData: FormData): Observable<MasteringV2FinalResponse> {
-    return this.http.post<MasteringV2FinalResponse>(`${this.baseUrl}/mastering/v2/process`, formData);
+    return this.http.post<MasteringV2FinalResponse>(`${this.baseUrl}/mastering/v2/process`, formData, {
+      headers: this.masteringV2Headers(),
+    });
   }
 
   generateMixS3(payload: {
@@ -82,11 +89,25 @@ export class DspService {
     });
   }
 
+  getMasteringV2PresignedUrl(filename: string): Observable<{ uploadUrl: string; s3Key: string }> {
+    return this.http.get<{ uploadUrl: string; s3Key: string }>(`${this.baseUrl}/mastering/v2/presigned-url`, {
+      params: { filename },
+      headers: this.masteringV2Headers(),
+    });
+  }
+
   uploadToS3(uploadUrl: string, file: File): Observable<unknown> {
     const fileName = file.name.toLowerCase();
     const contentType = fileName.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav';
     return this.http.put(uploadUrl, file, {
       headers: { 'Content-Type': contentType },
     });
+  }
+
+  private masteringV2Headers(): HttpHeaders {
+    const accessToken = this.auth.session()?.access_token;
+    return accessToken
+      ? new HttpHeaders({ Authorization: `Bearer ${accessToken}` })
+      : new HttpHeaders();
   }
 }
