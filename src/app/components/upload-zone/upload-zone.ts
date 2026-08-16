@@ -83,7 +83,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isUploadingS3 = true;
     this.addLog(`Iniciando handshake S3 para: ${file.name}`);
 
-    this.dspService.getPresignedUrl(file.name).subscribe({
+    this.dspService.getMasteringV2PresignedUrl(file.name).subscribe({
       next: (s3Response) => {
         this.addLog('URL pré-assinada concedida pelo S3. Iniciando upload em background...');
         this.dspService.uploadToS3(s3Response.uploadUrl, file).subscribe({
@@ -155,7 +155,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       next: (response) => {
         this.completeRenderProgress();
         this.isProcessing = false;
-        this.auth.registrarNovaMaster();
+        void this.auth.refreshProfile();
         this.releaseProcessedBlobUrl();
         this.processedAudioUrl = response.downloadUrl;
         this.processedAudioName = response.fileName;
@@ -347,7 +347,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
 
   private describeRequest(request: MasteringV2Request): string {
     const delivery = request.destination === 'streaming' ? `${request.destination}/${request.platform}` : request.destination;
-    const soundCloud = request.platform === 'soundcloud' ? `/${request.soundcloudMode}` : '';
+    const soundCloud = request.platform === 'soundcloud' ? `/${request.soundCloudMode}` : '';
     const lufs = request.requestedLufs === null ? 'policy-LUFS' : `${request.requestedLufs} LUFS`;
     return `${delivery}${soundCloud} | ${request.atmosphere} | ${lufs}`;
   }
