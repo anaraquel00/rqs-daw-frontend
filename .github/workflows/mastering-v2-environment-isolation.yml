@@ -58,8 +58,12 @@ jobs:
             echo 'ERROR: staging Supabase ref leaked into production bundle.'
             exit 1
           fi
+          if grep -R -F -q 'eawrx5jdefz4vczrza4bqhcoya0umabz.lambda-url.sa-east-1.on.aws' dist/prod-isolation; then
+            echo 'ERROR: staging backend URL leaked into production bundle.'
+            exit 1
+          fi
           if grep -R -F -q 'http://localhost:8080' dist/prod-isolation; then
-            echo 'ERROR: local/staging backend URL leaked into production bundle.'
+            echo 'ERROR: local backend URL leaked into production bundle.'
             exit 1
           fi
           echo 'PRODUCTION_SUPABASE_ISOLATION: PASS'
@@ -67,10 +71,10 @@ jobs:
       - name: Build isolated staging bundle
         run: npm run build -- --configuration staging --output-path dist/staging-isolation
 
-      - name: Verify staging bundle cannot target production Supabase
+      - name: Verify staging bundle targets only isolated staging services
         run: |
           grep -R -F -q 'uwrqbywapomuloresoek' dist/staging-isolation
-          grep -R -F -q 'http://localhost:8080' dist/staging-isolation
+          grep -R -F -q 'eawrx5jdefz4vczrza4bqhcoya0umabz.lambda-url.sa-east-1.on.aws' dist/staging-isolation
           if grep -R -F -q 'ucearnthodrltkvkmhit' dist/staging-isolation; then
             echo 'ERROR: production Supabase ref leaked into staging bundle.'
             exit 1
@@ -79,4 +83,8 @@ jobs:
             echo 'ERROR: production backend URL leaked into staging bundle.'
             exit 1
           fi
-          echo 'STAGING_SUPABASE_ISOLATION: PASS'
+          if grep -R -F -q 'http://localhost:8080' dist/staging-isolation; then
+            echo 'ERROR: localhost backend leaked into deployed staging bundle.'
+            exit 1
+          fi
+          echo 'STAGING_SERVICE_ISOLATION: PASS'
