@@ -161,8 +161,20 @@
 .uplink-ui {
   border: 1px solid var(--line);
   border-radius: 1rem;
-  background: linear-gradient(145deg, rgba(255,255,255,.034), rgba(255,255,255,.008)), #090b0f;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255,255,255,.012) inset;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.025),
+      rgba(255,255,255,.006)
+    ),
+    rgba(9, 11, 15, 0.75);
+
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(255,255,255,.012) inset;
+
+  backdrop-filter: blur(3px);
 }
 
 .hero-console { min-height: 34rem; padding: 1rem; }
@@ -681,5 +693,177 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* RQS STUDIO // ALTERNATING SECTION VIDEOS */
+
+.feature,
+.origin,
+.pricing {
+  position: relative;
+  isolation: isolate;
+}
+
+.feature > :not(.section-motion-layer),
+.origin > :not(.section-motion-layer),
+.pricing > :not(.section-motion-layer) {
+  position: relative;
+  z-index: 2;
+}
+
+.section-motion-layer {
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  width: 100vw;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateX(-50%);
+  z-index: 0;
+  background: #060608;
+}
+
+.section-motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  filter: saturate(.90) contrast(1.03) brightness(.76);
+  transition: opacity 900ms ease;
+}
+
+.section-motion.is-active {
+  opacity: .60;
+}
+
+.section-motion-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.section-motion-layer--master::after,
+.section-motion-layer--build::after {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(6,6,8,.88) 0%,
+      rgba(6,6,8,.70) 22%,
+      rgba(6,6,8,.30) 50%,
+      rgba(6,6,8,.10) 74%,
+      rgba(6,6,8,.22) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(6,6,8,.28),
+      rgba(6,6,8,.08) 28%,
+      rgba(6,6,8,.08) 72%,
+      rgba(6,6,8,.34)
+    );
+}
+
+.section-motion-layer--build::after {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(6,6,8,.98) 0%,
+      rgba(6,6,8,.91) 25%,
+      rgba(7,7,11,.66) 52%,
+      rgba(13,10,22,.34) 77%,
+      rgba(6,6,8,.50) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(6,6,8,.64),
+      transparent 30%,
+      transparent 70%,
+      rgba(6,6,8,.72)
+    );
+}
+
+.section-motion-layer--origin .section-motion {
+  object-position: 64% 20%;
+  filter: saturate(.84) contrast(1.02) brightness(.78);
+}
+
+.section-motion-layer--origin::after {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(6,6,8,.70) 0%,
+      rgba(6,6,8,.34) 28%,
+      rgba(6,6,8,.28) 68%,
+      rgba(6,6,8,.70) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(6,6,8,.40),
+      rgba(6,6,8,.12) 40%,
+      rgba(6,6,8,.16) 65%,
+      rgba(6,6,8,.44)
+    );
+}
+
+.section-motion-layer--origin .section-motion.is-active {
+  opacity: .56;
+}
+
+.section-motion-layer--pricing .section-motion {
+  filter: saturate(.78) contrast(1.01) brightness(.68);
+}
+
+.section-motion-layer--pricing::after {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(6,6,8,.74) 0%,
+      rgba(6,6,8,.48) 24%,
+      rgba(6,6,8,.42) 56%,
+      rgba(6,6,8,.70) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(6,6,8,.48),
+      rgba(6,6,8,.22) 50%,
+      rgba(6,6,8,.48)
+    );
+}
+
+.section-motion-layer--pricing .section-motion.is-active {
+  opacity: .50;
+}
+
+.master-ui,
+.setlist-ui,
+.plan {
+  backdrop-filter: blur(2px);
+}
+
+.feature--split,
+.feature--deploy,
+.proof,
+.final-cta {
+  background: #060608;
+}
+
+@media (max-width: 720px) {
+  .section-motion-layer {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-motion {
+    display: none;
+  }
+
+  .section-motion-layer {
+    background: #060608;
   }
 }
