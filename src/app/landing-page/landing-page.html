@@ -1,9 +1,27 @@
 <main class="rqs-landing">
   <section class="hero" aria-labelledby="landing-title">
     <div class="hero__copy">
+      <div class="hero-language" aria-label="Language selector">
+        <button type="button" class="hero-language__button"
+          [class.is-active]="lang.currentLang() === 'en'"
+          (click)="lang.setLanguage('en')">EN</button>
+        <span aria-hidden="true">/</span>
+        <button type="button" class="hero-language__button"
+          [class.is-active]="lang.currentLang() === 'pt'"
+          (click)="lang.setLanguage('pt')">PT</button>
+        <span aria-hidden="true">/</span>
+        <button type="button" class="hero-language__button"
+          [class.is-active]="lang.currentLang() === 'pl'"
+          (click)="lang.setLanguage('pl')">PL</button>
+      </div>
+
       <p class="kicker">{{ lang.tr().LANDING_HERO_EYEBROW }}</p>
 
-      <h1 id="landing-title">
+      <h1
+        id="landing-title"
+        [class.hero-title--pt]="lang.currentLang() === 'pt'"
+        [class.hero-title--pl]="lang.currentLang() === 'pl'"
+      >
         <span>RQS STUDIO</span>
         {{ lang.tr().LANDING_HERO_TITLE }}
       </h1>

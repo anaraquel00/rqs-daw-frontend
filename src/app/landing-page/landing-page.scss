@@ -867,3 +867,222 @@
     background: #060608;
   }
 }
+
+/* RQS STUDIO // HERO LANGUAGE + LOCALE-SAFE TYPOGRAPHY */
+
+.hero__copy { position: relative; }
+
+.hero-language {
+  position: absolute;
+  top: -2.6rem;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: .42rem;
+  z-index: 4;
+  font-family: "Fira Code", "Courier New", monospace;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: #59616d;
+}
+
+.hero-language > span { opacity: .45; }
+
+.hero-language__button {
+  appearance: none;
+  padding: .2rem .08rem;
+  border: 0;
+  background: transparent;
+  color: #6c7480;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  transition: color 160ms ease, text-shadow 160ms ease;
+}
+
+.hero-language__button:hover { color: #cbd1d8; }
+
+.hero-language__button.is-active {
+  color: var(--cyan);
+  text-shadow: 0 0 12px rgba(53,220,236,.18);
+}
+
+.hero-title--pt {
+  max-width: 11.5ch;
+  font-size: clamp(3.25rem, 6.15vw, 6.45rem);
+  line-height: .90;
+  letter-spacing: -.07em;
+}
+
+.hero-title--pl {
+  max-width: 11.8ch;
+  font-size: clamp(3.3rem, 6.3vw, 6.7rem);
+  line-height: .90;
+  letter-spacing: -.066em;
+}
+
+@media (min-width: 1440px) {
+  .hero-title--pt { max-width: 11.8ch; font-size: clamp(3.6rem, 5.75vw, 6.65rem); }
+  .hero-title--pl { max-width: 12ch; font-size: clamp(3.7rem, 5.9vw, 6.8rem); }
+}
+
+@media (max-width: 1180px) {
+  .hero {
+    grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+    gap: clamp(2rem, 4vw, 4rem);
+  }
+
+  .hero-title--pt { max-width: 11.2ch; font-size: clamp(3rem, 5.6vw, 5.55rem); }
+  .hero-title--pl { max-width: 11.5ch; font-size: clamp(3.05rem, 5.75vw, 5.75rem); }
+}
+
+@media (max-width: 980px) {
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-top: 6.2rem;
+  }
+
+  .hero__copy { max-width: 46rem; }
+
+  .hero-language {
+    top: -2.3rem;
+    right: auto;
+    left: 0;
+  }
+
+  .hero h1,
+  .hero-title--pt,
+  .hero-title--pl {
+    max-width: 10.8ch;
+    font-size: clamp(3.3rem, 10vw, 6.2rem);
+    line-height: .89;
+  }
+
+  .hero-console { min-height: 28rem; }
+}
+
+@media (max-width: 720px) {
+  .hero {
+    width: min(100% - 2rem, var(--max));
+    padding: 5.4rem 0 4rem;
+    gap: 2.5rem;
+  }
+
+  .hero-language {
+    top: -1.95rem;
+    gap: .34rem;
+    font-size: .64rem;
+  }
+
+  .hero h1,
+  .hero-title--pt,
+  .hero-title--pl {
+    max-width: none;
+    font-size: clamp(2.8rem, 16vw, 4.7rem);
+    line-height: .90;
+    letter-spacing: -.064em;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    width: min(100% - 1.5rem, var(--max));
+    padding-top: 5rem;
+  }
+
+  .hero h1,
+  .hero-title--pt,
+  .hero-title--pl {
+    font-size: clamp(2.45rem, 15.5vw, 3.75rem);
+    line-height: .92;
+  }
+
+  .hero-language { font-size: .6rem; }
+}
+
+/* RQS STUDIO // HERO TYPOGRAPHY HOTFIX V2
+   Prevent long locale words from escaping or orphaning on mobile. */
+
+.hero-title--pt {
+  max-width: 10.2ch;
+  font-size: clamp(3rem, 5.35vw, 5.8rem);
+  line-height: .91;
+  letter-spacing: -.066em;
+}
+
+.hero-title--pl {
+  max-width: 10.7ch;
+  font-size: clamp(3.05rem, 5.45vw, 5.95rem);
+  line-height: .91;
+  letter-spacing: -.064em;
+}
+
+@media (min-width: 1440px) {
+  .hero-title--pt {
+    max-width: 10.4ch;
+    font-size: clamp(3.4rem, 5.05vw, 5.95rem);
+  }
+
+  .hero-title--pl {
+    max-width: 10.8ch;
+    font-size: clamp(3.45rem, 5.15vw, 6.05rem);
+  }
+}
+
+@media (max-width: 1180px) {
+  .hero-title--pt {
+    max-width: 10.6ch;
+    font-size: clamp(2.9rem, 5.15vw, 5.15rem);
+  }
+
+  .hero-title--pl {
+    max-width: 10.9ch;
+    font-size: clamp(2.95rem, 5.25vw, 5.3rem);
+  }
+}
+
+@media (max-width: 980px) {
+  .hero-title--pt,
+  .hero-title--pl {
+    max-width: 11.6ch;
+    font-size: clamp(3rem, 8.8vw, 5.4rem);
+    line-height: .91;
+  }
+}
+
+@media (max-width: 720px) {
+  .hero h1,
+  .hero-title--pt,
+  .hero-title--pl {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  .hero-title--pt {
+    max-width: 100%;
+    font-size: clamp(2.2rem, 11.35vw, 3.45rem);
+    line-height: .92;
+    letter-spacing: -.055em;
+  }
+
+  .hero-title--pl {
+    max-width: 100%;
+    font-size: clamp(2.12rem, 10.7vw, 3.35rem);
+    line-height: .93;
+    letter-spacing: -.05em;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title--pt {
+    font-size: clamp(2.02rem, 10.9vw, 3.1rem);
+  }
+
+  .hero-title--pl {
+    font-size: clamp(1.95rem, 10.2vw, 3rem);
+  }
+}

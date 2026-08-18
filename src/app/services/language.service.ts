@@ -222,7 +222,7 @@ export const PL_DICT: typeof PT_DICT = {
 export const PT_TRANSLATIONS = {
   // Landing premium redesign
   LANDING_HERO_EYEBROW: "CONSTRUÍDO PELA RAQUEL SYNTHS // BETA PÚBLICO",
-  LANDING_HERO_TITLE: "DO SINAL BRUTO AO LANÇAMENTO.",
+  LANDING_HERO_TITLE: "DO SINAL BRUTO AO ENVIO.",
   LANDING_HERO_SUB: "Masterize. Separe stems. Construa sets. Envie sua música.",
   LANDING_CTA_OPEN: "ABRIR RQS STUDIO",
   LANDING_CTA_EXPLORE: "EXPLORAR RECURSOS",
@@ -598,7 +598,66 @@ export const EN_TRANSLATIONS = {
 
 export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   ...EN_TRANSLATIONS,
-  HERO_TITLE: 'NADAJ SWOJEJ MUZYCE GOTOWE BRZMIENIE.',
+
+
+  // Landing premium redesign — Polish
+  LANDING_HERO_EYEBROW: "ZBUDOWANE PRZEZ RAQUEL SYNTHS // PUBLICZNA BETA",
+  LANDING_HERO_TITLE: "OD SUROWEGO SYGNAŁU DO PREMIERY.",
+  LANDING_HERO_SUB: "Masteruj. Rozdziel stem-y. Zbuduj set. Wyślij swoją muzykę.",
+  LANDING_CTA_OPEN: "OTWÓRZ RQS STUDIO",
+  LANDING_CTA_EXPLORE: "POZNAJ FUNKCJE",
+  LANDING_HERO_NOTE: "Narzędzia produkcji muzycznej stworzone wewnątrz prawdziwego niezależnego projektu.",
+
+  LANDING_CAP_MASTERING: "MASTERING",
+  LANDING_CAP_STEMS: "SEPARACJA STEMÓW",
+  LANDING_CAP_SETLIST: "SETLIST ENGINE",
+  LANDING_CAP_UPLINK: "RQS UPLINK",
+  LANDING_CAP_NOTE: "Narzędzia stworzone wewnątrz prawdziwego projektu muzycznego.",
+
+  LANDING_MASTER_TAGLINE: "Dokończ utwór.",
+  LANDING_MASTER_DESC: "Przeanalizuj głośność, wygeneruj podgląd i przygotuj finalny master w workflow RQS DSP Core.",
+  LANDING_MASTER_ITEM_1: "Analiza głośności",
+  LANDING_MASTER_ITEM_2: "True Peak i telemetria",
+  LANDING_MASTER_ITEM_3: "Profile akustyczne",
+  LANDING_MASTER_ITEM_4: "Porównanie A/B na podstawie podglądu",
+
+  LANDING_SPLIT_TAGLINE: "Odzyskaj elementy.",
+  LANDING_SPLIT_DESC: "Rozdziel utwór na 6 stemów do remiksu, analizy i kreatywnej rekonstrukcji w workflow separacji RQS Studio.",
+
+  LANDING_BUILD_TAGLINE: "Zamień utwory w set.",
+  LANDING_BUILD_DESC: "Ułóż utwory, skonfiguruj crossfady i wyrenderuj ciągłą sesję w RQS Setlist Engine.",
+  LANDING_BUILD_ITEM_1: "Układanie utworów",
+  LANDING_BUILD_ITEM_2: "Konfigurowalne crossfady",
+  LANDING_BUILD_ITEM_3: "Ciągły render WAV",
+
+  LANDING_DEPLOY_TAGLINE: "Wyślij sygnał.",
+  LANDING_DEPLOY_DESC: "Wklej link do utworu ze Spotify, SoundCloud, YouTube lub Bandcamp. RQS Uplink Engine tworzy krótki link, który próbuje otworzyć treść w zgodnej oficjalnej aplikacji i ogranicza tarcie wewnętrznych przeglądarek.",
+
+  LANDING_ORIGIN_TITLE: "ZBUDOWANE WEWNĄTRZ MUZYKI.",
+  LANDING_ORIGIN_TAGLINE: "Używamy tych samych narzędzi.",
+  LANDING_ORIGIN_DESC: "RQS Studio powstało jako wewnętrzne narzędzia workflow RaQuel Synths — do masteringu, separacji stemów, przygotowania setlist i muzycznych deep linków. Teraz system otwiera się na innych twórców.",
+  LANDING_ORIGIN_CTA: "ODKRYJ RAQUEL SYNTHS",
+
+  LANDING_PROOF_TITLE: "USŁYSZ RÓŻNICĘ.",
+  LANDING_PROOF_DESC: "Publiczne porównanie A/B zostanie dodane wyłącznie z prawdziwym audio i zweryfikowanymi metrykami. Nie używamy fikcyjnych wyników jako dowodu działania produktu.",
+
+  LANDING_PRICING_TITLE: "ZACZNIJ ZA DARMO.",
+  LANDING_PRICING_DESC: "Publiczna beta zapewnia kontrolowany bezpłatny dostęp, podczas gdy RQS PRO pozostaje w fazie przygotowania do premiery.",
+  LANDING_FREE_PRICE: "PUBLICZNA BETA",
+  LANDING_FREE_ITEM_1: "3 pełne mastery",
+  LANDING_FREE_ITEM_2: "Do 3 aktywnych Uplinków",
+  LANDING_FREE_ITEM_3: "Dostęp do głównego workspace",
+  LANDING_FREE_CTA: "ZACZNIJ ZA DARMO",
+
+  LANDING_PRO_DESC: "RQS PRO jest przygotowywany do publicznej premiery. Cena komercyjna nie zostanie ogłoszona przed ostatecznym zatwierdzeniem.",
+  LANDING_PRO_ITEM_1: "Nielimitowane mastery dla kont PRO",
+  LANDING_PRO_ITEM_2: "Korzystanie z PRO bez zużywania limitu Free",
+  LANDING_PRO_ITEM_3: "Nowe korzyści zostaną ogłoszone dopiero, gdy będą dostępne",
+  LANDING_PRO_CTA: "RQS PRO // WKRÓTCE",
+
+  LANDING_FINAL_TITLE: "TWÓJ SYGNAŁ JEST GOTOWY.",
+  LANDING_FINAL_DESC: "Masteruj. Rozdziel. Zbuduj. Wyślij.",
+HERO_TITLE: 'NADAJ SWOJEJ MUZYCE GOTOWE BRZMIENIE.',
   HERO_SUB: 'RQS Studio to inteligentne narzędzia masteringu, setlist i DSP dla producentów, DJ-ów i twórców muzyki generowanej przez AI.',
   HERO_CTA: '[ 🎛️ WEJDŹ DO RQS STUDIO ]',
   HERO_NOTE: '*Pierwsze 3 mastery możesz przetestować bez karty.',
