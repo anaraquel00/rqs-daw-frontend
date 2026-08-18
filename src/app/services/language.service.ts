@@ -220,6 +220,65 @@ export const PL_DICT: typeof PT_DICT = {
 
  // Objeto de traduções em PORTUGUÊS
 export const PT_TRANSLATIONS = {
+  // Landing premium redesign
+  LANDING_HERO_EYEBROW: "CONSTRUÍDO PELA RAQUEL SYNTHS // BETA PÚBLICO",
+  LANDING_HERO_TITLE: "DO SINAL BRUTO AO LANÇAMENTO.",
+  LANDING_HERO_SUB: "Masterize. Separe stems. Construa sets. Envie sua música.",
+  LANDING_CTA_OPEN: "ABRIR RQS STUDIO",
+  LANDING_CTA_EXPLORE: "EXPLORAR RECURSOS",
+  LANDING_HERO_NOTE: "Ferramentas de produção musical desenvolvidas dentro de um projeto independente real.",
+
+  LANDING_CAP_MASTERING: "MASTERING",
+  LANDING_CAP_STEMS: "STEM SEPARATION",
+  LANDING_CAP_SETLIST: "SETLIST ENGINE",
+  LANDING_CAP_UPLINK: "RQS UPLINK",
+  LANDING_CAP_NOTE: "Ferramentas desenvolvidas dentro de um projeto musical real.",
+
+  LANDING_MASTER_TAGLINE: "Finalize a faixa.",
+  LANDING_MASTER_DESC: "Analise loudness, gere uma prévia e finalize a master dentro do workflow RQS DSP Core.",
+  LANDING_MASTER_ITEM_1: "Análise de loudness",
+  LANDING_MASTER_ITEM_2: "True Peak e telemetria",
+  LANDING_MASTER_ITEM_3: "Perfis acústicos",
+  LANDING_MASTER_ITEM_4: "Comparação A/B por prévia",
+
+  LANDING_SPLIT_TAGLINE: "Recupere as partes.",
+  LANDING_SPLIT_DESC: "Separe uma faixa em 6 stems para remix, análise e reconstrução criativa usando o fluxo de separação do Studio.",
+
+  LANDING_BUILD_TAGLINE: "Transforme faixas em um set.",
+  LANDING_BUILD_DESC: "Organize faixas, configure crossfades e renderize uma sessão contínua no RQS Setlist Engine.",
+  LANDING_BUILD_ITEM_1: "Organização de faixas",
+  LANDING_BUILD_ITEM_2: "Crossfades configuráveis",
+  LANDING_BUILD_ITEM_3: "Render contínuo em WAV",
+
+  LANDING_DEPLOY_TAGLINE: "Envie o sinal.",
+  LANDING_DEPLOY_DESC: "Cole o link da sua faixa no Spotify, SoundCloud, YouTube ou Bandcamp. O RQS Uplink Engine gera um link curto que tenta abrir o conteúdo no aplicativo oficial compatível e reduz a fricção de navegadores internos.",
+
+  LANDING_ORIGIN_TITLE: "CONSTRUÍDO DENTRO DA MÚSICA.",
+  LANDING_ORIGIN_TAGLINE: "Nós usamos as mesmas ferramentas.",
+  LANDING_ORIGIN_DESC: "O RQS Studio nasceu de ferramentas internas do workflow da RaQuel Synths — masterização, separação de stems, preparação de setlists e deep links musicais. Agora esse sistema está sendo aberto para outros criadores.",
+  LANDING_ORIGIN_CTA: "EXPLORAR RAQUEL SYNTHS",
+
+  LANDING_PROOF_TITLE: "OUÇA A DIFERENÇA.",
+  LANDING_PROOF_DESC: "A comparação pública A/B será adicionada somente com áudio real e métricas verificadas. Nenhum resultado fictício é usado como prova de produto.",
+
+  LANDING_PRICING_TITLE: "COMECE GRÁTIS.",
+  LANDING_PRICING_DESC: "A beta pública mantém acesso gratuito controlado enquanto o RQS PRO permanece em fase de lançamento.",
+  LANDING_FREE_PRICE: "BETA PÚBLICO",
+  LANDING_FREE_ITEM_1: "3 masterizações completas",
+  LANDING_FREE_ITEM_2: "Até 3 Uplinks ativos",
+  LANDING_FREE_ITEM_3: "Acesso ao workspace principal",
+  LANDING_FREE_CTA: "COMEÇAR GRÁTIS",
+
+  LANDING_PRO_DESC: "O RQS PRO está sendo preparado para o lançamento público. Nenhum preço comercial é anunciado antes da aprovação final.",
+  LANDING_PRO_ITEM_1: "Masterizações ilimitadas para contas PRO",
+  LANDING_PRO_ITEM_2: "Uso PRO sem consumir a quota Free",
+  LANDING_PRO_ITEM_3: "Novos benefícios serão anunciados somente quando estiverem disponíveis",
+  LANDING_PRO_CTA: "RQS PRO // EM BREVE",
+
+  LANDING_FINAL_TITLE: "SEU SINAL ESTÁ PRONTO.",
+  LANDING_FINAL_DESC: "Masterize. Separe. Construa. Envie.",
+
+
   HERO_TITLE: "REESCREVA O CÓDIGO SÔNICO DAS SUAS MÚSICAS.",
   HERO_SUB: "O RQS Studio é uma estação de trabalho inteligente em nuvem desenvolvida sob medida para produtores independentes, DJs e criadores de música por IA.",
   HERO_CTA: "[ 🎛️ ENTRAR NO MAINFRAME DE GRAÇA ]",
@@ -230,9 +289,6 @@ export const PT_TRANSLATIONS = {
 
   STEMS_TITLE: "SETLIST ENGINE & SEPARADOR DE STEMS",
   STEMS_DESC: "Extraia vocais, baterias e sintetizadores em arquivos WAV separados. Unifique o volume médio de um álbum inteiro sob a norma EBU R128 automaticamente.",
-
-  MIXLAB_TITLE: "RQS MIXLAB: SIMULADOR DE DJ PROFISSIONAL",
-  MIXLAB_DESC: "Acesse um emulador de DJ completo no seu navegador. Conecte sua controladora MIDI e grave seus mixsets em alta fidelidade com feedback de IA em tempo real.",
 
   PRICE_BETA_BADGE: "[ BETA FINAL // VALIDAÇÃO DO SISTEMA ]",
   PRICE_TITLE: "RQS PRO ESTÁ CHEGANDO.",
@@ -352,6 +408,65 @@ PRO_WAITLIST_ERROR:
 
 // Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
 export const EN_TRANSLATIONS = {
+  // Premium landing redesign
+  LANDING_HERO_EYEBROW: "BUILT BY RAQUEL SYNTHS // PUBLIC BETA",
+  LANDING_HERO_TITLE: "FROM RAW SIGNAL TO RELEASE.",
+  LANDING_HERO_SUB: "Master. Split stems. Build sets. Send your music.",
+  LANDING_CTA_OPEN: "OPEN RQS STUDIO",
+  LANDING_CTA_EXPLORE: "EXPLORE FEATURES",
+  LANDING_HERO_NOTE: "Music production tools built inside a real independent project.",
+
+  LANDING_CAP_MASTERING: "MASTERING",
+  LANDING_CAP_STEMS: "STEM SEPARATION",
+  LANDING_CAP_SETLIST: "SETLIST ENGINE",
+  LANDING_CAP_UPLINK: "RQS UPLINK",
+  LANDING_CAP_NOTE: "Tools built inside a real music project.",
+
+  LANDING_MASTER_TAGLINE: "Finish the track.",
+  LANDING_MASTER_DESC: "Analyze loudness, generate a preview and finish the master inside the RQS DSP Core workflow.",
+  LANDING_MASTER_ITEM_1: "Loudness analysis",
+  LANDING_MASTER_ITEM_2: "True Peak and telemetry",
+  LANDING_MASTER_ITEM_3: "Acoustic profiles",
+  LANDING_MASTER_ITEM_4: "Preview-based A/B comparison",
+
+  LANDING_SPLIT_TAGLINE: "Get the parts back.",
+  LANDING_SPLIT_DESC: "Separate a track into 6 stems for remixing, analysis and creative reconstruction using the Studio separation workflow.",
+
+  LANDING_BUILD_TAGLINE: "Turn tracks into a set.",
+  LANDING_BUILD_DESC: "Order tracks, configure crossfades and render a continuous session with the RQS Setlist Engine.",
+  LANDING_BUILD_ITEM_1: "Track ordering",
+  LANDING_BUILD_ITEM_2: "Configurable crossfades",
+  LANDING_BUILD_ITEM_3: "Continuous WAV render",
+
+  LANDING_DEPLOY_TAGLINE: "Send the signal.",
+  LANDING_DEPLOY_DESC: "Paste your track link from Spotify, SoundCloud, YouTube or Bandcamp. RQS Uplink Engine generates a short link that attempts to open the content in the compatible official app and reduces friction from in-app browsers.",
+
+  LANDING_ORIGIN_TITLE: "BUILT IN THE MUSIC.",
+  LANDING_ORIGIN_TAGLINE: "We use the same tools.",
+  LANDING_ORIGIN_DESC: "RQS Studio began as internal tooling for the RaQuel Synths workflow — mastering, stem separation, setlist preparation and music deep links. Now the system is opening to other creators.",
+  LANDING_ORIGIN_CTA: "EXPLORE RAQUEL SYNTHS",
+
+  LANDING_PROOF_TITLE: "HEAR THE DIFFERENCE.",
+  LANDING_PROOF_DESC: "The public A/B comparison will be added only with real audio and verified metrics. No fictional result is used as product proof.",
+
+  LANDING_PRICING_TITLE: "START FREE.",
+  LANDING_PRICING_DESC: "The public beta keeps controlled free access while RQS PRO remains in its launch phase.",
+  LANDING_FREE_PRICE: "PUBLIC BETA",
+  LANDING_FREE_ITEM_1: "3 full masterings",
+  LANDING_FREE_ITEM_2: "Up to 3 active Uplinks",
+  LANDING_FREE_ITEM_3: "Core workspace access",
+  LANDING_FREE_CTA: "START FREE",
+
+  LANDING_PRO_DESC: "RQS PRO is being prepared for public launch. No commercial price is announced before final approval.",
+  LANDING_PRO_ITEM_1: "Unlimited masterings for PRO accounts",
+  LANDING_PRO_ITEM_2: "PRO usage without consuming Free quota",
+  LANDING_PRO_ITEM_3: "New benefits will be announced only when available",
+  LANDING_PRO_CTA: "RQS PRO // COMING SOON",
+
+  LANDING_FINAL_TITLE: "YOUR SIGNAL IS READY.",
+  LANDING_FINAL_DESC: "Master. Split. Build. Send.",
+
+
   HERO_TITLE: "REWRITE THE SONIC CODE OF YOUR MUSIC.",
   HERO_SUB: "RQS Studio is an intelligent cloud workstation custom-built for independent producers, DJs, and generative AI creators.",
   HERO_CTA: "[ 🎛️ ENTER THE MAINFRAME FOR FREE ]",
@@ -362,9 +477,6 @@ export const EN_TRANSLATIONS = {
 
   STEMS_TITLE: "SETLIST ENGINE & STEMS SPLITTER",
   STEMS_DESC: "Extract vocals, drums, and synths into high-res WAV files. Batch-normalize album loudness under the international EBU R128 broadcast standard automatically.",
-
-  MIXLAB_TITLE: "RQS MIXLAB: PROFESSIONAL DJ SIMULATOR",
-  MIXLAB_DESC: "Access a complete DJ emulator in your browser. Connect your MIDI hardware and record high-fidelity mixsets with real-time AI performance metrics.",
 
   PRICE_BETA_BADGE: "[ FINAL BETA // SYSTEM VALIDATION ]",
   PRICE_TITLE: "RQS PRO IS COMING.",
@@ -494,8 +606,6 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   DSP_DESC: 'RQS stosuje kontrolowane przetwarzanie i polityki dostarczania, aby przygotować materiał do streamingu, klubu lub festiwalu.',
   STEMS_TITLE: 'SETLIST ENGINE I SEPARACJA STEMÓW',
   STEMS_DESC: 'Wydziel wokal, perkusję i pozostałe stem-y oraz przygotuj ciągłą setlistę.',
-  MIXLAB_TITLE: 'RQS MIXLAB: NARZĘDZIA DJ',
-  MIXLAB_DESC: 'Narzędzia performance, setlist i audio działające w przeglądarce.',
 
   AB_PREVIEW_LOCK_NOTE: 'Wygeneruj 15-sekundowy podgląd, aby włączyć porównanie A/B.',
   AB_PREVIEW_GENERATING: 'GENEROWANIE PODGLĄDU MASTERU...',

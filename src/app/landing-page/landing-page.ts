@@ -1,13 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Component, effect, inject } from '@angular/core';
+
 import { LanguageService } from '../services/language.service';
-import {
-  Component,
-  effect,
-  inject
-} from '@angular/core';
-
-
 import { SeoService } from '../services/seo.service';
 
 @Component({
@@ -18,58 +13,41 @@ import { SeoService } from '../services/seo.service';
   styleUrls: ['./landing-page.scss']
 })
 export class LandingPageComponent {
-
   readonly lang = inject(LanguageService);
 
-  private router = inject(Router);
-  private seo = inject(SeoService);
+  private readonly router = inject(Router);
+  private readonly seo = inject(SeoService);
 
   constructor() {
-
     effect(() => {
-
-      const isPt =
-        this.lang.currentLang() === 'pt';
-
-      const canonicalUrl =
-        'https://studio.raquelsynths.com/';
+      const currentLang = this.lang.currentLang();
+      const isPt = currentLang === 'pt';
+      const canonicalUrl = 'https://studio.raquelsynths.com/';
+      const socialImage =
+        'https://studio.raquelsynths.com/assets/images/studio.webp';
 
       this.seo.update({
         title: isPt
-          ? 'RQS Studio | Workstation Inteligente para Música'
-          : 'RQS Studio | Intelligent Music Workstation',
-
+          ? 'RQS Studio | Masterização, Stems, Setlists e Uplink'
+          : 'RQS Studio | Mastering, Stems, Setlists & Uplink',
         description: isPt
-          ? 'RQS Studio é a workstation web da RaQuel Synths para masterização de áudio, DSP inteligente, criação de setlists e deep links musicais.'
-          : 'RQS Studio is the RaQuel Synths web workstation for audio mastering, intelligent DSP, setlist creation and music deep links.',
-
+          ? 'RQS Studio reúne masterização, separação de stems, criação de setlists e o RQS Uplink Engine em um workflow web para criadores.'
+          : 'RQS Studio brings mastering, stem separation, setlist creation and the RQS Uplink Engine into one web workflow for creators.',
         url: canonicalUrl,
-
+        image: socialImage,
         type: 'website',
-
-        locale: isPt
-          ? 'pt_BR'
-          : 'en_US',
-
+        locale: isPt ? 'pt_BR' : currentLang === 'pl' ? 'pl_PL' : 'en_US',
         siteName: 'RQS Studio',
-
         robots: 'index, follow',
-
         jsonLd: {
           '@context': 'https://schema.org',
           '@type': 'WebSite',
-
           name: 'RQS Studio',
-
-          alternateName:
-            'RaQuel Synths Digital Audio Workstation',
-
+          alternateName: 'RaQuel Synths Studio',
           url: canonicalUrl,
-
           description: isPt
-            ? 'Workstation web para produção, processamento e ferramentas inteligentes para música.'
-            : 'Web workstation for music production, processing and intelligent music tools.',
-
+            ? 'Ferramentas web para masterização, stems, setlists e links musicais.'
+            : 'Web tools for mastering, stems, setlists and music links.',
           publisher: {
             '@type': 'Organization',
             name: 'RaQuel Synths',
@@ -82,12 +60,5 @@ export class LandingPageComponent {
 
   enterMainframe(): void {
     this.router.navigate(['/app']);
-  }
-
-  buyProPlan(): void {
-    window.open(
-      'https://buy.stripe.com/test_aFa00bdzW3Qmgt9dT7djO00',
-      '_blank'
-    );
   }
 }

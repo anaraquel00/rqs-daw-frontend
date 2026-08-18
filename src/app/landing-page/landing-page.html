@@ -1,98 +1,253 @@
-<div class="landing-mainframe relative min-h-screen bg-[#0a0a0f] text-[#8b949e] font-mono">
+<main class="rqs-landing">
+  <section class="hero" aria-labelledby="landing-title">
+    <div class="hero__copy">
+      <p class="kicker">{{ lang.tr().LANDING_HERO_EYEBROW }}</p>
 
-  <!-- SEÇÃO 1: HERO -->
-  <section class="hero-section flex flex-col items-center justify-center text-center py-20 px-4 min-h-screen relative border-b border-gray-900">
-    <div class="max-w-4xl z-10">
-      <h1 class="text-3xl md:text-5xl font-bold text-white mb-6 tracking-wider text-shadow-glow">
-        {{ lang.tr().HERO_TITLE }}
+      <h1 id="landing-title">
+        <span>RQS STUDIO</span>
+        {{ lang.tr().LANDING_HERO_TITLE }}
       </h1>
-      <p class="text-sm md:text-md text-[#8b949e] max-w-2xl mx-auto mb-10 leading-relaxed">
-        {{ lang.tr().HERO_SUB }}
-      </p>
-      <button (click)="enterMainframe()" class="btn-mainframe-primary px-8 py-4 mb-3 text-sm md:text-base">
-        {{ lang.tr().HERO_CTA }}
-      </button>
-      <span class="block text-[10px] text-yellow-500 tracking-widest">
-        {{ lang.tr().HERO_NOTE }}
-      </span>
+
+      <p class="hero__lead">{{ lang.tr().LANDING_HERO_SUB }}</p>
+
+      <div class="hero__actions">
+        <button type="button" class="btn btn--primary" (click)="enterMainframe()">
+          {{ lang.tr().LANDING_CTA_OPEN }}
+        </button>
+        <a class="btn btn--secondary" href="#workflow">
+          {{ lang.tr().LANDING_CTA_EXPLORE }}
+        </a>
+      </div>
+
+      <p class="hero__note">{{ lang.tr().LANDING_HERO_NOTE }}</p>
+    </div>
+
+    <div class="hero-console" aria-label="RQS Studio workflow overview">
+      <div class="console-topbar">
+        <span>RQS_STUDIO</span>
+        <span class="status"><i></i> PUBLIC BETA</span>
+      </div>
+
+      <div class="console-wave" aria-hidden="true"><span></span></div>
+
+      <div class="console-grid">
+        <div class="console-module">
+          <small>MODULE_01</small>
+          <strong>MASTER</strong>
+          <span>LUFS / TRUE PEAK / A-B</span>
+        </div>
+        <div class="console-module">
+          <small>MODULE_02</small>
+          <strong>SPLIT</strong>
+          <span>STEM SEPARATION</span>
+        </div>
+        <div class="console-module">
+          <small>MODULE_03</small>
+          <strong>BUILD</strong>
+          <span>SETLIST / CROSSFADE / WAV</span>
+        </div>
+        <div class="console-module">
+          <small>MODULE_04</small>
+          <strong>DEPLOY</strong>
+          <span>RQS UPLINK ENGINE</span>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- SEÇÃO 2: RQS DSP CORE (AI Mastering) -->
-  <section class="feature-section grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto py-20 px-6 border-b border-gray-900">
-    <div class="flex flex-col justify-center">
-      <h2 class="text-xl md:text-2xl font-bold text-white mb-4 tracking-widest text-[#00f0ff]">
-        {{ lang.tr().DSP_TITLE }}
-      </h2>
-      <p class="text-sm leading-relaxed mb-6">
-        {{ lang.tr().DSP_DESC }}
-      </p>
+  <section class="capabilities" aria-label="RQS Studio capabilities">
+    <div class="capabilities__inner">
+      <span>{{ lang.tr().LANDING_CAP_MASTERING }}</span>
+      <span>{{ lang.tr().LANDING_CAP_STEMS }}</span>
+      <span>{{ lang.tr().LANDING_CAP_SETLIST }}</span>
+      <span>{{ lang.tr().LANDING_CAP_UPLINK }}</span>
     </div>
-     <div class="visual-placeholder bg-opacity-5 border border-dashed border-[#00f0ff] rounded-lg h-64 flex items-center justify-center overflow-hidden">
-      <img
-      src="assets/images/rqs_dsp_core.webp"
-      alt="RQS DSP Core Active"
-      class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300"
-      loading="lazy">
+    <p>{{ lang.tr().LANDING_CAP_NOTE }}</p>
+  </section>
+
+  <div id="workflow" class="workflow">
+    <section class="feature feature--master" aria-labelledby="master-title">
+      <div class="feature__copy">
+        <p class="module-label">MODULE_01 // RQS DSP CORE</p>
+        <h2 id="master-title">MASTER.</h2>
+        <h3>{{ lang.tr().LANDING_MASTER_TAGLINE }}</h3>
+        <p>{{ lang.tr().LANDING_MASTER_DESC }}</p>
+        <ul>
+          <li>{{ lang.tr().LANDING_MASTER_ITEM_1 }}</li>
+          <li>{{ lang.tr().LANDING_MASTER_ITEM_2 }}</li>
+          <li>{{ lang.tr().LANDING_MASTER_ITEM_3 }}</li>
+          <li>{{ lang.tr().LANDING_MASTER_ITEM_4 }}</li>
+        </ul>
+      </div>
+
+      <div class="master-ui" aria-hidden="true">
+        <div class="ui-head">
+          <span>RQS DSP CORE</span>
+          <span>ANALYSIS READY</span>
+        </div>
+        <div class="master-wave"></div>
+        <div class="meter-grid">
+          <div><small>INTEGRATED</small><strong>-14.0</strong><span>LUFS</span></div>
+          <div><small>TRUE PEAK</small><strong>-1.0</strong><span>dBTP</span></div>
+          <div><small>PREVIEW</small><strong>15</strong><span>SEC</span></div>
+        </div>
+        <div class="ab-row">
+          <span>A // ORIGINAL</span>
+          <span>B // MASTER PREVIEW</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature feature--reverse feature--split" aria-labelledby="split-title">
+      <div class="feature__copy">
+        <p class="module-label">MODULE_02 // STEM SEPARATION</p>
+        <h2 id="split-title">SPLIT.</h2>
+        <h3>{{ lang.tr().LANDING_SPLIT_TAGLINE }}</h3>
+        <p>{{ lang.tr().LANDING_SPLIT_DESC }}</p>
+      </div>
+
+      <div class="stem-ui" aria-hidden="true">
+        <div class="ui-head">
+          <span>STEM MATRIX</span>
+          <span>6 STEMS</span>
+        </div>
+        <div class="stem-row"><span>VOCALS</span><i></i></div>
+        <div class="stem-row"><span>DRUMS</span><i></i></div>
+        <div class="stem-row"><span>BASS</span><i></i></div>
+        <div class="stem-row"><span>GUITAR</span><i></i></div>
+        <div class="stem-row"><span>PIANO</span><i></i></div>
+        <div class="stem-row"><span>OTHER</span><i></i></div>
+      </div>
+    </section>
+
+    <section class="feature feature--build" aria-labelledby="build-title">
+      <div class="feature__copy">
+        <p class="module-label">MODULE_03 // SETLIST ENGINE</p>
+        <h2 id="build-title">BUILD.</h2>
+        <h3>{{ lang.tr().LANDING_BUILD_TAGLINE }}</h3>
+        <p>{{ lang.tr().LANDING_BUILD_DESC }}</p>
+        <ul>
+          <li>{{ lang.tr().LANDING_BUILD_ITEM_1 }}</li>
+          <li>{{ lang.tr().LANDING_BUILD_ITEM_2 }}</li>
+          <li>{{ lang.tr().LANDING_BUILD_ITEM_3 }}</li>
+        </ul>
+      </div>
+
+      <div class="setlist-ui" aria-hidden="true">
+        <div class="ui-head">
+          <span>SETLIST ENGINE</span>
+          <span>CONTINUOUS WAV</span>
+        </div>
+        <div class="track-row"><span>01</span><strong>MIDNIGHT DRIVE</strong><i class="track-82"></i><small>03:58</small></div>
+        <div class="crossfade">CROSSFADE // EQUAL POWER</div>
+        <div class="track-row"><span>02</span><strong>NEON RAIN</strong><i class="track-68"></i><small>04:21</small></div>
+        <div class="crossfade">CROSSFADE // EQUAL POWER</div>
+        <div class="track-row"><span>03</span><strong>ECHOES OF YOU</strong><i class="track-74"></i><small>03:47</small></div>
+      </div>
+    </section>
+
+    <section class="feature feature--reverse feature--deploy" aria-labelledby="deploy-title">
+      <div class="feature__copy">
+        <p class="module-label">MODULE_04 // RQS UPLINK ENGINE</p>
+        <h2 id="deploy-title">DEPLOY.</h2>
+        <h3>{{ lang.tr().LANDING_DEPLOY_TAGLINE }}</h3>
+        <p>{{ lang.tr().LANDING_DEPLOY_DESC }}</p>
+        <div class="platforms" aria-label="Supported music destinations">
+          <span>SPOTIFY</span>
+          <span>SOUNDCLOUD</span>
+          <span>YOUTUBE</span>
+          <span>BANDCAMP</span>
+        </div>
+      </div>
+
+      <div class="uplink-ui" aria-hidden="true">
+        <div class="ui-head">
+          <span>RQS UPLINK ENGINE</span>
+          <span class="uplink-active"><i></i> DEEP LINK ACTIVE</span>
+        </div>
+        <div class="uplink-copy">
+          TRACK URL
+          <div class="fake-input">https://open.spotify.com/track/...</div>
+        </div>
+        <div class="uplink-copy">
+          CUSTOM SLUG
+          <div class="fake-input fake-input--muted">my-new-track</div>
+        </div>
+        <div class="fake-button">COMPILE SECURE DEEP LINK</div>
+      </div>
+    </section>
+  </div>
+
+  <section class="origin" aria-labelledby="origin-title">
+    <div>
+      <p class="module-label">RAQUEL SYNTHS // ORIGIN</p>
+      <h2 id="origin-title">{{ lang.tr().LANDING_ORIGIN_TITLE }}</h2>
+    </div>
+    <div class="origin__copy">
+      <h3>{{ lang.tr().LANDING_ORIGIN_TAGLINE }}</h3>
+      <p>{{ lang.tr().LANDING_ORIGIN_DESC }}</p>
+      <a href="https://raquelsynths.com" target="_blank" rel="noopener noreferrer">
+        {{ lang.tr().LANDING_ORIGIN_CTA }} <span aria-hidden="true">↗</span>
+      </a>
     </div>
   </section>
 
-  <!-- SEÇÃO 3: SETLIST & STEMS -->
-  <section class="feature-section grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto py-20 px-6 border-b border-gray-900">
-     <div class="visual-placeholder order-2 md:order-1 bg-opacity-5 border border-dashed border-[#ff0055] rounded-lg h-64 flex items-center justify-center overflow-hidden">
-      <img
-      src="assets/images/rqs_setlist_engine.webp"
-      alt="RQS Setlist Engine"
-      class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300"
-      loading="lazy">
+  <section class="proof" aria-labelledby="proof-title">
+    <div class="proof__copy">
+      <p class="module-label">PRODUCT PROOF // A/B</p>
+      <h2 id="proof-title">{{ lang.tr().LANDING_PROOF_TITLE }}</h2>
+      <p>{{ lang.tr().LANDING_PROOF_DESC }}</p>
     </div>
-    <div class="flex flex-col justify-center order-1 md:order-2">
-      <h2 class="text-xl md:text-2xl font-bold text-white mb-4 tracking-widest text-[#ff0055]">
-        {{ lang.tr().STEMS_TITLE }}
-      </h2>
-      <p class="text-sm leading-relaxed mb-6">
-        {{ lang.tr().STEMS_DESC }}
-      </p>
+    <div class="proof-ui" aria-hidden="true">
+      <div><span>A</span><strong>ORIGINAL</strong><i></i></div>
+      <b>A / B</b>
+      <div><span>B</span><strong>RQS MASTER</strong><i class="proof-wave--b"></i></div>
+    </div>
+    <p class="proof__status">A/B DEMO // COMING SOON</p>
+  </section>
+
+  <section class="pricing" aria-labelledby="pricing-title">
+    <div class="pricing__intro">
+      <p class="module-label">PUBLIC BETA // ACCESS</p>
+      <h2 id="pricing-title">{{ lang.tr().LANDING_PRICING_TITLE }}</h2>
+      <p>{{ lang.tr().LANDING_PRICING_DESC }}</p>
+    </div>
+
+    <div class="pricing__grid">
+      <article class="plan">
+        <header><span>FREE</span><strong>{{ lang.tr().LANDING_FREE_PRICE }}</strong></header>
+        <ul>
+          <li>{{ lang.tr().LANDING_FREE_ITEM_1 }}</li>
+          <li>{{ lang.tr().LANDING_FREE_ITEM_2 }}</li>
+          <li>{{ lang.tr().LANDING_FREE_ITEM_3 }}</li>
+        </ul>
+        <button type="button" class="btn btn--primary btn--full" (click)="enterMainframe()">
+          {{ lang.tr().LANDING_FREE_CTA }}
+        </button>
+      </article>
+
+      <article class="plan plan--pro">
+        <header><span>RQS PRO</span><strong>COMING SOON</strong></header>
+        <p>{{ lang.tr().LANDING_PRO_DESC }}</p>
+        <ul>
+          <li>{{ lang.tr().LANDING_PRO_ITEM_1 }}</li>
+          <li>{{ lang.tr().LANDING_PRO_ITEM_2 }}</li>
+          <li>{{ lang.tr().LANDING_PRO_ITEM_3 }}</li>
+        </ul>
+        <div class="btn btn--disabled btn--full" aria-disabled="true">
+          {{ lang.tr().LANDING_PRO_CTA }}
+        </div>
+      </article>
     </div>
   </section>
 
-  <!-- SEÇÃO 4: MIXLAB DJ -->
-  <section class="feature-section grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto py-20 px-6 border-b border-gray-900">
-    <div class="flex flex-col justify-center">
-      <h2 class="text-xl md:text-2xl font-bold text-white mb-4 tracking-widest text-[#9d00ff]">
-        {{ lang.tr().MIXLAB_TITLE }}
-      </h2>
-      <p class="text-sm leading-relaxed mb-6">
-        {{ lang.tr().MIXLAB_DESC }}
-      </p>
-    </div>
-     <div class="visual-placeholder bg-opacity-5 border border-dashed border-[#9d00ff] rounded-lg h-64 flex items-center justify-center overflow-hidden">
-      <img
-        src="assets/images/rqs_mixlab.webp"
-        alt="RQS MixLab Standby"
-        class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300"
-        loading="lazy">
-    </div>
+  <section class="final-cta" aria-labelledby="final-title">
+    <p class="module-label">// SIGNAL READY</p>
+    <h2 id="final-title">{{ lang.tr().LANDING_FINAL_TITLE }}</h2>
+    <p>{{ lang.tr().LANDING_FINAL_DESC }}</p>
+    <button type="button" class="btn btn--primary" (click)="enterMainframe()">
+      {{ lang.tr().LANDING_CTA_OPEN }}
+    </button>
+    <small>studio.raquelsynths.com</small>
   </section>
-
-  <!-- SEÇÃO 5: PREÇOS / BETA -->
- <section class="pricing-section flex flex-col items-center justify-center text-center py-20 px-4 max-w-4xl mx-auto">
-
-  <span class="block text-[10px] text-yellow-500 tracking-widest mb-4">
-    {{ lang.tr().PRICE_BETA_BADGE }}
-  </span>
-  <h2 class="text-2xl font-bold text-white mb-4 tracking-widest">
-    {{ lang.tr().PRICE_TITLE }}
-  </h2>
-  <p class="text-sm leading-relaxed max-w-2xl mb-10">
-    {{ lang.tr().PRICE_DESC }}
-  </p>
-  <button
-    type="button"
-    class="btn-mainframe-pro px-8 py-4 mb-3 text-sm md:text-base"
-    disabled
-  >
-    {{ lang.tr().PRICE_CTA }}
-  </button>
- </section>
-</div>
+</main>
