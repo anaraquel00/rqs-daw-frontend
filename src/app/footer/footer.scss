@@ -157,3 +157,14 @@
     }
   }
 }
+
+/* Compliance pass: badges may wrap; keyboard focus is visible. */
+.cyber-footer {
+  .branding .social-icons { flex-wrap: wrap; }
+
+  a:focus-visible {
+    outline: 2px solid #00f0ff;
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+}
