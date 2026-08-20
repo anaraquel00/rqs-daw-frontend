@@ -261,16 +261,16 @@
       </article>
 
       <article class="plan plan--pro">
-        <header><span>RQS PRO</span><strong>COMING SOON</strong></header>
+        <header><span>RQS PRO</span><strong>{{ lang.tr().LANDING_PRO_STATUS }}</strong></header>
         <p>{{ lang.tr().LANDING_PRO_DESC }}</p>
         <ul>
           <li>{{ lang.tr().LANDING_PRO_ITEM_1 }}</li>
           <li>{{ lang.tr().LANDING_PRO_ITEM_2 }}</li>
           <li>{{ lang.tr().LANDING_PRO_ITEM_3 }}</li>
         </ul>
-        <div class="btn btn--disabled btn--full" aria-disabled="true">
+        <button type="button" class="btn btn--secondary btn--full" (click)="openPricing()">
           {{ lang.tr().LANDING_PRO_CTA }}
-        </div>
+        </button>
       </article>
     </div>
   </section>

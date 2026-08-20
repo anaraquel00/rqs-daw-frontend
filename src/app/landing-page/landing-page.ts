@@ -152,4 +152,8 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
   enterMainframe(): void {
     this.router.navigate(['/app']);
   }
+
+  openPricing(): void {
+    this.router.navigate(['/pricing']);
+  }
 }

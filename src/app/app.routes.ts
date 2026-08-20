@@ -4,6 +4,7 @@ import { PrivacyComponent } from './components/privacy/privacy';
 import { WorkspaceComponent } from './workspace/workspace';
 import { LandingPageComponent } from './landing-page/landing-page';
 import { ContactPageComponent } from './contact-page/contact-page';
+import { PricingPageComponent } from './pricing-page/pricing-page';
 
 export const routes: Routes = [
   {
@@ -19,6 +20,10 @@ export const routes: Routes = [
   {
     path: 'contact',
     component: ContactPageComponent
+  },
+  {
+    path: 'pricing',
+    component: PricingPageComponent
   },
   {
     path: 'contato',

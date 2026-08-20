@@ -74,10 +74,10 @@ FOOTER_NODE: "Região de processamento",
 FOOTER_COMPLIANCE: "Referências DSP",
 FOOTER_TERMS: "Termos de Serviço",
 FOOTER_PRIVACY: "Política de Privacidade",
+FOOTER_PRICING:"Planos pagos",
 FOOTER_SA_EAST: "São Paulo (sa-east-1)",
 FOOTER_EBU_R128: "EBU R128 / ITU-R BS.1770",
 FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. Todos os direitos reservados.",
-
 FOOTER_CONTACT: "Fale Conosco",
 };
 
@@ -154,6 +154,7 @@ export const EN_DICT: typeof PT_DICT = {
   FOOTER_COMPLIANCE: "DSP references",
   FOOTER_TERMS: "Terms of Service",
   FOOTER_PRIVACY: "Privacy Policy",
+  FOOTER_PRICING:"Paid plans",
   FOOTER_SA_EAST: "São Paulo (sa-east-1)",
   FOOTER_EBU_R128: "EBU R128 / ITU-R BS.1770",
   FOOTER_COPYRIGHT: "© 2026 RaQuel Synths. All rights reserved.",
@@ -213,6 +214,7 @@ export const PL_DICT: typeof PT_DICT = {
   FOOTER_COMPLIANCE: 'Referencje DSP',
   FOOTER_TERMS: 'Warunki korzystania',
   FOOTER_PRIVACY: 'Polityka prywatności',
+  FOOTER_PRICING:"Płatne plany",
   FOOTER_SA_EAST: 'São Paulo (sa-east-1)',
   FOOTER_COPYRIGHT: '© 2026 RaQuel Synths. Wszelkie prawa zastrzeżone.',
   FOOTER_CONTACT: 'Kontakt',
@@ -269,11 +271,34 @@ export const PT_TRANSLATIONS = {
   LANDING_FREE_ITEM_3: "Acesso ao workspace principal",
   LANDING_FREE_CTA: "COMEÇAR GRÁTIS",
 
-  LANDING_PRO_DESC: "O RQS PRO está sendo preparado para o lançamento público. Nenhum preço comercial é anunciado antes da aprovação final.",
-  LANDING_PRO_ITEM_1: "Masterizações ilimitadas para contas PRO",
-  LANDING_PRO_ITEM_2: "Uso PRO sem consumir a quota Free",
-  LANDING_PRO_ITEM_3: "Novos benefícios serão anunciados somente quando estiverem disponíveis",
-  LANDING_PRO_CTA: "RQS PRO // EM BREVE",
+  LANDING_PRO_DESC: "O RQS PRO continua em preparação para o lançamento público. A prévia de preços e limites planejados já está disponível, mas nenhuma assinatura paga ou checkout está ativo.",
+  LANDING_PRO_ITEM_1: "Prévia de preços localizada em BRL, USD e PLN",
+  LANDING_PRO_ITEM_2: "Limites planejados de MASTER, SPLIT, BUILD e DEPLOY",
+  LANDING_PRO_ITEM_3: "Assinaturas pagas continuam desativadas durante o Public Beta",
+  LANDING_PRO_STATUS: "PRÉVIA DE LANÇAMENTO",
+  LANDING_PRO_CTA: "VER PREÇOS // PRÉVIA",
+  PRICING: {
+    eyebrow: "BETA PÚBLICO // PRÉVIA DE PREÇOS DE LANÇAMENTO", title: "PREÇOS FEITOS PARA ARTISTAS INDEPENDENTES.", subtitle: "Comece grátis. Faça upgrade quando o RQS Studio se tornar parte do seu workflow.",
+    inactive: "As assinaturas pagas ainda não estão ativas. Entre na lista de espera para ser avisado quando os planos forem disponibilizados.", previewLabel: "PREÇOS DE LANÇAMENTO PLANEJADOS", monthly: "/ mês", openStudio: "ABRIR RQS STUDIO", joinWaitlist: "ENTRAR NA WAITLIST",
+    features: "DIREÇÃO DE RECURSOS", proposedQuota: "Cota proposta", publicBeta: "BETA PÚBLICO", plannedAccess: "ACESSO PLANEJADO NOS PLANOS PAGOS", currentBetaAccess: "ACESSO ATUAL NO BETA",
+    taxes: "Tributos aplicáveis, quando houver, serão informados antes da compra quando os planos pagos forem disponibilizados.", compareTitle: "BETA ATUAL VS. ACESSO PLANEJADO", compareIntro: "O acesso do Public Beta permanece separado da proposta de empacotamento dos planos pagos. Nenhum entitlement pago está ativo hoje.",
+    feature: "Recurso", price: "Preço", fullMasters: "Full Masters", preview: "Preview", ab: "Comparação A/B", setlist: "Setlist Engine", uplink: "RQS Uplink", stems: "Separação de Stems", availableBeta: "Disponível durante o Public Beta", planned: "planejado",
+    waitlistTitle: "RECEBA O AVISO DE LANÇAMENTO.", waitlistIntro: "Use a waitlist já existente do RQS para receber avisos de disponibilidade. A preferência de plano ainda não é registrada.", emailLabel: "E-mail", emailPlaceholder: "voce@exemplo.com", sending: "ENTRANDO...", waitlistSuccess: "Você entrou na waitlist de lançamento do RQS.", waitlistError: "Não foi possível adicionar este e-mail à waitlist agora.", faqTitle: "FAQ",
+    freeTagline: "Explore o sistema.", masterTagline: "Finalize suas faixas.", plusTagline: "Construa seu workflow.", proTagline: "Use o Studio completo.", freeCurrentAccess: "ACESSO ATUAL DO BETA",
+    freeItem1: "3 Full Masters no total", freeItem2: "Preview: comportamento atual do beta", freeItem3: "Comparação A/B onde já suportada", freeItem4: "Setlist, Uplink e Stems disponíveis durante o Public Beta",
+    masterItem1: "Workflow MASTER", masterItem2: "Ferramentas de masterização", masterItem3: "Comparação A/B onde já suportada", plusItem1: "Tudo do MASTER", plusItem2: "BUILD / Setlist Engine", plusItem3: "DEPLOY / RQS Uplink", proItem1: "Tudo do PLUS", proItem2: "SPLIT / Separação de Stems", proItem3: "Workflow MASTER / SPLIT / BUILD / DEPLOY",
+    independentArtists: "PARA ARTISTAS INDEPENDENTES", fullStudio: "STUDIO COMPLETO", waitlistEyebrow: "WAITLIST // SEM CHECKOUT", infoEyebrow: "RQS STUDIO // INFORMAÇÕES",
+    faq: [
+      { q: "Posso usar o RQS Studio gratuitamente?", a: "Sim. O RQS Studio está em Public Beta. A experiência Free inclui a franquia atual de masterização do beta, enquanto vários módulos do Studio permanecem disponíveis durante o beta." },
+      { q: "As assinaturas pagas estão ativas?", a: "Não. Assinaturas pagas, checkout e entitlements comerciais não estão ativos. Os cards pagos desta página são apenas uma prévia de preços de lançamento." },
+      { q: "Esses são os preços finais de lançamento?", a: "Não. São preços planejados e ainda podem mudar antes da disponibilização dos planos pagos." },
+      { q: "Por que os preços são diferentes em cada moeda?", a: "O RQS Studio usa preços localizados nas moedas suportadas. São price books fixos e independentes, sem conversão automática pelas taxas de câmbio diárias." },
+      { q: "Haverá tributos adicionais?", a: "Tributos aplicáveis, quando houver, serão informados antes da compra quando os planos pagos forem disponibilizados. Este preview não calcula VAT, Stripe Tax ou impostos de checkout." },
+      { q: "O que acontece quando eu atinjo o limite gratuito de masterização?", a: "O limite atual do beta bloqueia novos Full Masters depois que a franquia gratuita é consumida. O comportamento de Preview é separado, e você pode entrar na waitlist para ser avisado sobre futuros planos pagos." },
+      { q: "O RQS reivindica propriedade sobre minha música?", a: "Consulte os Termos de Serviço para as regras atuais de propriedade e uso. Esta página de preços não substitui nem reproduz as regras jurídicas.", legal: "terms" },
+      { q: "Como os arquivos de áudio enviados são tratados?", a: "Consulte a Política de Privacidade para as informações atuais sobre tratamento e retenção dos arquivos. Esta página evita duplicar regras detalhadas de retenção.", legal: "privacy" }
+    ]
+  },
 
   LANDING_FINAL_TITLE: "SEU SINAL ESTÁ PRONTO.",
   LANDING_FINAL_DESC: "Masterize. Separe. Construa. Envie.",
@@ -457,11 +482,25 @@ export const EN_TRANSLATIONS = {
   LANDING_FREE_ITEM_3: "Core workspace access",
   LANDING_FREE_CTA: "START FREE",
 
-  LANDING_PRO_DESC: "RQS PRO is being prepared for public launch. No commercial price is announced before final approval.",
-  LANDING_PRO_ITEM_1: "Unlimited masterings for PRO accounts",
-  LANDING_PRO_ITEM_2: "PRO usage without consuming Free quota",
-  LANDING_PRO_ITEM_3: "New benefits will be announced only when available",
-  LANDING_PRO_CTA: "RQS PRO // COMING SOON",
+  LANDING_PRO_DESC: "RQS PRO is still being prepared for public launch. A preview of planned pricing and limits is now available, but no paid subscription or checkout is active.",
+  LANDING_PRO_ITEM_1: "Localized pricing preview in BRL, USD and PLN",
+  LANDING_PRO_ITEM_2: "Planned limits across MASTER, SPLIT, BUILD and DEPLOY",
+  LANDING_PRO_ITEM_3: "Paid subscriptions remain disabled during Public Beta",
+  LANDING_PRO_STATUS: "LAUNCH PREVIEW",
+  LANDING_PRO_CTA: "VIEW PRICING // PREVIEW",
+  PRICING: {
+    eyebrow: "PUBLIC BETA // LAUNCH PRICING PREVIEW", title: "PRICING BUILT FOR INDEPENDENT ARTISTS.", subtitle: "Start free. Upgrade when RQS Studio becomes part of your workflow.", inactive: "Paid subscriptions are not active yet. Join the waitlist to be notified when plans become available.", previewLabel: "PLANNED LAUNCH PRICING", monthly: "/ month", openStudio: "OPEN RQS STUDIO", joinWaitlist: "JOIN WAITLIST", features: "FEATURE DIRECTION", proposedQuota: "Proposed quota", publicBeta: "PUBLIC BETA", plannedAccess: "PLANNED PAID-PLAN ACCESS", currentBetaAccess: "CURRENT BETA ACCESS", taxes: "Taxes, where applicable, will be shown before purchase when paid plans become available.", compareTitle: "CURRENT BETA VS. PLANNED ACCESS", compareIntro: "Public Beta access remains separate from proposed paid-plan packaging. No paid entitlement is active today.", feature: "Feature", price: "Price", fullMasters: "Full Masters", preview: "Preview", ab: "A/B comparison", setlist: "Setlist Engine", uplink: "RQS Uplink", stems: "Stem Separation", availableBeta: "Available during Public Beta", planned: "planned", waitlistTitle: "GET LAUNCH NOTIFIED.", waitlistIntro: "Use the existing RQS waitlist to receive launch availability updates. Plan preference is not recorded yet.", emailLabel: "Email", emailPlaceholder: "you@example.com", sending: "JOINING...", waitlistSuccess: "You are on the RQS launch waitlist.", waitlistError: "We could not add this email to the waitlist right now.", faqTitle: "FAQ", freeTagline: "Explore the system.", masterTagline: "Finish your tracks.", plusTagline: "Build your workflow.", proTagline: "Run the full Studio.", freeCurrentAccess: "CURRENT BETA ACCESS", freeItem1: "3 Full Masters total", freeItem2: "Preview: current beta behavior", freeItem3: "A/B comparison where currently supported", freeItem4: "Setlist, Uplink and Stems available during Public Beta", masterItem1: "MASTER workflow", masterItem2: "Mastering tools", masterItem3: "A/B comparison where currently supported", plusItem1: "Everything in MASTER", plusItem2: "BUILD / Setlist Engine", plusItem3: "DEPLOY / RQS Uplink", proItem1: "Everything in PLUS", proItem2: "SPLIT / Stem Separation", proItem3: "MASTER / SPLIT / BUILD / DEPLOY workflow", independentArtists: "FOR INDEPENDENT ARTISTS", fullStudio: "FULL STUDIO", waitlistEyebrow: "WAITLIST // NO CHECKOUT", infoEyebrow: "RQS STUDIO // INFO",
+    faq: [
+      { q: "Can I use RQS Studio for free?", a: "Yes. RQS Studio is currently in Public Beta. The Free experience includes the current beta mastering allowance, while several Studio modules remain available during the beta." },
+      { q: "Are paid subscriptions active?", a: "No. Paid subscriptions, checkout and commercial entitlements are not active. The paid cards on this page are launch pricing previews only." },
+      { q: "Are these final launch prices?", a: "No. They are planned launch prices and may change before paid plans become available." },
+      { q: "Why do prices differ by currency?", a: "RQS Studio uses localized pricing for supported currencies. Prices are fixed product price books and do not change automatically with daily exchange rates." },
+      { q: "Will taxes be added?", a: "Taxes, where applicable, will be shown before purchase when paid plans become available. No VAT, Stripe Tax or checkout tax calculation is active in this preview." },
+      { q: "What happens when I reach my free mastering limit?", a: "The current beta Full Master limit blocks additional Full Masters after the free allowance is consumed. Preview behavior remains separate, and you can join the waitlist for future paid-plan availability." },
+      { q: "Does RQS claim ownership of my music?", a: "See the Terms of Service for the current ownership and usage terms. This pricing page does not replace or restate the legal terms.", legal: "terms" },
+      { q: "How are uploaded audio files handled?", a: "See the Privacy Policy for the current audio-file handling and retention information. This pricing page intentionally avoids duplicating detailed retention rules.", legal: "privacy" }
+    ]
+  },
 
   LANDING_FINAL_TITLE: "YOUR SIGNAL IS READY.",
   LANDING_FINAL_DESC: "Master. Split. Build. Send.",
@@ -649,11 +688,25 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   LANDING_FREE_ITEM_3: "Dostęp do głównego workspace",
   LANDING_FREE_CTA: "ZACZNIJ ZA DARMO",
 
-  LANDING_PRO_DESC: "RQS PRO jest przygotowywany do publicznej premiery. Cena komercyjna nie zostanie ogłoszona przed ostatecznym zatwierdzeniem.",
-  LANDING_PRO_ITEM_1: "Nielimitowane mastery dla kont PRO",
-  LANDING_PRO_ITEM_2: "Korzystanie z PRO bez zużywania limitu Free",
-  LANDING_PRO_ITEM_3: "Nowe korzyści zostaną ogłoszone dopiero, gdy będą dostępne",
-  LANDING_PRO_CTA: "RQS PRO // WKRÓTCE",
+  LANDING_PRO_DESC: "RQS PRO jest nadal przygotowywany do publicznej premiery. Podgląd planowanych cen i limitów jest już dostępny, ale płatne subskrypcje i checkout pozostają wyłączone.",
+  LANDING_PRO_ITEM_1: "Lokalny podgląd cen w BRL, USD i PLN",
+  LANDING_PRO_ITEM_2: "Planowane limity dla MASTER, SPLIT, BUILD i DEPLOY",
+  LANDING_PRO_ITEM_3: "Płatne subskrypcje pozostają wyłączone podczas Public Beta",
+  LANDING_PRO_STATUS: "PODGLĄD PREMIERY",
+  LANDING_PRO_CTA: "ZOBACZ CENY // PODGLĄD",
+  PRICING: {
+    eyebrow: "PUBLICZNA BETA // PODGLĄD CEN PREMIEROWYCH", title: "CENNIK DLA ARTYSTÓW NIEZALEŻNYCH.", subtitle: "Zacznij za darmo. Przejdź na wyższy plan, gdy RQS Studio stanie się częścią Twojego workflow.", inactive: "Płatne subskrypcje nie są jeszcze aktywne. Dołącz do listy oczekujących, aby otrzymać informację o uruchomieniu planów.", previewLabel: "PLANOWANE CENY PREMIEROWE", monthly: "/ miesiąc", openStudio: "OTWÓRZ RQS STUDIO", joinWaitlist: "DOŁĄCZ DO LISTY", features: "KIERUNEK FUNKCJI", proposedQuota: "Proponowany limit", publicBeta: "PUBLICZNA BETA", plannedAccess: "PLANOWANY DOSTĘP W PŁATNYCH PLANACH", currentBetaAccess: "OBECNY DOSTĘP W BETA", taxes: "Podatki, jeśli będą miały zastosowanie, zostaną pokazane przed zakupem, gdy płatne plany staną się dostępne.", compareTitle: "OBECNA BETA VS. PLANOWANY DOSTĘP", compareIntro: "Dostęp w Public Beta pozostaje oddzielony od planowanego podziału funkcji w płatnych planach. Obecnie żadne płatne uprawnienia nie są aktywne.", feature: "Funkcja", price: "Cena", fullMasters: "Pełne mastery", preview: "Preview", ab: "Porównanie A/B", setlist: "Setlist Engine", uplink: "RQS Uplink", stems: "Separacja stemów", availableBeta: "Dostępne podczas Public Beta", planned: "planowane", waitlistTitle: "OTRZYMAJ POWIADOMIENIE O PREMIERZE.", waitlistIntro: "Skorzystaj z istniejącej listy oczekujących RQS, aby otrzymywać informacje o dostępności. Preferencja planu nie jest jeszcze zapisywana.", emailLabel: "E-mail", emailPlaceholder: "ty@example.com", sending: "DODAWANIE...", waitlistSuccess: "Jesteś na liście oczekujących na premierę RQS.", waitlistError: "Nie udało się teraz dodać tego adresu e-mail do listy.", faqTitle: "FAQ", freeTagline: "Poznaj system.", masterTagline: "Dokończ swoje utwory.", plusTagline: "Zbuduj swój workflow.", proTagline: "Korzystaj z pełnego Studio.", freeCurrentAccess: "OBECNY DOSTĘP W BETA", freeItem1: "Łącznie 3 pełne mastery", freeItem2: "Preview: obecne działanie wersji beta", freeItem3: "Porównanie A/B tam, gdzie jest obecnie obsługiwane", freeItem4: "Setlist, Uplink i Stems dostępne podczas Public Beta", masterItem1: "Workflow MASTER", masterItem2: "Narzędzia masteringowe", masterItem3: "Porównanie A/B tam, gdzie jest obecnie obsługiwane", plusItem1: "Wszystko z MASTER", plusItem2: "BUILD / Setlist Engine", plusItem3: "DEPLOY / RQS Uplink", proItem1: "Wszystko z PLUS", proItem2: "SPLIT / Separacja stemów", proItem3: "Workflow MASTER / SPLIT / BUILD / DEPLOY", independentArtists: "DLA NIEZALEŻNYCH ARTYSTÓW", fullStudio: "PEŁNE STUDIO", waitlistEyebrow: "LISTA OCZEKUJĄCYCH // BEZ CHECKOUTU", infoEyebrow: "RQS STUDIO // INFORMACJE",
+    faq: [
+      { q: "Czy mogę korzystać z RQS Studio za darmo?", a: "Tak. RQS Studio jest obecnie w Public Beta. Plan Free obejmuje aktualny limit masteringu w wersji beta, a kilka modułów Studio pozostaje dostępnych podczas testów." },
+      { q: "Czy płatne subskrypcje są aktywne?", a: "Nie. Płatne subskrypcje, checkout i komercyjne uprawnienia nie są aktywne. Płatne karty na tej stronie są wyłącznie podglądem cen premierowych." },
+      { q: "Czy to są ostateczne ceny premierowe?", a: "Nie. To planowane ceny premierowe i mogą się zmienić przed uruchomieniem płatnych planów." },
+      { q: "Dlaczego ceny różnią się w zależności od waluty?", a: "RQS Studio stosuje lokalne ceny dla obsługiwanych walut. Są to stałe, niezależne cenniki produktowe i nie zmieniają się automatycznie wraz z codziennymi kursami walut." },
+      { q: "Czy zostaną doliczone podatki?", a: "Podatki, jeśli będą miały zastosowanie, zostaną pokazane przed zakupem, gdy płatne plany staną się dostępne. Ten podgląd nie oblicza VAT, Stripe Tax ani podatków checkoutu." },
+      { q: "Co się stanie po wykorzystaniu bezpłatnego limitu masteringu?", a: "Aktualny limit wersji beta blokuje kolejne pełne mastery po wykorzystaniu bezpłatnej puli. Preview działa osobno, a na listę oczekujących można dołączyć, aby otrzymać informację o przyszłych płatnych planach." },
+      { q: "Czy RQS przejmuje prawa do mojej muzyki?", a: "Aktualne zasady dotyczące własności i korzystania z muzyki znajdują się w Warunkach korzystania. Ta strona cenowa ich nie zastępuje ani nie powiela.", legal: "terms" },
+      { q: "Jak obsługiwane są przesłane pliki audio?", a: "Aktualne informacje o obsłudze i retencji plików audio znajdują się w Polityce prywatności. Ta strona celowo nie powiela szczegółowych zasad retencji.", legal: "privacy" }
+    ]
+  },
 
   LANDING_FINAL_TITLE: "TWÓJ SYGNAŁ JEST GOTOWY.",
   LANDING_FINAL_DESC: "Masteruj. Rozdziel. Zbuduj. Wyślij.",
