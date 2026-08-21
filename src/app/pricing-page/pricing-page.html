@@ -55,7 +55,7 @@
         <li>{{ copy().masterItem3 }}</li>
         <li>{{ copy().proposedQuota }}: 20 Full Masters/month</li>
       </ul>
-      <button type="button" class="plan-cta" (click)="scrollToWaitlist()">{{ copy().joinWaitlist }}</button>
+      <button type="button" class="plan-cta" (click)="scrollToWaitlist('master')">{{ copy().joinWaitlist }}</button>
     </article>
 
     <article class="plan-card plus">
@@ -70,7 +70,7 @@
         <li>{{ copy().plusItem3 }}</li>
         <li>{{ copy().proposedQuota }}: 40 Full Masters/month</li>
       </ul>
-      <button type="button" class="plan-cta" (click)="scrollToWaitlist()">{{ copy().joinWaitlist }}</button>
+      <button type="button" class="plan-cta" (click)="scrollToWaitlist('plus')">{{ copy().joinWaitlist }}</button>
     </article>
 
     <article class="plan-card pro">
@@ -86,7 +86,7 @@
         <li>{{ copy().proposedQuota }}: 80 Full Masters/month</li>
         <li>{{ copy().proposedQuota }}: 10 stem jobs/month</li>
       </ul>
-      <button type="button" class="plan-cta" (click)="scrollToWaitlist()">{{ copy().joinWaitlist }}</button>
+      <button type="button" class="plan-cta" (click)="scrollToWaitlist('pro')">{{ copy().joinWaitlist }}</button>
     </article>
   </section>
 

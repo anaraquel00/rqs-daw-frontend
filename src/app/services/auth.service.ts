@@ -12,12 +12,14 @@ import {
   Session
 } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import { AnalyticsService } from './analytics.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly analytics = inject(AnalyticsService);
   private supabase!: SupabaseClient;
 
   readonly session = signal<Session | null>(null);
@@ -87,7 +89,13 @@ export class AuthService {
       });
 
     this.supabase.auth
-      .onAuthStateChange((_event, session) => {
+      .onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          this.analytics.trackEvent('login', {
+            method: this.analyticsAuthMethod(session)
+          });
+        }
+
         void this.handleSessionUpdate(session);
       });
   }
@@ -183,6 +191,16 @@ export class AuthService {
     if (error) {
       console.error('[RQS AUTH] OAuth error:', error.message);
     }
+  }
+
+  private analyticsAuthMethod(session: Session): 'google' | 'github' | 'email' | 'unknown' {
+    const provider = String(session.user.app_metadata?.['provider'] || '').toLowerCase();
+
+    if (provider === 'google' || provider === 'github' || provider === 'email') {
+      return provider;
+    }
+
+    return 'unknown';
   }
 
   // =================================================

@@ -1,0 +1,39 @@
+<section
+  *ngIf="consent.bannerVisible()"
+  class="cookie-consent"
+  role="dialog"
+  aria-modal="false"
+  aria-labelledby="cookie-consent-title"
+>
+  <div class="cookie-panel">
+    <button
+      *ngIf="consent.preference() !== 'unset'"
+      type="button"
+      class="close-button"
+      (click)="close()"
+      [attr.aria-label]="copy().close"
+    >
+      ×
+    </button>
+
+    <p class="eyebrow">{{ copy().eyebrow }}</p>
+    <h2 id="cookie-consent-title">{{ copy().title }}</h2>
+    <p class="description">{{ copy().text }}</p>
+
+    <div class="cookie-actions">
+      <button type="button" class="secondary" (click)="necessaryOnly()">
+        {{ copy().necessary }}
+      </button>
+
+      <button type="button" class="primary" (click)="acceptAnalytics()">
+        {{ copy().analytics }}
+      </button>
+    </div>
+
+    <div class="policy-links">
+      <a routerLink="/cookies">{{ copy().cookies }}</a>
+      <span aria-hidden="true">•</span>
+      <a routerLink="/privacy">{{ copy().privacy }}</a>
+    </div>
+  </div>
+</section>

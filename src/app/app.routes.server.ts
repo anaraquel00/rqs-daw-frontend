@@ -22,6 +22,10 @@ export const serverRoutes: ServerRoute[] = [
     path: 'pricing',
     renderMode: RenderMode.Prerender
   },
+  {
+    path: 'cookies',
+    renderMode: RenderMode.Prerender
+  },
 
   // A DAW depende fortemente das APIs do navegador.
   {

@@ -61,8 +61,10 @@
     <p>Podemos tratar logs, identificadores técnicos, respostas de erro, horários de eventos e dados operacionais necessários para diagnóstico, segurança, prevenção de abuso e estabilidade. O conteúdo e a duração desses registros dependem do serviço e da necessidade operacional aplicável.</p>
 
     <h2>10. Cookies e tecnologias semelhantes</h2>
-    <p>O Studio pode utilizar armazenamento local do navegador e tecnologias semelhantes para funções como preferência de idioma, sessão e estado necessário da aplicação.</p>
-    <p>A auditoria atual do frontend do Studio não encontrou implementação ativa de Google AdSense, tags de publisher ou unidades de anúncio; por isso esta Política não descreve cookies de AdSense/DoubleClick ou anúncios personalizados como tratamento ativo do RQS Studio. Se publicidade for adicionada no futuro, esta Política e, quando necessário, os mecanismos de consentimento serão revisados antes do uso correspondente.</p>
+    <p>O Studio utiliza armazenamento local do navegador e tecnologias semelhantes para funções como preferência de idioma, sessão, estado necessário da aplicação e registro da escolha de cookies.</p>
+    <p>Com a permissão do usuário, o RQS Studio também pode utilizar Google Analytics 4 (GA4) para compreender, de forma agregada, navegação, page views e eventos de uso do produto. O GA4 não é carregado pelo Studio antes da escolha por Analytics no mecanismo de preferências de cookies.</p>
+    <p>A instrumentação atual não envia intencionalmente ao GA4 e-mail, nome, UUID de usuário, nomes de arquivos, títulos de faixas, URLs fornecidas pelo usuário, conteúdo de áudio, credenciais, tokens OAuth ou URLs S3/presigned.</p>
+    <p>Esta implementação tem finalidade de analytics de produto e medição do funil do Beta Público. Não ativamos, nesta implementação, Google Signals, personalização de anúncios, remarketing, AdSense ou eventos de compra/subscrição. O usuário pode alterar ou revogar sua escolha a qualquer momento por meio de Preferências de Cookies no footer. Consulte também nossa <a routerLink="/cookies">Política de Cookies</a>.</p>
 
     <h2>11. Fornecedores de serviço</h2>
     <p>Entre os fornecedores relevantes para a operação atual ou preparada estão:</p>
@@ -72,6 +74,7 @@
       <li><strong>Vercel</strong> — hospedagem e entrega do frontend/web infrastructure;</li>
       <li><strong>Google/Firestore</strong> — infraestrutura associada à waitlist, quando utilizada;</li>
       <li><strong>Brevo</strong> — envio de e-mail e comunicações relacionadas à waitlist, quando utilizadas.</li>
+      <li><strong>Google Analytics 4 (Google)</strong> — analytics agregado de navegação e uso do produto, quando autorizado pelo usuário.</li>
     </ul>
     <p>O backend contém integração preparada para pagamentos com Stripe, mas a monetização está desativada no estado atual. Se serviços pagos forem habilitados, dados de pagamento poderão ser processados pela Stripe ou por outro provedor informado no checkout. Quando o pagamento for tratado pelo provedor, o RQS Studio não precisa armazenar diretamente os dados completos do cartão.</p>
 

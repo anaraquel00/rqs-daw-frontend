@@ -6,6 +6,7 @@ import { ViewportScroller } from '@angular/common';
 import { Footer } from '../footer/footer';
 import { LanguageService, UiLanguage } from '../services/language.service';
 import { SeoService } from '../services/seo.service';
+import { AnalyticsService } from '../services/analytics.service';
 
 type PricingCurrency = 'BRL' | 'USD' | 'PLN';
 
@@ -33,6 +34,8 @@ export class PricingPageComponent implements AfterViewInit {
   waitlistEmail = '';
   private currencyManuallySelected = false;
   private readonly seo = inject(SeoService);
+  private readonly analytics = inject(AnalyticsService);
+  private desiredPlan: 'master' | 'plus' | 'pro' | 'unknown' = 'unknown';
 
   constructor() {
     effect(() => {
@@ -118,13 +121,26 @@ export class PricingPageComponent implements AfterViewInit {
         })
       });
       const result = await response.json();
-      this.waitlistState.set(response.ok && result?.success ? 'success' : 'error');
+      const success = response.ok && result?.success;
+      this.waitlistState.set(success ? 'success' : 'error');
+
+      if (success) {
+        this.analytics.trackEvent('waitlist_joined', {
+          desired_plan: this.desiredPlan
+        });
+      }
     } catch {
       this.waitlistState.set('error');
     }
   }
 
-  scrollToWaitlist(): void {
+  scrollToWaitlist(plan: 'master' | 'plus' | 'pro'): void {
+    this.desiredPlan = plan;
+    this.analytics.trackEvent('pricing_plan_interest', {
+      plan,
+      currency: this.currency()
+    });
+
     const target = document.getElementById('waitlist');
     target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     window.setTimeout(() => document.getElementById('pricing-waitlist-email')?.focus(), 350);

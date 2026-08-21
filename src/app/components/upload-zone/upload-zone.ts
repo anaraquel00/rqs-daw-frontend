@@ -9,6 +9,7 @@ import { AudioComparisonService } from '../../services/audio-comparison.service'
 import { MasteringProcessCommand, MasteringV2Request } from '../../services/mastering-types';
 import { MasteringService } from '../../services/mastering.service';
 import { environment } from '../../../environments/environment';
+import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
   selector: 'app-upload-zone',
@@ -27,6 +28,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   readonly masteringV2DirectUpload = environment.masteringV2DirectUpload;
   private readonly dspService = inject(DspService);
   private readonly masteringService = inject(MasteringService);
+  private readonly analytics = inject(AnalyticsService);
 
   isDragging = false;
   selectedFile: File | null = null;
@@ -117,6 +119,11 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       return;
     }
 
+    this.analytics.trackEvent('master_started', {
+      source_format: this.analyticsSourceFormat(),
+      processing_mode: command.preview ? 'preview' : 'full'
+    });
+
     this.isProcessing = true;
     this.startEstimatedRenderProgress(command.preview);
     const formData = this.buildMasteringV2FormData(
@@ -138,12 +145,20 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
           this.processedAudioName = 'rqs_v2_preview.wav';
           this.isFullMasterCompleted = false;
           this.audioComparison.previewStatus.set('ready');
+          this.analytics.trackEvent('master_completed', {
+            source_format: this.analyticsSourceFormat(),
+            processing_mode: 'preview'
+          });
           this.addLog('Mastering V2 preview concluído com sucesso.');
         },
         error: (error: unknown) => {
           this.stopEstimatedRenderProgress();
           this.isProcessing = false;
           this.audioComparison.previewStatus.set('error');
+          this.analytics.trackEvent('master_failed', {
+            source_format: this.analyticsSourceFormat(),
+            processing_mode: 'preview'
+          });
           this.addLog(`❌ MASTERING V2 PREVIEW ERROR: ${this.errorMessage(error)}`);
         },
       });
@@ -162,11 +177,19 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         this.isFullMasterCompleted = true;
         this.audioComparison.audioProcessed.set(true);
         this.audioComparison.processedFilename.set(response.fileName);
+        this.analytics.trackEvent('master_completed', {
+          source_format: this.analyticsSourceFormat(),
+          processing_mode: 'full'
+        });
         this.addLog(`Mastering V2 finalizado: ${response.fileName}`);
       },
       error: (error: unknown) => {
         this.stopEstimatedRenderProgress();
         this.isProcessing = false;
+        this.analytics.trackEvent('master_failed', {
+          source_format: this.analyticsSourceFormat(),
+          processing_mode: 'full'
+        });
         this.addLog(`❌ MASTERING V2 FINAL ERROR: ${this.errorMessage(error)}`);
       },
     });
@@ -202,6 +225,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   extrairStems(): void {
     if (!this.selectedFile || !this.s3Key) return;
 
+    this.analytics.trackEvent('stem_started', {
+      source_format: this.analyticsSourceFormat()
+    });
     this.isExtractingStems = true;
     this.addLog(`Iniciando dissecação acústica de 6 canais (Demucs) via S3 para: ${this.selectedFile.name}`);
 
@@ -215,10 +241,16 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        this.analytics.trackEvent('stem_completed', {
+          source_format: this.analyticsSourceFormat()
+        });
         this.addLog('ZIP de 6 canais entregue com sucesso!');
       },
       error: (error: unknown) => {
         this.isExtractingStems = false;
+        this.analytics.trackEvent('stem_failed', {
+          source_format: this.analyticsSourceFormat()
+        });
         this.addLog(`❌ ERRO DE DISSECAÇÃO: ${this.errorMessage(error)}`);
       },
     });
@@ -356,6 +388,13 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     if (this.processedAudioUrl?.startsWith('blob:')) {
       window.URL.revokeObjectURL(this.processedAudioUrl);
     }
+  }
+
+  private analyticsSourceFormat(): 'wav' | 'mp3' | 'unknown' {
+    const name = this.selectedFile?.name.toLowerCase() || '';
+    if (name.endsWith('.wav')) return 'wav';
+    if (name.endsWith('.mp3')) return 'mp3';
+    return 'unknown';
   }
 
   private errorMessage(error: unknown): string {

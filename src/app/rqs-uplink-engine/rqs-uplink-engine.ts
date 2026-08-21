@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DeepLinkService } from '../services/deep-link.service';
 import { LanguageService } from '../services/language.service';
+import { AnalyticsService } from '../services/analytics.service';
 
 @Component({
   selector: 'app-rqs-uplink-engine',
@@ -14,6 +15,7 @@ import { LanguageService } from '../services/language.service';
 export class RqsUplinkEngineComponent {
   private deepLinkService = inject(DeepLinkService);
   readonly lang = inject(LanguageService);
+  private readonly analytics = inject(AnalyticsService);
 
   targetUrl = signal<string>('');
   customSlug = signal<string>('');
@@ -40,6 +42,17 @@ export class RqsUplinkEngineComponent {
 
     this.compiledLink.set(result.url!);
     this.copied.set(false);
+
+    const platform = this.detectedPlatform();
+    this.analytics.trackEvent('uplink_created', {
+      platform:
+        platform === 'spotify' ||
+        platform === 'soundcloud' ||
+        platform === 'youtube' ||
+        platform === 'bandcamp'
+          ? platform
+          : 'other'
+    });
   }
 
   copyToClipboard(): void {

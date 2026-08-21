@@ -5,4 +5,7 @@ export const environment = {
   supabaseUrl: 'https://uwrqbywapomuloresoek.supabase.co',
   supabasePublishableKey: 'sb_publishable_evTmfCYwvcaPKqwyfEVMGA_kYXQftOX',
   localAuthProfileBypass: true,
+  analyticsMeasurementId: 'G-Z1TSQ0NV6T',
+  analyticsEnabled: false,
+  analyticsDebugMode: false,
 };
