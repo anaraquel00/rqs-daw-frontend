@@ -1,7 +1,3 @@
-import { Injectable, signal, computed } from '@angular/core';
-
-export type UiLanguage = 'en' | 'pt' | 'pl';
-
 // 🇧🇷 Dicionário de Tradução: Português
 export const PT_DICT = {
   RQS_DSP_CORE: "RQS DSP CORE",
@@ -874,45 +870,3 @@ HERO_TITLE: 'NADAJ SWOJEJ MUZYCE GOTOWE BRZMIENIE.',
   PRO_WAITLIST_SUCCESS: 'Jesteś na liście startowej RQS PRO.',
   PRO_WAITLIST_ERROR: 'Nie udało się teraz dołączyć do listy. Spróbuj ponownie.',
 };
-
-@Injectable({ providedIn: 'root' })
-export class LanguageService {
-  readonly currentLang = signal<UiLanguage>('en');
-
-  readonly t = computed(() => {
-    if (this.currentLang() === 'pt') return PT_DICT;
-    if (this.currentLang() === 'pl') return PL_DICT;
-    return EN_DICT;
-  });
-
-  readonly tr = computed(() => {
-    if (this.currentLang() === 'pt') return PT_TRANSLATIONS;
-    if (this.currentLang() === 'pl') return PL_TRANSLATIONS;
-    return EN_TRANSLATIONS;
-  });
-
-  constructor() {
-    this.detectLanguage();
-  }
-
-  setLanguage(lang: UiLanguage): void {
-    this.currentLang.set(lang);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('rqs_language', lang);
-    }
-  }
-
-  private detectLanguage(): void {
-    if (typeof window === 'undefined') return;
-
-    const stored = window.localStorage.getItem('rqs_language');
-    if (stored === 'en' || stored === 'pt' || stored === 'pl') {
-      this.currentLang.set(stored);
-      return;
-    }
-
-    // Product contract: English is the deterministic first-run language.
-    // Browser locale must never silently override the primary UI language.
-    this.currentLang.set('en');
-  }
-}
