@@ -16,6 +16,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
+import { AuthPromptService } from '../../services/auth-prompt.service';
 import { AudioComparisonService, AudioVariant } from '../../services/audio-comparison.service';
 import { DspService } from '../../services/dsp';
 import { MasteringService } from '../../services/mastering.service';
@@ -42,6 +43,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   readonly lang = inject(LanguageService);
   readonly auth = inject(AuthService);
   readonly audioComparison = inject(AudioComparisonService);
+  private readonly authPrompt = inject(AuthPromptService);
   private readonly dspService = inject(DspService);
   private readonly masteringService = inject(MasteringService);
   private readonly platformId = inject(PLATFORM_ID);
@@ -121,12 +123,14 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     if (this.capabilitiesLoading()) {
       if (this.lang.currentLang() === 'pl') return 'Ładowanie polityki masteringu z backendu…';
       if (this.lang.currentLang() === 'pt') return 'Carregando a política de masterização do backend…';
+      if (this.lang.currentLang() === 'fr') return 'Chargement de la politique de mastering depuis le backend…';
       return 'Loading the mastering policy from the backend…';
     }
     if (this.capabilitiesError()) return this.capabilitiesError();
     if (!this.activeTarget()) {
       if (this.lang.currentLang() === 'pl') return 'Nie znaleziono polityki dla wybranego zastosowania.';
       if (this.lang.currentLang() === 'pt') return 'A política do destino selecionado não está disponível.';
+      if (this.lang.currentLang() === 'fr') return 'La politique correspondant à la destination sélectionnée n’est pas disponible.';
       return 'The selected destination policy is unavailable.';
     }
     return this.requestedLufsError();
@@ -149,6 +153,8 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
           this.capabilitiesError.set('Nie można pobrać kontraktu Mastering V2.');
         } else if (this.lang.currentLang() === 'pt') {
           this.capabilitiesError.set('Não foi possível carregar o contrato Mastering V2.');
+        } else if (this.lang.currentLang() === 'fr') {
+          this.capabilitiesError.set('Impossible de charger le contrat Mastering V2.');
         } else {
           this.capabilitiesError.set('Mastering V2 contract is unavailable.');
         }
@@ -266,6 +272,12 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   canGenerateFullMaster(): boolean {
+    if (!this.auth.isLoggedIn()) {
+      // Anonymous users may press the protected CTA so the frontend can explain
+      // the authentication requirement instead of presenting a dead button.
+      return !this.isProcessing && this.requestReady();
+    }
+
     return !this.isProcessing
       && this.requestReady()
       && this.hasCurrentPreview()
@@ -277,15 +289,18 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     if (this.hasCurrentFullMaster()) {
       if (language === 'pl') return 'Pełny Master jest aktualny. Plik jest gotowy do pobrania.';
       if (language === 'pt') return 'O Master completo está atual. O arquivo está pronto para download.';
+      if (language === 'fr') return 'Le Master complet est à jour. Le fichier est prêt à être téléchargé.';
       return 'The Full Master is current. The file is ready to download.';
     }
     if (this.hasCurrentPreview()) {
       if (language === 'pl') return 'Preview jest aktualny. Możesz teraz wykonać pełny Master, jeśli pozwala na to plan.';
       if (language === 'pt') return 'A prévia está atual. Agora você pode gerar o Master completo se o plano permitir.';
+      if (language === 'fr') return 'Le Preview est à jour. Vous pouvez maintenant générer le Master complet si votre forfait le permet.';
       return 'The Preview is current. You can now render the Full Master if your plan allows it.';
     }
     if (language === 'pl') return 'Ustawienia są prawidłowe. Najpierw wygeneruj 15-sekundowy Preview.';
     if (language === 'pt') return 'As configurações estão válidas. Gere primeiro a prévia de 15 segundos.';
+    if (language === 'fr') return 'Les réglages sont valides. Générez d’abord le Preview de 15 secondes.';
     return 'Settings are valid. Generate the 15-second Preview first.';
   }
 
@@ -311,6 +326,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.isFullMaster) return this.lang.tr().MASTER_LABEL;
     if (this.lang.currentLang() === 'pl') return 'B - PEŁNY MASTER';
     if (this.lang.currentLang() === 'pt') return 'B - MASTER COMPLETO';
+    if (this.lang.currentLang() === 'fr') return 'B - MASTER COMPLET';
     return 'B - FULL MASTER';
   }
 
@@ -320,6 +336,12 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   dispararPreview(): void {
     if (!this.canGeneratePreview()) return;
+
+    if (!this.auth.isLoggedIn()) {
+      this.authPrompt.open('mastering');
+      return;
+    }
+
     const previewStartSeconds = this.audioComparison.previewStart();
     this.masteringService.setPreviewStartSeconds(previewStartSeconds);
     this.configInvalidatedResult.set(false);
@@ -332,6 +354,11 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   dispararProcessamentoCompleto(): void {
+    if (!this.auth.isLoggedIn()) {
+      this.authPrompt.open('mastering');
+      return;
+    }
+
     if (!this.canGenerateFullMaster()) return;
     this.configInvalidatedResult.set(false);
     this.processMaster.emit({ request: this.masteringService.getRequest(), preview: false });
