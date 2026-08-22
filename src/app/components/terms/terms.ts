@@ -36,6 +36,7 @@ export class TermsComponent {
 
       const isPt =
         this.lang.currentLang() === 'pt';
+      const isPl = this.lang.currentLang() === 'pl';
       const isFr = this.lang.currentLang() === 'fr';
 
       const canonicalUrl =
@@ -44,11 +45,11 @@ export class TermsComponent {
       this.seo.update({
         title: isPt
           ? 'Termos de Serviço | RQS Studio'
-          : isFr ? 'Conditions d’utilisation | RQS Studio' : 'Terms of Service | RQS Studio',
+          : isPl ? 'Warunki korzystania | RQS Studio' : isFr ? 'Conditions d’utilisation | RQS Studio' : 'Terms of Service | RQS Studio',
 
         description: isPt
           ? 'Consulte os Termos de Serviço do RQS Studio, incluindo regras de uso, processamento de áudio e componentes da plataforma.'
-          : isFr ? 'Consultez les Conditions d’utilisation de RQS Studio, notamment les règles d’usage, le traitement audio et les composants de la plateforme.' : 'Read the RQS Studio Terms of Service, including platform usage, audio processing and service component rules.',
+          : isPl ? 'Przeczytaj Warunki korzystania z RQS Studio, w tym zasady używania platformy, przetwarzania audio i działania jej komponentów.' : isFr ? 'Consultez les Conditions d’utilisation de RQS Studio, notamment les règles d’usage, le traitement audio et les composants de la plateforme.' : 'Read the RQS Studio Terms of Service, including platform usage, audio processing and service component rules.',
 
         url: canonicalUrl,
 
@@ -56,7 +57,7 @@ export class TermsComponent {
 
         locale: isPt
           ? 'pt_BR'
-          : isFr ? 'fr_FR' : 'en_US',
+          : isPl ? 'pl_PL' : isFr ? 'fr_FR' : 'en_US',
 
         siteName: 'RQS Studio',
 
@@ -68,13 +69,13 @@ export class TermsComponent {
 
           name: isPt
             ? 'Termos de Serviço do RQS Studio'
-            : isFr ? 'Conditions d’utilisation de RQS Studio' : 'RQS Studio Terms of Service',
+            : isPl ? 'Warunki korzystania z RQS Studio' : isFr ? 'Conditions d’utilisation de RQS Studio' : 'RQS Studio Terms of Service',
 
           url: canonicalUrl,
 
           description: isPt
             ? 'Termos aplicáveis ao uso da plataforma RQS Studio.'
-            : isFr ? 'Conditions applicables à l’utilisation de la plateforme RQS Studio.' : 'Terms applicable to use of the RQS Studio platform.',
+            : isPl ? 'Warunki mające zastosowanie do korzystania z platformy RQS Studio.' : isFr ? 'Conditions applicables à l’utilisation de la plateforme RQS Studio.' : 'Terms applicable to use of the RQS Studio platform.',
 
           isPartOf: {
             '@type': 'WebSite',

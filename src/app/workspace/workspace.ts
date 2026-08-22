@@ -32,7 +32,7 @@ import { SeoService } from '../services/seo.service';
           <div class="lang-selector" aria-label="Interface language">
             <button type="button" (click)="lang.setLanguage('pt')"
               [attr.aria-pressed]="lang.isLanguage('pt')"
-              [style.color]="lang.isLanguage('pt') ? '#00ffcc' : '#666'">PT</button>
+              [style.color]="lang.isLanguage('pt') ? '#00ffcc' : '#666'">PT-BR</button>
             <span class="divider">|</span>
             <button type="button" (click)="lang.setLanguage('en')"
               [attr.aria-pressed]="lang.isLanguage('en')"

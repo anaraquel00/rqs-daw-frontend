@@ -70,26 +70,6 @@ export const FR_DICT: typeof PT_DICT = {
   FOOTER_COPYRIGHT: '© 2026 RaQuel Synths. Tous droits réservés.',
   FOOTER_CONTACT: 'Nous contacter',
 
-  AUTH_CONTINUE_EMAIL: "Continuer avec l’e-mail",
-  AUTH_EMAIL_ADDRESS: "Adresse e-mail",
-  AUTH_SEND_LINK: "Envoyer le lien de connexion",
-  AUTH_SENDING: "ENVOI...",
-  AUTH_CHECK_EMAIL_TITLE: "Vérifiez votre e-mail",
-  AUTH_CHECK_EMAIL_BODY: "Nous vous avons envoyé un lien sécurisé pour vous connecter à RQS Studio.",
-  AUTH_REQUIRED_TITLE: "Connexion requise",
-  AUTH_REQUIRED_BODY: "Créez un compte gratuit ou connectez-vous pour continuer.",
-  AUTH_REQUIRED_SECONDARY: "Vous bénéficiez de 3 masterisations complètes gratuites pendant la bêta publique.",
-  AUTH_GOOGLE: "Continuer avec Google",
-  AUTH_GITHUB: "Continuer avec GitHub",
-  AUTH_CANCEL: "Pas maintenant",
-  AUTH_EMAIL_EMPTY: "Saisissez votre adresse e-mail.",
-  AUTH_EMAIL_INVALID: "Saisissez une adresse e-mail valide.",
-  AUTH_EMAIL_SEND_ERROR: "Impossible d’envoyer le lien de connexion. Réessayez.",
-  AUTH_EMAIL_RATE_LIMIT: "Trop de tentatives en peu de temps. Attendez quelques minutes puis réessayez.",
-  AUTH_LINK_INVALID: "Ce lien de connexion est invalide ou a expiré. Demandez un nouveau lien.",
-  AUTH_SESSION_MISSING: "Impossible de terminer la connexion. Demandez un nouveau lien.",
-  AUTH_RESELECT_TRACK: "Connexion terminée. Sélectionnez à nouveau votre piste pour poursuivre le Mastering.",
-  AUTH_DISMISS: "Fermer",
 };
 
 export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {

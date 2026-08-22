@@ -37,6 +37,7 @@ export class PrivacyComponent {
 
       const isPt =
         this.lang.currentLang() === 'pt';
+      const isPl = this.lang.currentLang() === 'pl';
       const isFr = this.lang.currentLang() === 'fr';
 
       const canonicalUrl =
@@ -45,11 +46,11 @@ export class PrivacyComponent {
       this.seo.update({
         title: isPt
           ? 'Política de Privacidade | RQS Studio'
-          : isFr ? 'Politique de confidentialité | RQS Studio' : 'Privacy Policy | RQS Studio',
+          : isPl ? 'Polityka prywatności | RQS Studio' : isFr ? 'Politique de confidentialité | RQS Studio' : 'Privacy Policy | RQS Studio',
 
         description: isPt
           ? 'Saiba como o RQS Studio trata arquivos de áudio, dados operacionais, cookies e informações relacionadas ao uso da plataforma.'
-          : isFr ? 'Découvrez comment RQS Studio traite les fichiers audio, les données opérationnelles, les cookies et les informations liées à l’utilisation de la plateforme.' : 'Learn how RQS Studio handles audio files, operational data, cookies and information related to platform usage.',
+          : isPl ? 'Dowiedz się, jak RQS Studio przetwarza pliki audio, dane operacyjne, pliki cookie i informacje związane z korzystaniem z platformy.' : isFr ? 'Découvrez comment RQS Studio traite les fichiers audio, les données opérationnelles, les cookies et les informations liées à l’utilisation de la plateforme.' : 'Learn how RQS Studio handles audio files, operational data, cookies and information related to platform usage.',
 
         url: canonicalUrl,
 
@@ -57,7 +58,7 @@ export class PrivacyComponent {
 
         locale: isPt
           ? 'pt_BR'
-          : isFr ? 'fr_FR' : 'en_US',
+          : isPl ? 'pl_PL' : isFr ? 'fr_FR' : 'en_US',
 
         siteName: 'RQS Studio',
 
@@ -69,13 +70,13 @@ export class PrivacyComponent {
 
           name: isPt
             ? 'Política de Privacidade do RQS Studio'
-            : isFr ? 'Politique de confidentialité de RQS Studio' : 'RQS Studio Privacy Policy',
+            : isPl ? 'Polityka prywatności RQS Studio' : isFr ? 'Politique de confidentialité de RQS Studio' : 'RQS Studio Privacy Policy',
 
           url: canonicalUrl,
 
           description: isPt
             ? 'Política de privacidade aplicável ao RQS Studio.'
-            : isFr ? 'Politique de confidentialité applicable à RQS Studio.' : 'Privacy policy applicable to RQS Studio.',
+            : isPl ? 'Polityka prywatności mająca zastosowanie do RQS Studio.' : isFr ? 'Politique de confidentialité applicable à RQS Studio.' : 'Privacy policy applicable to RQS Studio.',
 
           isPartOf: {
             '@type': 'WebSite',
