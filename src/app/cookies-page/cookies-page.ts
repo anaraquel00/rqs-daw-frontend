@@ -39,12 +39,7 @@ export class CookiesPageComponent {
           ['7. Retenção e fornecedores', 'A duração de cookies analíticos é determinada pela configuração e pelo funcionamento do Google Analytics. O fornecedor associado ao analytics é o Google. Consulte também nossa Política de Privacidade para informações sobre dados, finalidades, fornecedores e direitos.'],
           ['8. Alterações', 'Esta Política pode ser atualizada quando houver mudança nas tecnologias, fornecedores, finalidades ou mecanismos de consentimento utilizados pelo Studio.']
         ],
-        current: 'Preferência atual',
-        unset: 'Ainda não definida',
-        necessary: 'Somente necessários',
-        analytics: 'Analytics permitido',
-        manage: 'ABRIR PREFERÊNCIAS',
-        privacy: 'Política de Privacidade'
+        current: 'Preferência atual', unset: 'Ainda não definida', necessary: 'Somente necessários', analytics: 'Analytics permitido', manage: 'ABRIR PREFERÊNCIAS', privacy: 'Política de Privacidade'
       };
     }
 
@@ -64,12 +59,27 @@ export class CookiesPageComponent {
           ['7. Retencja i dostawcy', 'Okres działania analitycznych plików cookie zależy od konfiguracji i działania Google Analytics. Dostawcą analityki jest Google. Szczegóły dotyczące danych i praw znajdują się również w Polityce prywatności.'],
           ['8. Zmiany', 'Polityka może być aktualizowana, gdy zmienią się technologie, dostawcy, cele lub mechanizmy zgody stosowane przez Studio.']
         ],
-        current: 'Aktualne ustawienie',
-        unset: 'Jeszcze nie wybrano',
-        necessary: 'Tylko niezbędne',
-        analytics: 'Analytics dozwolone',
-        manage: 'OTWÓRZ PREFERENCJE',
-        privacy: 'Polityka prywatności'
+        current: 'Aktualne ustawienie', unset: 'Jeszcze nie wybrano', necessary: 'Tylko niezbędne', analytics: 'Analytics dozwolone', manage: 'OTWÓRZ PREFERENCJE', privacy: 'Polityka prywatności'
+      };
+    }
+
+    if (language === 'fr') {
+      return {
+        eyebrow: 'RQS STUDIO // JURIDIQUE',
+        title: 'Politique de cookies',
+        updated: 'Dernière mise à jour : 21 août 2026',
+        intro: 'Cette Politique explique comment RQS Studio utilise les cookies et technologies similaires, y compris l’utilisation facultative de Google Analytics 4 (GA4).',
+        sections: [
+          ['1. Que sont les cookies', 'Les cookies sont de petits fichiers ou identifiants stockés par le navigateur afin d’assurer des fonctions techniques, de mémoriser des préférences ou de mesurer de façon agrégée l’utilisation d’un service.'],
+          ['2. Technologies nécessaires', 'Le Studio utilise le stockage local et des technologies similaires pour les fonctions essentielles, notamment la session, la préférence de langue, l’état de l’application et votre choix relatif aux cookies. Ces technologies sont nécessaires au fonctionnement de base et ne dépendent pas de l’activation de GA4.'],
+          ['3. Cookies analytiques', 'Avec votre autorisation, RQS Studio charge Google Analytics 4 afin de mesurer les pages vues et des événements produit agrégés. Le Studio ne charge pas GA4 avant que vous ayez choisi d’autoriser Analytics.'],
+          ['4. Données que nous n’envoyons pas à GA4', 'L’instrumentation actuelle n’envoie pas intentionnellement l’adresse e-mail, le nom, l’UUID utilisateur, les noms de fichiers, les titres de morceaux, les URL soumises par l’utilisateur, le contenu audio, les jetons OAuth, les identifiants ou les URL S3/presigned.'],
+          ['5. Publicité', 'Cette implémentation n’active ni Google Signals, ni personnalisation publicitaire, ni remarketing, ni AdSense, ni événements d’achat ou d’abonnement. L’objectif actuel est l’analyse produit et la mesure du funnel de la bêta publique.'],
+          ['6. Modifier votre choix', 'Vous pouvez rouvrir les Préférences de cookies à tout moment depuis le footer. Si vous choisissez Uniquement nécessaires, le Studio cesse d’envoyer de nouveaux événements à GA4 et tente de supprimer les cookies GA existants du domaine du Studio.'],
+          ['7. Conservation et fournisseurs', 'La durée des cookies analytiques dépend de la configuration et du fonctionnement de Google Analytics. Google est le fournisseur associé à l’analytics. Consultez également notre Politique de confidentialité pour les informations sur les données, finalités, fournisseurs et droits.'],
+          ['8. Modifications', 'Cette Politique peut être mise à jour si le Studio modifie les technologies, fournisseurs, finalités ou mécanismes de consentement utilisés.']
+        ],
+        current: 'Préférence actuelle', unset: 'Pas encore définie', necessary: 'Uniquement nécessaires', analytics: 'Analytics autorisé', manage: 'OUVRIR LES PRÉFÉRENCES', privacy: 'Politique de confidentialité'
       };
     }
 
@@ -88,19 +98,13 @@ export class CookiesPageComponent {
         ['7. Retention and providers', 'Analytics-cookie duration depends on Google Analytics configuration and operation. Google is the provider associated with analytics. See the Privacy Policy for information about data, purposes, providers and rights.'],
         ['8. Changes', 'This Policy may be updated when the Studio changes technologies, providers, purposes or consent mechanisms.']
       ],
-      current: 'Current preference',
-      unset: 'Not set yet',
-      necessary: 'Necessary only',
-      analytics: 'Analytics allowed',
-      manage: 'OPEN PREFERENCES',
-      privacy: 'Privacy Policy'
+      current: 'Current preference', unset: 'Not set yet', necessary: 'Necessary only', analytics: 'Analytics allowed', manage: 'OPEN PREFERENCES', privacy: 'Privacy Policy'
     };
   });
 
   readonly preferenceLabel = computed(() => {
     const preference = this.consent.preference();
     const copy = this.copy();
-
     if (preference === 'analytics') return copy.analytics;
     if (preference === 'necessary') return copy.necessary;
     return copy.unset;
@@ -110,21 +114,19 @@ export class CookiesPageComponent {
     effect(() => {
       const language = this.lang.currentLang();
       const canonicalUrl = 'https://studio.raquelsynths.com/cookies';
+      const meta = {
+        pt: { title: 'Política de Cookies | RQS Studio', description: 'Saiba como o RQS Studio utiliza tecnologias necessárias e, com consentimento, Google Analytics 4.', locale: 'pt_BR' },
+        en: { title: 'Cookie Policy | RQS Studio', description: 'Learn how RQS Studio uses necessary technologies and, with consent, Google Analytics 4.', locale: 'en_US' },
+        pl: { title: 'Polityka plików cookie | RQS Studio', description: 'Dowiedz się, jak RQS Studio korzysta z niezbędnych technologii oraz, za zgodą, Google Analytics 4.', locale: 'pl_PL' },
+        fr: { title: 'Politique de cookies | RQS Studio', description: 'Découvrez comment RQS Studio utilise les technologies nécessaires et, avec votre consentement, Google Analytics 4.', locale: 'fr_FR' }
+      }[language];
 
       this.seo.update({
-        title: language === 'pt'
-          ? 'Política de Cookies | RQS Studio'
-          : language === 'pl'
-            ? 'Polityka plików cookie | RQS Studio'
-            : 'Cookie Policy | RQS Studio',
-        description: language === 'pt'
-          ? 'Saiba como o RQS Studio utiliza tecnologias necessárias e, com consentimento, Google Analytics 4.'
-          : language === 'pl'
-            ? 'Dowiedz się, jak RQS Studio korzysta z niezbędnych technologii oraz, za zgodą, Google Analytics 4.'
-            : 'Learn how RQS Studio uses necessary technologies and, with consent, Google Analytics 4.',
+        title: meta.title,
+        description: meta.description,
         url: canonicalUrl,
         type: 'website',
-        locale: language === 'pt' ? 'pt_BR' : language === 'pl' ? 'pl_PL' : 'en_US',
+        locale: meta.locale,
         siteName: 'RQS Studio',
         robots: 'index, follow',
         jsonLd: {
