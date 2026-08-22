@@ -1,0 +1,50 @@
+<div class="auth-backdrop" *ngIf="prompt.visible() || auth.authCallbackError()" (click)="close()">
+  <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="rqs-auth-title" (click)="$event.stopPropagation()">
+    <button class="auth-close" type="button" (click)="close()" [attr.aria-label]="copy().close">×</button>
+
+    <p class="eyebrow">RQS STUDIO // AUTH</p>
+    <h2 id="rqs-auth-title">{{ copy().title }}</h2>
+    <p class="body">{{ copy().body }}</p>
+    <p class="secondary">{{ copy().secondary }}</p>
+
+    <p class="callback-error" *ngIf="callbackMessage() as message">⚠ {{ message }}</p>
+
+    <ng-container *ngIf="!sent(); else sentState">
+      <div class="provider-stack">
+        <button type="button" class="provider google" (click)="provider('google')">
+          {{ copy().google }}
+        </button>
+        <button type="button" class="provider github" (click)="provider('github')">
+          {{ copy().github }}
+        </button>
+        <button type="button" class="provider email" (click)="openEmail()">
+          {{ copy().email }}
+        </button>
+      </div>
+
+      <form *ngIf="emailMode()" class="email-form" (ngSubmit)="sendMagicLink()" novalidate>
+        <label for="rqs-auth-email">{{ copy().emailLabel }}</label>
+        <input
+          id="rqs-auth-email"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          [(ngModel)]="email"
+          [disabled]="loading()"
+          required>
+        <button type="submit" class="send-link" [disabled]="loading()">
+          {{ loading() ? copy().sending : copy().send }}
+        </button>
+        <p class="form-error" *ngIf="errorMessage() as message">⚠ {{ message }}</p>
+      </form>
+    </ng-container>
+
+    <ng-template #sentState>
+      <div class="success-state" role="status">
+        <strong>{{ copy().successTitle }}</strong>
+        <p>{{ copy().successBody }}</p>
+      </div>
+    </ng-template>
+  </section>
+</div>
