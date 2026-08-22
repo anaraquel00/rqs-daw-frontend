@@ -73,6 +73,25 @@ export class CookiesPageComponent {
       };
     }
 
+
+    if (language === 'fr') {
+      return {
+        eyebrow: 'RQS STUDIO // JURIDIQUE', title: 'Politique de cookies', updated: 'Dernière mise à jour : 21 août 2026',
+        intro: 'Cette Politique explique comment RQS Studio utilise les cookies et technologies similaires, y compris l’utilisation optionnelle de Google Analytics 4 (GA4).',
+        sections: [
+          ['1. Que sont les cookies', 'Les cookies sont de petits fichiers ou identifiants stockés par le navigateur pour assurer des fonctions techniques, mémoriser des préférences ou mesurer de manière agrégée l’utilisation d’un service.'],
+          ['2. Technologies nécessaires', 'Le Studio utilise le stockage local et des technologies similaires pour la session, la langue, l’état de l’application et votre choix de cookies.'],
+          ['3. Cookies Analytics', 'Avec votre autorisation, RQS Studio charge Google Analytics 4 afin de mesurer les pages vues et les événements produit agrégés.'],
+          ['4. Données non envoyées à GA4', 'L’instrumentation actuelle n’envoie pas intentionnellement e-mail, nom, UUID utilisateur, noms de fichiers, titres de pistes, URL utilisateur, contenu audio, tokens OAuth, identifiants ou URL S3/presigned.'],
+          ['5. Publicité', 'Cette implémentation n’active pas Google Signals, la personnalisation publicitaire, le remarketing, AdSense ni les événements d’achat ou d’abonnement.'],
+          ['6. Modifier votre choix', 'Vous pouvez ouvrir les Préférences de cookies à tout moment depuis le footer. En choisissant Nécessaires uniquement, le Studio cesse d’envoyer de nouveaux événements à GA4.'],
+          ['7. Conservation et fournisseurs', 'La durée des cookies Analytics dépend de la configuration et du fonctionnement de Google Analytics. Google est le fournisseur associé à l’analytics.'],
+          ['8. Modifications', 'Cette Politique peut être mise à jour lorsque le Studio modifie les technologies, fournisseurs, finalités ou mécanismes de consentement.']
+        ],
+        current: 'Préférence actuelle', unset: 'Pas encore définie', necessary: 'Nécessaires uniquement', analytics: 'Analytics autorisé', manage: 'OUVRIR LES PRÉFÉRENCES', privacy: 'Politique de confidentialité'
+      };
+    }
+
     return {
       eyebrow: 'RQS STUDIO // LEGAL',
       title: 'Cookie Policy',
@@ -116,15 +135,15 @@ export class CookiesPageComponent {
           ? 'Política de Cookies | RQS Studio'
           : language === 'pl'
             ? 'Polityka plików cookie | RQS Studio'
-            : 'Cookie Policy | RQS Studio',
+            : language === 'fr' ? 'Politique de cookies | RQS Studio' : 'Cookie Policy | RQS Studio',
         description: language === 'pt'
           ? 'Saiba como o RQS Studio utiliza tecnologias necessárias e, com consentimento, Google Analytics 4.'
           : language === 'pl'
             ? 'Dowiedz się, jak RQS Studio korzysta z niezbędnych technologii oraz, za zgodą, Google Analytics 4.'
-            : 'Learn how RQS Studio uses necessary technologies and, with consent, Google Analytics 4.',
+            : language === 'fr' ? 'Découvrez comment RQS Studio utilise les technologies nécessaires et, avec votre consentement, Google Analytics 4.' : 'Learn how RQS Studio uses necessary technologies and, with consent, Google Analytics 4.',
         url: canonicalUrl,
         type: 'website',
-        locale: language === 'pt' ? 'pt_BR' : language === 'pl' ? 'pl_PL' : 'en_US',
+        locale: language === 'pt' ? 'pt_BR' : language === 'pl' ? 'pl_PL' : language === 'fr' ? 'fr_FR' : 'en_US',
         siteName: 'RQS Studio',
         robots: 'index, follow',
         jsonLd: {

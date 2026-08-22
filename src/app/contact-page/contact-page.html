@@ -2,19 +2,24 @@
   <section class="contact-hero" aria-labelledby="contact-title">
     <div class="contact-language" aria-label="Language selector">
       <button type="button"
-        [class.is-active]="lang.currentLang() === 'en'"
-        [attr.aria-pressed]="lang.currentLang() === 'en'"
-        (click)="lang.setLanguage('en')">EN</button>
-      <span aria-hidden="true">/</span>
-      <button type="button"
-        [class.is-active]="lang.currentLang() === 'pt'"
-        [attr.aria-pressed]="lang.currentLang() === 'pt'"
+        [class.is-active]="lang.isLanguage('pt')"
+        [attr.aria-pressed]="lang.isLanguage('pt')"
         (click)="lang.setLanguage('pt')">PT</button>
       <span aria-hidden="true">/</span>
       <button type="button"
-        [class.is-active]="lang.currentLang() === 'pl'"
-        [attr.aria-pressed]="lang.currentLang() === 'pl'"
+        [class.is-active]="lang.isLanguage('en')"
+        [attr.aria-pressed]="lang.isLanguage('en')"
+        (click)="lang.setLanguage('en')">EN</button>
+      <span aria-hidden="true">/</span>
+      <button type="button"
+        [class.is-active]="lang.isLanguage('pl')"
+        [attr.aria-pressed]="lang.isLanguage('pl')"
         (click)="lang.setLanguage('pl')">PL</button>
+      <span aria-hidden="true">/</span>
+      <button type="button"
+        [class.is-active]="lang.isLanguage('fr')"
+        [attr.aria-pressed]="lang.isLanguage('fr')"
+        (click)="lang.setLanguage('fr')">FR</button>
     </div>
 
     <p class="eyebrow">{{ copy().eyebrow }}</p>
