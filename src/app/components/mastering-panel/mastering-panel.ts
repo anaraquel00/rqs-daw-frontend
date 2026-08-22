@@ -269,7 +269,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     return !this.isProcessing
       && this.requestReady()
       && this.hasCurrentPreview()
-      && this.auth.canMaster();
+      && (!this.auth.isLoggedIn() || this.auth.canMaster());
   }
 
   workflowStatusText(): string {
@@ -320,6 +320,10 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   dispararPreview(): void {
     if (!this.canGeneratePreview()) return;
+    if (!this.auth.isLoggedIn()) {
+      this.auth.requestSignIn('mastering');
+      return;
+    }
     const previewStartSeconds = this.audioComparison.previewStart();
     this.masteringService.setPreviewStartSeconds(previewStartSeconds);
     this.configInvalidatedResult.set(false);
@@ -333,6 +337,10 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   dispararProcessamentoCompleto(): void {
     if (!this.canGenerateFullMaster()) return;
+    if (!this.auth.isLoggedIn()) {
+      this.auth.requestSignIn('mastering');
+      return;
+    }
     this.configInvalidatedResult.set(false);
     this.processMaster.emit({ request: this.masteringService.getRequest(), preview: false });
   }

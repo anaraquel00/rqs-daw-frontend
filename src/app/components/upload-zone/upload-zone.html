@@ -1,6 +1,11 @@
 <div class="glass-panel">
   <div class="header-auth-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(0,240,255,0.08); padding-bottom: 10px;"></div>
 
+  <div class="auth-resume-notice" *ngIf="auth.isLoggedIn() && auth.reselectAudioRequired()">
+    <span>{{ lang.t().AUTH_RESELECT_AUDIO }}</span>
+    <button type="button" (click)="auth.dismissReselectAudio()">{{ lang.t().AUTH_CLOSE }}</button>
+  </div>
+
   <div class="scanner-header">
     <h2>{{ lang.t().RQS_DSP_CORE }}</h2>
     <p>{{ lang.t().SUBTITLE }}</p>
