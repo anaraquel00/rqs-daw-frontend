@@ -1,184 +1,103 @@
 <div class="terms-container">
   <div class="lang-toggle-bar" aria-label="Legal document language">
-    <button type="button" (click)="lang.setLanguage('pt')" [attr.aria-pressed]="lang.currentLang() === 'pt'" [class.is-active]="lang.currentLang() === 'pt'">PT</button>
-    <span aria-hidden="true">|</span>
-    <button type="button" (click)="lang.setLanguage('en')" [attr.aria-pressed]="lang.currentLang() !== 'pt'" [class.is-active]="lang.currentLang() !== 'pt'">EN</button>
+    <button type="button" (click)="lang.setLanguage('pt')" [attr.aria-pressed]="lang.currentLang() === 'pt'" [class.is-active]="lang.currentLang() === 'pt'">PT</button><span aria-hidden="true">|</span>
+    <button type="button" (click)="lang.setLanguage('en')" [attr.aria-pressed]="lang.currentLang() === 'en'" [class.is-active]="lang.currentLang() === 'en'">EN</button><span aria-hidden="true">|</span>
+    <button type="button" (click)="lang.setLanguage('pl')" [attr.aria-pressed]="lang.currentLang() === 'pl'" [class.is-active]="lang.currentLang() === 'pl'">PL</button><span aria-hidden="true">|</span>
+    <button type="button" (click)="lang.setLanguage('fr')" [attr.aria-pressed]="lang.currentLang() === 'fr'" [class.is-active]="lang.currentLang() === 'fr'">FR</button>
   </div>
 
   @if (lang.currentLang() === 'pt') {
-    <h1>Termos de Serviço</h1>
-    <p class="update-date">Última atualização: 19 de agosto de 2026</p>
-
+    <h1>Termos de Serviço</h1><p class="update-date">Última atualização: 19 de agosto de 2026</p>
     <p>Estes Termos regulam o uso do <strong class="highlight">RQS Studio</strong>, operado pela <strong>RaQuel Synths / RQS Studio</strong>. O produto está atualmente em <strong>Beta Público</strong>, sem assinatura comercial ativa.</p>
-
-    <h2>1. Sobre o RQS Studio</h2>
-    <p>O RQS Studio é uma plataforma MusicTech que reúne fluxos de processamento de áudio, separação de stems, preparação de setlists e geração de links de distribuição/redirecionamento. Os módulos e recursos disponíveis podem variar durante a Beta Pública.</p>
-
-    <h2>2. Aceitação destes Termos</h2>
-    <p>Ao acessar ou utilizar o RQS Studio, você concorda com estes Termos e com a Política de Privacidade aplicável. Se não concordar, não utilize o serviço.</p>
-
-    <h2>3. Elegibilidade e contas</h2>
-    <p>Algumas funcionalidades podem exigir uma conta. Você é responsável por manter o acesso à sua sessão e por utilizar métodos de autenticação de forma autorizada. Quando login externo estiver disponível, a autenticação poderá ser realizada por provedores compatíveis por meio da infraestrutura de autenticação do Studio; o RQS Studio não precisa receber a senha da sua conta externa para esse fluxo.</p>
-    <p>Se a legislação aplicável exigir autorização de responsável para que você utilize o serviço, essa autorização deverá existir antes do uso.</p>
-
-    <h2>4. Direitos sobre o conteúdo enviado</h2>
-    <p>Ao enviar conteúdo ao RQS Studio, você declara possuir ou ter obtido os direitos, licenças, autorizações e permissões necessários para enviar, processar e utilizar esse conteúdo por meio da plataforma. Isso pode incluir conteúdo original, licenciado, gerado ou assistido por IA, stems, gravações, mixes e arquivos relacionados.</p>
-    <p>O RQS Studio não adquire a propriedade da sua música. Para executar o serviço, você concede apenas uma autorização técnica, limitada e temporária, necessária para upload, armazenamento temporário, processamento, geração de arquivos resultantes, disponibilização para download e demais operações técnicas indispensáveis ao fluxo solicitado. Essa autorização não constitui licença ampla para exploração comercial da sua música pelo RQS Studio.</p>
-    <p>Estes Termos não determinam quem possui copyright ou outros direitos sobre conteúdo gerado ou assistido por IA; essa análise depende do conteúdo, das ferramentas utilizadas e da legislação aplicável.</p>
-
-    <h2>5. Processamento e retenção de áudio</h2>
-    <p>O processamento pode utilizar armazenamento efêmero local durante o job e object storage em infraestrutura de nuvem. Arquivos temporários locais podem existir durante a execução técnica e são removidos quando o fluxo correspondente permite.</p>
-    <p>Arquivos de áudio armazenados temporariamente em object storage são configurados para expiração automática aproximadamente 24 horas após o upload, conforme as políticas técnicas de lifecycle aplicáveis. A remoção efetiva pode ocorrer posteriormente, de acordo com o processamento do provedor de infraestrutura. O RQS Studio não deve ser usado como serviço de armazenamento permanente ou backup.</p>
-
-    <h2>6. Módulos da plataforma</h2>
-    <h3>6.1. MASTER — RQS DSP Core</h3>
-    <p>Realiza análise e processamento automatizado de áudio. Os resultados dependem do arquivo de origem, parâmetros selecionados e limitações inerentes ao processamento digital de sinais. O RQS Studio não garante resultado artístico ou comercial, loudness específico, aprovação por plataforma de streaming ou melhoria subjetiva da música.</p>
-
-    <h3>6.2. SPLIT — separação de stems</h3>
-    <p>A separação de stems é automatizada e pode produzir bleed, artefatos ou isolamento incompleto. O resultado depende do material de origem e não representa reconstrução perfeita das gravações ou pistas originais.</p>
-
-    <h3>6.3. BUILD — RQS Setlist Engine</h3>
-    <p>O Setlist Engine auxilia na organização de faixas, configuração de transições e geração de uma sessão contínua. O recurso é assistivo e não garante performance artística, mix perfeito, compatibilidade universal ou sucesso comercial.</p>
-
-    <h3>6.4. DEPLOY — RQS Uplink</h3>
-    <p>O RQS Uplink recebe URLs públicas fornecidas pelo usuário e pode gerar links de redirecionamento/deep links destinados a facilitar a abertura de conteúdo em serviços externos de música e mídia. O recurso não exige que você forneça ao RQS Studio a senha das plataformas de destino.</p>
-    <p>A abertura do aplicativo, reprodução, autenticação e disponibilidade dependem do dispositivo, navegador e serviço externo. Terceiros podem alterar URLs, APIs, políticas, deep linking ou bloquear redirecionamentos. O RQS Studio não garante disponibilidade contínua dessas integrações indiretas e não é afiliado, patrocinado ou endossado por Spotify, SoundCloud, YouTube ou Bandcamp, salvo indicação expressa em contrário.</p>
-
-    <h2>7. Beta Público</h2>
-    <p>O RQS Studio é atualmente oferecido como Beta Público. Durante essa fase, funcionalidades, módulos, interfaces, limites e disponibilidade podem ser modificados; bugs podem ocorrer; e resultados ou dados operacionais não devem ser tratados como armazenamento permanente.</p>
-
-    <h2>8. Limites de uso e uso razoável</h2>
-    <p>Certas funcionalidades podem estar sujeitas a limites ou quotas exibidos dentro da aplicação. Esses limites podem ser ajustados de forma prospectiva durante a Beta Pública para segurança, capacidade, prevenção de abuso ou evolução do produto.</p>
-
-    <h2>9. Uso proibido</h2>
-    <p>Você não deve utilizar o RQS Studio para:</p>
-    <ul>
-      <li>processar ou distribuir conteúdo ilegal ou em violação de direitos de terceiros;</li>
-      <li>enviar malware, código malicioso ou conteúdo destinado a comprometer sistemas;</li>
-      <li>contornar deliberadamente quotas, controles de acesso ou mecanismos de segurança;</li>
-      <li>explorar vulnerabilidades, realizar ataques ou degradar a disponibilidade do serviço;</li>
-      <li>executar scraping ou automação abusiva que imponha carga desproporcional;</li>
-      <li>realizar engenharia reversa com finalidade abusiva de contornar proteções ou explorar a infraestrutura.</li>
-    </ul>
-
-    <h2>10. Serviços de terceiros</h2>
-    <p>Partes do serviço dependem de provedores de nuvem, autenticação, hospedagem, comunicação e plataformas externas. O uso de serviços externos também pode estar sujeito aos termos e políticas dos respectivos provedores. Mudanças nesses serviços podem afetar funcionalidades do RQS Studio.</p>
-
-    <h2>11. Propriedade intelectual do RQS Studio</h2>
-    <p>O software, identidade visual, documentação, marcas, interfaces e demais elementos próprios do RQS Studio permanecem protegidos pelos direitos aplicáveis. Estes Termos não transferem a você direitos sobre esses elementos além da permissão limitada de utilizar o serviço conforme disponibilizado.</p>
-
-    <h2>12. Disponibilidade e alterações</h2>
-    <p>Podemos corrigir, atualizar, substituir, suspender ou descontinuar recursos quando necessário por razões técnicas, de segurança, operacionais ou de produto. Quando uma mudança relevante afetar materialmente o uso do serviço, procuraremos comunicá-la de forma apropriada.</p>
-
-    <h2>13. Planos pagos e futuros serviços comerciais</h2>
-    <p>O RQS Studio não possui assinatura comercial ativa nesta fase. Planos pagos poderão ser introduzidos no futuro. Quando ativados, preço, período de cobrança, renovação, cancelamento, limites aplicáveis e demais condições comerciais serão apresentados antes da contratação.</p>
-
-    <h2>14. Suspensão e encerramento</h2>
-    <p>O acesso poderá ser limitado ou suspenso quando houver abuso, risco de segurança, violação destes Termos, obrigação legal ou necessidade técnica relevante. Sempre que razoável, a medida será proporcional ao problema identificado.</p>
-
-    <h2>15. Isenções e natureza do serviço</h2>
-    <p>O RQS Studio fornece ferramentas técnicas e assistivas. Processamento de áudio e resultados automatizados dependem do material fornecido e não substituem julgamento artístico, técnico ou jurídico do usuário.</p>
-
-    <h2>16. Limitação de responsabilidade</h2>
-    <p>Na extensão permitida pela legislação aplicável, o RQS Studio não responde por perdas indiretas ou resultados comerciais decorrentes exclusivamente de expectativas artísticas, indisponibilidade de terceiros ou uso do serviço em desacordo com estes Termos. Nada nesta cláusula exclui responsabilidade que não possa ser legalmente excluída ou limitada.</p>
-
-    <h2>17. Alterações destes Termos</h2>
-    <p>Estes Termos podem ser atualizados para refletir mudanças no produto, infraestrutura, legislação ou operação. A data de atualização será indicada nesta página.</p>
-
-    <h2>18. Lei aplicável</h2>
-    <p>Estes Termos são interpretados de acordo com a legislação aplicável ao serviço e aos usuários, incluindo normas brasileiras quando pertinentes, sem afastar direitos obrigatórios que possam ser aplicáveis em outras jurisdições.</p>
-
-    <h2>19. Contato</h2>
-    <p>Para questões sobre estes Termos, suporte ou assuntos relacionados ao serviço, utilize o <a routerLink="/contact">canal oficial de contato.</a></p>
+    <h2>1. Sobre o RQS Studio</h2><p>O RQS Studio é uma plataforma MusicTech que reúne fluxos de processamento de áudio, separação de stems, preparação de setlists e geração de links de distribuição/redirecionamento. Os módulos e recursos disponíveis podem variar durante a Beta Pública.</p>
+    <h2>2. Aceitação destes Termos</h2><p>Ao acessar ou utilizar o RQS Studio, você concorda com estes Termos e com a Política de Privacidade aplicável. Se não concordar, não utilize o serviço.</p>
+    <h2>3. Elegibilidade e contas</h2><p>Algumas funcionalidades podem exigir uma conta. Você é responsável por manter o acesso à sua sessão e por utilizar métodos de autenticação de forma autorizada. Login externo ou por e-mail pode ser realizado por meio da infraestrutura de autenticação do Studio; o RQS Studio não precisa receber a senha da sua conta externa.</p><p>Se a legislação aplicável exigir autorização de responsável, essa autorização deverá existir antes do uso.</p>
+    <h2>4. Direitos sobre o conteúdo enviado</h2><p>Ao enviar conteúdo, você declara possuir ou ter obtido os direitos, licenças e permissões necessários para enviá-lo, processá-lo e utilizá-lo por meio da plataforma. Isso pode incluir conteúdo original, licenciado, gerado ou assistido por IA, stems, gravações e mixes.</p><p>O RQS Studio não adquire a propriedade da sua música. Você concede apenas autorização técnica, limitada e temporária, necessária para upload, armazenamento temporário, processamento, geração e entrega dos arquivos resultantes. Isso não constitui licença ampla para exploração comercial da sua música.</p><p>Estes Termos não determinam quem possui copyright ou outros direitos sobre conteúdo gerado ou assistido por IA.</p>
+    <h2>5. Processamento e retenção de áudio</h2><p>O processamento pode utilizar armazenamento efêmero local durante o job e object storage em nuvem. Arquivos temporários podem existir durante a execução técnica e são removidos quando o fluxo permite.</p><p>Objetos de áudio em object storage são configurados para expiração automática aproximadamente 24 horas após o upload, conforme políticas de lifecycle. A remoção física pode ocorrer posteriormente conforme o provedor. O Studio não deve ser usado como backup ou armazenamento permanente.</p>
+    <h2>6. Módulos da plataforma</h2><h3>6.1. MASTER — RQS DSP Core</h3><p>Realiza análise e processamento automatizado de áudio. Os resultados dependem do arquivo, parâmetros e limitações do processamento digital. Não há garantia de resultado artístico ou comercial, loudness específico, aprovação por plataforma ou melhoria subjetiva.</p><h3>6.2. SPLIT — separação de stems</h3><p>A separação é automatizada e pode produzir bleed, artefatos ou isolamento incompleto.</p><h3>6.3. BUILD — RQS Setlist Engine</h3><p>Auxilia na organização, transições e geração de sessão contínua. Não garante performance artística, mix perfeito, compatibilidade universal ou sucesso comercial.</p><h3>6.4. DEPLOY — RQS Uplink</h3><p>Recebe URLs públicas e pode gerar links de redirecionamento/deep links. Não exige senhas das plataformas de destino.</p><p>Abertura do aplicativo, reprodução, autenticação e disponibilidade dependem do dispositivo, navegador e serviço externo. Terceiros podem alterar URLs, APIs, políticas ou deep linking. O RQS Studio não é afiliado ou endossado por Spotify, SoundCloud, YouTube ou Bandcamp salvo indicação expressa.</p>
+    <h2>7. Beta Público</h2><p>Durante a Beta Pública, funcionalidades, interfaces, limites e disponibilidade podem mudar; bugs podem ocorrer; e dados ou saídas não devem ser tratados como armazenamento permanente.</p>
+    <h2>8. Limites de uso e uso razoável</h2><p>Recursos podem estar sujeitos a quotas exibidas na aplicação. Elas podem ser ajustadas prospectivamente por segurança, capacidade, prevenção de abuso ou evolução do produto.</p>
+    <h2>9. Uso proibido</h2><ul><li>processar ou distribuir conteúdo ilegal ou que viole direitos de terceiros;</li><li>enviar malware ou código malicioso;</li><li>contornar quotas, controles de acesso ou segurança;</li><li>explorar vulnerabilidades ou degradar o serviço;</li><li>executar scraping ou automação abusiva;</li><li>realizar engenharia reversa para contornar proteções ou explorar infraestrutura.</li></ul>
+    <h2>10. Serviços de terceiros</h2><p>Partes do serviço dependem de provedores de nuvem, autenticação, hospedagem, comunicação e plataformas externas. Mudanças nesses serviços podem afetar o RQS Studio.</p>
+    <h2>11. Propriedade intelectual do RQS Studio</h2><p>Software, identidade visual, documentação, marcas, interfaces e demais elementos próprios permanecem protegidos. Estes Termos não transferem propriedade desses elementos.</p>
+    <h2>12. Disponibilidade e alterações</h2><p>Podemos corrigir, atualizar, substituir, suspender ou descontinuar recursos por razões técnicas, de segurança, operacionais ou de produto.</p>
+    <h2>13. Planos pagos e futuros serviços comerciais</h2><p>Não existe assinatura comercial ativa nesta fase. Se planos pagos forem ativados, preço, cobrança, renovação, cancelamento, limites e demais condições serão apresentados antes da contratação.</p>
+    <h2>14. Suspensão e encerramento</h2><p>O acesso pode ser limitado ou suspenso por abuso, risco de segurança, violação destes Termos, obrigação legal ou necessidade técnica relevante.</p>
+    <h2>15. Isenções e natureza do serviço</h2><p>O RQS Studio fornece ferramentas técnicas e assistivas. Resultados automatizados não substituem julgamento artístico, técnico ou jurídico do usuário.</p>
+    <h2>16. Limitação de responsabilidade</h2><p>Na extensão permitida pela lei, o RQS Studio não responde por perdas indiretas ou resultados comerciais decorrentes exclusivamente de expectativas artísticas, indisponibilidade de terceiros ou uso contrário a estes Termos. Nada exclui responsabilidade que não possa ser legalmente excluída.</p>
+    <h2>17. Alterações destes Termos</h2><p>Os Termos podem ser atualizados para refletir mudanças no produto, infraestrutura, legislação ou operação.</p>
+    <h2>18. Lei aplicável</h2><p>Estes Termos são interpretados conforme a legislação aplicável ao serviço e aos usuários, incluindo normas brasileiras quando pertinentes, sem afastar direitos obrigatórios de outras jurisdições.</p>
+    <h2>19. Contato</h2><p>Para questões sobre estes Termos ou suporte, utilize o <a routerLink="/contact">canal oficial de contato</a>.</p>
+  } @else if (lang.currentLang() === 'pl') {
+    <h1>Warunki korzystania</h1><p class="update-date">Ostatnia aktualizacja: 19 sierpnia 2026</p>
+    <p>Niniejsze Warunki regulują korzystanie z <strong class="highlight">RQS Studio</strong>, obsługiwanego przez <strong>RaQuel Synths / RQS Studio</strong>. Produkt jest obecnie dostępny jako <strong>Publiczna Beta</strong>, bez aktywnej subskrypcji komercyjnej.</p>
+    <h2>1. O RQS Studio</h2><p>RQS Studio to platforma MusicTech łącząca przetwarzanie audio, separację stemów, przygotowanie setlist oraz generowanie linków dystrybucyjnych i przekierowań. Zakres modułów i funkcji może zmieniać się w czasie Publicznej Bety.</p>
+    <h2>2. Akceptacja Warunków</h2><p>Korzystając z RQS Studio, akceptujesz niniejsze Warunki oraz obowiązującą Politykę prywatności. Jeśli się z nimi nie zgadzasz, nie korzystaj z usługi.</p>
+    <h2>3. Uprawnienia i konta</h2><p>Niektóre funkcje wymagają konta. Użytkownik odpowiada za bezpieczny dostęp do swojej sesji oraz uprawnione używanie metod logowania. Logowanie zewnętrzne lub przez e-mail może odbywać się przez infrastrukturę uwierzytelniania Studio; RQS Studio nie musi otrzymywać hasła do zewnętrznego konta.</p><p>Jeśli prawo wymaga zgody rodzica lub opiekuna, musi ona zostać uzyskana przed skorzystaniem z usługi.</p>
+    <h2>4. Prawa do przesyłanych treści</h2><p>Przesyłając treści, oświadczasz, że posiadasz wymagane prawa, licencje i zgody na ich przesłanie, przetwarzanie i użycie w ramach platformy. Dotyczy to m.in. materiałów własnych, licencjonowanych, generowanych lub wspomaganych przez AI, stemów, nagrań i miksów.</p><p>RQS Studio nie przejmuje praw własności do Twojej muzyki. Udzielasz wyłącznie ograniczonego i tymczasowego upoważnienia technicznego potrzebnego do uploadu, tymczasowego przechowania, przetworzenia, wygenerowania i dostarczenia plików wynikowych. Nie jest to szeroka licencja na komercyjne wykorzystywanie Twojej muzyki.</p><p>Warunki nie rozstrzygają własności praw autorskich do treści generowanych lub wspomaganych przez AI.</p>
+    <h2>5. Przetwarzanie i retencja audio</h2><p>Przetwarzanie może korzystać z tymczasowego magazynu lokalnego podczas zadania oraz z chmurowego object storage. Pliki tymczasowe mogą istnieć podczas wykonywania operacji technicznej.</p><p>Obiekty audio w object storage są skonfigurowane do automatycznego wygaśnięcia około 24 godziny po przesłaniu zgodnie z politykami lifecycle. Fizyczne usunięcie może nastąpić później zależnie od dostawcy. Studio nie jest usługą backupu ani trwałego magazynu.</p>
+    <h2>6. Moduły platformy</h2><h3>6.1. MASTER — RQS DSP Core</h3><p>Zapewnia automatyczną analizę i przetwarzanie audio. Wynik zależy od pliku źródłowego, parametrów i ograniczeń DSP. RQS nie gwarantuje rezultatu artystycznego lub komercyjnego, konkretnego loudness, akceptacji platformy ani subiektywnej poprawy.</p><h3>6.2. SPLIT — separacja stemów</h3><p>Proces jest automatyczny i może powodować bleed, artefakty lub niepełną izolację.</p><h3>6.3. BUILD — RQS Setlist Engine</h3><p>Pomaga organizować utwory, przejścia i renderować ciągłą sesję. Nie gwarantuje idealnego miksu, uniwersalnej kompatybilności ani sukcesu komercyjnego.</p><h3>6.4. DEPLOY — RQS Uplink</h3><p>Przetwarza publiczne URL-e podane przez użytkownika i może generować przekierowania/deep linki. Nie wymaga haseł do platform docelowych.</p><p>Otwarcie aplikacji, odtwarzanie, logowanie i dostępność zależą od urządzenia, przeglądarki i zewnętrznego serwisu. Zewnętrzni dostawcy mogą zmieniać URL-e, API, zasady lub mechanizmy deep linking. RQS Studio nie jest powiązane ani sponsorowane przez Spotify, SoundCloud, YouTube lub Bandcamp, chyba że wyraźnie wskazano inaczej.</p>
+    <h2>7. Publiczna Beta</h2><p>W czasie Publicznej Bety funkcje, interfejsy, limity i dostępność mogą się zmieniać; mogą wystąpić błędy; danych ani wyników nie należy traktować jako trwałego magazynu.</p>
+    <h2>8. Limity użycia i fair use</h2><p>Niektóre funkcje mogą podlegać limitom widocznym w aplikacji. Limity mogą być zmieniane na przyszłość z powodów bezpieczeństwa, pojemności, zapobiegania nadużyciom lub rozwoju produktu.</p>
+    <h2>9. Zabronione użycie</h2><ul><li>przetwarzanie lub dystrybucja treści nielegalnych albo naruszających prawa osób trzecich;</li><li>przesyłanie malware lub złośliwego kodu;</li><li>omijanie limitów, kontroli dostępu lub zabezpieczeń;</li><li>wykorzystywanie podatności lub pogarszanie dostępności usługi;</li><li>nadużywające scraping lub automatyzacja;</li><li>inżynieria wsteczna w celu obchodzenia zabezpieczeń lub eksploatacji infrastruktury.</li></ul>
+    <h2>10. Usługi zewnętrzne</h2><p>Części usługi zależą od dostawców chmury, uwierzytelniania, hostingu, komunikacji i platform zewnętrznych. Ich zmiany mogą wpływać na RQS Studio.</p>
+    <h2>11. Własność intelektualna RQS Studio</h2><p>Oprogramowanie, identyfikacja wizualna, dokumentacja, znaki i interfejsy RQS Studio pozostają chronione. Warunki nie przenoszą własności tych elementów.</p>
+    <h2>12. Dostępność i zmiany</h2><p>Możemy poprawiać, aktualizować, zastępować, zawieszać lub wycofywać funkcje z przyczyn technicznych, bezpieczeństwa, operacyjnych lub produktowych.</p>
+    <h2>13. Płatne plany i przyszłe usługi komercyjne</h2><p>Obecnie nie ma aktywnej subskrypcji komercyjnej. Jeśli płatne plany zostaną uruchomione, cena, okres rozliczeniowy, odnowienie, anulowanie, limity i pozostałe warunki zostaną pokazane przed zakupem.</p>
+    <h2>14. Zawieszenie i zakończenie</h2><p>Dostęp może zostać ograniczony lub zawieszony w przypadku nadużycia, ryzyka bezpieczeństwa, naruszenia Warunków, obowiązku prawnego lub istotnej potrzeby technicznej.</p>
+    <h2>15. Charakter usługi</h2><p>RQS Studio dostarcza narzędzia techniczne i wspomagające. Wyniki automatyczne nie zastępują artystycznej, technicznej ani prawnej oceny użytkownika.</p>
+    <h2>16. Ograniczenie odpowiedzialności</h2><p>W zakresie dozwolonym przez prawo RQS Studio nie odpowiada za straty pośrednie lub wyniki komercyjne wynikające wyłącznie z oczekiwań artystycznych, niedostępności usług zewnętrznych albo użycia niezgodnego z Warunkami. Nie wyłącza to odpowiedzialności, której prawo nie pozwala wyłączyć.</p>
+    <h2>17. Zmiany Warunków</h2><p>Warunki mogą być aktualizowane w związku ze zmianami produktu, infrastruktury, prawa lub sposobu działania.</p>
+    <h2>18. Prawo właściwe</h2><p>Warunki są interpretowane zgodnie z prawem właściwym dla usługi i jej użytkowników, w tym prawem brazylijskim tam, gdzie ma zastosowanie, bez naruszania bezwzględnie obowiązujących praw w innych jurysdykcjach.</p>
+    <h2>19. Kontakt</h2><p>W sprawach dotyczących Warunków lub wsparcia skorzystaj z <a routerLink="/contact">oficjalnego kanału kontaktowego</a>.</p>
+  } @else if (lang.currentLang() === 'fr') {
+    <h1>Conditions d’utilisation</h1><p class="update-date">Dernière mise à jour : 19 août 2026</p>
+    <p>Les présentes Conditions régissent l’utilisation de <strong class="highlight">RQS Studio</strong>, exploité par <strong>RaQuel Synths / RQS Studio</strong>. Le produit est actuellement proposé en <strong>bêta publique</strong>, sans abonnement commercial actif.</p>
+    <h2>1. À propos de RQS Studio</h2><p>RQS Studio est une plateforme MusicTech réunissant traitement audio, séparation des stems, préparation de setlists et génération de liens de distribution/redirection. Les modules et fonctionnalités peuvent évoluer pendant la bêta publique.</p>
+    <h2>2. Acceptation des Conditions</h2><p>En accédant à RQS Studio ou en l’utilisant, vous acceptez les présentes Conditions ainsi que la Politique de confidentialité applicable. Si vous n’êtes pas d’accord, n’utilisez pas le service.</p>
+    <h2>3. Éligibilité et comptes</h2><p>Certaines fonctionnalités peuvent nécessiter un compte. Vous êtes responsable de l’accès à votre session et de l’utilisation autorisée des méthodes d’authentification. La connexion externe ou par e-mail peut passer par l’infrastructure d’authentification du Studio ; RQS Studio n’a pas besoin de recevoir le mot de passe de votre compte externe.</p><p>Si la loi applicable exige l’autorisation d’un parent ou tuteur, celle-ci doit être obtenue avant l’utilisation.</p>
+    <h2>4. Droits sur les contenus envoyés</h2><p>En envoyant un contenu, vous déclarez disposer des droits, licences et autorisations nécessaires pour l’envoyer, le traiter et l’utiliser via la plateforme. Cela peut inclure des contenus originaux, sous licence, générés ou assistés par IA, des stems, enregistrements et mixes.</p><p>RQS Studio n’acquiert aucun droit de propriété sur votre musique. Vous accordez uniquement une autorisation technique, limitée et temporaire, nécessaire à l’upload, au stockage temporaire, au traitement, à la génération et à la livraison des fichiers résultants. Il ne s’agit pas d’une licence générale d’exploitation commerciale.</p><p>Les présentes Conditions ne déterminent pas la titularité des droits d’auteur sur les contenus générés ou assistés par IA.</p>
+    <h2>5. Traitement et conservation de l’audio</h2><p>Le traitement peut utiliser un stockage local éphémère pendant le job ainsi qu’un object storage cloud. Des fichiers temporaires peuvent exister pendant l’exécution technique.</p><p>Les objets audio stockés temporairement sont configurés pour expirer automatiquement environ 24 heures après l’upload selon les politiques de lifecycle. La suppression physique peut intervenir plus tard selon le fournisseur. Le Studio ne doit pas être utilisé comme sauvegarde ou stockage permanent.</p>
+    <h2>6. Modules de la plateforme</h2><h3>6.1. MASTER — RQS DSP Core</h3><p>Effectue une analyse et un traitement audio automatisés. Les résultats dépendent du fichier source, des paramètres et des limites inhérentes au DSP. RQS Studio ne garantit ni résultat artistique ou commercial, ni loudness précis, ni validation par une plateforme, ni amélioration subjective.</p><h3>6.2. SPLIT — séparation des stems</h3><p>La séparation est automatisée et peut produire du bleed, des artefacts ou une isolation incomplète.</p><h3>6.3. BUILD — RQS Setlist Engine</h3><p>Aide à organiser les morceaux, régler les transitions et générer une session continue. Il ne garantit pas un mix parfait, une compatibilité universelle ou un succès commercial.</p><h3>6.4. DEPLOY — RQS Uplink</h3><p>Traite les URL publiques fournies par l’utilisateur et peut générer des redirections/deep links. Il ne nécessite pas les mots de passe des plateformes de destination.</p><p>L’ouverture d’application, la lecture, l’authentification et la disponibilité dépendent de l’appareil, du navigateur et du service externe. Des tiers peuvent modifier leurs URL, API, politiques ou deep links. RQS Studio n’est ni affilié, ni sponsorisé, ni approuvé par Spotify, SoundCloud, YouTube ou Bandcamp, sauf indication expresse.</p>
+    <h2>7. Bêta publique</h2><p>Pendant la bêta publique, les fonctionnalités, interfaces, limites et disponibilités peuvent changer ; des bugs peuvent survenir ; les données ou résultats ne doivent pas être considérés comme un stockage permanent.</p>
+    <h2>8. Limites d’utilisation et usage raisonnable</h2><p>Certaines fonctionnalités peuvent être soumises aux quotas affichés dans l’application. Ces limites peuvent être ajustées pour des raisons de sécurité, capacité, prévention des abus ou évolution du produit.</p>
+    <h2>9. Usages interdits</h2><ul><li>traiter ou distribuer des contenus illégaux ou portant atteinte aux droits de tiers ;</li><li>envoyer des logiciels malveillants ou du code malveillant ;</li><li>contourner les quotas, contrôles d’accès ou mécanismes de sécurité ;</li><li>exploiter des vulnérabilités ou dégrader la disponibilité du service ;</li><li>effectuer du scraping ou une automatisation abusive ;</li><li>procéder à de l’ingénierie inverse afin de contourner des protections ou exploiter l’infrastructure.</li></ul>
+    <h2>10. Services tiers</h2><p>Certaines parties du service dépendent de fournisseurs cloud, d’authentification, d’hébergement, de communication et de plateformes externes. Leurs changements peuvent affecter RQS Studio.</p>
+    <h2>11. Propriété intellectuelle de RQS Studio</h2><p>Le logiciel, l’identité visuelle, la documentation, les marques, interfaces et autres éléments propres à RQS Studio restent protégés. Les présentes Conditions n’en transfèrent pas la propriété.</p>
+    <h2>12. Disponibilité et modifications</h2><p>Nous pouvons corriger, mettre à jour, remplacer, suspendre ou arrêter des fonctionnalités pour des raisons techniques, de sécurité, opérationnelles ou produit.</p>
+    <h2>13. Forfaits payants et futurs services commerciaux</h2><p>Aucun abonnement commercial n’est actuellement actif. Si des forfaits payants sont lancés, le prix, la période de facturation, le renouvellement, l’annulation, les limites et les autres conditions seront affichés avant l’achat.</p>
+    <h2>14. Suspension et résiliation</h2><p>L’accès peut être limité ou suspendu en cas d’abus, de risque de sécurité, de violation des présentes Conditions, d’obligation légale ou de nécessité technique importante.</p>
+    <h2>15. Nature du service</h2><p>RQS Studio fournit des outils techniques et d’assistance. Les résultats automatisés ne remplacent pas le jugement artistique, technique ou juridique de l’utilisateur.</p>
+    <h2>16. Limitation de responsabilité</h2><p>Dans la mesure permise par la loi, RQS Studio n’est pas responsable des pertes indirectes ou résultats commerciaux découlant exclusivement d’attentes artistiques, de l’indisponibilité de tiers ou d’un usage contraire aux présentes Conditions. Cette clause n’exclut aucune responsabilité qui ne peut légalement être exclue.</p>
+    <h2>17. Modification des Conditions</h2><p>Les Conditions peuvent être mises à jour pour refléter les changements du produit, de l’infrastructure, de la législation ou de l’exploitation.</p>
+    <h2>18. Droit applicable</h2><p>Les présentes Conditions sont interprétées selon les lois applicables au service et à ses utilisateurs, y compris le droit brésilien lorsque pertinent, sans écarter les droits impératifs pouvant s’appliquer dans d’autres juridictions.</p>
+    <h2>19. Contact</h2><p>Pour toute question concernant ces Conditions ou le support, utilisez le <a routerLink="/contact">canal de contact officiel</a>.</p>
   } @else {
-    <h1>Terms of Service</h1>
-    <p class="update-date">Last Updated: August 19, 2026</p>
-
+    <h1>Terms of Service</h1><p class="update-date">Last Updated: August 19, 2026</p>
     <p>These Terms govern use of <strong class="highlight">RQS Studio</strong>, operated by <strong>RaQuel Synths / RQS Studio</strong>. The product is currently offered as a <strong>Public Beta</strong> with no active commercial subscription.</p>
-
-    <h2>1. About RQS Studio</h2>
-    <p>RQS Studio is a MusicTech platform combining audio processing, stem separation, setlist preparation and distribution/redirection link workflows. Available modules and features may change during Public Beta.</p>
-
-    <h2>2. Acceptance of Terms</h2>
-    <p>By accessing or using RQS Studio, you agree to these Terms and the applicable Privacy Policy. If you do not agree, do not use the service.</p>
-
-    <h2>3. Eligibility and Accounts</h2>
-    <p>Some features may require an account. You are responsible for maintaining access to your session and using authentication methods in an authorized manner. Where external login is available, authentication may be handled through compatible providers and the Studio authentication infrastructure; RQS Studio does not need to receive your external-account password for that flow.</p>
-    <p>If applicable law requires authorization from a parent or guardian for you to use the service, that authorization must exist before use.</p>
-
-    <h2>4. Rights to Submitted Content</h2>
-    <p>By submitting content to RQS Studio, you represent that you own or have obtained the rights, licenses, authorizations and permissions necessary to submit, process and use that content through the platform. This may include original or licensed content, AI-generated or AI-assisted content, stems, recordings, mixes and related files.</p>
-    <p>RQS Studio does not acquire ownership of your music. To operate the service, you grant only a limited and temporary technical authorization necessary for upload, temporary storage, processing, generation of output files, download delivery and other operations strictly required to perform the requested workflow. This is not a broad license for RQS Studio to commercially exploit your music.</p>
-    <p>These Terms do not determine who legally owns copyright or other rights in AI-generated or AI-assisted content; that question depends on the content, tools used and applicable law.</p>
-
-    <h2>5. Audio Processing and Retention</h2>
-    <p>Processing may use ephemeral local storage during a job and cloud object storage. Local temporary files may exist while a technical job runs and are removed when the relevant workflow permits.</p>
-    <p>Audio files temporarily stored in object storage are configured for automatic expiration approximately 24 hours after upload under applicable lifecycle policies. Effective removal may occur later depending on the infrastructure provider's processing. RQS Studio should not be used as a permanent storage or backup service.</p>
-
-    <h2>6. Platform Modules</h2>
-    <h3>6.1. MASTER — RQS DSP Core</h3>
-    <p>Provides automated audio analysis and processing. Results depend on the source file, selected parameters and inherent limits of digital signal processing. RQS Studio does not guarantee an artistic or commercial outcome, a specific loudness value, streaming-platform approval or a subjective improvement in the music.</p>
-
-    <h3>6.2. SPLIT — Stem Separation</h3>
-    <p>Stem separation is automated and may produce bleed, artifacts or incomplete isolation. Results depend on the source material and are not a perfect reconstruction of the original recordings or tracks.</p>
-
-    <h3>6.3. BUILD — RQS Setlist Engine</h3>
-    <p>The Setlist Engine assists with track organization, transition settings and continuous-session rendering. It is an assistive tool and does not guarantee artistic performance, a perfect mix, universal compatibility or commercial success.</p>
-
-    <h3>6.4. DEPLOY — RQS Uplink</h3>
-    <p>RQS Uplink receives public URLs supplied by users and may generate redirect/deep links intended to make it easier to open content in external music and media services. It does not require you to provide RQS Studio with passwords for destination platforms.</p>
-    <p>App opening, playback, authentication and availability depend on the device, browser and external service. Third parties may change URLs, APIs, policies or deep-link behavior, or block redirections. RQS Studio does not guarantee continuous availability of these indirect integrations and is not affiliated with, sponsored by or endorsed by Spotify, SoundCloud, YouTube or Bandcamp unless expressly stated otherwise.</p>
-
-    <h2>7. Public Beta</h2>
-    <p>RQS Studio is currently offered as a Public Beta. During this stage, features, modules, interfaces, usage limits and availability may change; bugs may occur; and operational data or outputs should not be treated as permanent storage.</p>
-
-    <h2>8. Usage Limits and Fair Use</h2>
-    <p>Certain features may be subject to usage limits or quotas shown inside the application. Limits may be adjusted prospectively during Public Beta for security, capacity, abuse prevention or product evolution.</p>
-
-    <h2>9. Prohibited Use</h2>
-    <p>You must not use RQS Studio to:</p>
-    <ul>
-      <li>process or distribute unlawful content or infringe third-party rights;</li>
-      <li>upload malware, malicious code or material intended to compromise systems;</li>
-      <li>deliberately bypass quotas, access controls or security mechanisms;</li>
-      <li>exploit vulnerabilities, perform attacks or degrade service availability;</li>
-      <li>run abusive scraping or automation that imposes disproportionate load;</li>
-      <li>perform reverse engineering for abusive circumvention or infrastructure exploitation.</li>
-    </ul>
-
-    <h2>10. Third-Party Services</h2>
-    <p>Parts of the service depend on cloud, authentication, hosting, communications and external-platform providers. External services may also be governed by their own terms and policies, and changes by those providers may affect RQS Studio features.</p>
-
-    <h2>11. RQS Studio Intellectual Property</h2>
-    <p>RQS Studio software, visual identity, documentation, marks, interfaces and other proprietary elements remain protected by applicable rights. These Terms do not transfer ownership of those elements and grant only the limited permission required to use the service as provided.</p>
-
-    <h2>12. Availability and Changes</h2>
-    <p>We may correct, update, replace, suspend or discontinue features when needed for technical, security, operational or product reasons. Where a significant change materially affects use of the service, we will seek to communicate it appropriately.</p>
-
-    <h2>13. Paid Plans and Future Commercial Services</h2>
-    <p>RQS Studio has no active commercial subscription at this stage. Paid plans may be introduced in the future. If activated, pricing, billing period, renewal, cancellation, applicable limits and other commercial terms will be presented before purchase.</p>
-
-    <h2>14. Suspension and Termination</h2>
-    <p>Access may be limited or suspended in response to abuse, security risk, violation of these Terms, legal requirements or material technical needs. Where reasonable, the measure will be proportionate to the issue identified.</p>
-
-    <h2>15. Disclaimers and Nature of the Service</h2>
-    <p>RQS Studio provides technical and assistive tools. Audio processing and automated outputs depend on the material supplied and do not replace the user's artistic, technical or legal judgment.</p>
-
-    <h2>16. Limitation of Liability</h2>
-    <p>To the extent permitted by applicable law, RQS Studio is not responsible for indirect losses or commercial outcomes arising solely from artistic expectations, third-party unavailability or use of the service contrary to these Terms. Nothing in this section excludes liability that cannot legally be excluded or limited.</p>
-
-    <h2>17. Changes to These Terms</h2>
-    <p>These Terms may be updated to reflect changes in the product, infrastructure, law or operation. The update date will be shown on this page.</p>
-
-    <h2>18. Governing Law</h2>
-    <p>These Terms are interpreted under laws applicable to the service and its users, including Brazilian law where relevant, without excluding mandatory rights that may apply in other jurisdictions.</p>
-
-    <h2>19. Contact</h2>
-    <p>For questions about these Terms, support or service-related matters, use <a routerLink="/contact">the official contact channel.</a></p>
+    <h2>1. About RQS Studio</h2><p>RQS Studio is a MusicTech platform combining audio processing, stem separation, setlist preparation and distribution/redirection link workflows. Available modules and features may change during Public Beta.</p>
+    <h2>2. Acceptance of Terms</h2><p>By accessing or using RQS Studio, you agree to these Terms and the applicable Privacy Policy. If you do not agree, do not use the service.</p>
+    <h2>3. Eligibility and Accounts</h2><p>Some features may require an account. You are responsible for maintaining access to your session and using authentication methods in an authorized manner. External or email login may be handled through the Studio authentication infrastructure; RQS Studio does not need to receive your external-account password.</p><p>If applicable law requires authorization from a parent or guardian, that authorization must exist before use.</p>
+    <h2>4. Rights to Submitted Content</h2><p>By submitting content, you represent that you have the rights, licenses and permissions necessary to submit, process and use it through the platform. This may include original, licensed, AI-generated or AI-assisted content, stems, recordings and mixes.</p><p>RQS Studio does not acquire ownership of your music. You grant only a limited and temporary technical authorization necessary for upload, temporary storage, processing, output generation and delivery. This is not a broad license to commercially exploit your music.</p><p>These Terms do not determine copyright ownership in AI-generated or AI-assisted content.</p>
+    <h2>5. Audio Processing and Retention</h2><p>Processing may use ephemeral local storage during a job and cloud object storage. Temporary files may exist while a technical job runs.</p><p>Audio objects are configured for automatic expiration approximately 24 hours after upload under lifecycle policies. Effective removal may occur later depending on the infrastructure provider. RQS Studio is not a permanent storage or backup service.</p>
+    <h2>6. Platform Modules</h2><h3>6.1. MASTER — RQS DSP Core</h3><p>Provides automated audio analysis and processing. Results depend on the source file, selected parameters and DSP limitations. RQS Studio does not guarantee artistic or commercial outcomes, a specific loudness, platform approval or subjective improvement.</p><h3>6.2. SPLIT — Stem Separation</h3><p>Stem separation is automated and may produce bleed, artifacts or incomplete isolation.</p><h3>6.3. BUILD — RQS Setlist Engine</h3><p>Assists with track organization, transitions and continuous-session rendering. It does not guarantee a perfect mix, universal compatibility or commercial success.</p><h3>6.4. DEPLOY — RQS Uplink</h3><p>Processes public URLs supplied by users and may generate redirect/deep links. It does not require passwords for destination platforms.</p><p>App opening, playback, authentication and availability depend on the device, browser and external service. Third parties may change URLs, APIs, policies or deep linking. RQS Studio is not affiliated with, sponsored by or endorsed by Spotify, SoundCloud, YouTube or Bandcamp unless expressly stated otherwise.</p>
+    <h2>7. Public Beta</h2><p>During Public Beta, features, interfaces, limits and availability may change; bugs may occur; data or outputs should not be treated as permanent storage.</p>
+    <h2>8. Usage Limits and Fair Use</h2><p>Features may be subject to quotas shown in the application. Limits may be adjusted prospectively for security, capacity, abuse prevention or product evolution.</p>
+    <h2>9. Prohibited Use</h2><ul><li>process or distribute unlawful content or infringe third-party rights;</li><li>upload malware or malicious code;</li><li>bypass quotas, access controls or security mechanisms;</li><li>exploit vulnerabilities or degrade service availability;</li><li>run abusive scraping or automation;</li><li>perform reverse engineering to circumvent protections or exploit infrastructure.</li></ul>
+    <h2>10. Third-Party Services</h2><p>Parts of the service depend on cloud, authentication, hosting, communications and external-platform providers. Their changes may affect RQS Studio.</p>
+    <h2>11. RQS Studio Intellectual Property</h2><p>Software, visual identity, documentation, marks, interfaces and proprietary elements remain protected. These Terms do not transfer ownership of those elements.</p>
+    <h2>12. Availability and Changes</h2><p>We may correct, update, replace, suspend or discontinue features for technical, security, operational or product reasons.</p>
+    <h2>13. Paid Plans and Future Commercial Services</h2><p>No commercial subscription is active at this stage. If paid plans launch, pricing, billing, renewal, cancellation, limits and other conditions will be presented before purchase.</p>
+    <h2>14. Suspension and Termination</h2><p>Access may be limited or suspended in response to abuse, security risk, violation of these Terms, legal requirements or material technical needs.</p>
+    <h2>15. Nature of the Service</h2><p>RQS Studio provides technical and assistive tools. Automated outputs do not replace the user's artistic, technical or legal judgment.</p>
+    <h2>16. Limitation of Liability</h2><p>To the extent permitted by law, RQS Studio is not responsible for indirect losses or commercial outcomes arising solely from artistic expectations, third-party unavailability or use contrary to these Terms. Nothing excludes liability that cannot legally be excluded.</p>
+    <h2>17. Changes to These Terms</h2><p>These Terms may be updated to reflect changes in the product, infrastructure, law or operation.</p>
+    <h2>18. Governing Law</h2><p>These Terms are interpreted under laws applicable to the service and users, including Brazilian law where relevant, without excluding mandatory rights in other jurisdictions.</p>
+    <h2>19. Contact</h2><p>For questions about these Terms or support, use the <a routerLink="/contact">official contact channel</a>.</p>
   }
 
   <div class="bottom-nav">
-    <a routerLink="/app" class="primary">Voltar ao Estúdio / Back to Studio</a>
-    <a routerLink="/privacy" class="secondary">Política de Privacidade / Privacy Policy</a>
+    <a routerLink="/app" class="primary">{{ lang.currentLang() === 'pt' ? 'Voltar ao Studio' : lang.currentLang() === 'pl' ? 'Wróć do Studio' : lang.currentLang() === 'fr' ? 'Retour au Studio' : 'Back to Studio' }}</a>
+    <a routerLink="/privacy" class="secondary">{{ lang.currentLang() === 'pt' ? 'Política de Privacidade' : lang.currentLang() === 'pl' ? 'Polityka prywatności' : lang.currentLang() === 'fr' ? 'Politique de confidentialité' : 'Privacy Policy' }}</a>
   </div>
 </div>
