@@ -128,7 +128,11 @@ export class AnalyticsService {
   trackPageView(): void {
     if (!this.canTrack()) return;
 
-    const pagePath = `${window.location.pathname}${window.location.search}`;
+    // Never send query strings or fragments to GA4. OAuth codes, tokens,
+    // e-mail addresses or other user-provided values may legitimately appear
+    // there even though custom event parameters are separately filtered.
+    const pagePath = window.location.pathname || '/';
+    const pageLocation = `${window.location.origin}${pagePath}`;
     const pageKey = pagePath;
 
     if (pageKey === this.lastPageKey) {
@@ -139,7 +143,7 @@ export class AnalyticsService {
 
     this.send('event', 'page_view', {
       page_path: pagePath,
-      page_location: window.location.href,
+      page_location: pageLocation,
       page_title: this.title.getTitle() || this.document.title
     });
   }

@@ -70,6 +70,12 @@ export class AudioComparisonService implements OnDestroy {
       const defaultStart = Math.max(0, (total - previewLength) / 2);
       const start = this.preferredPreviewStart ?? defaultStart;
       this.setPreviewStart(start);
+
+      // Keep the physical source aligned as soon as metadata resolves.
+      // Without this, a very fast first Play can start at 0 before the
+      // selected Preview window is known.
+      this.originalAudio.currentTime = this.previewStart();
+      this.currentTime.set(this.previewStart());
     });
 
     this.originalAudio.addEventListener('timeupdate', () => {
