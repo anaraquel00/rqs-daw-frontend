@@ -33,22 +33,42 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
   constructor() {
     effect(() => {
       const currentLang = this.lang.currentLang();
-      const isPt = currentLang === 'pt';
       const canonicalUrl = 'https://studio.raquelsynths.com/';
-      const socialImage =
-        'https://studio.raquelsynths.com/assets/images/studio.webp';
+      const socialImage = 'https://studio.raquelsynths.com/assets/images/studio.webp';
+      const meta = {
+        pt: {
+          title: 'RQS Studio | Masterização, Stems, Setlists e Uplink',
+          description: 'RQS Studio reúne masterização, separação de stems, criação de setlists e o RQS Uplink Engine em um workflow web para criadores.',
+          shortDescription: 'Ferramentas web para masterização, stems, setlists e links musicais.',
+          locale: 'pt_BR'
+        },
+        en: {
+          title: 'RQS Studio | Mastering, Stems, Setlists & Uplink',
+          description: 'RQS Studio brings mastering, stem separation, setlist creation and the RQS Uplink Engine into one web workflow for creators.',
+          shortDescription: 'Web tools for mastering, stems, setlists and music links.',
+          locale: 'en_US'
+        },
+        pl: {
+          title: 'RQS Studio | Mastering, Stemy, Setlisty i Uplink',
+          description: 'RQS Studio łączy mastering, separację stemów, tworzenie setlist i RQS Uplink Engine w jednym webowym workflow dla twórców.',
+          shortDescription: 'Narzędzia webowe do masteringu, stemów, setlist i linków muzycznych.',
+          locale: 'pl_PL'
+        },
+        fr: {
+          title: 'RQS Studio | Mastering, Stems, Setlists et Uplink',
+          description: 'RQS Studio réunit mastering, séparation des stems, création de setlists et RQS Uplink Engine dans un workflow web pour les créateurs.',
+          shortDescription: 'Outils web pour le mastering, les stems, les setlists et les liens musicaux.',
+          locale: 'fr_FR'
+        }
+      }[currentLang];
 
       this.seo.update({
-        title: isPt
-          ? 'RQS Studio | Masterização, Stems, Setlists e Uplink'
-          : 'RQS Studio | Mastering, Stems, Setlists & Uplink',
-        description: isPt
-          ? 'RQS Studio reúne masterização, separação de stems, criação de setlists e o RQS Uplink Engine em um workflow web para criadores.'
-          : 'RQS Studio brings mastering, stem separation, setlist creation and the RQS Uplink Engine into one web workflow for creators.',
+        title: meta.title,
+        description: meta.description,
         url: canonicalUrl,
         image: socialImage,
         type: 'website',
-        locale: isPt ? 'pt_BR' : currentLang === 'pl' ? 'pl_PL' : 'en_US',
+        locale: meta.locale,
         siteName: 'RQS Studio',
         robots: 'index, follow',
         jsonLd: {
@@ -57,9 +77,7 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
           name: 'RQS Studio',
           alternateName: 'RaQuel Synths Studio',
           url: canonicalUrl,
-          description: isPt
-            ? 'Ferramentas web para masterização, stems, setlists e links musicais.'
-            : 'Web tools for mastering, stems, setlists and music links.',
+          description: meta.shortDescription,
           publisher: {
             '@type': 'Organization',
             name: 'RaQuel Synths',
@@ -71,42 +89,28 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
+    if (!isPlatformBrowser(this.platformId)) return;
 
     const mobile = window.matchMedia('(max-width: 720px)').matches;
-    const reducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches;
-
-    if (mobile || reducedMotion) {
-      return;
-    }
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (mobile || reducedMotion) return;
 
     const videos = Array.from(
-      this.host.nativeElement.querySelectorAll<HTMLVideoElement>(
-        'video.section-motion[data-src]'
-      )
+      this.host.nativeElement.querySelectorAll<HTMLVideoElement>('video.section-motion[data-src]')
     );
 
     this.videoObserver = new IntersectionObserver(
       entries => {
         for (const entry of entries) {
           const video = entry.target as HTMLVideoElement;
-
-          if (entry.isIntersecting) {
-            this.activateVideo(video);
-          } else {
+          if (entry.isIntersecting) this.activateVideo(video);
+          else {
             video.classList.remove('is-active');
             video.pause();
           }
         }
       },
-      {
-        rootMargin: '22% 0px',
-        threshold: 0.04
-      }
+      { rootMargin: '22% 0px', threshold: 0.04 }
     );
 
     videos.forEach(video => this.videoObserver?.observe(video));
@@ -114,7 +118,6 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.videoObserver?.disconnect();
-
     if (isPlatformBrowser(this.platformId)) {
       this.host.nativeElement
         .querySelectorAll<HTMLVideoElement>('video.section-motion')
@@ -131,22 +134,15 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
 
     if (!video.src) {
       const src = video.dataset['src'];
-
-      if (!src) {
-        return;
-      }
-
+      if (!src) return;
       video.src = src;
       video.addEventListener('canplay', startPlayback, { once: true });
       video.load();
       return;
     }
 
-    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-      startPlayback();
-    } else {
-      video.addEventListener('canplay', startPlayback, { once: true });
-    }
+    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) startPlayback();
+    else video.addEventListener('canplay', startPlayback, { once: true });
   }
 
   enterMainframe(): void {
