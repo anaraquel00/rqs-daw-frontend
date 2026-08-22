@@ -3,11 +3,10 @@
     <div class="topbar">
       <a routerLink="/app" class="brand">RQS STUDIO</a>
       <div class="language-switcher" aria-label="Interface language">
-        <button type="button" [class.active]="lang.currentLang() === 'en'" (click)="lang.setLanguage('en')">EN</button>
-        <span>|</span>
-        <button type="button" [class.active]="lang.currentLang() === 'pt'" (click)="lang.setLanguage('pt')">PT-BR</button>
-        <span>|</span>
-        <button type="button" [class.active]="lang.currentLang() === 'pl'" (click)="lang.setLanguage('pl')">PL</button>
+        <button type="button" [class.active]="lang.currentLang() === 'en'" (click)="lang.setLanguage('en')">EN</button><span>|</span>
+        <button type="button" [class.active]="lang.currentLang() === 'pt'" (click)="lang.setLanguage('pt')">PT</button><span>|</span>
+        <button type="button" [class.active]="lang.currentLang() === 'pl'" (click)="lang.setLanguage('pl')">PL</button><span>|</span>
+        <button type="button" [class.active]="lang.currentLang() === 'fr'" (click)="lang.setLanguage('fr')">FR</button>
       </div>
     </div>
 
@@ -17,24 +16,15 @@
     <p class="intro">{{ copy().intro }}</p>
 
     <aside class="preference-card">
-      <div>
-        <span>{{ copy().current }}</span>
-        <strong>{{ preferenceLabel() }}</strong>
-      </div>
+      <div><span>{{ copy().current }}</span><strong>{{ preferenceLabel() }}</strong></div>
       <button type="button" (click)="openPreferences()">{{ copy().manage }}</button>
     </aside>
 
     <article class="policy-content">
-      <section *ngFor="let section of copy().sections">
-        <h2>{{ section[0] }}</h2>
-        <p>{{ section[1] }}</p>
-      </section>
+      <section *ngFor="let section of copy().sections"><h2>{{ section[0] }}</h2><p>{{ section[1] }}</p></section>
     </article>
 
-    <p class="privacy-link">
-      <a routerLink="/privacy">{{ copy().privacy }}</a>
-    </p>
+    <p class="privacy-link"><a routerLink="/privacy">{{ copy().privacy }}</a></p>
   </section>
 </main>
-
 <app-footer></app-footer>
