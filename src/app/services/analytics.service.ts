@@ -51,7 +51,9 @@ export class AnalyticsService {
     'oauth_token',
     'access_token',
     'refresh_token',
-    'token'
+    'token',
+    'code',
+    'otp'
   ]);
 
   initialize(): void {
@@ -67,10 +69,10 @@ export class AnalyticsService {
 
     window.dataLayer = window.dataLayer || [];
     if (!window.gtag) {
-    window.gtag = function (...args: unknown[]) {
-    window.dataLayer.push(arguments);
-  };
-  }
+      window.gtag = function (...args: unknown[]) {
+        window.dataLayer.push(arguments);
+      };
+    }
 
     if (!this.gtagConfigured) {
       window.gtag('js', new Date());
@@ -128,7 +130,9 @@ export class AnalyticsService {
   trackPageView(): void {
     if (!this.canTrack()) return;
 
-    const pagePath = `${window.location.pathname}${window.location.search}`;
+    // Auth callbacks may contain OAuth codes, OTP metadata or errors in the
+    // query/hash. Analytics must only ever receive the canonical path.
+    const pagePath = this.sanitizedPath();
     const pageKey = pagePath;
 
     if (pageKey === this.lastPageKey) {
@@ -139,7 +143,7 @@ export class AnalyticsService {
 
     this.send('event', 'page_view', {
       page_path: pagePath,
-      page_location: window.location.href,
+      page_location: `${window.location.origin}${pagePath}`,
       page_title: this.title.getTitle() || this.document.title
     });
   }
@@ -169,7 +173,7 @@ export class AnalyticsService {
 
     this.trackPageView();
 
-    const path = window.location.pathname;
+    const path = this.sanitizedPath();
 
     if (path === '/app') {
       this.trackEvent('studio_open');
@@ -178,6 +182,12 @@ export class AnalyticsService {
     if (path === '/pricing') {
       this.trackEvent('pricing_view');
     }
+  }
+
+  private sanitizedPath(): string {
+    const path = window.location.pathname || '/';
+    if (!path.startsWith('/') || path.startsWith('//')) return '/';
+    return path;
   }
 
   private canTrack(): boolean {
