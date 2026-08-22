@@ -64,6 +64,22 @@ describe('AudioComparisonService V2 preview mapping', () => {
     expect(service.displayDuration()).toBeCloseTo(8.25, 3);
   });
 
+  it('physically positions the source when the initial Preview window resolves', () => {
+    const media = service as unknown as {
+      originalAudio: HTMLAudioElement;
+    };
+
+    spyOnProperty(media.originalAudio, 'duration', 'get').and.returnValue(60);
+    media.originalAudio.currentTime = 0;
+
+    media.originalAudio.dispatchEvent(new Event('durationchange'));
+
+    expect(service.previewStart()).toBeCloseTo(22.5, 3);
+    expect(service.previewEnd()).toBeCloseTo(37.5, 3);
+    expect(media.originalAudio.currentTime).toBeCloseTo(22.5, 3);
+    expect(service.currentTime()).toBeCloseTo(22.5, 3);
+  });
+
   it('constrains source-only audition to the selected Preview range before a master exists', async () => {
     service.duration.set(60);
     service.setPreviewStart(20);

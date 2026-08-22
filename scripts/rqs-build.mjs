@@ -1,4 +1,6 @@
 import { spawnSync } from 'node:child_process';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const target = String(process.env.RQS_BUILD_TARGET || 'production').trim().toLowerCase();
 const allowedTargets = new Set(['production', 'staging']);
@@ -9,14 +11,15 @@ if (!allowedTargets.has(target)) {
   process.exit(2);
 }
 
-const ngCommand = process.platform === 'win32' ? 'ng.cmd' : 'ng';
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const angularCli = resolve(scriptDir, '..', 'node_modules', '@angular', 'cli', 'bin', 'ng.js');
 const extraArgs = process.argv.slice(2);
 const args = ['build', '--configuration', target, ...extraArgs];
 
 console.log(`RQS_BUILD_TARGET: ${target}`);
 console.log(`RQS_BUILD_COMMAND: ng ${args.join(' ')}`);
 
-const result = spawnSync(ngCommand, args, {
+const result = spawnSync(process.execPath, [angularCli, ...args], {
   stdio: 'inherit',
   env: process.env,
 });
