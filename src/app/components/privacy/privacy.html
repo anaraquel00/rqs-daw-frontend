@@ -1,88 +1,211 @@
 <div class="terms-container">
-  <!-- Seletor de Idiomas -->
-  <div class="lang-toggle-bar">
-    <button (click)="lang.setLanguage('pt')" [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'">PT</button>
-    <span style="color: #333;">|</span>
-    <button (click)="lang.setLanguage('en')" [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'">EN</button>
+  <div class="lang-toggle-bar" aria-label="Privacy policy language">
+    <button type="button" (click)="lang.setLanguage('pt')" [attr.aria-pressed]="lang.currentLang() === 'pt'" [class.is-active]="lang.currentLang() === 'pt'">PT</button>
+    <span aria-hidden="true">|</span>
+    <button type="button" (click)="lang.setLanguage('en')" [attr.aria-pressed]="lang.currentLang() !== 'pt'" [class.is-active]="lang.currentLang() !== 'pt'">EN</button>
   </div>
 
   @if (lang.currentLang() === 'pt') {
-    <!-- 🇧🇷 POLÍTICA EM PORTUGUÊS -->
     <h1>Política de Privacidade</h1>
-    <p class="update-date">Última atualização: 29 de Julho de 2026</p>
+    <p class="update-date">Última atualização: 19 de agosto de 2026</p>
 
-    <p>A sua privacidade é sagrada para nós. Esta política descreve como tratamos os seus dados pessoais e arquivos de áudio nos domínios da <strong class="highlight">RaQuel Synths</strong>, em conformidade com as diretrizes da LGPD, GDPR e do Google AdSense:</p>
+    <p>Esta Política descreve como o <strong class="highlight">RQS Studio</strong> trata dados pessoais e dados técnicos relacionados ao uso da plataforma. Ela descreve o estado atual do produto em Beta Público e não constitui uma afirmação de conformidade absoluta ou certificação jurídica.</p>
 
-    <h2>1. Armazenamento Efêmero Seguro</h2>
-    <p>Para realizar a masterização, os arquivos são guardados temporariamente em um bucket S3 criptografado (amzn-rqs-bunker-sa) de São Paulo [1.2.6]. Todos os arquivos e uploads são deletados de forma compulsória e permanente após 24 horas [1].</p>
+    <h2>1. Sobre esta Política de Privacidade</h2>
+    <p>Esta Política se aplica ao RQS Studio e explica as principais categorias de dados tratadas, finalidades, fornecedores relevantes, retenção, segurança, direitos e canais de contato.</p>
 
-    <h2>2. Cookies de Publicidade do Google AdSense</h2>
-    <p>Este site utiliza os serviços do Google AdSense para veicular anúncios. O Google usa cookies para veicular anúncios com base em visitas anteriores dos usuários a este ou a outros sites na Internet [2]. Com o uso do cookie da DoubleClick, o Google e seus parceiros podem veicular anúncios personalizados com base nas visitas feitas a este e a outros sites da web [2].</p>
-    <p class="highlight">Você pode desativar a publicidade personalizada a qualquer momento acessando as <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" class="underline">Configurações de anúncios do Google</a> [2].</p>
+    <h2>2. Quem opera o RQS Studio</h2>
+    <p>O serviço é operado por <strong>RaQuel Synths / RQS Studio</strong>. Para questões de privacidade, dados pessoais, suporte ou Termos, utilize o nosso <a routerLink="/contact">canal de mensagens</a>.</p>
 
-     <h2>3. Dados Operacionais e de Suporte</h2>
+    <h2>3. Dados que podemos tratar</h2>
+    <p>Dependendo dos recursos utilizados, o RQS Studio pode tratar:</p>
+    <ul>
+      <li>e-mail, identificador de usuário/conta e metadados de perfil;</li>
+      <li>dados básicos recebidos de provedores de login externo quando você escolhe OAuth;</li>
+      <li>papel da conta e informações necessárias à aplicação de limites/quotas;</li>
+      <li>arquivos de áudio, nomes de arquivo e parâmetros de processamento;</li>
+      <li>URLs públicas enviadas ao RQS Uplink e metadados dos links gerados;</li>
+      <li>e-mail informado voluntariamente para lista de interesse/waitlist;</li>
+      <li>logs técnicos, eventos operacionais e informações necessárias à segurança e diagnóstico.</li>
+    </ul>
+    <p>O RQS Studio não declara coletar CPF, endereço postal, telefone, localização precisa ou biometria como parte do fluxo padrão atual.</p>
 
-    <p>
-    Além dos arquivos de áudio, a plataforma poderá processar dados
-    operacionais necessários ao funcionamento dos módulos RQS, como
-    preferências de processamento, parâmetros técnicos, informações
-    de setlists e dados de comunicação enviados pelo usuário.
-    </p>
+    <h2>4. Por que tratamos dados</h2>
+    <p>Os dados podem ser tratados para:</p>
+    <ul>
+      <li>fornecer autenticação, conta e recursos do Studio;</li>
+      <li>receber, processar e devolver arquivos de áudio;</li>
+      <li>gerar e gerenciar Uplinks/deep links;</li>
+      <li>aplicar limites, prevenir abuso e proteger a plataforma;</li>
+      <li>registrar interesse na futura oferta do RQS Studio e enviar comunicações relacionadas quando solicitadas;</li>
+      <li>diagnosticar falhas, manter segurança e melhorar a operação do serviço;</li>
+      <li>cumprir obrigações legais quando aplicáveis.</li>
+    </ul>
 
-    <p>
-    Mensagens enviadas pelo RQS Uplink Engine podem incluir nome,
-    endereço de e-mail, assunto e conteúdo da solicitação. Esses dados
-    são utilizados exclusivamente para atendimento, suporte e resposta
-    ao usuário.
-    </p>
+    <h2>5. Dados de conta e autenticação</h2>
+    <p>O RQS Studio utiliza infraestrutura Supabase para funções como autenticação, perfis/contas e banco de dados da aplicação. Quando você escolhe login por Google ou GitHub, dados necessários ao fluxo de autenticação podem ser recebidos do respectivo provedor. O RQS Studio não precisa receber a sua senha do Google ou GitHub para esse login.</p>
+    <p>O tratamento realizado pelo próprio provedor de identidade também é regido pelas políticas desse provedor.</p>
 
-    <h2>4. Provedores de Infraestrutura</h2>
+    <h2>6. Arquivos de áudio</h2>
+    <p>Arquivos podem ser processados em armazenamento efêmero local durante o job e em object storage da Amazon Web Services (AWS), incluindo infraestrutura na região de São Paulo quando aplicável ao fluxo de áudio.</p>
+    <p>Objetos de áudio temporários são configurados para expiração automática aproximadamente 24 horas após o upload conforme políticas técnicas de lifecycle. A remoção física efetiva pode ocorrer posteriormente conforme o processamento do provedor. O serviço não deve ser tratado como backup ou armazenamento permanente.</p>
 
-    <p>
-    A RQS utiliza provedores de infraestrutura e comunicação,
-    incluindo serviços de nuvem da Amazon Web Services (AWS)
-    e serviços de e-mail transacional da Brevo.
-    Esses provedores processam dados apenas na medida necessária
-    para prestar os respectivos serviços.
-    </p>
+    <h2>7. Dados do RQS Uplink</h2>
+    <p>O Uplink trata URLs públicas de música/mídia fornecidas pelo usuário, links de redirecionamento/deep links gerados e metadados relacionados que sejam necessários ao funcionamento e gerenciamento do recurso. O Uplink não é um formulário de contato e não é descrito como coletando nome, assunto e mensagem de suporte.</p>
+
+    <h2>8. Waitlist e comunicações</h2>
+    <p>Quando você envia voluntariamente seu e-mail para uma lista de interesse, ele pode ser armazenado/processado por infraestrutura Google/Firestore e por provedor de comunicação como a Brevo para registrar seu interesse em futuras ofertas do RQS Studio e enviar comunicações diretamente relacionadas a esse interesse.</p>
+    <p>A entrada na waitlist não é tratada como autorização irrestrita para marketing sem relação com a finalidade informada.</p>
+
+    <h2>9. Dados técnicos e operacionais</h2>
+    <p>Podemos tratar logs, identificadores técnicos, respostas de erro, horários de eventos e dados operacionais necessários para diagnóstico, segurança, prevenção de abuso e estabilidade. O conteúdo e a duração desses registros dependem do serviço e da necessidade operacional aplicável.</p>
+
+    <h2>10. Cookies e tecnologias semelhantes</h2>
+    <p>O Studio utiliza armazenamento local do navegador e tecnologias semelhantes para funções como preferência de idioma, sessão, estado necessário da aplicação e registro da escolha de cookies.</p>
+    <p>Com a permissão do usuário, o RQS Studio também pode utilizar Google Analytics 4 (GA4) para compreender, de forma agregada, navegação, page views e eventos de uso do produto. O GA4 não é carregado pelo Studio antes da escolha por Analytics no mecanismo de preferências de cookies.</p>
+    <p>A instrumentação atual não envia intencionalmente ao GA4 e-mail, nome, UUID de usuário, nomes de arquivos, títulos de faixas, URLs fornecidas pelo usuário, conteúdo de áudio, credenciais, tokens OAuth ou URLs S3/presigned.</p>
+    <p>Esta implementação tem finalidade de analytics de produto e medição do funil do Beta Público. Não ativamos, nesta implementação, Google Signals, personalização de anúncios, remarketing, AdSense ou eventos de compra/subscrição. O usuário pode alterar ou revogar sua escolha a qualquer momento por meio de Preferências de Cookies no footer. Consulte também nossa <a routerLink="/cookies">Política de Cookies</a>.</p>
+
+    <h2>11. Fornecedores de serviço</h2>
+    <p>Entre os fornecedores relevantes para a operação atual ou preparada estão:</p>
+    <ul>
+      <li><strong>Supabase</strong> — autenticação, perfis/contas e banco de dados da aplicação;</li>
+      <li><strong>Amazon Web Services (AWS)</strong> — computação em nuvem, processamento temporário de áudio e object storage;</li>
+      <li><strong>Vercel</strong> — hospedagem e entrega do frontend/web infrastructure;</li>
+      <li><strong>Google/Firestore</strong> — infraestrutura associada à waitlist, quando utilizada;</li>
+      <li><strong>Brevo</strong> — envio de e-mail e comunicações relacionadas à waitlist, quando utilizadas.</li>
+      <li><strong>Google Analytics 4 (Google)</strong> — analytics agregado de navegação e uso do produto, quando autorizado pelo usuário.</li>
+    </ul>
+    <p>O backend contém integração preparada para pagamentos com Stripe, mas a monetização está desativada no estado atual. Se serviços pagos forem habilitados, dados de pagamento poderão ser processados pela Stripe ou por outro provedor informado no checkout. Quando o pagamento for tratado pelo provedor, o RQS Studio não precisa armazenar diretamente os dados completos do cartão.</p>
+
+    <h2>12. Transferências internacionais</h2>
+    <p>Alguns fornecedores operam infraestrutura em múltiplos países. Portanto, determinados dados podem ser tratados fora do Brasil conforme o serviço e o provedor utilizados. Quando aplicável, o tratamento deve observar as medidas e requisitos legais pertinentes. Não afirmamos que todos os dados do Studio permanecem exclusivamente no Brasil.</p>
+
+    <h2>13. Retenção</h2>
+    <p>A retenção varia conforme a categoria:</p>
+    <ul>
+      <li><strong>Áudio:</strong> ciclo efêmero e lifecycle de object storage descritos acima.</li>
+      <li><strong>Conta/perfil:</strong> enquanto necessário para manter a conta, fornecer o serviço ou atender obrigação aplicável.</li>
+      <li><strong>Waitlist:</strong> enquanto houver finalidade válida, até cancelamento/retirada quando aplicável ou encerramento da finalidade.</li>
+      <li><strong>Uplink:</strong> enquanto necessário para manter os links e funções escolhidas pelo usuário ou conforme necessidade operacional legítima.</li>
+      <li><strong>Logs:</strong> pelo período necessário para segurança, diagnóstico, prevenção de abuso ou obrigações aplicáveis.</li>
+      <li><strong>Registros de cobrança/legal:</strong> somente se pagamentos forem ativados e conforme obrigações aplicáveis.</li>
+    </ul>
+
+    <h2>14. Segurança</h2>
+    <p>O RQS Studio utiliza controles técnicos e operacionais destinados a reduzir riscos de acesso não autorizado, perda e abuso. Nenhum sistema conectado à Internet pode garantir segurança absoluta, e as medidas são ajustadas conforme a arquitetura e o estágio do produto.</p>
+
+    <h2>15. Seus direitos de privacidade</h2>
+    <p>Conforme a legislação aplicável e a situação concreta, você pode ter direitos como confirmação da existência de tratamento, acesso, correção, informação sobre compartilhamentos, anonimização/bloqueio/eliminação quando aplicável, revogação de consentimento quando essa for a base, eliminação de dados tratados com consentimento quando cabível e revisão de decisões automatizadas quando aplicável.</p>
+    <p>Para exercer direitos ou fazer uma solicitação relacionada a dados pessoais, utilize o canal de contato indicado nesta Política. Alguns pedidos podem exigir verificação razoável da identidade e podem estar sujeitos a exceções previstas em lei.</p>
+
+    <h2>16. Crianças e idade</h2>
+    <p>O RQS Studio não é direcionado especificamente a crianças. Quando a legislação aplicável exigir consentimento ou autorização de responsável para determinado usuário, o serviço deve ser utilizado apenas com essa autorização.</p>
+
+    <h2>17. Alterações desta Política</h2>
+    <p>Esta Política pode ser atualizada para refletir alterações no produto, fornecedores, práticas de dados ou requisitos aplicáveis. A data de atualização será exibida nesta página.</p>
+
+    <h2>18. Contato</h2>
+    <p>Para privacidade, solicitações sobre dados pessoais, suporte ou dúvidas sobre esta Política: <a routerLink="/contact">Fale Conosco</a></p>
   } @else {
-    <!-- 🇺🇸 POLÍTICA EM INGLÊS (MANDATÓRIO PARA AUDITORIA DO GOOGLE ADSENSE) [2] -->
     <h1>Privacy Policy</h1>
-    <p class="update-date">Last Updated: July 29, 2026</p>
+    <p class="update-date">Last Updated: August 19, 2026</p>
 
-    <p>Your privacy is highly sacred to us. This policy describes how we handle your personal data and audio files across <strong class="highlight">RaQuel Synths</strong> platforms, in compliance with GDPR, LGPD, and Google AdSense guidelines [1, 2]:</p>
+    <p>This Privacy Policy describes how <strong class="highlight">RQS Studio</strong> processes personal and technical data related to use of the platform. It describes the current Public Beta and is not a statement of absolute legal compliance or certification.</p>
 
-    <h2>1. Secure Ephemeral Storage</h2>
-    <p>To perform mastering, files are temporarily stored in an encrypted S3 bucket (amzn-rqs-bunker-sa) located in São Paulo [1.2.6]. All files and uploads are permanently deleted from our servers after 24 hours [1].</p>
+    <h2>1. About This Privacy Policy</h2>
+    <p>This Policy applies to RQS Studio and explains key data categories, purposes, relevant providers, retention, security, privacy rights and contact channels.</p>
 
-    <h2>2. Google AdSense Advertising Cookies</h2>
-    <p>This website uses Google AdSense services to serve advertisements. Google uses cookies to serve ads based on user's prior visits to this website or other websites on the Internet [2]. Google's use of the DoubleClick cookie enables it and its partners to serve personalized ads based on visits to this site and/or other sites on the Internet [2].</p>
-    <p class="highlight">You may opt out of personalized advertising at any time by visiting <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" class="underline">Google Ads Settings</a> [2].</p>
+    <h2>2. Who Operates RQS Studio</h2>
+    <p>The service is operated by <strong>RaQuel Synths / RQS Studio</strong>. For privacy, personal-data requests, support or Terms questions, use our <a routerLink="/contact">support channel</a>.</p>
 
-     <h2>3. Operational and Support Data</h2>
+    <h2>3. Data We Process</h2>
+    <p>Depending on the features you use, RQS Studio may process:</p>
+    <ul>
+      <li>email, user/account identifiers and profile metadata;</li>
+      <li>basic profile data received from external login providers when you choose OAuth;</li>
+      <li>account role and information needed to apply usage limits/quotas;</li>
+      <li>audio files, file names and processing parameters;</li>
+      <li>public URLs submitted to RQS Uplink and metadata for generated links;</li>
+      <li>email voluntarily submitted to an interest list/waitlist;</li>
+      <li>technical logs, operational events and information needed for security and diagnostics.</li>
+    </ul>
+    <p>RQS Studio does not describe CPF/tax ID, postal address, phone number, precise location or biometrics as part of its current standard workflow.</p>
 
-      <p>
-      In addition to audio files, the platform may process operational
-      data required for RQS modules to function, such as processing
-      preferences, technical parameters, setlist information, and
-      communication data voluntarily submitted by the user.
-      </p>
+    <h2>4. Why We Process Data</h2>
+    <p>Data may be processed to:</p>
+    <ul>
+      <li>provide authentication, accounts and Studio features;</li>
+      <li>receive, process and return audio files;</li>
+      <li>generate and manage Uplinks/deep links;</li>
+      <li>apply limits, prevent abuse and protect the platform;</li>
+      <li>record interest in future RQS Studio offerings and send related communications when requested;</li>
+      <li>diagnose failures, maintain security and improve service operation;</li>
+      <li>meet legal obligations where applicable.</li>
+    </ul>
 
-      <p>
-      Messages submitted through the RQS Uplink Engine may include name,
-      email address, subject, and message content. This information is used
-      solely for customer service, support, and responding to the user.
-      </p>
+    <h2>5. Account and Authentication Data</h2>
+    <p>RQS Studio uses Supabase infrastructure for functions such as authentication, profile/account data and the application database. If you choose Google or GitHub login, data needed for authentication may be received from the selected provider. RQS Studio does not need to receive your Google or GitHub password for this login flow.</p>
+    <p>Processing carried out by the identity provider itself is also governed by that provider's policies.</p>
 
-      <h2>4. Infrastructure Providers</h2>
+    <h2>6. Audio Files</h2>
+    <p>Audio may be processed in ephemeral local storage while a job runs and in Amazon Web Services (AWS) object storage, including infrastructure in the São Paulo region where applicable to the audio workflow.</p>
+    <p>Temporary audio objects are configured for automatic expiration approximately 24 hours after upload under technical lifecycle policies. Effective physical removal may occur later depending on provider processing. The service should not be treated as permanent storage or backup.</p>
 
-      <p>
-      RQS uses infrastructure and communication providers,
-      including cloud services from Amazon Web Services (AWS)
-      and transactional email services from Brevo.
-      These providers process data only to the extent necessary
-      to provide their respective services.
-      </p>
+    <h2>7. Uplink Data</h2>
+    <p>RQS Uplink processes public music/media URLs supplied by users, generated redirect/deep links and related metadata needed to operate and manage the feature. Uplink is not a contact form and is not described as collecting a support name, subject and message.</p>
+
+    <h2>8. Waitlist and Communications</h2>
+    <p>When you voluntarily submit your email to an interest list, it may be stored/processed using Google/Firestore infrastructure and a communications provider such as Brevo to record interest in future RQS Studio offerings and send communications directly related to that interest.</p>
+    <p>Joining the waitlist is not treated as unrestricted consent for unrelated marketing.</p>
+
+    <h2>9. Technical and Operational Data</h2>
+    <p>We may process logs, technical identifiers, error responses, event times and operational data needed for diagnostics, security, abuse prevention and service stability. The content and duration of these records depend on the relevant service and operational need.</p>
+
+    <h2>10. Cookies and Similar Technologies</h2>
+    <p>The Studio may use browser local storage and similar technologies for functions such as language preference, session handling and application state needed for the service.</p>
+    <p>The current Studio frontend audit did not find active Google AdSense implementation, publisher tags or ad units; this Policy therefore does not describe AdSense/DoubleClick advertising cookies or personalized ads as active RQS Studio processing. If advertising is introduced in the future, this Policy and, where required, consent mechanisms will be reviewed before the relevant use.</p>
+
+    <h2>11. Service Providers</h2>
+    <p>Relevant providers for current or prepared operation include:</p>
+    <ul>
+      <li><strong>Supabase</strong> — authentication, profile/account data and application database;</li>
+      <li><strong>Amazon Web Services (AWS)</strong> — cloud computing, temporary audio processing and object storage;</li>
+      <li><strong>Vercel</strong> — web hosting, frontend delivery and web infrastructure;</li>
+      <li><strong>Google/Firestore</strong> — infrastructure associated with the waitlist where used;</li>
+      <li><strong>Brevo</strong> — email and waitlist-related communications where used.</li>
+    </ul>
+    <p>The backend contains a prepared Stripe payment integration, but monetization is disabled in the current product state. If paid services are enabled, payment data may be processed by Stripe or another provider disclosed at checkout. When payment is handled by the payment provider, RQS Studio does not need to store complete payment-card data directly.</p>
+
+    <h2>12. International Data Transfers</h2>
+    <p>Some providers operate infrastructure across multiple countries. Accordingly, certain data may be processed outside Brazil depending on the service and provider used. Where applicable, processing should observe relevant legal requirements and safeguards. We do not state that all RQS Studio data remains exclusively in Brazil.</p>
+
+    <h2>13. Data Retention</h2>
+    <p>Retention varies by category:</p>
+    <ul>
+      <li><strong>Audio:</strong> ephemeral processing and object-storage lifecycle described above.</li>
+      <li><strong>Account/profile:</strong> while needed to maintain the account, provide the service or meet applicable obligations.</li>
+      <li><strong>Waitlist:</strong> while a valid purpose remains, until opt-out/withdrawal where applicable, or until that purpose ends.</li>
+      <li><strong>Uplink:</strong> while needed to maintain user-selected links/features or for a legitimate operational need.</li>
+      <li><strong>Logs:</strong> for the period needed for security, diagnostics, abuse prevention or applicable obligations.</li>
+      <li><strong>Billing/legal records:</strong> only if payments are activated and as required by applicable obligations.</li>
+    </ul>
+
+    <h2>14. Security</h2>
+    <p>RQS Studio uses technical and operational controls intended to reduce risks of unauthorized access, loss and abuse. No Internet-connected system can guarantee absolute security, and measures are adjusted as the architecture and product stage evolve.</p>
+
+    <h2>15. Your Privacy Rights</h2>
+    <p>Depending on applicable law and the specific situation, you may have rights such as confirmation of processing, access, correction, information about sharing, anonymization/blocking/deletion where applicable, withdrawal of consent where consent is the legal basis, deletion of consent-based data where applicable, and review of automated decisions where applicable.</p>
+    <p>To exercise rights or make a personal-data request, use the contact channel in this Policy. Some requests may require reasonable identity verification and may be subject to exceptions provided by law.</p>
+
+    <h2>16. Children and Age</h2>
+    <p>RQS Studio is not specifically directed to children. Where applicable law requires consent or authorization from a parent or guardian for a user, the service should be used only with that authorization.</p>
+
+    <h2>17. Changes to This Policy</h2>
+    <p>This Policy may be updated to reflect changes in the product, providers, data practices or applicable requirements. The update date will be shown on this page.</p>
+
+    <h2>18. Contact</h2>
+    <p>For privacy, personal-data requests, support or questions about this Policy: <a routerLink="/contact">Contact Us</a></p>
   }
 
   <div class="bottom-nav">

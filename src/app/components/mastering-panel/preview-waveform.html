@@ -1,0 +1,23 @@
+<div
+  #waveformHost
+  class="waveform-host"
+  [class.waveform-disabled]="disabled"
+  (pointerdown)="onHostPointerDown($event)"
+  (pointermove)="onHostPointerMove($event)"
+  (pointerup)="onHostPointerUp($event)"
+  (pointercancel)="onHostPointerUp($event)">
+  <canvas #waveformCanvas class="waveform-canvas" aria-hidden="true"></canvas>
+  <div
+    class="preview-region"
+    [style.left.%]="previewLeftPercent()"
+    [style.width.%]="previewWidthPercent()"
+    (pointerdown)="onRegionPointerDown($event)"
+    role="slider"
+    aria-label="15-second Preview source range"
+    [attr.aria-valuemin]="0"
+    [attr.aria-valuemax]="duration"
+    [attr.aria-valuenow]="previewStart">
+    <span class="preview-grip">↔ {{ rangeLabel() }}</span>
+  </div>
+  <div class="waveform-playhead" [style.left.%]="playheadPercent()" aria-hidden="true"></div>
+</div>

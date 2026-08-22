@@ -1,8 +1,11 @@
 /* 📟 RQS CYBERPUNK FOOTER */
 :host {
-  display: block;   /* Força o <app-footer> a se comportar como uma div block */
-  width: 100%;      /* Garante que ele ocupe todo o espaço horizontal da tela */
-  clear: both;      /* Garante que ele quebre a linha abaixo do grid de cards */
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  clear: both;
 }
 
 .cyber-footer {
@@ -154,6 +157,56 @@
       }
 
       .dot { color: #333; }
+    }
+  }
+}
+
+.cookie-preferences-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #555;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #8b949e;
+  }
+}
+
+/* Prevent legal navigation from widening the page/footer */
+.cyber-footer {
+  box-sizing: border-box;
+  width: 100%;
+
+  .footer-bottom {
+    min-width: 0;
+  }
+
+  .legal-links {
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 8px;
+
+    a,
+    .cookie-preferences-link {
+      white-space: normal;
+    }
+  }
+}
+
+@media (max-width: 680px) {
+  .cyber-footer {
+    .footer-bottom {
+      align-items: flex-start;
+    }
+
+    .legal-links {
+      width: 100%;
+      justify-content: flex-start;
     }
   }
 }

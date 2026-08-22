@@ -1,0 +1,153 @@
+<main class="pricing-page">
+  <section class="pricing-hero shell">
+    <div class="hero-nav">
+      <a routerLink="/app" class="brand">RQS STUDIO</a>
+      <div class="language-switcher" aria-label="Interface language">
+        <button type="button" [class.active]="lang.currentLang() === 'en'" (click)="lang.setLanguage('en')">EN</button>
+        <span>|</span>
+        <button type="button" [class.active]="lang.currentLang() === 'pt'" (click)="lang.setLanguage('pt')">PT-BR</button>
+        <span>|</span>
+        <button type="button" [class.active]="lang.currentLang() === 'pl'" (click)="lang.setLanguage('pl')">PL</button>
+      </div>
+    </div>
+
+    <p class="eyebrow">{{ copy().eyebrow }}</p>
+    <h1>{{ copy().title }}</h1>
+    <p class="hero-subtitle">{{ copy().subtitle }}</p>
+    <div class="beta-notice">{{ copy().inactive }}</div>
+
+    <div class="currency-control" aria-label="Pricing currency">
+      <span>CURRENCY</span>
+      <div class="currency-selector">
+        <button type="button" [class.active]="currency() === 'BRL'" (click)="setCurrency('BRL')">BRL</button>
+        <span>|</span>
+        <button type="button" [class.active]="currency() === 'USD'" (click)="setCurrency('USD')">USD</button>
+        <span>|</span>
+        <button type="button" [class.active]="currency() === 'PLN'" (click)="setCurrency('PLN')">PLN</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="plans shell" aria-label="RQS Studio pricing plans">
+    <article class="plan-card free">
+      <div class="card-topline"><span>FREE</span><span class="status-chip">{{ copy().publicBeta }}</span></div>
+      <h2>{{ copy().freeTagline }}</h2>
+      <div class="price-row"><strong>{{ formatPrice('free') }}</strong></div>
+      <p class="price-status">{{ copy().freeCurrentAccess }}</p>
+      <ul>
+        <li>{{ copy().freeItem1 }}</li>
+        <li>{{ copy().freeItem2 }}</li>
+        <li>{{ copy().freeItem3 }}</li>
+        <li>{{ copy().freeItem4 }}</li>
+      </ul>
+      <a routerLink="/app" class="plan-cta secondary">{{ copy().openStudio }}</a>
+    </article>
+
+    <article class="plan-card">
+      <div class="card-topline"><span>MASTER</span></div>
+      <h2>{{ copy().masterTagline }}</h2>
+      <div class="price-row"><strong>{{ formatPrice('master') }}</strong><span>{{ copy().monthly }}</span></div>
+      <p class="price-status">{{ copy().previewLabel }}</p>
+      <p class="feature-heading">{{ copy().features }}</p>
+      <ul>
+        <li>{{ copy().masterItem1 }}</li>
+        <li>{{ copy().masterItem2 }}</li>
+        <li>{{ copy().masterItem3 }}</li>
+        <li>{{ copy().proposedQuota }}: 20 Full Masters/month</li>
+      </ul>
+      <button type="button" class="plan-cta" (click)="scrollToWaitlist('master')">{{ copy().joinWaitlist }}</button>
+    </article>
+
+    <article class="plan-card plus">
+      <div class="card-topline"><span>PLUS</span><span class="badge">{{ copy().independentArtists }}</span></div>
+      <h2>{{ copy().plusTagline }}</h2>
+      <div class="price-row"><strong>{{ formatPrice('plus') }}</strong><span>{{ copy().monthly }}</span></div>
+      <p class="price-status">{{ copy().previewLabel }}</p>
+      <p class="feature-heading">{{ copy().features }}</p>
+      <ul>
+        <li>{{ copy().plusItem1 }}</li>
+        <li>{{ copy().plusItem2 }}</li>
+        <li>{{ copy().plusItem3 }}</li>
+        <li>{{ copy().proposedQuota }}: 40 Full Masters/month</li>
+      </ul>
+      <button type="button" class="plan-cta" (click)="scrollToWaitlist('plus')">{{ copy().joinWaitlist }}</button>
+    </article>
+
+    <article class="plan-card pro">
+      <div class="card-topline"><span>PRO</span><span class="badge pro-badge">{{ copy().fullStudio }}</span></div>
+      <h2>{{ copy().proTagline }}</h2>
+      <div class="price-row"><strong>{{ formatPrice('pro') }}</strong><span>{{ copy().monthly }}</span></div>
+      <p class="price-status">{{ copy().previewLabel }}</p>
+      <p class="feature-heading">{{ copy().features }}</p>
+      <ul>
+        <li>{{ copy().proItem1 }}</li>
+        <li>{{ copy().proItem2 }}</li>
+        <li>{{ copy().proItem3 }}</li>
+        <li>{{ copy().proposedQuota }}: 80 Full Masters/month</li>
+        <li>{{ copy().proposedQuota }}: 10 stem jobs/month</li>
+      </ul>
+      <button type="button" class="plan-cta" (click)="scrollToWaitlist('pro')">{{ copy().joinWaitlist }}</button>
+    </article>
+  </section>
+
+  <p class="tax-note shell">{{ copy().taxes }}</p>
+
+  <section class="comparison shell">
+    <div class="section-heading">
+      <span>{{ copy().publicBeta }} // {{ copy().plannedAccess }}</span>
+      <h2>{{ copy().compareTitle }}</h2>
+      <p>{{ copy().compareIntro }}</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>{{ copy().feature }}</th><th>FREE</th><th>MASTER</th><th>PLUS</th><th>PRO</th></tr></thead>
+        <tbody>
+          <tr><th>{{ copy().price }}</th><td>{{ formatPrice('free') }}</td><td>{{ formatPrice('master') }}</td><td>{{ formatPrice('plus') }}</td><td>{{ formatPrice('pro') }}</td></tr>
+          <tr><th>{{ copy().fullMasters }}</th><td>3 total</td><td>20/mo {{ copy().planned }}</td><td>40/mo {{ copy().planned }}</td><td>80/mo {{ copy().planned }}</td></tr>
+          <tr><th>{{ copy().preview }}</th><td>{{ copy().currentBetaAccess }}</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><th>{{ copy().ab }}</th><td>{{ copy().currentBetaAccess }}</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><th>{{ copy().setlist }}</th><td>{{ copy().availableBeta }}</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · planned ✓</td><td>{{ copy().availableBeta }} · planned ✓</td></tr>
+          <tr><th>{{ copy().uplink }}</th><td>{{ copy().availableBeta }}</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · planned ✓</td><td>{{ copy().availableBeta }} · planned ✓</td></tr>
+          <tr><th>{{ copy().stems }}</th><td>{{ copy().availableBeta }}</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · 10 jobs/mo planned</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="waitlist" class="waitlist shell">
+    <div>
+      <span class="eyebrow">{{ copy().waitlistEyebrow }}</span>
+      <h2>{{ copy().waitlistTitle }}</h2>
+      <p>{{ copy().waitlistIntro }}</p>
+    </div>
+    <form (ngSubmit)="joinWaitlist()" class="waitlist-form">
+      <label for="pricing-waitlist-email">{{ copy().emailLabel }}</label>
+      <div class="waitlist-row">
+        <input id="pricing-waitlist-email" name="email" type="email" required autocomplete="email" [(ngModel)]="waitlistEmail" [placeholder]="copy().emailPlaceholder">
+        <button type="submit" [disabled]="waitlistState() === 'sending' || waitlistState() === 'success'">
+          {{ waitlistState() === 'sending' ? copy().sending : copy().joinWaitlist }}
+        </button>
+      </div>
+      <p class="form-state success" *ngIf="waitlistState() === 'success'">{{ copy().waitlistSuccess }}</p>
+      <p class="form-state error" *ngIf="waitlistState() === 'error'">{{ copy().waitlistError }}</p>
+    </form>
+  </section>
+
+  <section class="faq shell">
+    <div class="section-heading"><span>{{ copy().infoEyebrow }}</span><h2>{{ copy().faqTitle }}</h2></div>
+    <div class="faq-grid">
+      <details *ngFor="let item of copy().faq">
+        <summary>{{ item.q }}</summary>
+        <p>{{ item.a }}</p>
+        <p class="legal-shortcuts" *ngIf="item.legal === 'terms'">
+          <a routerLink="/terms">/terms</a>
+        </p>
+        <p class="legal-shortcuts" *ngIf="item.legal === 'privacy'">
+          <a routerLink="/privacy">/privacy</a>
+        </p>
+      </details>
+    </div>
+  </section>
+</main>
+<app-footer></app-footer>

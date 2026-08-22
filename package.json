@@ -4,7 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "node scripts/rqs-build.mjs",
+    "build:production": "ng build --configuration production",
+    "build:staging": "ng build --configuration staging",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:rqs-daw": "node dist/rqs-daw/server/server.mjs"
@@ -31,14 +33,10 @@
     "@angular/platform-server": "^20.3.27",
     "@angular/router": "^20.3.27",
     "@angular/ssr": "^20.3.33",
-    "@aws-sdk/client-s3": "^3.1096.0",
-    "@aws-sdk/s3-request-presigner": "^3.1096.0",
     "@supabase/supabase-js": "^2.111.0",
     "express": "^5.1.0",
     "rxjs": "~7.8.0",
-    "stripe": "^22.4.0",
     "tslib": "^2.3.0",
-    "ws": "^8.18.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {

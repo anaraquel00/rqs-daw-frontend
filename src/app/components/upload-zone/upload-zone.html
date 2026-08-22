@@ -1,8 +1,5 @@
 <div class="glass-panel">
-    <!-- 🌐 BARRA SUPERIOR: SELETOR DE IDIOMAS & CONSOLE DE LOGIN (CLERK/SUPABASE STYLE) [1.1, 1.1.9] -->
-  <div class="header-auth-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(0,240,255,0.08); padding-bottom: 10px;">
-
-  </div>
+  <div class="header-auth-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(0,240,255,0.08); padding-bottom: 10px;"></div>
 
   <div class="scanner-header">
     <h2>{{ lang.t().RQS_DSP_CORE }}</h2>
@@ -15,57 +12,40 @@
        (dragleave)="onDragLeave($event)"
        (click)="fileInput.click()"
        [class.active]="isDragging">
-
-    <div class="icon-container">
-      <span class="cyber-icon">🎧</span>
-    </div>
-
+    <div class="icon-container"><span class="cyber-icon">🎧</span></div>
     <p class="drop-text" *ngIf="!selectedFile">
       {{ lang.t().DROP_PROMPT }}<br>
       <span style="font-size: 12px; color: #00f0ff; opacity: 0.8;">{{ lang.t().OR_CLICK }}</span>
     </p>
-
     <p class="drop-text file-ready" *ngIf="selectedFile">💿 {{ selectedFile.name }} {{ lang.t().FILE_INTERCEPTED }}</p>
-
-    <input
-      type="file"
-      #fileInput
-      accept=".wav, .mp3"
-      (change)="onFileSelect($event)"
-      style="display: none;">
+    <input type="file" #fileInput accept=".wav, .mp3" (change)="onFileSelect($event)" style="display: none;">
   </div>
 
-  <!-- 🧬 PAINEL DE STEMS SEMPRE VISÍVEL (Marketing e Usabilidade Ativos!) [1] -->
   <div class="stem-action-panel" style="margin-top: 15px; margin-bottom: 15px;">
     <button
       class="btn-stem-extract"
       (click)="extrairStems()"
-      [disabled]="!selectedFile || isProcessing || isExtractingStems || isUploadingS3">
+      [disabled]="!selectedFile || masteringV2DirectUpload || isProcessing || isExtractingStems || isUploadingS3">
       {{ isExtractingStems ? lang.t().DISSECTING_MINI : lang.t().EXTRACT_STEMS }}
     </button>
-    <!-- Helper Text indica o que o usuário deve fazer para liberar a extração -->
     <p class="text-[10px] text-zinc-500 text-center mt-1.5 font-mono" *ngIf="!selectedFile">
       * {{ lang.t().UPLOAD_FIRST_STEMS }}
     </p>
   </div>
 
-  <!-- Painel de Masterização Principal -->
   <app-mastering-panel
-  *ngIf="selectedFile && !isProcessing && !isExtractingStems"
-  [originalFile]="selectedFile"
-  [isProcessing]="isProcessing || isUploadingS3"
-  [masteredAudioUrl]="processedAudioUrl"
-  [isFullMaster]="isFullMasterCompleted"
-  (processMaster)="processarMaster($event)"
-  (estiloAlterado)="trocarPerfil($any($event))">
- </app-mastering-panel>
+    *ngIf="selectedFile && !isProcessing && !isExtractingStems"
+    [originalFile]="selectedFile"
+    [isProcessing]="isProcessing || isUploadingS3"
+    [masteredAudioUrl]="processedAudioUrl"
+    [isFullMaster]="isFullMasterCompleted"
+    (processMaster)="processarMaster($event)"
+    (configChanged)="invalidateMasteringResult()">
+  </app-mastering-panel>
 
-  <!-- 📟 TERMINAL DE TELEMETRIA RQS (Mainframe Logger) -->
   <div class="cyber-terminal" *ngIf="isProcessing || isUploadingS3 || isExtractingStems">
     <div class="terminal-header">
-      <span class="dot red"></span>
-      <span class="dot yellow"></span>
-      <span class="dot green"></span>
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
       <span class="terminal-title">rqs_mainframe_logger.sh</span>
     </div>
     <div class="terminal-body" #terminalBody>
@@ -75,28 +55,26 @@
       <div class="terminal-line active-status">
         <span class="prompt">>></span>
         <span class="status-text">
-          {{ isUploadingS3 ? lang.t().SYNCHRONIZING : (isExtractingStems ? lang.t().DISSECTING : lang.t().REACTOR_PROCESSING) }}
+          {{ isUploadingS3 ? lang.t().SYNCHRONIZING : (isExtractingStems ? lang.t().DISSECTING : renderProgressStatus()) }}
         </span>
         <span class="blink-block">█</span>
       </div>
     </div>
   </div>
 
-  <!-- Seção de Download Final -->
   <div class="download-section" *ngIf="processedAudioUrl && !isProcessing">
-    <a [href]="processedAudioUrl" [download]="processedAudioName" class="btn-download">
+    <a
+      *ngIf="isFullMasterCompleted"
+      [href]="processedAudioUrl"
+      [download]="processedAudioName"
+      class="btn-download">
       {{ lang.t().MASTER_COMPLETED }}
     </a>
-
-    <button class="btn-danger" (click)="ejetarFaixa()">
-      {{ lang.t().EJECT_DECK }}
-    </button>
+    <button class="btn-danger" (click)="ejetarFaixa()">{{ lang.t().EJECT_DECK }}</button>
   </div>
 
   <app-ekg-monitor
-  *ngIf="isFullMasterCompleted && !isProcessing"
-  [audioUrl]="processedAudioUrl">
-</app-ekg-monitor>
-
-  </div>
-
+    *ngIf="isFullMasterCompleted && !isProcessing"
+    [audioUrl]="processedAudioUrl">
+  </app-ekg-monitor>
+</div>

@@ -1,0 +1,174 @@
+:host {
+  display: block;
+}
+
+.cookies-page {
+  min-height: 100vh;
+  padding: 42px 20px 24px;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(50, 217, 232, 0.08), transparent 34rem),
+    #07090c;
+  color: #e8f0f3;
+}
+
+.cookies-shell {
+  width: min(920px, 100%);
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 56px;
+}
+
+.brand {
+  color: #eaf5f7;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+}
+
+.language-switcher {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #58666d;
+}
+
+.language-switcher button {
+  border: 0;
+  background: transparent;
+  color: #7d8d94;
+  cursor: pointer;
+}
+
+.language-switcher button.active {
+  color: #4cdae7;
+}
+
+.eyebrow {
+  color: #4cdae7;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+h1 {
+  margin: 8px 0;
+  font-size: clamp(2rem, 6vw, 4rem);
+}
+
+.updated {
+  color: #73848c;
+  font-size: 0.85rem;
+}
+
+.intro {
+  max-width: 760px;
+  margin: 24px 0 28px;
+  color: #b1bfc5;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.preference-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 30px 0 48px;
+  padding: 18px;
+  border: 1px solid #26343b;
+  border-radius: 12px;
+  background: #0d1116;
+}
+
+.preference-card div {
+  display: grid;
+  gap: 5px;
+}
+
+.preference-card span {
+  color: #71838b;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.preference-card strong {
+  color: #e9f5f6;
+}
+
+.preference-card button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #4cdae7;
+  border-radius: 8px;
+  background: transparent;
+  color: #4cdae7;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.policy-content {
+  display: grid;
+  gap: 34px;
+}
+
+.policy-content section {
+  padding-bottom: 28px;
+  border-bottom: 1px solid #182127;
+}
+
+.policy-content h2 {
+  margin: 0 0 12px;
+  color: #f1f7f8;
+  font-size: 1.22rem;
+}
+
+.policy-content p {
+  margin: 0;
+  color: #aab9bf;
+  line-height: 1.8;
+}
+
+.privacy-link {
+  margin-top: 38px;
+}
+
+.privacy-link a {
+  color: #4cdae7;
+}
+
+@media (max-width: 640px) {
+  .cookies-page {
+    padding-inline: 14px;
+  }
+
+  .topbar,
+  .preference-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .preference-card button {
+    width: 100%;
+  }
+}
+/* Footer boundary fix — scoped only to /cookies */
+app-footer {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 20px 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 680px) {
+  app-footer {
+    padding-inline: 12px;
+  }
+}

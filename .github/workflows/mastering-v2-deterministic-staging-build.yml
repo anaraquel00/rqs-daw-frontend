@@ -1,0 +1,98 @@
+name: Mastering V2 Deterministic Staging Build
+
+on:
+  push:
+    branches:
+      - stage/mastering-v2-preview-build-20260816
+  pull_request:
+    branches:
+      - integration/mastering-v2-secure-p1-20260816
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  staging-build-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Verify default build remains production
+        run: |
+          npm run build
+          grep -R -F -q 'ucearnthodrltkvkmhit' dist
+          grep -R -F -q 'm2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws' dist
+
+          if grep -R -F -q 'uwrqbywapomuloresoek' dist; then
+            echo 'ERROR: staging Supabase ref leaked into default production build.'
+            exit 1
+          fi
+
+          if grep -R -F -q 'http://localhost:8080' dist; then
+            echo 'ERROR: local staging backend leaked into default production build.'
+            exit 1
+          fi
+
+          echo 'DEFAULT_BUILD_PRODUCTION_COMPATIBILITY: PASS'
+
+      - name: Build deterministic staging bundle
+        run: |
+          rm -rf dist
+          RQS_BUILD_TARGET=staging npm run build
+
+      - name: Verify staging bundle target isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          STAGING_BACKEND_URL="$(
+            sed -n "s/^[[:space:]]*baseUrl:[[:space:]]*'\([^']*\)'.*/\1/p" \
+              src/environments/environment.staging.ts | head -n 1
+          )"
+
+          if [ -z "$STAGING_BACKEND_URL" ]; then
+            echo 'ERROR: staging baseUrl could not be read from environment.staging.ts'
+            exit 1
+          fi
+
+          case "$STAGING_BACKEND_URL" in
+            *m2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws*)
+              echo 'ERROR: staging environment targets production backend.'
+              exit 1
+              ;;
+          esac
+
+          grep -R -F -q 'uwrqbywapomuloresoek' dist
+          grep -R -F -q "$STAGING_BACKEND_URL" dist
+
+          if grep -R -F -q 'ucearnthodrltkvkmhit' dist; then
+            echo 'ERROR: production Supabase ref leaked into staging bundle.'
+            exit 1
+          fi
+
+          if grep -R -F -q 'm2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws' dist; then
+            echo 'ERROR: production backend URL leaked into staging bundle.'
+            exit 1
+          fi
+
+          echo "STAGING_BACKEND_URL_BOUNDARY: $STAGING_BACKEND_URL"
+          echo 'DETERMINISTIC_STAGING_BUILD: PASS'
+
+      - name: Reject invalid build target
+        run: |
+          if RQS_BUILD_TARGET=invalid npm run build; then
+            echo 'ERROR: invalid RQS_BUILD_TARGET was accepted.'
+            exit 1
+          fi
+          echo 'INVALID_BUILD_TARGET_FAIL_CLOSED: PASS'

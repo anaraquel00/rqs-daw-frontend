@@ -19,4 +19,23 @@
     <priority>0.4</priority>
   </url>
 
+  <url>
+    <loc>https://studio.raquelsynths.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://studio.raquelsynths.com/pricing</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+
+  <url>
+    <loc>https://studio.raquelsynths.com/cookies</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
 </urlset>

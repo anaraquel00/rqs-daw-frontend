@@ -1,0 +1,90 @@
+name: Mastering V2 Environment Isolation
+
+on:
+  push:
+    branches:
+      - integration/mastering-v2-secure-p1-20260816
+  pull_request:
+    branches:
+      - integration/mastering-v2-final-beta-20260812-frontend
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-environment-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Verify AuthService uses compile-time environment
+        run: |
+          grep -F -q "environment.supabaseUrl" src/app/services/auth.service.ts
+          grep -F -q "environment.supabasePublishableKey" src/app/services/auth.service.ts
+          grep -F -q "environment.localAuthProfileBypass" src/app/services/auth.service.ts
+          if grep -F -q "ucearnthodrltkvkmhit" src/app/services/auth.service.ts; then
+            echo 'ERROR: production Supabase ref is hard-coded in AuthService.'
+            exit 1
+          fi
+          if grep -F -q "uwrqbywapomuloresoek" src/app/services/auth.service.ts; then
+            echo 'ERROR: staging Supabase ref is hard-coded in AuthService.'
+            exit 1
+          fi
+          if grep -F -q ".update({" src/app/services/auth.service.ts; then
+            echo 'ERROR: AuthService still contains a direct browser profile UPDATE path.'
+            exit 1
+          fi
+          echo 'AUTH_SERVICE_ENVIRONMENT_BOUNDARY: PASS'
+
+      - name: Build isolated production bundle
+        run: npm run build -- --configuration production --output-path dist/prod-isolation
+
+      - name: Verify production bundle contains only production Supabase target
+        run: |
+          grep -R -F -q 'ucearnthodrltkvkmhit' dist/prod-isolation
+          if grep -R -F -q 'uwrqbywapomuloresoek' dist/prod-isolation; then
+            echo 'ERROR: staging Supabase ref leaked into production bundle.'
+            exit 1
+          fi
+          if grep -R -F -q 'eawrx5jdefz4vczrza4bqhcoya0umabz.lambda-url.sa-east-1.on.aws' dist/prod-isolation; then
+            echo 'ERROR: staging backend URL leaked into production bundle.'
+            exit 1
+          fi
+          if grep -R -F -q 'http://localhost:8080' dist/prod-isolation; then
+            echo 'ERROR: local backend URL leaked into production bundle.'
+            exit 1
+          fi
+          echo 'PRODUCTION_SUPABASE_ISOLATION: PASS'
+
+      - name: Build isolated staging bundle
+        run: npm run build -- --configuration staging --output-path dist/staging-isolation
+
+      - name: Verify staging bundle targets only isolated staging services
+        run: |
+          grep -R -F -q 'uwrqbywapomuloresoek' dist/staging-isolation
+          grep -R -F -q 'eawrx5jdefz4vczrza4bqhcoya0umabz.lambda-url.sa-east-1.on.aws' dist/staging-isolation
+          if grep -R -F -q 'ucearnthodrltkvkmhit' dist/staging-isolation; then
+            echo 'ERROR: production Supabase ref leaked into staging bundle.'
+            exit 1
+          fi
+          if grep -R -F -q 'm2ud3r3gh7vocnc3hzvhnv4s4m0dmujw.lambda-url.sa-east-1.on.aws' dist/staging-isolation; then
+            echo 'ERROR: production backend URL leaked into staging bundle.'
+            exit 1
+          fi
+          if grep -R -F -q 'http://localhost:8080' dist/staging-isolation; then
+            echo 'ERROR: localhost backend leaked into deployed staging bundle.'
+            exit 1
+          fi
+          echo 'STAGING_SERVICE_ISOLATION: PASS'

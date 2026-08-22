@@ -1,0 +1,143 @@
+<main class="contact-page">
+  <section class="contact-hero" aria-labelledby="contact-title">
+    <div class="contact-language" aria-label="Language selector">
+      <button type="button"
+        [class.is-active]="lang.currentLang() === 'en'"
+        [attr.aria-pressed]="lang.currentLang() === 'en'"
+        (click)="lang.setLanguage('en')">EN</button>
+      <span aria-hidden="true">/</span>
+      <button type="button"
+        [class.is-active]="lang.currentLang() === 'pt'"
+        [attr.aria-pressed]="lang.currentLang() === 'pt'"
+        (click)="lang.setLanguage('pt')">PT</button>
+      <span aria-hidden="true">/</span>
+      <button type="button"
+        [class.is-active]="lang.currentLang() === 'pl'"
+        [attr.aria-pressed]="lang.currentLang() === 'pl'"
+        (click)="lang.setLanguage('pl')">PL</button>
+    </div>
+
+    <p class="eyebrow">{{ copy().eyebrow }}</p>
+    <h1 id="contact-title">{{ copy().title }}</h1>
+    <p class="lead">{{ copy().subtitle }}</p>
+  </section>
+
+  <section class="contact-grid" aria-label="Contact categories">
+    <article class="contact-card">
+      <span class="index">01</span>
+      <h2>{{ copy().supportTitle }}</h2>
+      <p>{{ copy().supportDesc }}</p>
+    </article>
+
+    <article class="contact-card">
+      <span class="index">02</span>
+      <h2>{{ copy().privacyTitle }}</h2>
+      <p>{{ copy().privacyDesc }}</p>
+      <div class="inline-links">
+        <a routerLink="/privacy">PRIVACY</a>
+        <a routerLink="/terms">TERMS</a>
+      </div>
+    </article>
+
+    <article class="contact-card">
+      <span class="index">03</span>
+      <h2>{{ copy().businessTitle }}</h2>
+      <p>{{ copy().businessDesc }}</p>
+    </article>
+  </section>
+
+  <section class="contact-form-section" aria-labelledby="contact-form-title">
+    <div class="form-copy">
+      <p class="eyebrow">{{ copy().formEyebrow }}</p>
+      <h2 id="contact-form-title">{{ copy().formTitle }}</h2>
+      <p>{{ copy().formDesc }}</p>
+    </div>
+
+    <form class="contact-form" (ngSubmit)="submitContact()" #contactForm="ngForm">
+      <div class="field-row">
+        <label>
+          <span>{{ copy().nameLabel }}</span>
+          <input
+            type="text"
+            name="name"
+            [(ngModel)]="name"
+            [placeholder]="copy().namePlaceholder"
+            maxlength="120"
+            autocomplete="name"
+            required>
+        </label>
+
+        <label>
+          <span>{{ copy().emailLabel }}</span>
+          <input
+            type="email"
+            name="email"
+            [(ngModel)]="email"
+            [placeholder]="copy().emailPlaceholder"
+            maxlength="254"
+            autocomplete="email"
+            required>
+        </label>
+      </div>
+
+      <label>
+        <span>{{ copy().categoryLabel }}</span>
+        <select name="category" [(ngModel)]="category" required>
+          <option value="support">{{ copy().categories['support'] }}</option>
+          <option value="account">{{ copy().categories['account'] }}</option>
+          <option value="privacy">{{ copy().categories['privacy'] }}</option>
+          <option value="business">{{ copy().categories['business'] }}</option>
+          <option value="other">{{ copy().categories['other'] }}</option>
+        </select>
+      </label>
+
+      <label>
+        <span>{{ copy().messageLabel }}</span>
+        <textarea
+          name="message"
+          [(ngModel)]="message"
+          [placeholder]="copy().messagePlaceholder"
+          maxlength="5000"
+          rows="7"
+          required></textarea>
+      </label>
+
+      <div class="honeypot" aria-hidden="true">
+        <label>
+          Website
+          <input
+            type="text"
+            name="website"
+            [(ngModel)]="website"
+            tabindex="-1"
+            autocomplete="off">
+        </label>
+      </div>
+
+      <button
+        type="submit"
+        class="submit-button"
+        [disabled]="contactForm.invalid || sending()">
+        {{ sending() ? copy().sending : copy().submit }}
+      </button>
+
+      @if (submitState() === 'success') {
+        <p class="form-status success" role="status">{{ copy().success }}</p>
+      }
+
+      @if (submitState() === 'error') {
+        <p class="form-status error" role="alert">{{ copy().error }}</p>
+      }
+
+      <p class="privacy-note">
+        {{ copy().privacyNote }}
+        <a routerLink="/privacy">Privacy</a>
+      </p>
+    </form>
+  </section>
+
+  <nav class="contact-nav" aria-label="RQS Studio navigation">
+    <a routerLink="/app" class="primary">{{ copy().backStudio }}</a>
+    <a routerLink="/">{{ copy().backHome }}</a>
+  </nav>
+</main>
