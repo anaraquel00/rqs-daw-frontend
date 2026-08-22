@@ -46,6 +46,19 @@ export class CookieConsentComponent {
       };
     }
 
+    if (language === 'fr') {
+      return {
+        eyebrow: 'RQS STUDIO // CONFIDENTIALITÉ',
+        title: 'Préférences de cookies',
+        text: 'Nous utilisons les technologies nécessaires au fonctionnement du Studio et, avec votre autorisation, Google Analytics 4 pour comprendre de manière agrégée l’utilisation du produit.',
+        necessary: 'UNIQUEMENT NÉCESSAIRES',
+        analytics: 'ACCEPTER ANALYTICS',
+        cookies: 'Politique de cookies',
+        privacy: 'Politique de confidentialité',
+        close: 'Fermer'
+      };
+    }
+
     return {
       eyebrow: 'RQS STUDIO // PRIVACY',
       title: 'Cookie preferences',
