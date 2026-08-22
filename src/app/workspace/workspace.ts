@@ -2,11 +2,12 @@
 import { Component, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MixPanelComponent } from '../mix-panel/mix-panel';
-import { UploadZoneComponent } from "../components/upload-zone/upload-zone";
+import { UploadZoneComponent } from '../components/upload-zone/upload-zone';
 import { Footer } from '../footer/footer';
 import { AuthService } from '../services/auth.service';
+import { AuthPromptService } from '../services/auth-prompt.service';
 import { LanguageService } from '../services/language.service';
-import { RqsUplinkEngineComponent } from "../rqs-uplink-engine/rqs-uplink-engine";
+import { RqsUplinkEngineComponent } from '../rqs-uplink-engine/rqs-uplink-engine';
 import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/rqs-uplink-dashboard';
 import { SeoService } from '../services/seo.service';
 
@@ -15,44 +16,42 @@ import { SeoService } from '../services/seo.service';
   standalone: true,
   imports: [CommonModule, MixPanelComponent, UploadZoneComponent, Footer, RqsUplinkEngineComponent, RqsUplinkDashboardComponent],
   template: `
-    <!-- 🛰️ ENVELOPE DO MAINFRAME DA DAW [1.1.2] -->
     <div class="rqs-mainframe-container" style="padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between;">
-
-      <!-- 🛰️ RQS GLOBAL WORKSTATION HEADER -->
       <header class="rqs-mainframe-header" style="margin-bottom: 30px;">
-        <!-- Esquerda: Branding -->
         <div class="header-branding">
           <span class="satellite-icon">🛰️</span>
           <h1 class="header-title">RAQUEL SYNTHS DIGITAL AUDIO WORKSTATION</h1>
         </div>
 
-        <!-- Centro: Central de Controle de Acesso e Idiomas Global [1, 1.1] -->
         <div class="header-controls">
-          <!-- Seletor de Idiomas -->
           <div class="lang-selector" aria-label="Interface language">
+            <button type="button" (click)="lang.setLanguage('pt')"
+              [attr.aria-pressed]="lang.currentLang() === 'pt'"
+              [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'">PT</button>
+            <span class="divider">|</span>
             <button type="button" (click)="lang.setLanguage('en')"
               [attr.aria-pressed]="lang.currentLang() === 'en'"
               [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'">EN</button>
             <span class="divider">|</span>
-            <button type="button" (click)="lang.setLanguage('pt')"
-              [attr.aria-pressed]="lang.currentLang() === 'pt'"
-              [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'">PT-BR</button>
-            <span class="divider">|</span>
             <button type="button" (click)="lang.setLanguage('pl')"
               [attr.aria-pressed]="lang.currentLang() === 'pl'"
               [style.color]="lang.currentLang() === 'pl' ? '#00ffcc' : '#666'">PL</button>
+            <span class="divider">|</span>
+            <button type="button" (click)="lang.setLanguage('fr')"
+              [attr.aria-pressed]="lang.currentLang() === 'fr'"
+              [style.color]="lang.currentLang() === 'fr' ? '#00ffcc' : '#666'">FR</button>
           </div>
 
-          <!-- Sessão de Login (Supabase Auth) [1] -->
           <div class="user-session">
             @if (!auth.session()) {
               <div class="auth-helper-container" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-right: 10px;">
                 <span style="font-size: 9px; font-family: monospace; color: #8b949e; letter-spacing: 0.5px;">
-                  {{ lang.currentLang() === 'pl' ? 'ZAPISZ HISTORIĘ I EKSPORTUJ WAV:' : (lang.currentLang() === 'pt' ? 'SALVAR HISTÓRICO & EXPORTAR WAV:' : 'SAVE HISTORY & EXPORT WAV:') }}
+                  {{ authHelperText() }}
                 </span>
                 <div class="auth-buttons">
                   <button (click)="auth.loginWithProvider('github')" class="btn-auth github">🐈 GITHUB</button>
                   <button (click)="auth.loginWithProvider('google')" class="btn-auth google">🌐 GOOGLE</button>
+                  <button (click)="authPrompt.open('general')" class="btn-auth email">✉ EMAIL</button>
                 </div>
               </div>
             } @else {
@@ -64,37 +63,29 @@ import { SeoService } from '../services/seo.service';
                   </span>
                 </div>
                 <img [src]="auth.session()?.user?.user_metadata?.[avatar_url] || 'assets/default-avatar.png'" class="avatar" alt="Avatar">
-                <button (click)="auth.logout()" class="btn-logout">⏏️</button>
+                <button (click)="auth.logout()" class="btn-logout" aria-label="Sign out">⏏️</button>
               </div>
             }
           </div>
         </div>
 
-        <!-- Direita: Status -->
         <div class="header-status">
           <span class="status-led"></span>
           <span class="status-text">CORE STATUS: OPERATIONAL</span>
         </div>
       </header>
 
-      <!-- 🎛️ A GRADE DE ENGENHARIA PRINCIPAL DA WORKSTATION (Layout 50/50 Otimizado) -->
       <div class="workspace-grid" style="margin-bottom: 25px;">
-
-         <!-- Coluna da Esquerda: Core de Masterização e Processamento DSP (Fixa ao rolar) -->
          <div class="left-workstation-column">
            <app-upload-zone></app-upload-zone>
          </div>
-
-         <!-- 🟢 Coluna da Direita: Setlists, Uplink Engine e Analytics Integrados [1.1.2] -->
          <div class="right-workstation-column">
            <app-mix-panel></app-mix-panel>
            <app-rqs-uplink-engine></app-rqs-uplink-engine>
            <app-rqs-uplink-dashboard></app-rqs-uplink-dashboard>
          </div>
-
       </div>
 
-      <!-- Rodapé do Studio -->
       <app-footer></app-footer>
     </div>
   `,
@@ -109,14 +100,19 @@ import { SeoService } from '../services/seo.service';
       align-items: start;
     }
 
-    /* 🖥️ Ajuste de Breakpoint para Tablets e Desktops (A partir de 768px a divisão é ativada) */
+    .auth-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
     @media (min-width: 768px) {
       .workspace-grid {
         grid-template-columns: 1fr 1fr;
         gap: 24px;
       }
 
-      /* Sticky Core ativado estritamente em telas maiores para evitar conflito de fluxo */
       .left-workstation-column {
         position: sticky;
         top: 20px;
@@ -127,87 +123,89 @@ import { SeoService } from '../services/seo.service';
       width: 100%;
     }
 
-    /* 🟢 Barramento Vertical da Coluna da Direita */
     .right-workstation-column {
       display: flex;
       flex-direction: column;
       gap: 24px;
       width: 100%;
     }
-`]
+
+    @media (max-width: 640px) {
+      .rqs-mainframe-container {
+        padding-inline: 12px !important;
+      }
+
+      .header-controls,
+      .auth-helper-container {
+        align-items: flex-start !important;
+      }
+
+      .auth-buttons {
+        justify-content: flex-start;
+      }
+    }
+  `]
 })
 export class WorkspaceComponent {
-
   readonly auth = inject(AuthService);
+  readonly authPrompt = inject(AuthPromptService);
   readonly lang = inject(LanguageService);
-
   private seo = inject(SeoService);
-  avatarUrl =
-  this.auth.session()?.user?.user_metadata?.['avatar_url'] ||
-  'assets/default-avatar.png';
+
+  avatarUrl = this.auth.session()?.user?.user_metadata?.['avatar_url'] || 'assets/default-avatar.png';
   avatar_url: string = 'avatar_url';
 
   constructor() {
-
     effect(() => {
+      const currentLang = this.lang.currentLang();
+      const canonicalUrl = 'https://studio.raquelsynths.com/app';
 
-      const isPt =
-        this.lang.currentLang() === 'pt';
-
-      const canonicalUrl =
-        'https://studio.raquelsynths.com/app';
+      const meta = {
+        pt: {
+          title: 'RQS Studio | Masterização, DSP, Setlists e Deep Links',
+          description: 'Acesse o RQS Studio: masterização inteligente de áudio, RQS DSP Core, Setlist Engine e Uplink Engine em uma workstation musical integrada.',
+          locale: 'pt_BR'
+        },
+        en: {
+          title: 'RQS Studio | Mastering, DSP, Setlists & Deep Links',
+          description: 'Access RQS Studio: intelligent audio mastering, RQS DSP Core, Setlist Engine and Uplink Engine in one integrated music workstation.',
+          locale: 'en_US'
+        },
+        pl: {
+          title: 'RQS Studio | Mastering, DSP, Setlisty i Deep Linki',
+          description: 'RQS Studio łączy mastering audio, RQS DSP Core, Setlist Engine i Uplink Engine w jednym webowym środowisku pracy.',
+          locale: 'pl_PL'
+        },
+        fr: {
+          title: 'RQS Studio | Mastering, DSP, Setlists et Deep Links',
+          description: 'RQS Studio réunit mastering audio, RQS DSP Core, Setlist Engine et Uplink Engine dans une station de travail musicale web intégrée.',
+          locale: 'fr_FR'
+        }
+      }[currentLang];
 
       this.seo.update({
-        title: isPt
-          ? 'RQS Studio | Masterização, DSP, Setlists e Deep Links'
-          : 'RQS Studio | Mastering, DSP, Setlists & Deep Links',
-
-        description: isPt
-          ? 'Acesse o RQS Studio: masterização inteligente de áudio, RQS DSP Core, Setlist Engine e Uplink Engine em uma workstation musical integrada.'
-          : 'Access RQS Studio: intelligent audio mastering, RQS DSP Core, Setlist Engine and Uplink Engine in one integrated music workstation.',
-
+        title: meta.title,
+        description: meta.description,
         url: canonicalUrl,
-
         type: 'website',
-
-        locale: isPt
-          ? 'pt_BR'
-          : 'en_US',
-
+        locale: meta.locale,
         siteName: 'RQS Studio',
-
         robots: 'index, follow',
-
         jsonLd: {
           '@context': 'https://schema.org',
           '@type': 'SoftwareApplication',
-
           name: 'RQS Studio',
-
-          alternateName:
-            'RaQuel Synths Digital Audio Workstation',
-
-          applicationCategory:
-            'MultimediaApplication',
-
-          applicationSubCategory:
-            'Digital Audio Workstation',
-
-          operatingSystem:
-            'Web Browser',
-
+          alternateName: 'RaQuel Synths Digital Audio Workstation',
+          applicationCategory: 'MultimediaApplication',
+          applicationSubCategory: 'Digital Audio Workstation',
+          operatingSystem: 'Web Browser',
           url: canonicalUrl,
-
-          description: isPt
-            ? 'Workstation musical web com masterização DSP, organização de setlists e geração de deep links.'
-            : 'Web music workstation featuring DSP mastering, setlist organization and deep-link generation.',
-
+          description: meta.description,
           creator: {
             '@type': 'Organization',
             name: 'RaQuel Synths',
             url: 'https://raquelsynths.com'
           },
-
           offers: {
             '@type': 'Offer',
             category: 'SaaS'
@@ -215,5 +213,12 @@ export class WorkspaceComponent {
         }
       });
     });
+  }
+
+  authHelperText(): string {
+    if (this.lang.currentLang() === 'pt') return 'SALVAR HISTÓRICO & EXPORTAR WAV:';
+    if (this.lang.currentLang() === 'pl') return 'ZAPISZ HISTORIĘ I EKSPORTUJ WAV:';
+    if (this.lang.currentLang() === 'fr') return 'ENREGISTRER L’HISTORIQUE & EXPORTER WAV :';
+    return 'SAVE HISTORY & EXPORT WAV:';
   }
 }
