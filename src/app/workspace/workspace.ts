@@ -9,11 +9,12 @@ import { LanguageService } from '../services/language.service';
 import { RqsUplinkEngineComponent } from "../rqs-uplink-engine/rqs-uplink-engine";
 import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/rqs-uplink-dashboard';
 import { SeoService } from '../services/seo.service';
+import { AuthPromptComponent } from '../components/auth-prompt/auth-prompt';
 
 @Component({
   selector: 'app-workspace',
   standalone: true,
-  imports: [CommonModule, MixPanelComponent, UploadZoneComponent, Footer, RqsUplinkEngineComponent, RqsUplinkDashboardComponent],
+  imports: [CommonModule, MixPanelComponent, UploadZoneComponent, Footer, RqsUplinkEngineComponent, RqsUplinkDashboardComponent, AuthPromptComponent],
   template: `
     <!-- 🛰️ ENVELOPE DO MAINFRAME DA DAW [1.1.2] -->
     <div class="rqs-mainframe-container" style="padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between;">
@@ -57,6 +58,7 @@ import { SeoService } from '../services/seo.service';
                 <div class="auth-buttons">
                   <button (click)="auth.loginWithProvider('github')" class="btn-auth github">🐈 GITHUB</button>
                   <button (click)="auth.loginWithProvider('google')" class="btn-auth google">🌐 GOOGLE</button>
+                  <button (click)="auth.requestSignIn('general', 'email')" class="btn-auth email">✉ {{ lang.t().AUTH_EMAIL_CONTINUE }}</button>
                 </div>
               </div>
             } @else {
@@ -100,6 +102,7 @@ import { SeoService } from '../services/seo.service';
 
       <!-- Rodapé do Studio -->
       <app-footer></app-footer>
+      <app-auth-prompt></app-auth-prompt>
     </div>
   `,
   styles: [`

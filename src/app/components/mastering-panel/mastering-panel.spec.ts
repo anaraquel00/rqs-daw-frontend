@@ -76,6 +76,9 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
   let masteringService: MasteringService;
   const currentLang = signal<'en' | 'pt' | 'pl'>('en');
   const canUseMaster = signal(false);
+  const isLoggedIn = signal(true);
+  const canMaster = signal(true);
+  let requestSignIn: jasmine.Spy;
   let clearCalls = 0;
   let stopResetCalls = 0;
 
@@ -83,6 +86,9 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
     clearCalls = 0;
     stopResetCalls = 0;
     canUseMaster.set(false);
+    isLoggedIn.set(true);
+    canMaster.set(true);
+    requestSignIn = jasmine.createSpy('requestSignIn');
     currentLang.set('en');
 
     const previewStartSignal = signal(0);
@@ -133,7 +139,7 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
             tr: () => ({ MASTER_LABEL: 'B - MASTER PREVIEW' }),
           },
         },
-        { provide: AuthService, useValue: { canMaster: signal(true) } },
+        { provide: AuthService, useValue: { canMaster, isLoggedIn, requestSignIn } },
       ],
     });
 
@@ -209,6 +215,65 @@ it('sends the selected source start with the Preview command', () => {
 
   expect(previewStartSeconds).toBe(12.5);
 });
+
+  it('opens Auth UX and emits no protected Preview command for an anonymous user', () => {
+    isLoggedIn.set(false);
+    const processMaster = jasmine.createSpy('processMaster');
+    panel.processMaster.subscribe(processMaster);
+
+    panel.dispararPreview();
+
+    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    expect(processMaster).not.toHaveBeenCalled();
+    expect(panel.audioComparison.previewStatus()).toBe('not-generated');
+  });
+
+  it('opens Auth UX and emits no Full Master command for an anonymous user', () => {
+    isLoggedIn.set(false);
+    panel.audioComparison.previewStatus.set('ready');
+    panel.audioComparison.playbackMode.set('preview-15s');
+    canUseMaster.set(true);
+    const processMaster = jasmine.createSpy('processMaster');
+    panel.processMaster.subscribe(processMaster);
+
+    panel.dispararProcessamentoCompleto();
+
+    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    expect(processMaster).not.toHaveBeenCalled();
+  });
+
+  it('preserves authenticated Preview and Full Master commands', () => {
+    const commands: boolean[] = [];
+    panel.processMaster.subscribe((command) => commands.push(command.preview));
+
+    panel.dispararPreview();
+    panel.audioComparison.previewStatus.set('ready');
+    panel.audioComparison.playbackMode.set('preview-15s');
+    canUseMaster.set(true);
+    panel.dispararProcessamentoCompleto();
+
+    expect(commands).toEqual([true, false]);
+    expect(requestSignIn).not.toHaveBeenCalled();
+  });
+
+  it('keeps Preview eligible but blocks Full Master for a logged Free user at 3/3', () => {
+    canMaster.set(false);
+    expect(panel.canGeneratePreview()).toBeTrue();
+
+    panel.audioComparison.previewStatus.set('ready');
+    panel.audioComparison.playbackMode.set('preview-15s');
+    canUseMaster.set(true);
+    expect(panel.canGenerateFullMaster()).toBeFalse();
+  });
+
+  it('preserves Premium Full Master eligibility', () => {
+    canMaster.set(true);
+    panel.audioComparison.previewStatus.set('ready');
+    panel.audioComparison.playbackMode.set('preview-15s');
+    canUseMaster.set(true);
+
+    expect(panel.canGenerateFullMaster()).toBeTrue();
+  });
 
   it('invalidates stale results and resets audition when the Preview range moves', () => {
     panel.audioComparison.previewStatus.set('ready');

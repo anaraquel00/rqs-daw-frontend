@@ -305,7 +305,7 @@
       {{ audioComparison.previewStatus() === 'processing' ? lang.tr().AB_PREVIEW_GENERATING : lang.tr().BTN_GENERATE_PREVIEW }}
     </button>
     <button
-      *ngIf="auth.canMaster()"
+      *ngIf="!auth.isLoggedIn() || auth.canMaster()"
       class="btn-process"
       (click)="dispararProcessamentoCompleto()"
       [disabled]="!canGenerateFullMaster()">

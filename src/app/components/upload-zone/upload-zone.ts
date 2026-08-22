@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, ElementRef, OnDestroy, ViewChild, inject } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, OnDestroy, ViewChild, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DspService } from '../../services/dsp';
 import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
@@ -43,6 +43,17 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
   private renderProgressTimer: ReturnType<typeof setInterval> | undefined;
+  private readonly authenticatedUploadEffect = effect(() => {
+    if (
+      this.auth.isLoggedIn()
+      && this.selectedFile
+      && !this.masteringV2DirectUpload
+      && !this.s3Key
+      && !this.isUploadingS3
+    ) {
+      this.iniciarUploadS3Silencioso(this.selectedFile);
+    }
+  });
 
   ngAfterViewChecked(): void {
     const element = this.terminalScrollContainer?.nativeElement;
@@ -82,6 +93,11 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   }
 
   iniciarUploadS3Silencioso(file: File): void {
+    if (!this.auth.isLoggedIn()) {
+      this.auth.requestSignIn('mastering');
+      return;
+    }
+
     this.isUploadingS3 = true;
     this.addLog(`Iniciando handshake S3 para: ${file.name}`);
 
@@ -109,6 +125,10 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
 
   processarMaster(command: MasteringProcessCommand): void {
     if (this.isProcessing || !this.selectedFile) return;
+    if (!this.auth.isLoggedIn()) {
+      this.auth.requestSignIn('mastering');
+      return;
+    }
     if (!this.masteringV2DirectUpload && !this.s3Key) {
       this.addLog('❌ MASTERING V2: source upload is not ready yet.');
       return;
@@ -287,7 +307,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       return;
     }
 
-    this.iniciarUploadS3Silencioso(file);
+    if (this.auth.isLoggedIn()) {
+      this.iniciarUploadS3Silencioso(file);
+    }
   }
 
   private buildMasteringV2FormData(

@@ -14,6 +14,16 @@ import {
 import { environment } from '../../environments/environment';
 import { AnalyticsService } from './analytics.service';
 
+export type AuthPromptMode = 'providers' | 'email' | 'sent';
+export type AuthMessageKey =
+  | 'AUTH_EMAIL_REQUIRED'
+  | 'AUTH_EMAIL_INVALID'
+  | 'AUTH_EMAIL_SEND_ERROR'
+  | 'AUTH_EMAIL_RATE_LIMIT'
+  | 'AUTH_LINK_INVALID'
+  | 'AUTH_CALLBACK_ERROR'
+  | 'AUTH_SESSION_MISSING';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -25,6 +35,12 @@ export class AuthService {
   readonly session = signal<Session | null>(null);
   readonly userRole = signal<'free' | 'premium'>('free');
   readonly completedMasters = signal<number>(0);
+  readonly authPromptOpen = signal(false);
+  readonly authPromptMode = signal<AuthPromptMode>('providers');
+  readonly authMessageKey = signal<AuthMessageKey | null>(null);
+  readonly authEmailSending = signal(false);
+  readonly reselectAudioRequired = signal(false);
+  private readonly resumeMasteringKey = 'rqs_resume_mastering';
 
   // =================================================
   // PAYWALL / LIMITES
@@ -61,12 +77,14 @@ export class AuthService {
       return;
     }
 
+    const callbackState = this.readAuthCallbackState();
+
     this.supabase = createClient(
       environment.supabaseUrl,
       environment.supabasePublishableKey
     );
 
-    this.listenToAuthChanges();
+    this.listenToAuthChanges(callbackState);
   }
 
   getSupabaseClient(): SupabaseClient {
@@ -81,11 +99,12 @@ export class AuthService {
   // AUTH SESSION
   // =================================================
 
-  private listenToAuthChanges(): void {
+  private listenToAuthChanges(callbackState: AuthCallbackState): void {
     this.supabase.auth
       .getSession()
       .then(({ data: { session } }) => {
         void this.handleSessionUpdate(session);
+        this.handleAuthCallbackReturn(callbackState, session);
       });
 
     this.supabase.auth
@@ -176,6 +195,79 @@ export class AuthService {
   // LOGIN
   // =================================================
 
+  requestSignIn(intent: 'general' | 'mastering' = 'general', mode: AuthPromptMode = 'providers'): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    if (intent === 'mastering') {
+      window.sessionStorage.setItem(this.resumeMasteringKey, 'true');
+    }
+
+    this.authMessageKey.set(null);
+    this.authPromptMode.set(mode);
+    this.authPromptOpen.set(true);
+  }
+
+  closeAuthPrompt(): void {
+    this.authPromptOpen.set(false);
+    this.authPromptMode.set('providers');
+    this.authMessageKey.set(null);
+    this.authEmailSending.set(false);
+  }
+
+  showEmailSignIn(): void {
+    this.authMessageKey.set(null);
+    this.authPromptMode.set('email');
+  }
+
+  showAuthProviders(): void {
+    this.authMessageKey.set(null);
+    this.authPromptMode.set('providers');
+  }
+
+  dismissReselectAudio(): void {
+    this.reselectAudioRequired.set(false);
+  }
+
+  async sendMagicLink(rawEmail: string): Promise<void> {
+    if (!this.supabase || !isPlatformBrowser(this.platformId)) return;
+
+    const email = rawEmail.trim();
+    if (!email) {
+      this.authMessageKey.set('AUTH_EMAIL_REQUIRED');
+      return;
+    }
+    if (!this.isValidEmail(email)) {
+      this.authMessageKey.set('AUTH_EMAIL_INVALID');
+      return;
+    }
+
+    this.authMessageKey.set(null);
+    this.authEmailSending.set(true);
+    this.analytics.trackEvent('auth_email_started');
+
+    try {
+      const { error } = await this.supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${window.location.origin}/app`
+        }
+      });
+
+      if (error) {
+        this.authMessageKey.set(this.isRateLimitError(error) ? 'AUTH_EMAIL_RATE_LIMIT' : 'AUTH_EMAIL_SEND_ERROR');
+        return;
+      }
+
+      this.analytics.trackEvent('auth_email_link_sent');
+      this.authPromptMode.set('sent');
+    } catch {
+      this.authMessageKey.set('AUTH_EMAIL_SEND_ERROR');
+    } finally {
+      this.authEmailSending.set(false);
+    }
+  }
+
   async loginWithProvider(provider: 'google' | 'github'): Promise<void> {
     if (!this.supabase) {
       return;
@@ -191,6 +283,55 @@ export class AuthService {
     if (error) {
       console.error('[RQS AUTH] OAuth error:', error.message);
     }
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  private isRateLimitError(error: { status?: number; message?: string }): boolean {
+    return error.status === 429 || /rate|too many|seconds/i.test(error.message ?? '');
+  }
+
+  private readAuthCallbackState(): AuthCallbackState {
+    if (!isPlatformBrowser(this.platformId)) return { present: false, errorCode: null };
+
+    const query = new URLSearchParams(window.location.search);
+    const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const callbackKeys = ['code', 'token_hash', 'access_token', 'error', 'error_code', 'type'];
+    const present = callbackKeys.some((key) => query.has(key) || fragment.has(key));
+    const errorCode = query.get('error_code') ?? fragment.get('error_code') ?? query.get('error') ?? fragment.get('error');
+    return { present, errorCode };
+  }
+
+  private handleAuthCallbackReturn(callback: AuthCallbackState, session: Session | null): void {
+    if (!callback.present || !isPlatformBrowser(this.platformId)) return;
+
+    window.history.replaceState({}, document.title, window.location.pathname);
+    const resumeMastering = window.sessionStorage.getItem(this.resumeMasteringKey) === 'true';
+
+    if (callback.errorCode) {
+      const invalidOrExpired = /expired|otp_expired|invalid/i.test(callback.errorCode);
+      this.authMessageKey.set(invalidOrExpired ? 'AUTH_LINK_INVALID' : 'AUTH_CALLBACK_ERROR');
+      this.authPromptMode.set('email');
+      this.authPromptOpen.set(true);
+      window.sessionStorage.removeItem(this.resumeMasteringKey);
+      return;
+    }
+
+    if (!session?.user) {
+      this.authMessageKey.set('AUTH_SESSION_MISSING');
+      this.authPromptMode.set('email');
+      this.authPromptOpen.set(true);
+      window.sessionStorage.removeItem(this.resumeMasteringKey);
+      return;
+    }
+
+    if (resumeMastering) {
+      this.reselectAudioRequired.set(true);
+      window.sessionStorage.removeItem(this.resumeMasteringKey);
+    }
+    this.closeAuthPrompt();
   }
 
   private analyticsAuthMethod(session: Session): 'google' | 'github' | 'email' | 'unknown' {
@@ -247,4 +388,9 @@ export class AuthService {
     localStorage.setItem('rqs_anon_completed_masters', nextCount.toString());
     this.completedMasters.set(nextCount);
   }
+}
+
+interface AuthCallbackState {
+  present: boolean;
+  errorCode: string | null;
 }
