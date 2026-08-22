@@ -14,6 +14,13 @@ import {
 import { environment } from '../../environments/environment';
 import { AnalyticsService } from './analytics.service';
 
+export type MagicLinkErrorCode = 'invalid_email' | 'rate_limit' | 'send_failed';
+export type MagicLinkResult =
+  | { ok: true }
+  | { ok: false; code: MagicLinkErrorCode };
+
+export type AuthCallbackError = 'expired' | 'invalid' | null;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -25,6 +32,7 @@ export class AuthService {
   readonly session = signal<Session | null>(null);
   readonly userRole = signal<'free' | 'premium'>('free');
   readonly completedMasters = signal<number>(0);
+  readonly authCallbackError = signal<AuthCallbackError>(null);
 
   // =================================================
   // PAYWALL / LIMITES
@@ -61,6 +69,8 @@ export class AuthService {
       return;
     }
 
+    this.captureCallbackError();
+
     this.supabase = createClient(
       environment.supabaseUrl,
       environment.supabasePublishableKey
@@ -91,6 +101,7 @@ export class AuthService {
     this.supabase.auth
       .onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
+          this.authCallbackError.set(null);
           this.analytics.trackEvent('login', {
             method: this.analyticsAuthMethod(session)
           });
@@ -177,19 +188,97 @@ export class AuthService {
   // =================================================
 
   async loginWithProvider(provider: 'google' | 'github'): Promise<void> {
-    if (!this.supabase) {
+    if (!this.supabase || !isPlatformBrowser(this.platformId)) {
       return;
     }
 
     const { error } = await this.supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/app`
+        redirectTo: this.buildSafeRedirectUrl()
       }
     });
 
     if (error) {
       console.error('[RQS AUTH] OAuth error:', error.message);
+    }
+  }
+
+  async sendMagicLink(rawEmail: string): Promise<MagicLinkResult> {
+    if (!this.supabase || !isPlatformBrowser(this.platformId)) {
+      return { ok: false, code: 'send_failed' };
+    }
+
+    const email = rawEmail.trim();
+    if (!this.isValidEmail(email)) {
+      return { ok: false, code: 'invalid_email' };
+    }
+
+    this.analytics.trackEvent('auth_email_started');
+
+    const { error } = await this.supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: this.buildSafeRedirectUrl(),
+        shouldCreateUser: true
+      }
+    });
+
+    if (error) {
+      const status = Number((error as { status?: number }).status ?? 0);
+      const message = String(error.message || '').toLowerCase();
+      if (status === 429 || message.includes('rate limit') || message.includes('too many')) {
+        return { ok: false, code: 'rate_limit' };
+      }
+      return { ok: false, code: 'send_failed' };
+    }
+
+    this.analytics.trackEvent('auth_email_link_sent');
+    return { ok: true };
+  }
+
+  clearAuthCallbackError(): void {
+    this.authCallbackError.set(null);
+  }
+
+  private buildSafeRedirectUrl(): string {
+    const path = this.safeReturnPath(window.location.pathname);
+    return `${window.location.origin}${path}`;
+  }
+
+  private safeReturnPath(path: string): string {
+    if (!path.startsWith('/') || path.startsWith('//')) {
+      return '/app';
+    }
+
+    // Keep route intent but never forward query strings, hashes or auth data.
+    const cleanPath = path.split('?')[0].split('#')[0];
+    return cleanPath || '/app';
+  }
+
+  private isValidEmail(email: string): boolean {
+    if (email.length < 3 || email.length > 320) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  private captureCallbackError(): void {
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const code = (query.get('error_code') || hash.get('error_code') || '').toLowerCase();
+    const error = (query.get('error') || hash.get('error') || '').toLowerCase();
+    const description = (
+      query.get('error_description') ||
+      hash.get('error_description') ||
+      ''
+    ).toLowerCase();
+
+    if (code.includes('expired') || description.includes('expired')) {
+      this.authCallbackError.set('expired');
+      return;
+    }
+
+    if (error || code || description) {
+      this.authCallbackError.set('invalid');
     }
   }
 
