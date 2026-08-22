@@ -2,286 +2,97 @@
   <section class="hero" aria-labelledby="landing-title">
     <div class="hero__copy">
       <div class="hero-language" aria-label="Language selector">
-        <button type="button" class="hero-language__button"
-          [class.is-active]="lang.currentLang() === 'en'"
-          (click)="lang.setLanguage('en')">EN</button>
+        <button type="button" class="hero-language__button" [class.is-active]="lang.currentLang() === 'en'" (click)="lang.setLanguage('en')">EN</button>
         <span aria-hidden="true">/</span>
-        <button type="button" class="hero-language__button"
-          [class.is-active]="lang.currentLang() === 'pt'"
-          (click)="lang.setLanguage('pt')">PT</button>
+        <button type="button" class="hero-language__button" [class.is-active]="lang.currentLang() === 'pt'" (click)="lang.setLanguage('pt')">PT</button>
         <span aria-hidden="true">/</span>
-        <button type="button" class="hero-language__button"
-          [class.is-active]="lang.currentLang() === 'pl'"
-          (click)="lang.setLanguage('pl')">PL</button>
+        <button type="button" class="hero-language__button" [class.is-active]="lang.currentLang() === 'pl'" (click)="lang.setLanguage('pl')">PL</button>
+        <span aria-hidden="true">/</span>
+        <button type="button" class="hero-language__button" [class.is-active]="lang.currentLang() === 'fr'" (click)="lang.setLanguage('fr')">FR</button>
       </div>
 
       <p class="kicker">{{ lang.tr().LANDING_HERO_EYEBROW }}</p>
-
-      <h1
-        id="landing-title"
-        [class.hero-title--pt]="lang.currentLang() === 'pt'"
-        [class.hero-title--pl]="lang.currentLang() === 'pl'"
-      >
+      <h1 id="landing-title" [class.hero-title--pt]="lang.currentLang() === 'pt'" [class.hero-title--pl]="lang.currentLang() === 'pl'">
         <span>RQS STUDIO</span>
         {{ lang.tr().LANDING_HERO_TITLE }}
       </h1>
-
       <p class="hero__lead">{{ lang.tr().LANDING_HERO_SUB }}</p>
-
       <div class="hero__actions">
-        <button type="button" class="btn btn--primary" (click)="enterMainframe()">
-          {{ lang.tr().LANDING_CTA_OPEN }}
-        </button>
-        <a class="btn btn--secondary" href="#workflow">
-          {{ lang.tr().LANDING_CTA_EXPLORE }}
-        </a>
+        <button type="button" class="btn btn--primary" (click)="enterMainframe()">{{ lang.tr().LANDING_CTA_OPEN }}</button>
+        <a class="btn btn--secondary" href="#workflow">{{ lang.tr().LANDING_CTA_EXPLORE }}</a>
       </div>
-
       <p class="hero__note">{{ lang.tr().LANDING_HERO_NOTE }}</p>
     </div>
 
     <div class="hero-console" aria-label="RQS Studio workflow overview">
-      <div class="console-topbar">
-        <span>RQS_STUDIO</span>
-        <span class="status"><i></i> PUBLIC BETA</span>
-      </div>
-
+      <div class="console-topbar"><span>RQS_STUDIO</span><span class="status"><i></i> PUBLIC BETA</span></div>
       <div class="console-wave" aria-hidden="true"><span></span></div>
-
       <div class="console-grid">
-        <div class="console-module">
-          <small>MODULE_01</small>
-          <strong>MASTER</strong>
-          <span>LUFS / TRUE PEAK / A-B</span>
-        </div>
-        <div class="console-module">
-          <small>MODULE_02</small>
-          <strong>SPLIT</strong>
-          <span>STEM SEPARATION</span>
-        </div>
-        <div class="console-module">
-          <small>MODULE_03</small>
-          <strong>BUILD</strong>
-          <span>SETLIST / CROSSFADE / WAV</span>
-        </div>
-        <div class="console-module">
-          <small>MODULE_04</small>
-          <strong>DEPLOY</strong>
-          <span>RQS UPLINK ENGINE</span>
-        </div>
+        <div class="console-module"><small>MODULE_01</small><strong>MASTER</strong><span>LUFS / TRUE PEAK / A-B</span></div>
+        <div class="console-module"><small>MODULE_02</small><strong>SPLIT</strong><span>STEM SEPARATION</span></div>
+        <div class="console-module"><small>MODULE_03</small><strong>BUILD</strong><span>SETLIST / CROSSFADE / WAV</span></div>
+        <div class="console-module"><small>MODULE_04</small><strong>DEPLOY</strong><span>RQS UPLINK ENGINE</span></div>
       </div>
     </div>
   </section>
 
   <section class="capabilities" aria-label="RQS Studio capabilities">
     <div class="capabilities__inner">
-      <span>{{ lang.tr().LANDING_CAP_MASTERING }}</span>
-      <span>{{ lang.tr().LANDING_CAP_STEMS }}</span>
-      <span>{{ lang.tr().LANDING_CAP_SETLIST }}</span>
-      <span>{{ lang.tr().LANDING_CAP_UPLINK }}</span>
+      <span>{{ lang.tr().LANDING_CAP_MASTERING }}</span><span>{{ lang.tr().LANDING_CAP_STEMS }}</span><span>{{ lang.tr().LANDING_CAP_SETLIST }}</span><span>{{ lang.tr().LANDING_CAP_UPLINK }}</span>
     </div>
     <p>{{ lang.tr().LANDING_CAP_NOTE }}</p>
   </section>
 
   <div id="workflow" class="workflow">
     <section class="feature feature--master" aria-labelledby="master-title">
-      <div class="section-motion-layer section-motion-layer--master" aria-hidden="true">
-        <video class="section-motion" data-src="/assets/videos/master-instrument.mp4" muted loop playsinline preload="none"></video>
-      </div>
-
+      <div class="section-motion-layer section-motion-layer--master" aria-hidden="true"><video class="section-motion" data-src="/assets/videos/master-instrument.mp4" muted loop playsinline preload="none"></video></div>
       <div class="feature__copy">
-        <p class="module-label">MODULE_01 // RQS DSP CORE</p>
-        <h2 id="master-title">MASTER.</h2>
-        <h3>{{ lang.tr().LANDING_MASTER_TAGLINE }}</h3>
-        <p>{{ lang.tr().LANDING_MASTER_DESC }}</p>
-        <ul>
-          <li>{{ lang.tr().LANDING_MASTER_ITEM_1 }}</li>
-          <li>{{ lang.tr().LANDING_MASTER_ITEM_2 }}</li>
-          <li>{{ lang.tr().LANDING_MASTER_ITEM_3 }}</li>
-          <li>{{ lang.tr().LANDING_MASTER_ITEM_4 }}</li>
-        </ul>
+        <p class="module-label">MODULE_01 // RQS DSP CORE</p><h2 id="master-title">MASTER.</h2><h3>{{ lang.tr().LANDING_MASTER_TAGLINE }}</h3><p>{{ lang.tr().LANDING_MASTER_DESC }}</p>
+        <ul><li>{{ lang.tr().LANDING_MASTER_ITEM_1 }}</li><li>{{ lang.tr().LANDING_MASTER_ITEM_2 }}</li><li>{{ lang.tr().LANDING_MASTER_ITEM_3 }}</li><li>{{ lang.tr().LANDING_MASTER_ITEM_4 }}</li></ul>
       </div>
-
       <div class="master-ui" aria-hidden="true">
-        <div class="ui-head">
-          <span>RQS DSP CORE</span>
-          <span>ANALYSIS READY</span>
-        </div>
-        <div class="master-wave"></div>
-        <div class="meter-grid">
-          <div><small>INTEGRATED</small><strong>-14.0</strong><span>LUFS</span></div>
-          <div><small>TRUE PEAK</small><strong>-1.0</strong><span>dBTP</span></div>
-          <div><small>PREVIEW</small><strong>15</strong><span>SEC</span></div>
-        </div>
-        <div class="ab-row">
-          <span>A // ORIGINAL</span>
-          <span>B // MASTER PREVIEW</span>
-        </div>
+        <div class="ui-head"><span>RQS DSP CORE</span><span>ANALYSIS READY</span></div><div class="master-wave"></div>
+        <div class="meter-grid"><div><small>INTEGRATED</small><strong>-14.0</strong><span>LUFS</span></div><div><small>TRUE PEAK</small><strong>-1.0</strong><span>dBTP</span></div><div><small>PREVIEW</small><strong>15</strong><span>SEC</span></div></div>
+        <div class="ab-row"><span>A // ORIGINAL</span><span>B // MASTER PREVIEW</span></div>
       </div>
     </section>
 
     <section class="feature feature--reverse feature--split" aria-labelledby="split-title">
-      <div class="feature__copy">
-        <p class="module-label">MODULE_02 // STEM SEPARATION</p>
-        <h2 id="split-title">SPLIT.</h2>
-        <h3>{{ lang.tr().LANDING_SPLIT_TAGLINE }}</h3>
-        <p>{{ lang.tr().LANDING_SPLIT_DESC }}</p>
-      </div>
-
-      <div class="stem-ui" aria-hidden="true">
-        <div class="ui-head">
-          <span>STEM MATRIX</span>
-          <span>6 STEMS</span>
-        </div>
-        <div class="stem-row"><span>VOCALS</span><i></i></div>
-        <div class="stem-row"><span>DRUMS</span><i></i></div>
-        <div class="stem-row"><span>BASS</span><i></i></div>
-        <div class="stem-row"><span>GUITAR</span><i></i></div>
-        <div class="stem-row"><span>PIANO</span><i></i></div>
-        <div class="stem-row"><span>OTHER</span><i></i></div>
-      </div>
+      <div class="feature__copy"><p class="module-label">MODULE_02 // STEM SEPARATION</p><h2 id="split-title">SPLIT.</h2><h3>{{ lang.tr().LANDING_SPLIT_TAGLINE }}</h3><p>{{ lang.tr().LANDING_SPLIT_DESC }}</p></div>
+      <div class="stem-ui" aria-hidden="true"><div class="ui-head"><span>STEM MATRIX</span><span>6 STEMS</span></div><div class="stem-row"><span>VOCALS</span><i></i></div><div class="stem-row"><span>DRUMS</span><i></i></div><div class="stem-row"><span>BASS</span><i></i></div><div class="stem-row"><span>GUITAR</span><i></i></div><div class="stem-row"><span>PIANO</span><i></i></div><div class="stem-row"><span>OTHER</span><i></i></div></div>
     </section>
 
     <section class="feature feature--build" aria-labelledby="build-title">
-      <div class="section-motion-layer section-motion-layer--build" aria-hidden="true">
-        <video class="section-motion" data-src="/assets/videos/build.mp4" muted loop playsinline preload="none"></video>
-      </div>
-
-      <div class="feature__copy">
-        <p class="module-label">MODULE_03 // SETLIST ENGINE</p>
-        <h2 id="build-title">BUILD.</h2>
-        <h3>{{ lang.tr().LANDING_BUILD_TAGLINE }}</h3>
-        <p>{{ lang.tr().LANDING_BUILD_DESC }}</p>
-        <ul>
-          <li>{{ lang.tr().LANDING_BUILD_ITEM_1 }}</li>
-          <li>{{ lang.tr().LANDING_BUILD_ITEM_2 }}</li>
-          <li>{{ lang.tr().LANDING_BUILD_ITEM_3 }}</li>
-        </ul>
-      </div>
-
-      <div class="setlist-ui" aria-hidden="true">
-        <div class="ui-head">
-          <span>SETLIST ENGINE</span>
-          <span>CONTINUOUS WAV</span>
-        </div>
-        <div class="track-row"><span>01</span><strong>MIDNIGHT DRIVE</strong><i class="track-82"></i><small>03:58</small></div>
-        <div class="crossfade">CROSSFADE // EQUAL POWER</div>
-        <div class="track-row"><span>02</span><strong>NEON RAIN</strong><i class="track-68"></i><small>04:21</small></div>
-        <div class="crossfade">CROSSFADE // EQUAL POWER</div>
-        <div class="track-row"><span>03</span><strong>ECHOES OF YOU</strong><i class="track-74"></i><small>03:47</small></div>
-      </div>
+      <div class="section-motion-layer section-motion-layer--build" aria-hidden="true"><video class="section-motion" data-src="/assets/videos/build.mp4" muted loop playsinline preload="none"></video></div>
+      <div class="feature__copy"><p class="module-label">MODULE_03 // SETLIST ENGINE</p><h2 id="build-title">BUILD.</h2><h3>{{ lang.tr().LANDING_BUILD_TAGLINE }}</h3><p>{{ lang.tr().LANDING_BUILD_DESC }}</p><ul><li>{{ lang.tr().LANDING_BUILD_ITEM_1 }}</li><li>{{ lang.tr().LANDING_BUILD_ITEM_2 }}</li><li>{{ lang.tr().LANDING_BUILD_ITEM_3 }}</li></ul></div>
+      <div class="setlist-ui" aria-hidden="true"><div class="ui-head"><span>SETLIST ENGINE</span><span>CONTINUOUS WAV</span></div><div class="track-row"><span>01</span><strong>MIDNIGHT DRIVE</strong><i class="track-82"></i><small>03:58</small></div><div class="crossfade">CROSSFADE // EQUAL POWER</div><div class="track-row"><span>02</span><strong>NEON RAIN</strong><i class="track-68"></i><small>04:21</small></div><div class="crossfade">CROSSFADE // EQUAL POWER</div><div class="track-row"><span>03</span><strong>ECHOES OF YOU</strong><i class="track-74"></i><small>03:47</small></div></div>
     </section>
 
     <section class="feature feature--reverse feature--deploy" aria-labelledby="deploy-title">
-      <div class="feature__copy">
-        <p class="module-label">MODULE_04 // RQS UPLINK ENGINE</p>
-        <h2 id="deploy-title">DEPLOY.</h2>
-        <h3>{{ lang.tr().LANDING_DEPLOY_TAGLINE }}</h3>
-        <p>{{ lang.tr().LANDING_DEPLOY_DESC }}</p>
-        <div class="platforms" aria-label="Supported music destinations">
-          <span>SPOTIFY</span>
-          <span>SOUNDCLOUD</span>
-          <span>YOUTUBE</span>
-          <span>BANDCAMP</span>
-        </div>
-      </div>
-
-      <div class="uplink-ui" aria-hidden="true">
-        <div class="ui-head">
-          <span>RQS UPLINK ENGINE</span>
-          <span class="uplink-active"><i></i> DEEP LINK ACTIVE</span>
-        </div>
-        <div class="uplink-copy">
-          TRACK URL
-          <div class="fake-input">https://open.spotify.com/track/...</div>
-        </div>
-        <div class="uplink-copy">
-          CUSTOM SLUG
-          <div class="fake-input fake-input--muted">my-new-track</div>
-        </div>
-        <div class="fake-button">COMPILE SECURE DEEP LINK</div>
-      </div>
+      <div class="feature__copy"><p class="module-label">MODULE_04 // RQS UPLINK ENGINE</p><h2 id="deploy-title">DEPLOY.</h2><h3>{{ lang.tr().LANDING_DEPLOY_TAGLINE }}</h3><p>{{ lang.tr().LANDING_DEPLOY_DESC }}</p><div class="platforms" aria-label="Supported music destinations"><span>SPOTIFY</span><span>SOUNDCLOUD</span><span>YOUTUBE</span><span>BANDCAMP</span></div></div>
+      <div class="uplink-ui" aria-hidden="true"><div class="ui-head"><span>RQS UPLINK ENGINE</span><span class="uplink-active"><i></i> DEEP LINK ACTIVE</span></div><div class="uplink-copy">TRACK URL<div class="fake-input">https://open.spotify.com/track/...</div></div><div class="uplink-copy">CUSTOM SLUG<div class="fake-input fake-input--muted">my-new-track</div></div><div class="fake-button">COMPILE SECURE DEEP LINK</div></div>
     </section>
   </div>
 
   <section class="origin" aria-labelledby="origin-title">
-    <div class="section-motion-layer section-motion-layer--origin" aria-hidden="true">
-      <video class="section-motion" data-src="/assets/videos/built_in_the_music.mp4" muted loop playsinline preload="none"></video>
-    </div>
-
-    <div>
-      <p class="module-label">RAQUEL SYNTHS // ORIGIN</p>
-      <h2 id="origin-title">{{ lang.tr().LANDING_ORIGIN_TITLE }}</h2>
-    </div>
-    <div class="origin__copy">
-      <h3>{{ lang.tr().LANDING_ORIGIN_TAGLINE }}</h3>
-      <p>{{ lang.tr().LANDING_ORIGIN_DESC }}</p>
-      <a href="https://raquelsynths.com" target="_blank" rel="noopener noreferrer">
-        {{ lang.tr().LANDING_ORIGIN_CTA }} <span aria-hidden="true">↗</span>
-      </a>
-    </div>
+    <div class="section-motion-layer section-motion-layer--origin" aria-hidden="true"><video class="section-motion" data-src="/assets/videos/built_in_the_music.mp4" muted loop playsinline preload="none"></video></div>
+    <div><p class="module-label">RAQUEL SYNTHS // ORIGIN</p><h2 id="origin-title">{{ lang.tr().LANDING_ORIGIN_TITLE }}</h2></div>
+    <div class="origin__copy"><h3>{{ lang.tr().LANDING_ORIGIN_TAGLINE }}</h3><p>{{ lang.tr().LANDING_ORIGIN_DESC }}</p><a href="https://raquelsynths.com" target="_blank" rel="noopener noreferrer">{{ lang.tr().LANDING_ORIGIN_CTA }} <span aria-hidden="true">↗</span></a></div>
   </section>
 
   <section class="proof" aria-labelledby="proof-title">
-    <div class="proof__copy">
-      <p class="module-label">PRODUCT PROOF // A/B</p>
-      <h2 id="proof-title">{{ lang.tr().LANDING_PROOF_TITLE }}</h2>
-      <p>{{ lang.tr().LANDING_PROOF_DESC }}</p>
-    </div>
-    <div class="proof-ui" aria-hidden="true">
-      <div><span>A</span><strong>ORIGINAL</strong><i></i></div>
-      <b>A / B</b>
-      <div><span>B</span><strong>RQS MASTER</strong><i class="proof-wave--b"></i></div>
-    </div>
-    <p class="proof__status">A/B DEMO // COMING SOON</p>
+    <div class="proof__copy"><p class="module-label">PRODUCT PROOF // A/B</p><h2 id="proof-title">{{ lang.tr().LANDING_PROOF_TITLE }}</h2><p>{{ lang.tr().LANDING_PROOF_DESC }}</p></div>
+    <div class="proof-ui" aria-hidden="true"><div><span>A</span><strong>ORIGINAL</strong><i></i></div><b>A / B</b><div><span>B</span><strong>RQS MASTER</strong><i class="proof-wave--b"></i></div></div><p class="proof__status">A/B DEMO // COMING SOON</p>
   </section>
 
   <section class="pricing" aria-labelledby="pricing-title">
-    <div class="section-motion-layer section-motion-layer--pricing" aria-hidden="true">
-      <video class="section-motion" data-src="/assets/videos/start_free.mp4" muted loop playsinline preload="none"></video>
-    </div>
-
-    <div class="pricing__intro">
-      <p class="module-label">PUBLIC BETA // ACCESS</p>
-      <h2 id="pricing-title">{{ lang.tr().LANDING_PRICING_TITLE }}</h2>
-      <p>{{ lang.tr().LANDING_PRICING_DESC }}</p>
-    </div>
-
+    <div class="section-motion-layer section-motion-layer--pricing" aria-hidden="true"><video class="section-motion" data-src="/assets/videos/start_free.mp4" muted loop playsinline preload="none"></video></div>
+    <div class="pricing__intro"><p class="module-label">PUBLIC BETA // ACCESS</p><h2 id="pricing-title">{{ lang.tr().LANDING_PRICING_TITLE }}</h2><p>{{ lang.tr().LANDING_PRICING_DESC }}</p></div>
     <div class="pricing__grid">
-      <article class="plan">
-        <header><span>FREE</span><strong>{{ lang.tr().LANDING_FREE_PRICE }}</strong></header>
-        <ul>
-          <li>{{ lang.tr().LANDING_FREE_ITEM_1 }}</li>
-          <li>{{ lang.tr().LANDING_FREE_ITEM_2 }}</li>
-          <li>{{ lang.tr().LANDING_FREE_ITEM_3 }}</li>
-        </ul>
-        <button type="button" class="btn btn--primary btn--full" (click)="enterMainframe()">
-          {{ lang.tr().LANDING_FREE_CTA }}
-        </button>
-      </article>
-
-      <article class="plan plan--pro">
-        <header><span>RQS PRO</span><strong>{{ lang.tr().LANDING_PRO_STATUS }}</strong></header>
-        <p>{{ lang.tr().LANDING_PRO_DESC }}</p>
-        <ul>
-          <li>{{ lang.tr().LANDING_PRO_ITEM_1 }}</li>
-          <li>{{ lang.tr().LANDING_PRO_ITEM_2 }}</li>
-          <li>{{ lang.tr().LANDING_PRO_ITEM_3 }}</li>
-        </ul>
-        <button type="button" class="btn btn--secondary btn--full" (click)="openPricing()">
-          {{ lang.tr().LANDING_PRO_CTA }}
-        </button>
-      </article>
+      <article class="plan"><header><span>FREE</span><strong>{{ lang.tr().LANDING_FREE_PRICE }}</strong></header><ul><li>{{ lang.tr().LANDING_FREE_ITEM_1 }}</li><li>{{ lang.tr().LANDING_FREE_ITEM_2 }}</li><li>{{ lang.tr().LANDING_FREE_ITEM_3 }}</li></ul><button type="button" class="btn btn--primary btn--full" (click)="enterMainframe()">{{ lang.tr().LANDING_FREE_CTA }}</button></article>
+      <article class="plan plan--pro"><header><span>RQS PRO</span><strong>{{ lang.tr().LANDING_PRO_STATUS }}</strong></header><p>{{ lang.tr().LANDING_PRO_DESC }}</p><ul><li>{{ lang.tr().LANDING_PRO_ITEM_1 }}</li><li>{{ lang.tr().LANDING_PRO_ITEM_2 }}</li><li>{{ lang.tr().LANDING_PRO_ITEM_3 }}</li></ul><button type="button" class="btn btn--secondary btn--full" (click)="openPricing()">{{ lang.tr().LANDING_PRO_CTA }}</button></article>
     </div>
   </section>
 
-  <section class="final-cta" aria-labelledby="final-title">
-    <p class="module-label">// SIGNAL READY</p>
-    <h2 id="final-title">{{ lang.tr().LANDING_FINAL_TITLE }}</h2>
-    <p>{{ lang.tr().LANDING_FINAL_DESC }}</p>
-    <button type="button" class="btn btn--primary" (click)="enterMainframe()">
-      {{ lang.tr().LANDING_CTA_OPEN }}
-    </button>
-    <small>studio.raquelsynths.com</small>
-  </section>
+  <section class="final-cta" aria-labelledby="final-title"><p class="module-label">// SIGNAL READY</p><h2 id="final-title">{{ lang.tr().LANDING_FINAL_TITLE }}</h2><p>{{ lang.tr().LANDING_FINAL_DESC }}</p><button type="button" class="btn btn--primary" (click)="enterMainframe()">{{ lang.tr().LANDING_CTA_OPEN }}</button><small>studio.raquelsynths.com</small></section>
 </main>
