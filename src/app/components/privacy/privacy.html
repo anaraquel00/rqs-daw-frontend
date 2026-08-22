@@ -1,8 +1,12 @@
 <div class="terms-container">
   <div class="lang-toggle-bar" aria-label="Privacy policy language">
-    <button type="button" (click)="lang.setLanguage('pt')" [attr.aria-pressed]="lang.currentLang() === 'pt'" [class.is-active]="lang.currentLang() === 'pt'">PT</button>
+    <button type="button" (click)="lang.setLanguage('pt')" [attr.aria-pressed]="lang.currentLang() === 'pt'" [class.is-active]="lang.currentLang() === 'pt'">PT-BR</button>
     <span aria-hidden="true">|</span>
-    <button type="button" (click)="lang.setLanguage('en')" [attr.aria-pressed]="lang.currentLang() !== 'pt'" [class.is-active]="lang.currentLang() !== 'pt'">EN</button>
+    <button type="button" (click)="lang.setLanguage('en')" [attr.aria-pressed]="lang.currentLang() === 'en'" [class.is-active]="lang.currentLang() === 'en'">EN</button>
+    <span aria-hidden="true">|</span>
+    <button type="button" (click)="lang.setLanguage('pl')" [attr.aria-pressed]="lang.currentLang() === 'pl'" [class.is-active]="lang.currentLang() === 'pl'">PL</button>
+    <span aria-hidden="true">|</span>
+    <button type="button" (click)="lang.setLanguage('fr')" [attr.aria-pressed]="lang.currentLang() === 'fr'" [class.is-active]="lang.currentLang() === 'fr'">FR</button>
   </div>
 
   @if (lang.currentLang() === 'pt') {
@@ -107,6 +111,51 @@
 
     <h2>18. Contato</h2>
     <p>Para privacidade, solicitações sobre dados pessoais, suporte ou dúvidas sobre esta Política: <a routerLink="/contact">Fale Conosco</a></p>
+  } @else if (lang.currentLang() === 'pl') {
+    <h1>Polityka prywatności</h1>
+    <p class="update-date">Ostatnia aktualizacja: 19 sierpnia 2026 r.</p>
+    <p>Niniejsza Polityka opisuje, w jaki sposób <strong class="highlight">RQS Studio</strong> przetwarza dane osobowe i techniczne związane z korzystaniem z platformy. Odzwierciedla obecny stan produktu w publicznej wersji beta i nie stanowi certyfikatu prawnego.</p>
+    <h2>1. Zakres Polityki</h2><p>Polityka przedstawia główne kategorie przetwarzanych danych, cele, odpowiednich dostawców, okres przechowywania, bezpieczeństwo, prawa użytkowników i kanały kontaktu.</p>
+    <h2>2. Operator RQS Studio</h2><p>Usługa jest obsługiwana przez <strong>RaQuel Synths / RQS Studio</strong>. W sprawach dotyczących prywatności, danych osobowych, wsparcia lub Warunków skorzystaj z naszego <a routerLink="/contact">kanału kontaktowego</a>.</p>
+    <h2>3. Dane, które możemy przetwarzać</h2><p>W zależności od używanych funkcji mogą to być: e-mail, identyfikatory konta, metadane profilu, rola konta, pliki audio, nazwy plików, parametry przetwarzania, publiczne adresy URL wysyłane do RQS Uplink, dane listy oczekujących oraz logi techniczne.</p>
+    <h2>4. Cele przetwarzania</h2><p>Dane mogą służyć do udostępniania Studio, przetwarzania audio, obsługi Uplinków, stosowania limitów, zapobiegania nadużyciom, rejestrowania zainteresowania przyszłymi ofertami, diagnozowania awarii i realizacji obowiązków prawnych.</p>
+    <h2>5. Konto i uwierzytelnianie</h2><p>RQS Studio korzysta z Supabase do uwierzytelniania, obsługi profili i kont oraz bazy danych. Logowanie przez Google lub GitHub może przekazywać dane niezbędne do procesu uwierzytelniania; RQS Studio nie musi otrzymywać hasła do zewnętrznego konta.</p>
+    <h2>6. Pliki audio</h2><p>Pliki mogą być przetwarzane w tymczasowej pamięci lokalnej oraz w object storage AWS. Tymczasowe obiekty audio są skonfigurowane tak, aby wygasały około 24 godziny po przesłaniu, zgodnie z technicznymi zasadami lifecycle.</p>
+    <h2>7. Dane RQS Uplink</h2><p>RQS Uplink przetwarza publiczne adresy URL, wygenerowane przekierowania/deep linki i metadane niezbędne do działania tej funkcji.</p>
+    <h2>8. Lista oczekujących i komunikacja</h2><p>Dobrowolnie podany e-mail może być przetwarzany przez Google/Firestore i Brevo w celu zapisania zainteresowania przyszłymi ofertami oraz wysyłania powiązanej komunikacji.</p>
+    <h2>9. Dane techniczne i operacyjne</h2><p>Możemy przetwarzać logi, identyfikatory techniczne, błędy, znaczniki czasu i dane operacyjne potrzebne do diagnostyki, bezpieczeństwa, zapobiegania nadużyciom i stabilności.</p>
+    <h2>10. Pliki cookie i podobne technologie</h2><p>Studio korzysta z pamięci lokalnej do obsługi języka, sesji, stanu aplikacji i wyboru plików cookie.</p><p>Za zgodą użytkownika Google Analytics 4 może agregować odsłony i zdarzenia produktu. GA4 nie jest ładowany przed wyrażeniem zgody na Analytics.</p><p>Instrumentacja nie wysyła celowo do GA4 e-maila, imienia i nazwiska, UUID użytkownika, nazw plików, tytułów utworów, adresów URL użytkownika, treści audio, tokenów OAuth, danych logowania ani adresów S3/presigned.</p><p>Google Signals, personalizacja reklam, remarketing i AdSense nie są aktywne. Zobacz także <a routerLink="/cookies">Politykę plików cookie</a>.</p>
+    <h2>11. Dostawcy</h2><p>Supabase, AWS, Vercel, Google/Firestore, Brevo oraz Google Analytics 4 po uzyskaniu zgody. Backend zawiera przygotowaną integrację Stripe, lecz monetyzacja jest obecnie wyłączona.</p>
+    <h2>12. Transfery międzynarodowe</h2><p>Niektórzy dostawcy działają w wielu krajach, dlatego zależnie od używanej usługi dane mogą być przetwarzane poza Brazylią.</p>
+    <h2>13. Przechowywanie</h2><p>Okres przechowywania zależy od kategorii: tymczasowe audio, konto/profil, lista oczekujących, Uplink, logi oraz — jeśli płatności zostaną uruchomione — dokumentacja rozliczeniowa lub prawna.</p>
+    <h2>14. Bezpieczeństwo</h2><p>RQS Studio stosuje środki techniczne i operacyjne ograniczające ryzyko nieuprawnionego dostępu, utraty i nadużyć. Żaden system połączony z Internetem nie gwarantuje całkowitego bezpieczeństwa.</p>
+    <h2>15. Twoje prawa</h2><p>Zależnie od właściwego prawa możesz mieć prawo do dostępu, sprostowania, informacji, anonimizacji, blokowania, usunięcia danych, wycofania zgody i przeglądu decyzji automatycznych, gdy ma to zastosowanie.</p>
+    <h2>16. Dzieci i wiek</h2><p>RQS Studio nie jest kierowane specjalnie do dzieci. Jeśli prawo wymaga zgody opiekuna, z usługi można korzystać wyłącznie za taką zgodą.</p>
+    <h2>17. Zmiany Polityki</h2><p>Polityka może być aktualizowana w celu odzwierciedlenia zmian produktu, dostawców, praktyk dotyczących danych lub obowiązujących wymagań.</p>
+    <h2>18. Kontakt</h2><p>W sprawach prywatności lub danych osobowych skorzystaj z opcji <a routerLink="/contact">Kontakt</a>.</p>
+  } @else if (lang.currentLang() === 'fr') {
+    <h1>Politique de confidentialité</h1>
+    <p class="update-date">Dernière mise à jour : 19 août 2026</p>
+    <p>Cette Politique décrit comment <strong class="highlight">RQS Studio</strong> traite les données personnelles et techniques liées à l’utilisation de la plateforme. Elle décrit l’état actuel du produit en bêta publique et ne constitue pas une certification juridique.</p>
+    <h2>1. À propos de cette Politique</h2><p>Cette Politique présente les principales catégories de données traitées, leurs finalités, les fournisseurs concernés, la conservation, la sécurité, les droits et les moyens de contact.</p>
+    <h2>2. Qui exploite RQS Studio</h2><p>Le service est exploité par <strong>RaQuel Synths / RQS Studio</strong>. Pour toute demande, utilisez notre <a routerLink="/contact">canal de contact</a>.</p>
+    <h2>3. Données que nous pouvons traiter</h2><p>Selon les fonctionnalités utilisées : e-mail, identifiants de compte, métadonnées de profil, rôle du compte, fichiers audio, noms de fichiers, paramètres de traitement, URL publiques envoyées à RQS Uplink, informations de waitlist et logs techniques.</p>
+    <h2>4. Finalités</h2><p>Fournir le Studio, traiter l’audio, gérer les Uplinks, appliquer les limites, prévenir les abus, enregistrer l’intérêt pour de futures offres, diagnostiquer les pannes et respecter les obligations légales applicables.</p>
+    <h2>5. Compte et authentification</h2><p>RQS Studio utilise Supabase pour l’authentification, les profils/comptes et la base de données. Les connexions Google ou GitHub peuvent transmettre les données nécessaires au flux d’authentification ; RQS Studio n’a pas besoin de votre mot de passe externe.</p>
+    <h2>6. Fichiers audio</h2><p>Les fichiers peuvent être traités dans un stockage éphémère et dans l’object storage AWS. Les objets audio temporaires sont configurés pour expirer environ 24 heures après l’upload selon les politiques de lifecycle.</p>
+    <h2>7. Données RQS Uplink</h2><p>RQS Uplink traite les URL publiques, les liens de redirection/deep links générés et les métadonnées nécessaires au fonctionnement de la fonctionnalité.</p>
+    <h2>8. Waitlist et communications</h2><p>Un e-mail fourni volontairement peut être traité via Google/Firestore et Brevo afin d’enregistrer l’intérêt pour de futures offres et d’envoyer les communications associées.</p>
+    <h2>9. Données techniques</h2><p>Nous pouvons traiter logs, identifiants techniques, erreurs, horodatages et données opérationnelles nécessaires au diagnostic, à la sécurité, à la prévention des abus et à la stabilité.</p>
+    <h2>10. Cookies et technologies similaires</h2><p>Le Studio utilise le stockage local pour la langue, la session, l’état de l’application et le choix de cookies.</p><p>Avec votre autorisation, Google Analytics 4 peut mesurer de manière agrégée les pages vues et les événements produit. GA4 n’est pas chargé avant le consentement Analytics.</p><p>L’instrumentation n’envoie pas intentionnellement à GA4 l’e-mail, le nom, l’UUID utilisateur, les noms de fichiers, titres de pistes, URL utilisateur, contenu audio, tokens OAuth, identifiants ou URL S3/presigned.</p><p>Google Signals, personnalisation publicitaire, remarketing et AdSense ne sont pas activés. Consultez également notre <a routerLink="/cookies">Politique de cookies</a>.</p>
+    <h2>11. Fournisseurs</h2><p>Supabase, AWS, Vercel, Google/Firestore, Brevo et Google Analytics 4 lorsqu’il est autorisé. Le backend contient une intégration Stripe préparée, mais la monétisation est actuellement désactivée.</p>
+    <h2>12. Transferts internationaux</h2><p>Certains fournisseurs exploitent une infrastructure dans plusieurs pays ; certaines données peuvent donc être traitées hors du Brésil selon le service utilisé.</p>
+    <h2>13. Conservation</h2><p>La conservation dépend de la catégorie : audio temporaire, compte/profil, waitlist, Uplink, logs et, si des paiements sont activés ultérieurement, registres de facturation ou juridiques.</p>
+    <h2>14. Sécurité</h2><p>RQS Studio utilise des contrôles techniques et opérationnels destinés à réduire les risques d’accès non autorisé, de perte et d’abus. Aucun système connecté à Internet ne peut garantir une sécurité absolue.</p>
+    <h2>15. Vos droits</h2><p>Selon la législation applicable, vous pouvez disposer de droits d’accès, de rectification, d’information, d’anonymisation, de blocage, de suppression, de retrait du consentement et de révision de décisions automatisées lorsque cela s’applique.</p>
+    <h2>16. Enfants et âge</h2><p>RQS Studio ne s’adresse pas spécifiquement aux enfants. Lorsque la loi exige l’autorisation d’un responsable, le service ne doit être utilisé qu’avec cette autorisation.</p>
+    <h2>17. Modifications</h2><p>Cette Politique peut être mise à jour pour refléter les changements du produit, des fournisseurs, des pratiques de données ou des exigences applicables.</p>
+    <h2>18. Contact</h2><p>Pour les questions de confidentialité ou les demandes concernant vos données personnelles : <a routerLink="/contact">Nous contacter</a></p>
+
   } @else {
     <h1>Privacy Policy</h1>
     <p class="update-date">Last Updated: August 19, 2026</p>
