@@ -5,6 +5,7 @@ import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
 import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
+import { AuthPromptService } from '../../services/auth-prompt.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
 import { MasteringProcessCommand, MasteringV2Request } from '../../services/mastering-types';
 import { MasteringService } from '../../services/mastering.service';
@@ -26,6 +27,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   readonly auth = inject(AuthService);
   readonly audioComparison = inject(AudioComparisonService);
   readonly masteringV2DirectUpload = environment.masteringV2DirectUpload;
+  private readonly authPrompt = inject(AuthPromptService);
   private readonly dspService = inject(DspService);
   private readonly masteringService = inject(MasteringService);
   private readonly analytics = inject(AnalyticsService);
@@ -82,6 +84,11 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   }
 
   iniciarUploadS3Silencioso(file: File): void {
+    if (!this.auth.isLoggedIn()) {
+      this.isUploadingS3 = false;
+      return;
+    }
+
     this.isUploadingS3 = true;
     this.addLog(`Iniciando handshake S3 para: ${file.name}`);
 
@@ -109,8 +116,19 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
 
   processarMaster(command: MasteringProcessCommand): void {
     if (this.isProcessing || !this.selectedFile) return;
+
+    // Authentication is a UX gate before any protected upload/mastering call.
+    // The backend remains fail-closed; this prevents normal anonymous use from
+    // being presented as a technical 401/source-upload failure.
+    if (!this.auth.isLoggedIn()) {
+      this.authPrompt.open('mastering');
+      return;
+    }
+
     if (!this.masteringV2DirectUpload && !this.s3Key) {
-      this.addLog('❌ MASTERING V2: source upload is not ready yet.');
+      // The file may have been selected before authentication. Start the
+      // protected upload now instead of continuing into the mastering pipeline.
+      this.iniciarUploadS3Silencioso(this.selectedFile);
       return;
     }
 
@@ -223,7 +241,19 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   }
 
   extrairStems(): void {
-    if (!this.selectedFile || !this.s3Key) return;
+    if (!this.selectedFile) return;
+
+    if (!this.auth.isLoggedIn()) {
+      this.authPrompt.open('stems');
+      return;
+    }
+
+    if (!this.s3Key) {
+      if (!this.masteringV2DirectUpload) {
+        this.iniciarUploadS3Silencioso(this.selectedFile);
+      }
+      return;
+    }
 
     this.analytics.trackEvent('stem_started', {
       source_format: this.analyticsSourceFormat()
@@ -287,6 +317,11 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       return;
     }
 
+    if (!this.auth.isLoggedIn()) {
+      this.isUploadingS3 = false;
+      return;
+    }
+
     this.iniciarUploadS3Silencioso(file);
   }
 
@@ -321,6 +356,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     const phase = this.renderProgressPhaseText();
     if (language === 'pl') return `SZAC. ${this.renderProgressPercent}% · ${phase}`;
     if (language === 'pt') return `EST. ${this.renderProgressPercent}% · ${phase}`;
+    if (language === 'fr') return `EST. ${this.renderProgressPercent}% · ${phase}`;
     return `EST. ${this.renderProgressPercent}% · ${phase}`;
   }
 
@@ -369,6 +405,13 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       if (percent < 78) return 'Processamento DSP';
       if (percent < 90) return 'Finalizando LUFS / True Peak';
       return 'Codificando e finalizando o arquivo';
+    }
+    if (language === 'fr') {
+      if (percent < 15) return preview ? 'Préparation de l’extrait Preview' : 'Préparation du morceau complet';
+      if (percent < 35) return 'Analyse et préparation de l’audio';
+      if (percent < 78) return 'Traitement DSP';
+      if (percent < 90) return 'Finalisation LUFS / True Peak';
+      return 'Encodage et finalisation du fichier';
     }
     if (percent < 15) return preview ? 'Preparing the Preview segment' : 'Preparing the full track';
     if (percent < 35) return 'Analyzing and preparing audio';
