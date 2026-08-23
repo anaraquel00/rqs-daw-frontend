@@ -226,8 +226,75 @@ const PL: MasteringEducationCopy = {
   },
 };
 
+
+const FR: MasteringEducationCopy = {
+  help: 'Aide',
+  guideTitle: 'Guide de mastering',
+  guideIntro:
+    'Vous n’avez pas besoin d’être ingénieur de mastering. RQS maintient la destination sélectionnée dans une plage de livraison validée et explique la fonction de chaque contrôle. « Plus fort » ne signifie pas automatiquement « meilleur ».',
+  close: 'Fermer',
+  whyBlocked: 'Pourquoi le rendu est-il bloqué ?',
+  ready: 'Les réglages sont valides et prêts pour le rendu.',
+  previewRelative: 'Le temps de la prévisualisation est relatif : 00:00 correspond au début de la prévisualisation générée, et non au début de la chanson complète.',
+  previewSourceWindow: 'Extrait source',
+  invalidLufs: (min, max) => `Le loudness demandé doit rester entre ${min} et ${max} LUFS pour cette destination.`,
+  policyDefault: 'Recommandation : utilisez la valeur par défaut de la politique sauf si vous avez une exigence de livraison spécifique.',
+  currentTarget: 'Cible pour la destination sélectionnée',
+  controls: {
+    ab: {
+      title: 'Comparaison A/B',
+      short: 'Bascule entre l’original et le master actuel sans modifier la position de lecture.',
+      details:
+        'La comparaison A/B permet d’évaluer ce que le mastering a modifié. Comparez la tonalité, l’impact, l’image stéréo et les éventuels artefacts. Un signal plus fort peut sembler meilleur simplement parce qu’il est plus fort ; utilisez donc l’A/B comme outil d’écoute, et non comme note de qualité.',
+    },
+    destination: {
+      title: 'Destination',
+      short: 'Définit la politique de loudness de livraison et de True Peak pour le Streaming, le Club ou le Festival.',
+      details:
+        'Les différents environnements de lecture nécessitent des marges de headroom et des niveaux de loudness différents. Les services de streaming normalisent généralement la lecture, tandis que les masters destinés au Club ou au Festival peuvent utiliser des cibles de loudness plus élevées. RQS applique la politique du backend correspondant à la destination sélectionnée au lieu d’utiliser une valeur universelle.',
+    },
+    platform: {
+      title: 'Plateforme de streaming',
+      short: 'Sélectionne la politique de livraison utilisée pour le service de streaming visé.',
+      details:
+        'Les plateformes peuvent utiliser des workflows de normalisation et de codec différents. Le choix de la plateforme modifie les limites de livraison, comme la cible LUFS et le True Peak. Cela ne garantit pas que chaque auditeur percevra exactement ce niveau de loudness, car la normalisation de lecture est contrôlée par la plateforme.',
+    },
+    atmosphere: {
+      title: 'Atmosphere',
+      short: 'Nom de profil de mastering. Dans la version V2 actuellement validée, toutes les Atmospheres partagent le même son DSP de compatibilité.',
+      details:
+        'Thunder, Clear Sky, Sunroof et Aurora font déjà partie du contrat produit, mais le moteur V2 actuellement validé les achemine volontairement vers un seul chemin DSP de compatibilité. À ce stade, il ne faut pas interpréter ces noms comme quatre processeurs sonores distincts. Des voicings Atmosphere réellement différents nécessiteront une étape ultérieure de validation sur de l’audio réel.',
+    },
+    intensity: {
+      title: 'Intensité du caractère',
+      short: 'Contrôle l’intensité avec laquelle le traitement de caractère V2 validé est appliqué. 0 % conserve uniquement le traitement de livraison.',
+      details:
+        '0 % signifie livraison uniquement : finalisation du loudness et du True Peak sans le chemin créatif de caractère V2. Des valeurs plus élevées augmentent progressivement le traitement de caractère validé. 100 % correspond à l’intensité complète actuelle de V2 ; ce n’est pas automatiquement le meilleur choix pour chaque morceau.',
+    },
+    lufs: {
+      title: 'Loudness LUFS',
+      short: 'Le LUFS mesure le loudness perçu. Les valeurs plus négatives sont plus faibles ; les valeurs plus proches de 0 sont plus fortes.',
+      details:
+        'Le LUFS n’est pas une note de qualité. Par exemple, -20 LUFS est relativement faible, -14 LUFS est une cible courante à l’échelle du streaming et -1 LUFS serait extrêmement fort et généralement inadapté à une livraison musicale. La valeur correcte dépend de la destination. RQS bloque les valeurs hors de la plage validée au lieu de supposer que « plus proche de zéro » signifie « meilleur ».',
+    },
+    truePeak: {
+      title: 'True Peak (dBTP)',
+      short: 'Estime les pics inter-échantillons pouvant apparaître pendant la lecture ou après un encodage avec pertes.',
+      details:
+        'Un master peut rester sous 0 dBFS au niveau des échantillons individuels et produire malgré tout des pics reconstruits plus élevés dans un DAC ou un codec. Un plafond de True Peak négatif, par exemple -1.0 dBTP, conserve une marge de sécurité. Une valeur plus proche de 0 dBTP signifie moins de headroom, et non une meilleure qualité.',
+    },
+    preview: {
+      title: 'Prévisualisation de 15 secondes',
+      short: 'Effectue le rendu de la région de 15 secondes mise en évidence dans la forme d’onde afin de vérifier les réglages avant un master complet.',
+      details:
+        'Faites glisser la région mise en évidence sur la forme d’onde de la piste complète pour choisir l’extrait source. Le lecteur de prévisualisation utilise une timeline relative de 00:00 à 00:15, tandis que l’étiquette de l’extrait source indique la position exacte dans la chanson complète. Toute modification des réglages ou déplacement de la région invalide l’ancienne prévisualisation afin d’éviter toute comparaison avec des paramètres obsolètes.',
+    },
+  },
+};
+
 export function masteringEducation(lang: UiLanguage): MasteringEducationCopy {
   if (lang === 'pt') return PT;
   if (lang === 'pl') return PL;
+  if (lang === 'fr') return FR;
   return EN;
 }

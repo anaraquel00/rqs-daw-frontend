@@ -30,17 +30,21 @@ import { SeoService } from '../services/seo.service';
         <div class="header-controls">
           <!-- Seletor de Idiomas -->
           <div class="lang-selector" aria-label="Interface language">
-            <button type="button" (click)="lang.setLanguage('en')"
-              [attr.aria-pressed]="lang.currentLang() === 'en'"
-              [style.color]="lang.currentLang() === 'en' ? '#00ffcc' : '#666'">EN</button>
-            <span class="divider">|</span>
             <button type="button" (click)="lang.setLanguage('pt')"
-              [attr.aria-pressed]="lang.currentLang() === 'pt'"
-              [style.color]="lang.currentLang() === 'pt' ? '#00ffcc' : '#666'">PT-BR</button>
+              [attr.aria-pressed]="lang.isLanguage('pt')"
+              [style.color]="lang.isLanguage('pt') ? '#00ffcc' : '#666'">PT-BR</button>
+            <span class="divider">|</span>
+            <button type="button" (click)="lang.setLanguage('en')"
+              [attr.aria-pressed]="lang.isLanguage('en')"
+              [style.color]="lang.isLanguage('en') ? '#00ffcc' : '#666'">EN</button>
             <span class="divider">|</span>
             <button type="button" (click)="lang.setLanguage('pl')"
-              [attr.aria-pressed]="lang.currentLang() === 'pl'"
-              [style.color]="lang.currentLang() === 'pl' ? '#00ffcc' : '#666'">PL</button>
+              [attr.aria-pressed]="lang.isLanguage('pl')"
+              [style.color]="lang.isLanguage('pl') ? '#00ffcc' : '#666'">PL</button>
+            <span class="divider">|</span>
+            <button type="button" (click)="lang.setLanguage('fr')"
+              [attr.aria-pressed]="lang.isLanguage('fr')"
+              [style.color]="lang.isLanguage('fr') ? '#00ffcc' : '#666'">FR</button>
           </div>
 
           <!-- Sessão de Login (Supabase Auth) [1] -->

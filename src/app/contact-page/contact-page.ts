@@ -110,6 +110,31 @@ const CONTACT_COPY: Record<UiLanguage, ContactCopy> = {
     backStudio: 'OPEN RQS STUDIO',
     backHome: 'BACK TO LANDING'
   },
+
+  fr: {
+    eyebrow: 'RQS STUDIO // CONTACT',
+    title: 'CONTACTEZ LE STUDIO.',
+    subtitle: 'Support technique, confidentialité et demandes professionnelles depuis un point de contact unique.',
+    supportTitle: 'SUPPORT',
+    supportDesc: 'Problèmes techniques, compte, mastering, stems, setlists, Uplink ou comportement inattendu du Studio.',
+    privacyTitle: 'CONFIDENTIALITÉ & JURIDIQUE',
+    privacyDesc: 'Demandes relatives aux données personnelles, à la Politique de confidentialité, aux Conditions d’utilisation ou aux droits applicables.',
+    businessTitle: 'BUSINESS',
+    businessDesc: 'Partenariats, presse, collaborations, intérêt commercial et futures offres de RQS Studio.',
+    formEyebrow: 'CONTACT DIRECT',
+    formTitle: 'ENVOYEZ UN MESSAGE.',
+    formDesc: 'Choisissez la catégorie la plus adaptée afin que nous puissions orienter correctement votre demande.',
+    nameLabel: 'Nom', emailLabel: 'E-mail', categoryLabel: 'Sujet', messageLabel: 'Message',
+    namePlaceholder: 'Votre nom', emailPlaceholder: 'vous@exemple.com',
+    messagePlaceholder: 'Décrivez votre demande avec les informations utiles.',
+    categoryPlaceholder: 'Sélectionnez une catégorie',
+    categories: { support: 'Support technique', account: 'Compte', privacy: 'Confidentialité / Juridique', business: 'Business / Partenariat', other: 'Autre' },
+    submit: 'ENVOYER LE MESSAGE', sending: 'ENVOI...',
+    success: 'Message reçu. Merci — nous répondrons à l’adresse e-mail indiquée.',
+    error: 'Impossible d’envoyer le message pour le moment. Réessayez dans quelques instants.',
+    privacyNote: 'Les données de ce formulaire servent à traiter votre demande et à y répondre. Consultez notre Politique de confidentialité pour plus d’informations.',
+    backStudio: 'OUVRIR RQS STUDIO', backHome: 'RETOUR À LA LANDING'
+  },
   pl: {
     eyebrow: 'RQS STUDIO // KONTAKT',
     title: 'SKONTAKTUJ SIĘ ZE STUDIO.',
@@ -175,24 +200,25 @@ export class ContactPageComponent {
       const currentLang = this.lang.currentLang();
       const isPt = currentLang === 'pt';
       const isPl = currentLang === 'pl';
+      const isFr = currentLang === 'fr';
       const canonicalUrl = 'https://studio.raquelsynths.com/contact';
 
       this.seo.update({
-        title: isPt ? 'Contato | RQS Studio' : isPl ? 'Kontakt | RQS Studio' : 'Contact | RQS Studio',
+        title: isPt ? 'Contato | RQS Studio' : isPl ? 'Kontakt | RQS Studio' : isFr ? 'Contact | RQS Studio' : 'Contact | RQS Studio',
         description: isPt
           ? 'Entre em contato com o RQS Studio para suporte técnico, privacidade, questões legais e assuntos comerciais.'
           : isPl
             ? 'Skontaktuj się z RQS Studio w sprawie wsparcia technicznego, prywatności, kwestii prawnych i biznesowych.'
-            : 'Contact RQS Studio for technical support, privacy, legal and business matters.',
+            : isFr ? 'Contactez RQS Studio pour le support technique, la confidentialité, les questions juridiques et professionnelles.' : 'Contact RQS Studio for technical support, privacy, legal and business matters.',
         url: canonicalUrl,
         type: 'website',
-        locale: isPt ? 'pt_BR' : isPl ? 'pl_PL' : 'en_US',
+        locale: isPt ? 'pt_BR' : isPl ? 'pl_PL' : isFr ? 'fr_FR' : 'en_US',
         siteName: 'RQS Studio',
         robots: 'index, follow',
         jsonLd: {
           '@context': 'https://schema.org',
           '@type': 'ContactPage',
-          name: isPt ? 'Contato do RQS Studio' : isPl ? 'Kontakt RQS Studio' : 'RQS Studio Contact',
+          name: isPt ? 'Contato do RQS Studio' : isPl ? 'Kontakt RQS Studio' : isFr ? 'Contact RQS Studio' : 'RQS Studio Contact',
           url: canonicalUrl,
           isPartOf: {
             '@type': 'WebSite',
