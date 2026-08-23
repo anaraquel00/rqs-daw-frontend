@@ -132,6 +132,7 @@ import { AuthPromptComponent } from '../components/auth-prompt/auth-prompt';
 
     .left-workstation-column {
       width: 100%;
+      min-width: 0;
     }
 
     /* 🟢 Barramento Vertical da Coluna da Direita */
@@ -140,6 +141,7 @@ import { AuthPromptComponent } from '../components/auth-prompt/auth-prompt';
       flex-direction: column;
       gap: 24px;
       width: 100%;
+      min-width: 0;
     }
 `]
 })

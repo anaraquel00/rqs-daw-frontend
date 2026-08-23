@@ -1,6 +1,6 @@
-<div class="auth-overlay" *ngIf="auth.authPromptOpen()" (click)="auth.closeAuthPrompt()">
+<div class="auth-overlay" *ngIf="auth.authPromptOpen()" (click)="close()">
   <section class="auth-dialog" role="dialog" aria-modal="true" [attr.aria-labelledby]="'auth-title'" (click)="$event.stopPropagation()">
-    <button type="button" class="auth-close" (click)="auth.closeAuthPrompt()" [attr.aria-label]="lang.t().AUTH_CLOSE">×</button>
+    <button type="button" class="auth-close" (click)="close()" [attr.aria-label]="lang.t().AUTH_CLOSE">×</button>
 
     <div *ngIf="auth.authPromptMode() !== 'sent'">
       <p class="auth-eyebrow">{{ lang.t().AUTH_EYEBROW }}</p>

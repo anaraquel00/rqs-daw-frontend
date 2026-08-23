@@ -20,6 +20,11 @@ export class AuthPromptComponent {
     return key ? this.lang.t()[key] : '';
   });
 
+  close(): void {
+    this.email.set('');
+    this.auth.closeAuthPrompt();
+  }
+
   submitEmail(): void {
     void this.auth.sendMagicLink(this.email());
   }
