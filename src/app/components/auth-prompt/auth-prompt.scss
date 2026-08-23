@@ -43,5 +43,5 @@ button:disabled, input:disabled { opacity: 0.6; cursor: wait; }
 
 @media (max-width: 520px) {
   .auth-overlay { align-items: end; padding: 0; }
-  .auth-dialog { width: 100%; border-radius: 16px 16px 0 0; padding: 24px 20px max(24px, env(safe-area-inset-bottom)); }
+  .auth-dialog { box-sizing: border-box; width: 100%; border-radius: 16px 16px 0 0; padding: 24px 20px max(24px, env(safe-area-inset-bottom)); }
 }
