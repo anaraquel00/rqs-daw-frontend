@@ -43,9 +43,18 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
   private renderProgressTimer: ReturnType<typeof setInterval> | undefined;
+  private wasAuthenticated = this.auth.isLoggedIn();
+  private workspaceGeneration = 0;
   private readonly authenticatedUploadEffect = effect(() => {
+    const isAuthenticated = this.auth.isLoggedIn();
+
+    if (this.wasAuthenticated && !isAuthenticated) {
+      this.ejetarFaixa();
+    }
+    this.wasAuthenticated = isAuthenticated;
+
     if (
-      this.auth.isLoggedIn()
+      isAuthenticated
       && this.selectedFile
       && !this.masteringV2DirectUpload
       && !this.s3Key
@@ -99,24 +108,29 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     }
 
     this.isUploadingS3 = true;
+    const generation = this.workspaceGeneration;
     this.addLog(`Iniciando handshake S3 para: ${file.name}`);
 
     this.dspService.getMasteringV2PresignedUrl(file.name).subscribe({
       next: (s3Response) => {
+        if (!this.isActiveWorkspace(generation)) return;
         this.addLog('URL pré-assinada concedida pelo S3. Iniciando upload em background...');
         this.dspService.uploadToS3(s3Response.uploadUrl, file).subscribe({
           next: () => {
+            if (!this.isActiveWorkspace(generation)) return;
             this.isUploadingS3 = false;
             this.s3Key = s3Response.s3Key;
             this.addLog(`Upload concluído! Arquivo persistido em: ${s3Response.s3Key}`);
           },
           error: (error: unknown) => {
+            if (!this.isActiveWorkspace(generation)) return;
             this.isUploadingS3 = false;
             this.addLog(`❌ ERRO CRÍTICO S3: ${this.errorMessage(error)}`);
           },
         });
       },
       error: (error: unknown) => {
+        if (!this.isActiveWorkspace(generation)) return;
         this.isUploadingS3 = false;
         this.addLog(`❌ ERRO DE PROTOCOLO S3: ${this.errorMessage(error)}`);
       },
@@ -145,6 +159,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     });
 
     this.isProcessing = true;
+    const generation = this.workspaceGeneration;
     this.startEstimatedRenderProgress(command.preview);
     const formData = this.buildMasteringV2FormData(
       command.request,
@@ -158,6 +173,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       );
       this.dspService.masterizeV2Preview(formData).subscribe({
         next: (blob) => {
+          if (!this.isActiveWorkspace(generation)) return;
           this.completeRenderProgress();
           this.isProcessing = false;
           this.releaseProcessedBlobUrl();
@@ -172,6 +188,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
           this.addLog('Mastering V2 preview concluído com sucesso.');
         },
         error: (error: unknown) => {
+          if (!this.isActiveWorkspace(generation)) return;
           this.stopEstimatedRenderProgress();
           this.isProcessing = false;
           this.audioComparison.previewStatus.set('error');
@@ -188,6 +205,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.addLog(`Mastering V2 final: ${this.describeRequest(command.request)} | ${command.request.intensityPercent}%`);
     this.dspService.masterizeV2Final(formData).subscribe({
       next: (response) => {
+        if (!this.isActiveWorkspace(generation)) return;
         this.completeRenderProgress();
         this.isProcessing = false;
         void this.auth.refreshProfile();
@@ -204,6 +222,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         this.addLog(`Mastering V2 finalizado: ${response.fileName}`);
       },
       error: (error: unknown) => {
+        if (!this.isActiveWorkspace(generation)) return;
         this.stopEstimatedRenderProgress();
         this.isProcessing = false;
         this.analytics.trackEvent('master_failed', {
@@ -227,12 +246,15 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   }
 
   ejetarFaixa(): void {
+    this.workspaceGeneration += 1;
     this.releaseProcessedBlobUrl();
     this.selectedFile = null;
     this.processedAudioUrl = null;
     this.processedAudioName = '';
     this.s3Key = null;
     this.isProcessing = false;
+    this.isUploadingS3 = false;
+    this.isExtractingStems = false;
     this.systemLogs = [];
     this.isFullMasterCompleted = false;
     this.masteringService.resetPreviewStartSeconds();
@@ -249,10 +271,12 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       source_format: this.analyticsSourceFormat()
     });
     this.isExtractingStems = true;
+    const generation = this.workspaceGeneration;
     this.addLog(`Iniciando dissecação acústica de 6 canais (Demucs) via S3 para: ${this.selectedFile.name}`);
 
     this.dspService.extractStemsS3(this.s3Key).subscribe({
       next: (response) => {
+        if (!this.isActiveWorkspace(generation)) return;
         this.isExtractingStems = false;
         const a = document.createElement('a');
         a.href = response.downloadUrl;
@@ -267,6 +291,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         this.addLog('ZIP de 6 canais entregue com sucesso!');
       },
       error: (error: unknown) => {
+        if (!this.isActiveWorkspace(generation)) return;
         this.isExtractingStems = false;
         this.analytics.trackEvent('stem_failed', {
           source_format: this.analyticsSourceFormat()
@@ -288,6 +313,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       return;
     }
 
+    this.workspaceGeneration += 1;
     this.releaseProcessedBlobUrl();
     this.selectedFile = file;
     this.processedAudioUrl = null;
@@ -410,6 +436,10 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     if (this.processedAudioUrl?.startsWith('blob:')) {
       window.URL.revokeObjectURL(this.processedAudioUrl);
     }
+  }
+
+  private isActiveWorkspace(generation: number): boolean {
+    return generation === this.workspaceGeneration && this.auth.isLoggedIn();
   }
 
   private analyticsSourceFormat(): 'wav' | 'mp3' | 'unknown' {
