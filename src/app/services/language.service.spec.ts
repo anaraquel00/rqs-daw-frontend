@@ -10,18 +10,22 @@ describe('LanguageService', () => {
     service = TestBed.inject(LanguageService);
   });
 
-  it('supports English, Brazilian Portuguese and Polish', () => {
+  it('provides Auth UX strings in English, Brazilian Portuguese, Polish and French', () => {
     service.setLanguage('en');
     expect(service.currentLang()).toBe('en');
-    expect(service.tr().ORIGINAL_LABEL).toContain('ORIGINAL');
+    expect(service.t().AUTH_EMAIL_CONTINUE).toBe('Continue with email');
 
     service.setLanguage('pt');
     expect(service.currentLang()).toBe('pt');
-    expect(service.t().MASTER_FULL).toContain('MASTERIZAR');
+    expect(service.t().AUTH_EMAIL_CONTINUE).toBe('Continuar com e-mail');
 
     service.setLanguage('pl');
     expect(service.currentLang()).toBe('pl');
-    expect(service.t().MASTER_FULL).toContain('MASTERUJ');
+    expect(service.t().AUTH_EMAIL_CONTINUE).toBe('Kontynuuj przez e-mail');
+
+    service.setLanguage('fr');
+    expect(service.currentLang()).toBe('fr');
+    expect(service.t().AUTH_EMAIL_CONTINUE).toBe('Continuer avec l’e-mail');
   });
 
   it('persists the explicit language choice', () => {

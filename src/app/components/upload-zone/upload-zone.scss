@@ -17,6 +17,35 @@
   text-align: center;
 }
 
+.auth-resume-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 8px;
+  background: rgba(0, 240, 255, 0.06);
+  color: #bfeff7;
+  font-size: 12px;
+}
+
+.auth-resume-notice button {
+  border: 0;
+  background: transparent;
+  color: #00f0ff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .auth-resume-notice {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .drop-zone {
   border: 2px dashed rgba(0, 212, 255, 0.4);
   border-radius: 12px;
@@ -265,4 +294,3 @@ transition: all 0.3s ease;
     transform: none;
   }
 }
-
