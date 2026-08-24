@@ -222,6 +222,97 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.tracks).toEqual([]);
   }));
 
+  it('clears user A Setlist state on A to B switch and ignores a delayed A success', fakeAsync(() => {
+    let emitDelayedSuccess = () => {};
+    let unsubscribed = false;
+    generateMixS3.and.returnValue(new Observable<SetlistRenderResponse>((subscriber) => {
+      emitDelayedSuccess = () => {
+        subscriber.next(renderResponse());
+        subscriber.complete();
+      };
+      return () => { unsubscribed = true; };
+    }));
+    component.tracks = readyTracks(2);
+    component.vignetteEnabled = true;
+    component.vignetteTrack = track(
+      'user-a-vignette.wav',
+      5,
+      'ready',
+      'uploads/user-id/setlist/user-a-vignette.wav',
+    );
+    const staleTracks = [...component.tracks];
+    const staleVignette = component.vignetteTrack;
+    const revokeObjectUrl = spyOn(URL, 'revokeObjectURL');
+    const anchorClick = spyOn(HTMLAnchorElement.prototype, 'click');
+
+    component.igniteSetlist();
+    expect(component.isProcessing).toBeTrue();
+
+    session.set({ access_token: 'user-b-token', user: { id: 'user-b' } });
+    fixture.detectChanges();
+    flushMicrotasks();
+
+    expect(unsubscribed).toBeTrue();
+    expect(component.isProcessing).toBeFalse();
+    expect(component.mixSuccess).toBeFalse();
+    expect(component.tracks).toEqual([]);
+    expect(component.vignetteTrack).toBeNull();
+    expect(component.vignetteEnabled).toBeFalse();
+    expect(staleTracks.every((item) => item.s3Key === null && item.uploadState === 'idle')).toBeTrue();
+    expect(staleVignette?.s3Key).toBeNull();
+    expect(staleVignette?.uploadState).toBe('idle');
+    for (const item of [...staleTracks, staleVignette!]) {
+      expect(revokeObjectUrl).toHaveBeenCalledWith(item.rawUrl);
+    }
+
+    emitDelayedSuccess();
+    flushMicrotasks();
+
+    expect(anchorClick).not.toHaveBeenCalled();
+    expect(component.isProcessing).toBeFalse();
+    expect(component.mixSuccess).toBeFalse();
+    expect(audioComparison.audioProcessed()).toBeFalse();
+    expect(audioComparison.processedFilename()).toBe('');
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('setlist_created');
+    expect(component.tracks).toEqual([]);
+    expect(component.vignetteTrack).toBeNull();
+  }));
+
+  it('preserves Setlist state and active render on same-user token refresh', fakeAsync(() => {
+    let unsubscribed = false;
+    generateMixS3.and.returnValue(new Observable<SetlistRenderResponse>(() => (
+      () => { unsubscribed = true; }
+    )));
+    component.tracks = readyTracks(2);
+    component.vignetteEnabled = true;
+    component.vignetteTrack = track(
+      'same-user-vignette.wav',
+      5,
+      'ready',
+      'uploads/user-id/setlist/same-user-vignette.wav',
+    );
+    const originalTracks = component.tracks;
+    const originalVignette = component.vignetteTrack;
+    const revokeObjectUrl = spyOn(URL, 'revokeObjectURL');
+
+    component.igniteSetlist();
+    session.set({ access_token: 'refreshed-token', user: { id: 'user-id' } });
+    fixture.detectChanges();
+    flushMicrotasks();
+
+    expect(unsubscribed).toBeFalse();
+    expect(component.isProcessing).toBeTrue();
+    expect(component.tracks).toBe(originalTracks);
+    expect(component.vignetteTrack).toBe(originalVignette);
+    expect(component.vignetteEnabled).toBeTrue();
+    expect(component.tracks.map((item) => item.s3Key)).toEqual([
+      'uploads/user-id/setlist/track-01.wav',
+      'uploads/user-id/setlist/track-02.wav',
+    ]);
+    expect(component.vignetteTrack?.s3Key).toBe('uploads/user-id/setlist/same-user-vignette.wav');
+    expect(revokeObjectUrl).not.toHaveBeenCalled();
+  }));
+
   it('cancels an active render when the component is destroyed', () => {
     let unsubscribed = false;
     generateMixS3.and.returnValue(new Observable<SetlistRenderResponse>(() => (

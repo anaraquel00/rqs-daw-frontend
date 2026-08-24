@@ -168,7 +168,8 @@ export class MixPanelComponent implements OnDestroy {
     afterNextRender(() => this.initializeTransitionPlayers());
     effect(() => {
       const userId = this.auth.session()?.user?.id ?? null;
-      if (this.previousUserId && !userId) {
+      const previousUserId = this.previousUserId;
+      if (previousUserId && previousUserId !== userId) {
         queueMicrotask(() => this.clearAllLocalAudio());
       }
       this.previousUserId = userId;
