@@ -1,6 +1,21 @@
-import { inject, Injectable } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Injectable, PLATFORM_ID, effect, inject, signal } from '@angular/core';
 import { AuthService } from './auth.service';
 import { LanguageService } from './language.service';
+
+interface UplinkRow {
+  id: string;
+  target_url: string;
+  custom_slug: string;
+  created_at: string;
+  clicks: number;
+  source_instagram: number;
+  source_tiktok: number;
+  source_facebook: number;
+  source_youtube: number;
+  source_direct: number;
+}
+
 export interface DeepLinkRecord {
   id: string;
   targetUrl: string;
@@ -8,7 +23,6 @@ export interface DeepLinkRecord {
   platform: string | null;
   createdAt: string;
   clicks: number;
-  conversionRate: string;
   sources: {
     instagram: number;
     facebook: number;
@@ -18,23 +32,37 @@ export interface DeepLinkRecord {
   };
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class DeepLinkService {
-  private storageKey = 'rqs_uplink_database';
-  private auth = inject(AuthService);
-  private lang = inject(LanguageService);
-  private get supabase() {
-  return this.auth.getSupabaseClient();
-   }
+  private readonly auth = inject(AuthService);
+  private readonly lang = inject(LanguageService);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  private regexPatterns = {
+  readonly links = signal<DeepLinkRecord[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly limitReached = signal(false);
+
+  private readonly regexPatterns = {
     spotify: /open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(track|album|artist)\/([a-zA-Z0-9]+)/,
     bandcamp: /[a-zA-Z0-9-]+\.bandcamp\.com\/(track|album)/,
     youtube: /(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/,
     soundcloud: /soundcloud\.com\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+/
   };
+
+  constructor() {
+    effect(() => {
+      const userId = this.auth.session()?.user.id;
+      if (!this.isBrowser || !userId) {
+        this.links.set([]);
+        this.loading.set(false);
+        this.error.set(null);
+        this.limitReached.set(false);
+        return;
+      }
+      void this.refreshLinks();
+    });
+  }
 
   detectPlatform(url: string): string | null {
     if (this.regexPatterns.spotify.test(url)) return 'spotify';
@@ -44,123 +72,74 @@ export class DeepLinkService {
     return null;
   }
 
-  getAllLinks(): DeepLinkRecord[] {
-    const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : [];
-  }
-
- async compileAndRegisterLink(
-  targetUrl: string,
-  customSlug: string
-): Promise<{
-  success: boolean;
-  url?: string;
-  error?: string;
-}> {
-
-  const session = this.auth.session();
-
-  console.log('[RQS UPLINK SESSION]', session);
-
-  // 🔐 LOGIN OBRIGATÓRIO
-  if (!session?.user) {
-    return {
-      success: false,
-      error: this.lang.tr().UPLINK_LOGIN_REQUIRED
-    };
-  }
-
-  const links = this.getAllLinks();
-
-  const isUserPremium =
-    this.auth.isPremium();
-
-  if (!isUserPremium && links.length >= 3) {
-    return {
-      success: false,
-      error: this.lang.tr().UPLINK_LIMIT_REACHED
-    };
-  }
-
-  const platform =
-    this.detectPlatform(targetUrl);
-
-  const slug =
-    customSlug.trim() ||
-    `rqs-${Math.random().toString(36).substring(2, 8)}`;
-
-  const finalUrl =
-    `https://go.raquelsynths.com/${slug}`;
-
-  const newRecord: DeepLinkRecord = {
-    id: crypto.randomUUID(),
-    targetUrl,
-    customSlug: slug,
-    platform,
-    createdAt: new Date().toLocaleDateString('pt-BR'),
-    clicks: 0,
-    conversionRate: '0.0%',
-    sources: {
-      instagram: 0,
-      tiktok: 0,
-      facebook: 0,
-      youtube: 0,
-      direct: 0
+  async refreshLinks(): Promise<void> {
+    if (!this.isBrowser || !this.auth.session()?.user) {
+      this.links.set([]);
+      return;
     }
-  };
 
- const { error: dbError } =
-  await this.supabase
-    .from('rqs_uplinks')
-    .insert([
-      {
-        user_id: session.user.id,
+    this.loading.set(true);
+    this.error.set(null);
+    const { data, error } = await this.auth.getSupabaseClient()
+      .from('rqs_uplinks')
+      .select('id,target_url,custom_slug,created_at,clicks,source_instagram,source_tiktok,source_facebook,source_youtube,source_direct')
+      .order('created_at', { ascending: false });
 
-        custom_slug: slug,
-        target_url: targetUrl,
-        platform,
+    if (error) {
+      this.links.set([]);
+      this.error.set(error.message);
+    } else {
+      this.links.set(((data ?? []) as UplinkRow[]).map((row) => this.mapRow(row)));
+      this.limitReached.set(!this.auth.isPremium() && this.links().length >= 3);
+    }
+    this.loading.set(false);
+  }
 
-        clicks: 0,
+  async compileAndRegisterLink(targetUrl: string, customSlug: string): Promise<{
+    success: boolean;
+    url?: string;
+    error?: string;
+  }> {
+    if (!this.isBrowser || !this.auth.session()?.user) {
+      return { success: false, error: this.lang.tr().UPLINK_LOGIN_REQUIRED };
+    }
 
-        source_instagram: 0,
-        source_tiktok: 0,
-        source_facebook: 0,
-        source_youtube: 0,
-        source_direct: 0
+    this.error.set(null);
+    const { data, error } = await this.auth.getSupabaseClient().rpc('create_rqs_uplink', {
+      target_url: targetUrl,
+      requested_slug: customSlug.trim() || null
+    });
+
+    if (error) {
+      const limitReached = error.message.includes('UPLINK_FREE_LIMIT_REACHED');
+      this.limitReached.set(limitReached);
+      return {
+        success: false,
+        error: limitReached ? this.lang.tr().UPLINK_LIMIT_REACHED : error.message
+      };
+    }
+
+    const row = (Array.isArray(data) ? data[0] : data) as UplinkRow | null;
+    await this.refreshLinks();
+    if (!row) return { success: false, error: 'UPLINK_CREATE_EMPTY_RESULT' };
+    return { success: true, url: `https://go.raquelsynths.com/${row.custom_slug}` };
+  }
+
+  private mapRow(row: UplinkRow): DeepLinkRecord {
+    return {
+      id: row.id,
+      targetUrl: row.target_url,
+      customSlug: row.custom_slug,
+      platform: this.detectPlatform(row.target_url),
+      createdAt: row.created_at,
+      clicks: Number(row.clicks),
+      sources: {
+        instagram: Number(row.source_instagram),
+        tiktok: Number(row.source_tiktok),
+        facebook: Number(row.source_facebook),
+        youtube: Number(row.source_youtube),
+        direct: Number(row.source_direct)
       }
-    ]);
-
-  if (dbError) {
-    console.error(
-      'Erro ao sincronizar com o Supabase:',
-      dbError.message
-    );
-
-    return {
-      success: false,
-      error: `DB_ERROR: ${dbError.message}`
     };
-  }
-
-  links.unshift(newRecord);
-
-  localStorage.setItem(
-    this.storageKey,
-    JSON.stringify(links)
-  );
-
-  return {
-    success: true,
-    url: finalUrl
-  };
-}
-
-  incrementClick(slug: string): void {
-    const links = this.getAllLinks();
-    const link = links.find(l => l.customSlug === slug);
-    if (link) {
-      link.clicks += 1;
-      localStorage.setItem(this.storageKey, JSON.stringify(links));
-    }
   }
 }

@@ -21,6 +21,7 @@ export class RqsUplinkEngineComponent {
   customSlug = signal<string>('');
   compiledLink = signal<string>('');
   copied = signal<boolean>(false);
+  creating = signal<boolean>(false);
 
   detectedPlatform = computed(() => {
     return this.deepLinkService.detectPlatform(this.targetUrl());
@@ -29,19 +30,22 @@ export class RqsUplinkEngineComponent {
   errorMessage = signal<string>('');
 
   async compileLink(): Promise<void> {
+    if (this.creating()) return;
     this.errorMessage.set('');
     if (!this.targetUrl()) return;
 
-    const slug = this.customSlug();
+    this.creating.set(true);
     const result = await this.deepLinkService.compileAndRegisterLink(this.targetUrl(), this.customSlug());
 
     if (!result.success) {
       this.errorMessage.set(result.error || 'Erro ao compilar link.');
+      this.creating.set(false);
       return;
     }
 
     this.compiledLink.set(result.url!);
     this.copied.set(false);
+    this.creating.set(false);
 
     const platform = this.detectedPlatform();
     this.analytics.trackEvent('uplink_created', {
