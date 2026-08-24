@@ -8,6 +8,37 @@ import {
   MasteringV2FinalResponse,
 } from './mastering-types';
 
+export type SetlistCurve = 'linear' | 'equal-power' | 'fast-cut';
+export type SetlistLoudnessMode = 'off' | 'normalize';
+
+export interface SetlistRenderRequest {
+  tracks: string[];
+  vignette: string | null;
+  crossfades: number[];
+  curve: SetlistCurve;
+  loudness: SetlistLoudnessMode;
+  exportName: string;
+  outputFormat: 'wav';
+}
+
+export interface SetlistRenderResponse {
+  success: true;
+  downloadUrl: string;
+  fileName: string;
+  output: {
+    format: 'wav';
+    codec: 'pcm_s24le';
+    sampleRate: 48000;
+    channels: 2;
+    durationSeconds: number;
+  };
+}
+
+export interface SetlistPresignResponse {
+  uploadUrl: string;
+  s3Key: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -36,14 +67,17 @@ export class DspService {
     });
   }
 
-  generateMixS3(payload: {
-    s3Keys: string[];
-    crossfades: number[];
-    curva: string;
-    loudness: string;
-    exportName: string;
-  }): Observable<{ success: boolean; downloadUrl: string }> {
-    return this.http.post<{ success: boolean; downloadUrl: string }>(`${this.baseUrl}/mix/generate-s3`, payload);
+  generateMixS3(payload: SetlistRenderRequest): Observable<SetlistRenderResponse> {
+    return this.http.post<SetlistRenderResponse>(`${this.baseUrl}/mix/generate-s3`, payload, {
+      headers: this.setlistHeaders(),
+    });
+  }
+
+  getSetlistPresignedUrl(filename: string): Observable<SetlistPresignResponse> {
+    return this.http.get<SetlistPresignResponse>(`${this.baseUrl}/mix/presigned-url`, {
+      params: { filename },
+      headers: this.setlistHeaders(),
+    });
   }
 
   masterizeTrack(formData: FormData): Observable<Blob> {
@@ -83,6 +117,7 @@ export class DspService {
     return this.http.post<{ success: boolean; downloadUrl: string }>(`${this.baseUrl}/stems/split-s3`, { s3Key });
   }
 
+  // Kept only for unrelated legacy callers. Setlist must use getSetlistPresignedUrl().
   getPresignedUrl(filename: string): Observable<{ uploadUrl: string; s3Key: string }> {
     return this.http.get<{ uploadUrl: string; s3Key: string }>(`${this.baseUrl}/mastering/presigned-url`, {
       params: { filename },
@@ -105,6 +140,13 @@ export class DspService {
   }
 
   private masteringV2Headers(): HttpHeaders {
+    const accessToken = this.auth.session()?.access_token;
+    return accessToken
+      ? new HttpHeaders({ Authorization: `Bearer ${accessToken}` })
+      : new HttpHeaders();
+  }
+
+  private setlistHeaders(): HttpHeaders {
     const accessToken = this.auth.session()?.access_token;
     return accessToken
       ? new HttpHeaders({ Authorization: `Bearer ${accessToken}` })
