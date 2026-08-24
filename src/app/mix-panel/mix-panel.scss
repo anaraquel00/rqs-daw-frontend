@@ -10,7 +10,10 @@ $text-muted: #8b949e;
 /* src/app/workspace/mix-panel.scss */
 
 .mix-panel-container {
+  box-sizing: border-box;
   width: 95%;
+  min-width: 0;
+  max-width: 100%;
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(0, 240, 255, 0.1);
   padding: 24px;

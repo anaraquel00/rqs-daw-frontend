@@ -1,0 +1,42 @@
+<div class="auth-overlay" *ngIf="auth.authPromptOpen()" (click)="close()">
+  <section class="auth-dialog" role="dialog" aria-modal="true" [attr.aria-labelledby]="'auth-title'" (click)="$event.stopPropagation()">
+    <button type="button" class="auth-close" (click)="close()" [attr.aria-label]="lang.t().AUTH_CLOSE">×</button>
+
+    <div *ngIf="auth.authPromptMode() !== 'sent'">
+      <p class="auth-eyebrow">{{ lang.t().AUTH_EYEBROW }}</p>
+      <h2 id="auth-title">{{ lang.t().AUTH_REQUIRED_TITLE }}</h2>
+      <p>{{ lang.t().AUTH_REQUIRED_BODY }}</p>
+      <p class="auth-benefit">{{ lang.t().AUTH_REQUIRED_BENEFIT }}</p>
+    </div>
+
+    <div class="auth-providers" *ngIf="auth.authPromptMode() === 'providers'">
+      <button type="button" class="provider google" (click)="auth.loginWithProvider('google')">{{ lang.t().AUTH_GOOGLE }}</button>
+      <button type="button" class="provider github" (click)="auth.loginWithProvider('github')">{{ lang.t().AUTH_GITHUB }}</button>
+      <button type="button" class="provider email" (click)="auth.showEmailSignIn()">{{ lang.t().AUTH_EMAIL_CONTINUE }}</button>
+    </div>
+
+    <form *ngIf="auth.authPromptMode() === 'email'" (ngSubmit)="submitEmail()" novalidate>
+      <label for="auth-email">{{ lang.t().AUTH_EMAIL_ADDRESS }}</label>
+      <input
+        id="auth-email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+        [disabled]="auth.authEmailSending()">
+      <p class="auth-error" *ngIf="message()">{{ message() }}</p>
+      <button type="submit" class="auth-submit" [disabled]="auth.authEmailSending()">
+        {{ auth.authEmailSending() ? lang.t().AUTH_EMAIL_SENDING : lang.t().AUTH_EMAIL_SEND }}
+      </button>
+      <button type="button" class="auth-back" (click)="auth.showAuthProviders()">{{ lang.t().AUTH_BACK_TO_PROVIDERS }}</button>
+    </form>
+
+    <div class="auth-sent" *ngIf="auth.authPromptMode() === 'sent'">
+      <p class="auth-eyebrow">{{ lang.t().AUTH_EYEBROW }}</p>
+      <h2 id="auth-title">{{ lang.t().AUTH_EMAIL_SUCCESS_TITLE }}</h2>
+      <p>{{ lang.t().AUTH_EMAIL_SUCCESS_BODY }}</p>
+      <button type="button" class="auth-back" (click)="auth.showAuthProviders()">{{ lang.t().AUTH_BACK_TO_PROVIDERS }}</button>
+    </div>
+  </section>
+</div>

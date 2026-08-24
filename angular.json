@@ -30,7 +30,8 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/stage4-ux.scss"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",
@@ -55,7 +56,25 @@
                   "maximumError": "30kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
+            },
+            "staging": {
+              "optimization": true,
+              "extractLicenses": true,
+              "sourceMap": false,
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.staging.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -70,6 +89,9 @@
           "configurations": {
             "production": {
               "buildTarget": "rqs-daw:build:production"
+            },
+            "staging": {
+              "buildTarget": "rqs-daw:build:staging"
             },
             "development": {
               "buildTarget": "rqs-daw:build:development"
@@ -96,7 +118,8 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/stage4-ux.scss"
             ]
           }
         }

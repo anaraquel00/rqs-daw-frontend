@@ -15,6 +15,7 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { LanguageService } from '../services/language.service';
 import { AuthService } from '../services/auth.service';
 import { AudioComparisonService } from '../services/audio-comparison.service';
+import { AnalyticsService } from '../services/analytics.service';
 
 export interface RQSTrack {
   file: File;
@@ -47,6 +48,7 @@ export class MixPanelComponent implements OnDestroy {
 
   readonly lang = inject(LanguageService);
   readonly auth = inject(AuthService);
+  private readonly analytics = inject(AnalyticsService);
 
   tracks: RQSTrack[] = [];
   isProcessing = false;
@@ -421,6 +423,7 @@ export class MixPanelComponent implements OnDestroy {
         next: (response: any) => {
           this.isProcessing = false;
           this.mixSuccess = true;
+          this.analytics.trackEvent('setlist_created');
 
           const a = document.createElement('a');
           a.href = response.downloadUrl;
