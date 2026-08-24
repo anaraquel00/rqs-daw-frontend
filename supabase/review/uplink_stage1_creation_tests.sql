@@ -2,15 +2,28 @@
 begin;
 
 do $security_contract$
+declare
+  v_privilege text;
 begin
-  if has_function_privilege('anon', 'public.create_rqs_uplink(text,text)', 'EXECUTE') then
-    raise exception 'ANON_EXECUTE_UNEXPECTED';
+  foreach v_privilege in array array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'] loop
+    if has_table_privilege('anon', 'public.rqs_uplinks', v_privilege) then
+      raise exception 'ANON_TABLE_PRIVILEGE_UNEXPECTED: %', v_privilege;
+    end if;
+  end loop;
+  if not has_table_privilege('authenticated', 'public.rqs_uplinks', 'SELECT') then
+    raise exception 'AUTHENTICATED_SELECT_MISSING';
+  end if;
+  foreach v_privilege in array array['INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'] loop
+    if has_table_privilege('authenticated', 'public.rqs_uplinks', v_privilege) then
+      raise exception 'AUTHENTICATED_TABLE_PRIVILEGE_UNEXPECTED: %', v_privilege;
+    end if;
+  end loop;
+  if has_function_privilege('public', 'public.create_rqs_uplink(text,text)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.create_rqs_uplink(text,text)', 'EXECUTE') then
+    raise exception 'PUBLIC_OR_ANON_EXECUTE_UNEXPECTED';
   end if;
   if not has_function_privilege('authenticated', 'public.create_rqs_uplink(text,text)', 'EXECUTE') then
     raise exception 'AUTHENTICATED_EXECUTE_MISSING';
-  end if;
-  if has_table_privilege('authenticated', 'public.rqs_uplinks', 'INSERT') then
-    raise exception 'DIRECT_INSERT_BYPASS_PRESENT';
   end if;
   if not exists (
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace

@@ -26,7 +26,7 @@ create index if not exists rqs_uplinks_user_id_created_at_idx
 on public.rqs_uplinks (user_id, created_at desc);
 
 drop policy if exists "Permitir inserção de uplinks" on public.rqs_uplinks;
-revoke insert, delete on table public.rqs_uplinks from public, anon, authenticated;
+revoke all privileges on table public.rqs_uplinks from anon, authenticated;
 grant select on table public.rqs_uplinks to authenticated;
 
 create function public.create_rqs_uplink(

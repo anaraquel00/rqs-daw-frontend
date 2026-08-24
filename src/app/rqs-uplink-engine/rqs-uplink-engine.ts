@@ -35,28 +35,32 @@ export class RqsUplinkEngineComponent {
     if (!this.targetUrl()) return;
 
     this.creating.set(true);
-    const result = await this.deepLinkService.compileAndRegisterLink(this.targetUrl(), this.customSlug());
+    try {
+      const result = await this.deepLinkService.compileAndRegisterLink(this.targetUrl(), this.customSlug());
 
-    if (!result.success) {
-      this.errorMessage.set(result.error || 'Erro ao compilar link.');
+      if (!result.success) {
+        this.errorMessage.set(result.error || this.lang.tr().UPLINK_CREATE_FAILED);
+        return;
+      }
+
+      this.compiledLink.set(result.url!);
+      this.copied.set(false);
+
+      const platform = this.detectedPlatform();
+      this.analytics.trackEvent('uplink_created', {
+        platform:
+          platform === 'spotify' ||
+          platform === 'soundcloud' ||
+          platform === 'youtube' ||
+          platform === 'bandcamp'
+            ? platform
+            : 'other'
+      });
+    } catch {
+      this.errorMessage.set(this.lang.tr().UPLINK_CREATE_FAILED);
+    } finally {
       this.creating.set(false);
-      return;
     }
-
-    this.compiledLink.set(result.url!);
-    this.copied.set(false);
-    this.creating.set(false);
-
-    const platform = this.detectedPlatform();
-    this.analytics.trackEvent('uplink_created', {
-      platform:
-        platform === 'spotify' ||
-        platform === 'soundcloud' ||
-        platform === 'youtube' ||
-        platform === 'bandcamp'
-          ? platform
-          : 'other'
-    });
   }
 
   copyToClipboard(): void {

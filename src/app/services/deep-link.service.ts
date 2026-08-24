@@ -80,19 +80,22 @@ export class DeepLinkService {
 
     this.loading.set(true);
     this.error.set(null);
-    const { data, error } = await this.auth.getSupabaseClient()
-      .from('rqs_uplinks')
-      .select('id,target_url,custom_slug,created_at,clicks,source_instagram,source_tiktok,source_facebook,source_youtube,source_direct')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await this.auth.getSupabaseClient()
+        .from('rqs_uplinks')
+        .select('id,target_url,custom_slug,created_at,clicks,source_instagram,source_tiktok,source_facebook,source_youtube,source_direct')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      this.links.set([]);
-      this.error.set(error.message);
-    } else {
+      if (error) throw error;
       this.links.set(((data ?? []) as UplinkRow[]).map((row) => this.mapRow(row)));
       this.limitReached.set(!this.auth.isPremium() && this.links().length >= 3);
+    } catch {
+      this.links.set([]);
+      this.limitReached.set(false);
+      this.error.set(this.lang.tr().UPLINK_LOAD_FAILED);
+    } finally {
+      this.loading.set(false);
     }
-    this.loading.set(false);
   }
 
   async compileAndRegisterLink(targetUrl: string, customSlug: string): Promise<{
@@ -105,24 +108,34 @@ export class DeepLinkService {
     }
 
     this.error.set(null);
-    const { data, error } = await this.auth.getSupabaseClient().rpc('create_rqs_uplink', {
-      target_url: targetUrl,
-      requested_slug: customSlug.trim() || null
-    });
+    try {
+      const { data, error } = await this.auth.getSupabaseClient().rpc('create_rqs_uplink', {
+        target_url: targetUrl,
+        requested_slug: customSlug.trim() || null
+      });
 
-    if (error) {
-      const limitReached = error.message.includes('UPLINK_FREE_LIMIT_REACHED');
-      this.limitReached.set(limitReached);
-      return {
-        success: false,
-        error: limitReached ? this.lang.tr().UPLINK_LIMIT_REACHED : error.message
-      };
+      if (error) {
+        const safeMessage = this.safeCreateError(error.message);
+        this.limitReached.set(safeMessage === this.lang.tr().UPLINK_LIMIT_REACHED);
+        return { success: false, error: safeMessage };
+      }
+
+      const row = (Array.isArray(data) ? data[0] : data) as UplinkRow | null;
+      if (!row) return { success: false, error: this.lang.tr().UPLINK_CREATE_FAILED };
+      await this.refreshLinks();
+      return { success: true, url: `https://go.raquelsynths.com/${row.custom_slug}` };
+    } catch {
+      return { success: false, error: this.lang.tr().UPLINK_CREATE_FAILED };
     }
+  }
 
-    const row = (Array.isArray(data) ? data[0] : data) as UplinkRow | null;
-    await this.refreshLinks();
-    if (!row) return { success: false, error: 'UPLINK_CREATE_EMPTY_RESULT' };
-    return { success: true, url: `https://go.raquelsynths.com/${row.custom_slug}` };
+  private safeCreateError(message: string): string {
+    if (message.includes('UPLINK_AUTH_REQUIRED')) return this.lang.tr().UPLINK_LOGIN_REQUIRED;
+    if (message.includes('UPLINK_FREE_LIMIT_REACHED')) return this.lang.tr().UPLINK_LIMIT_REACHED;
+    if (message.includes('UPLINK_INVALID_TARGET_URL')) return this.lang.tr().UPLINK_INVALID_URL;
+    if (message.includes('UPLINK_INVALID_SLUG')) return this.lang.tr().UPLINK_INVALID_SLUG;
+    if (message.includes('UPLINK_SLUG_TAKEN')) return this.lang.tr().UPLINK_SLUG_TAKEN;
+    return this.lang.tr().UPLINK_CREATE_FAILED;
   }
 
   private mapRow(row: UplinkRow): DeepLinkRecord {
