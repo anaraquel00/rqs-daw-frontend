@@ -1,0 +1,24 @@
+name: Uplink Stage 1 Release SQL
+
+on:
+  push:
+    branches:
+      - ana/frontend-uplink-dashboard-stage1-20260824
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  expand-contract-rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run isolated staging-like and production-like SQL matrix
+        shell: pwsh
+        run: ./scripts/test-uplink-stage1-sql.ps1

@@ -475,7 +475,7 @@ export const PT_TRANSLATIONS = {
   deleteBtn: 'Excluir',
 
   UPLINK_LOGIN_REQUIRED:'LOGIN_REQUIRED: Você precisa estar logado para criar deep links. Por favor, faça login na sua conta para continuar.',
-  UPLINK_LIMIT_REACHED: 'LIMIT_REACHED: O plano Free permite apenas 3 Deep Links ativos. Faça login para vincular sua conta e assine o RQS Pro para liberar links ilimitados.',
+  UPLINK_LIMIT_REACHED: 'LIMIT_REACHED: O plano Free permite até 3 Uplinks ativos. O RQS PRO oferecerá limites maiores quando estiver disponível.',
   UPLINK_INVALID_URL: 'Informe uma URL HTTPS válida.',
   UPLINK_INVALID_SLUG: 'Use de 3 a 64 caracteres: letras minúsculas, números e hífens.',
   UPLINK_SLUG_TAKEN: 'Este endereço personalizado já está em uso.',
@@ -684,7 +684,7 @@ export const EN_TRANSLATIONS = {
 
   UPLINK_LOGIN_REQUIRED:'LOGIN_REQUIRED: You must be logged in to create deep links. Please sign in to your account to continue.',
   UPLINK_LIMIT_REACHED:
-  'LIMIT_REACHED: The Free plan allows up to 3 active Deep Links. Sign in to link your account and subscribe to RQS Pro to unlock unlimited links.',
+  'LIMIT_REACHED: The Free plan allows up to 3 active Uplinks. RQS PRO will offer higher limits when available.',
   UPLINK_INVALID_URL: 'Enter a valid HTTPS URL.',
   UPLINK_INVALID_SLUG: 'Use 3 to 64 lowercase letters, numbers, and hyphens.',
   UPLINK_SLUG_TAKEN: 'This custom address is already in use.',

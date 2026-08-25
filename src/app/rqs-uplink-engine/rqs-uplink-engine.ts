@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DeepLinkService } from '../services/deep-link.service';
@@ -29,8 +29,26 @@ export class RqsUplinkEngineComponent {
 
   errorMessage = signal<string>('');
 
+  private lastSessionEpoch = this.deepLinkService.sessionEpoch();
+  private latestCompileRequest = 0;
+
+  constructor() {
+    effect(() => {
+      const epoch = this.deepLinkService.sessionEpoch();
+      if (epoch === this.lastSessionEpoch) return;
+
+      this.lastSessionEpoch = epoch;
+      this.latestCompileRequest += 1;
+      this.compiledLink.set('');
+      this.errorMessage.set('');
+      this.copied.set(false);
+      this.creating.set(false);
+    });
+  }
+
   async compileLink(): Promise<void> {
     if (this.creating()) return;
+    const requestId = ++this.latestCompileRequest;
     this.errorMessage.set('');
     if (!this.targetUrl()) return;
 
@@ -38,6 +56,8 @@ export class RqsUplinkEngineComponent {
     try {
       const result = await this.deepLinkService.compileAndRegisterLink(this.targetUrl(), this.customSlug());
 
+      if (requestId !== this.latestCompileRequest) return;
+      if (result.stale) return;
       if (!result.success) {
         this.errorMessage.set(result.error || this.lang.tr().UPLINK_CREATE_FAILED);
         return;
@@ -57,9 +77,13 @@ export class RqsUplinkEngineComponent {
             : 'other'
       });
     } catch {
-      this.errorMessage.set(this.lang.tr().UPLINK_CREATE_FAILED);
+      if (requestId === this.latestCompileRequest) {
+        this.errorMessage.set(this.lang.tr().UPLINK_CREATE_FAILED);
+      }
     } finally {
-      this.creating.set(false);
+      if (requestId === this.latestCompileRequest) {
+        this.creating.set(false);
+      }
     }
   }
 

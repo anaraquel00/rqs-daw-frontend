@@ -1,7 +1,12 @@
-select p.proname, p.prosecdef, p.proconfig, p.proacl,
-       pg_get_function_identity_arguments(p.oid) as identity_args
-from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public' and p.proname = 'create_rqs_uplink';
+-- Read-only audit valid at baseline, EXPAND, CONTRACT, and rollback states.
+select
+  to_regprocedure('public.create_rqs_uplink(text,text)') as rpc,
+  p.prosecdef,
+  p.proconfig,
+  p.proacl,
+  pg_get_function_identity_arguments(p.oid) as identity_args
+from (values (to_regprocedure('public.create_rqs_uplink(text,text)'))) expected(oid)
+left join pg_proc p on p.oid = expected.oid;
 
 select policyname, roles, cmd, qual, with_check
 from pg_policies
@@ -11,6 +16,7 @@ order by policyname;
 select grantee, privilege_type
 from information_schema.role_table_grants
 where table_schema = 'public' and table_name = 'rqs_uplinks'
+  and grantee in ('anon', 'authenticated', 'service_role')
 order by grantee, privilege_type;
 
 select r.rolname as role,
@@ -21,11 +27,23 @@ select r.rolname as role,
        has_table_privilege(r.rolname, 'public.rqs_uplinks', 'TRUNCATE') as can_truncate,
        has_table_privilege(r.rolname, 'public.rqs_uplinks', 'REFERENCES') as can_references,
        has_table_privilege(r.rolname, 'public.rqs_uplinks', 'TRIGGER') as can_trigger,
-       has_function_privilege(r.rolname, 'public.create_rqs_uplink(text,text)', 'EXECUTE') as can_execute_rpc
+       case
+         when to_regprocedure('public.create_rqs_uplink(text,text)') is null then false
+         else has_function_privilege(
+           r.rolname, 'public.create_rqs_uplink(text,text)', 'EXECUTE'
+         )
+       end as can_execute_rpc
 from pg_roles r
 where r.rolname in ('anon', 'authenticated', 'service_role')
 order by r.rolname;
 
-select indexname, indexdef from pg_indexes
+select indexname, indexdef
+from pg_indexes
 where schemaname = 'public' and tablename = 'rqs_uplinks'
 order by indexname;
+
+select
+  count(*) as total_rows,
+  count(*) filter (where user_id is not null) as owned_rows,
+  count(*) filter (where user_id is null) as legacy_unowned_rows
+from public.rqs_uplinks;

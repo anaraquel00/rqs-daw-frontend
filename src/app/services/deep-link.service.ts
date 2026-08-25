@@ -32,6 +32,18 @@ export interface DeepLinkRecord {
   };
 }
 
+export interface DeepLinkCreateResult {
+  success: boolean;
+  url?: string;
+  error?: string;
+  stale?: boolean;
+}
+
+interface SessionContext {
+  userId: string;
+  epoch: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DeepLinkService {
   private readonly auth = inject(AuthService);
@@ -43,6 +55,12 @@ export class DeepLinkService {
   readonly error = signal<string | null>(null);
   readonly limitReached = signal(false);
 
+  private activeUserId: string | null | undefined;
+  private activeEpoch = 0;
+  private latestRefreshRequest = 0;
+  private readonly sessionEpochState = signal(0);
+  readonly sessionEpoch = this.sessionEpochState.asReadonly();
+
   private readonly regexPatterns = {
     spotify: /open\.spotify\.com\/(?:intl-[a-z]{2}\/)?(track|album|artist)\/([a-zA-Z0-9]+)/,
     bandcamp: /[a-zA-Z0-9-]+\.bandcamp\.com\/(track|album)/,
@@ -52,12 +70,9 @@ export class DeepLinkService {
 
   constructor() {
     effect(() => {
-      const userId = this.auth.session()?.user.id;
+      const userId = this.auth.session()?.user.id ?? null;
+      this.synchronizeUserContext(userId);
       if (!this.isBrowser || !userId) {
-        this.links.set([]);
-        this.loading.set(false);
-        this.error.set(null);
-        this.limitReached.set(false);
         return;
       }
       void this.refreshLinks();
@@ -73,11 +88,12 @@ export class DeepLinkService {
   }
 
   async refreshLinks(): Promise<void> {
-    if (!this.isBrowser || !this.auth.session()?.user) {
-      this.links.set([]);
+    const context = this.captureSessionContext();
+    if (!context) {
       return;
     }
 
+    const requestId = ++this.latestRefreshRequest;
     this.loading.set(true);
     this.error.set(null);
     try {
@@ -86,24 +102,25 @@ export class DeepLinkService {
         .select('id,target_url,custom_slug,created_at,clicks,source_instagram,source_tiktok,source_facebook,source_youtube,source_direct')
         .order('created_at', { ascending: false });
 
+      if (!this.isCurrentRefresh(context, requestId)) return;
       if (error) throw error;
       this.links.set(((data ?? []) as UplinkRow[]).map((row) => this.mapRow(row)));
       this.limitReached.set(!this.auth.isPremium() && this.links().length >= 3);
     } catch {
+      if (!this.isCurrentRefresh(context, requestId)) return;
       this.links.set([]);
       this.limitReached.set(false);
       this.error.set(this.lang.tr().UPLINK_LOAD_FAILED);
     } finally {
-      this.loading.set(false);
+      if (this.isCurrentRefresh(context, requestId)) {
+        this.loading.set(false);
+      }
     }
   }
 
-  async compileAndRegisterLink(targetUrl: string, customSlug: string): Promise<{
-    success: boolean;
-    url?: string;
-    error?: string;
-  }> {
-    if (!this.isBrowser || !this.auth.session()?.user) {
+  async compileAndRegisterLink(targetUrl: string, customSlug: string): Promise<DeepLinkCreateResult> {
+    const context = this.captureSessionContext();
+    if (!context) {
       return { success: false, error: this.lang.tr().UPLINK_LOGIN_REQUIRED };
     }
 
@@ -114,6 +131,7 @@ export class DeepLinkService {
         requested_slug: customSlug.trim() || null
       });
 
+      if (!this.isCurrentSession(context)) return { success: false, stale: true };
       if (error) {
         const safeMessage = this.safeCreateError(error.message);
         this.limitReached.set(safeMessage === this.lang.tr().UPLINK_LIMIT_REACHED);
@@ -123,8 +141,10 @@ export class DeepLinkService {
       const row = (Array.isArray(data) ? data[0] : data) as UplinkRow | null;
       if (!row) return { success: false, error: this.lang.tr().UPLINK_CREATE_FAILED };
       await this.refreshLinks();
+      if (!this.isCurrentSession(context)) return { success: false, stale: true };
       return { success: true, url: `https://go.raquelsynths.com/${row.custom_slug}` };
     } catch {
+      if (!this.isCurrentSession(context)) return { success: false, stale: true };
       return { success: false, error: this.lang.tr().UPLINK_CREATE_FAILED };
     }
   }
@@ -133,9 +153,41 @@ export class DeepLinkService {
     if (message.includes('UPLINK_AUTH_REQUIRED')) return this.lang.tr().UPLINK_LOGIN_REQUIRED;
     if (message.includes('UPLINK_FREE_LIMIT_REACHED')) return this.lang.tr().UPLINK_LIMIT_REACHED;
     if (message.includes('UPLINK_INVALID_TARGET_URL')) return this.lang.tr().UPLINK_INVALID_URL;
+    if (message.includes('UPLINK_RESERVED_SLUG')) return this.lang.tr().UPLINK_INVALID_SLUG;
     if (message.includes('UPLINK_INVALID_SLUG')) return this.lang.tr().UPLINK_INVALID_SLUG;
     if (message.includes('UPLINK_SLUG_TAKEN')) return this.lang.tr().UPLINK_SLUG_TAKEN;
     return this.lang.tr().UPLINK_CREATE_FAILED;
+  }
+
+  private captureSessionContext(): SessionContext | null {
+    if (!this.isBrowser) return null;
+
+    const userId = this.auth.session()?.user.id ?? null;
+    this.synchronizeUserContext(userId);
+    return userId ? { userId, epoch: this.activeEpoch } : null;
+  }
+
+  private synchronizeUserContext(userId: string | null): void {
+    if (userId === this.activeUserId) return;
+
+    this.activeUserId = userId;
+    this.activeEpoch += 1;
+    this.latestRefreshRequest += 1;
+    this.sessionEpochState.set(this.activeEpoch);
+    this.links.set([]);
+    this.loading.set(false);
+    this.error.set(null);
+    this.limitReached.set(false);
+  }
+
+  private isCurrentSession(context: SessionContext): boolean {
+    return this.activeEpoch === context.epoch
+      && this.activeUserId === context.userId
+      && this.auth.session()?.user.id === context.userId;
+  }
+
+  private isCurrentRefresh(context: SessionContext, requestId: number): boolean {
+    return requestId === this.latestRefreshRequest && this.isCurrentSession(context);
   }
 
   private mapRow(row: UplinkRow): DeepLinkRecord {
