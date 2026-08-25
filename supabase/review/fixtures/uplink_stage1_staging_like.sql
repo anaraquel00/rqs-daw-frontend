@@ -47,12 +47,14 @@ create table public.rqs_uplinks (
 
 alter table public.rqs_uplinks enable row level security;
 revoke all on table public.rqs_uplinks from anon, authenticated;
-grant select, insert on table public.rqs_uplinks to authenticated;
+-- Live staging currently exposes SELECT only before PHASE A / EXPAND.
+grant select on table public.rqs_uplinks to authenticated;
 
 create policy "Owners can read own uplinks"
 on public.rqs_uplinks for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
+-- Keep one direct owner form in the matrix to prove backwards compatibility.
 create policy "Permitir inserção de uplinks"
 on public.rqs_uplinks for insert to authenticated
 with check (auth.uid() = user_id);

@@ -56,11 +56,11 @@ grant select, insert on table public.rqs_uplinks to authenticated;
 
 create policy "Owners can read own uplinks"
 on public.rqs_uplinks for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 create policy "Permitir inserção de uplinks"
 on public.rqs_uplinks for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 insert into auth.users(id) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),

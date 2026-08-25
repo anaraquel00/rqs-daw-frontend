@@ -47,6 +47,128 @@ function Invoke-PsqlFile {
   Invoke-Psql -Database $Database -Arguments $arguments | Out-Host
 }
 
+function Invoke-PsqlFileExpectFailure {
+  param(
+    [Parameter(Mandatory)][string]$Database,
+    [Parameter(Mandatory)][string]$ContainerPath,
+    [Parameter(Mandatory)][string]$ExpectedError
+  )
+
+  $output = & docker exec $containerName psql -v ON_ERROR_STOP=1 -U postgres -d $Database -f $ContainerPath 2>&1
+  $exitCode = $LASTEXITCODE
+  $text = $output | Out-String
+  if ($exitCode -eq 0) {
+    throw "EXPECTED_SQL_FAILURE_MISSING: $ExpectedError"
+  }
+  if ($text -notmatch [regex]::Escape($ExpectedError)) {
+    throw "UNEXPECTED_SQL_FAILURE: expected=$ExpectedError output=$text"
+  }
+}
+
+function Set-OwnerPolicies {
+  param(
+    [Parameter(Mandatory)][string]$Database,
+    [Parameter(Mandatory)][string]$SelectPredicate,
+    [Parameter(Mandatory)][string]$InsertPredicate
+  )
+
+  $sql = @"
+drop policy if exists "Owners can read own uplinks" on public.rqs_uplinks;
+create policy "Owners can read own uplinks"
+on public.rqs_uplinks for select to authenticated
+using ($SelectPredicate);
+drop policy if exists "Permitir inserção de uplinks" on public.rqs_uplinks;
+create policy "Permitir inserção de uplinks"
+on public.rqs_uplinks for insert to authenticated
+with check ($InsertPredicate);
+"@
+  Invoke-Psql -Database $Database -Arguments @('-c', $sql) | Out-Host
+}
+
+function Test-PolicyCompatibilityControls {
+  param(
+    [Parameter(Mandatory)][string]$Database,
+    [Parameter(Mandatory)][string]$Fixture
+  )
+
+  $optimizedOwner = '(select auth.uid()) = user_id'
+  $insertOwner = if ($Fixture -eq 'staging_like') {
+    'auth.uid() = user_id'
+  } else {
+    $optimizedOwner
+  }
+
+  Set-OwnerPolicies -Database $Database -SelectPredicate 'true' -InsertPredicate $insertOwner
+  Invoke-PsqlFileExpectFailure -Database $Database -ContainerPath '/review/uplink_stage1_creation_migration.sql' -ExpectedError 'RQS_UPLINKS_OWNER_SELECT_POLICY_REQUIRED'
+  Set-OwnerPolicies -Database $Database -SelectPredicate $optimizedOwner -InsertPredicate $insertOwner
+
+  Invoke-Psql -Database $Database -Arguments @(
+    '-c',
+    @"
+create policy "Broad SELECT negative control"
+on public.rqs_uplinks for select to authenticated
+using ((select auth.uid()) = user_id or true);
+"@
+  ) | Out-Host
+  Invoke-PsqlFileExpectFailure -Database $Database -ContainerPath '/review/uplink_stage1_creation_migration.sql' -ExpectedError 'RQS_UPLINKS_BROAD_SELECT_POLICY_REJECTED'
+  Invoke-Psql -Database $Database -Arguments @(
+    '-c', 'drop policy "Broad SELECT negative control" on public.rqs_uplinks;'
+  ) | Out-Host
+
+  Set-OwnerPolicies -Database $Database -SelectPredicate $optimizedOwner -InsertPredicate 'true'
+  Invoke-PsqlFileExpectFailure -Database $Database -ContainerPath '/review/uplink_stage1_creation_migration.sql' -ExpectedError 'RQS_UPLINKS_OWNER_INSERT_POLICY_REQUIRED'
+  Set-OwnerPolicies -Database $Database -SelectPredicate $optimizedOwner -InsertPredicate $insertOwner
+
+  Invoke-Psql -Database $Database -Arguments @(
+    '-c',
+    @"
+create policy "Broad INSERT negative control"
+on public.rqs_uplinks for insert to authenticated
+with check (true);
+"@
+  ) | Out-Host
+  Invoke-PsqlFileExpectFailure -Database $Database -ContainerPath '/review/uplink_stage1_creation_migration.sql' -ExpectedError 'RQS_UPLINKS_BROAD_INSERT_POLICY_REJECTED'
+  Invoke-Psql -Database $Database -Arguments @(
+    '-c', 'drop policy "Broad INSERT negative control" on public.rqs_uplinks;'
+  ) | Out-Host
+
+  $selectPolicy = (
+    Invoke-Psql -Database $Database -Arguments @(
+      '-Atc',
+      "select qual from pg_policies where schemaname='public' and tablename='rqs_uplinks' and cmd='SELECT';"
+    ) | Out-String
+  ).Trim()
+  if ($selectPolicy -notmatch '(?i)select\s+auth\.uid\(\)') {
+    throw "OPTIMIZED_SELECT_POLICY_SERIALIZATION_MISSING [$Fixture]: $selectPolicy"
+  }
+
+  if ($Fixture -eq 'production_like') {
+    $insertPolicy = (
+      Invoke-Psql -Database $Database -Arguments @(
+        '-Atc',
+        "select with_check from pg_policies where schemaname='public' and tablename='rqs_uplinks' and cmd='INSERT';"
+      ) | Out-String
+    ).Trim()
+    if ($insertPolicy -notmatch '(?i)select\s+auth\.uid\(\)') {
+      throw "OPTIMIZED_INSERT_POLICY_SERIALIZATION_MISSING [$Fixture]: $insertPolicy"
+    }
+  } else {
+    $insertPolicy = (
+      Invoke-Psql -Database $Database -Arguments @(
+        '-Atc',
+        "select with_check from pg_policies where schemaname='public' and tablename='rqs_uplinks' and cmd='INSERT';"
+      ) | Out-String
+    ).Trim()
+    if ($insertPolicy -match '(?i)select\s+auth\.uid\(\)') {
+      throw "DIRECT_INSERT_POLICY_SERIALIZATION_MISSING [$Fixture]: $insertPolicy"
+    }
+    Write-Output "DIRECT_OWNER_POLICY_FORM [$Fixture]: PASS"
+  }
+
+  Write-Output "REAL_OPTIMIZED_RLS_POLICY_FORM [$Fixture]: PASS"
+  Write-Output "BROAD_POLICY_NEGATIVE_CONTROL [$Fixture]: PASS"
+}
+
 function Get-TrackingFingerprint {
   param([Parameter(Mandatory)][string]$Database)
 
@@ -162,6 +284,7 @@ try {
 
     Write-Output "BASELINE_AUDIT [$fixture]"
     Invoke-PsqlFile -Database $database -ContainerPath '/review/uplink_stage1_creation_audit.sql'
+    Test-PolicyCompatibilityControls -Database $database -Fixture $fixture
     $trackingBefore = Get-TrackingFingerprint -Database $database
 
     Invoke-PsqlFile -Database $database -ContainerPath '/review/uplink_stage1_creation_migration.sql'

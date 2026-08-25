@@ -9,6 +9,47 @@
 begin;
 select pg_catalog.set_config('rqs.test.expected_state', :'expected_state', true);
 
+do $policy_normalization_contract$
+declare
+  v_expression text;
+  v_normalized text;
+begin
+  foreach v_expression in array array[
+    '(auth.uid() = user_id)',
+    '(user_id = auth.uid())',
+    '(( SELECT auth.uid() AS uid) = user_id)',
+    '(user_id = ( SELECT auth.uid() AS uid))'
+  ] loop
+    v_normalized := regexp_replace(
+      regexp_replace(lower(v_expression), '[[:space:]]+', '', 'g'),
+      '\(selectauth\.uid\(\)(asuid)?\)', 'auth.uid()', 'g'
+    );
+    if v_normalized not in (
+      '(auth.uid()=user_id)', '(user_id=auth.uid())'
+    ) then
+      raise exception 'OWNER_POLICY_EQUIVALENT_FORM_REJECTED: %', v_expression;
+    end if;
+  end loop;
+
+  foreach v_expression in array array[
+    '(true)',
+    '(( SELECT auth.uid() AS uid) = user_id OR true)',
+    '(auth.uid() = account_id)',
+    '(auth.uid() = user_id OR auth.uid() = owner_id)'
+  ] loop
+    v_normalized := regexp_replace(
+      regexp_replace(lower(v_expression), '[[:space:]]+', '', 'g'),
+      '\(selectauth\.uid\(\)(asuid)?\)', 'auth.uid()', 'g'
+    );
+    if v_normalized in (
+      '(auth.uid()=user_id)', '(user_id=auth.uid())'
+    ) then
+      raise exception 'BROAD_POLICY_EXPRESSION_UNEXPECTEDLY_ACCEPTED: %', v_expression;
+    end if;
+  end loop;
+end;
+$policy_normalization_contract$;
+
 do $security_contract$
 declare
   v_state text := pg_catalog.current_setting('rqs.test.expected_state');
@@ -43,6 +84,97 @@ begin
     end if;
   end loop;
 
+  if not exists (
+    select 1
+    from (
+      select cmd, roles,
+        regexp_replace(
+          regexp_replace(lower(coalesce(qual, '')), '[[:space:]]+', '', 'g'),
+          '\(selectauth\.uid\(\)(asuid)?\)', 'auth.uid()', 'g'
+        ) as normalized_expression
+      from pg_policies
+      where schemaname = 'public' and tablename = 'rqs_uplinks'
+    ) policy
+    where cmd = 'SELECT' and roles @> array['authenticated']::name[]
+      and normalized_expression in (
+        '(auth.uid()=user_id)', '(user_id=auth.uid())'
+      )
+  ) then
+    raise exception 'OWNER_SELECT_POLICY_INVALID';
+  end if;
+  if exists (
+    select 1
+    from (
+      select cmd, roles,
+        regexp_replace(
+          regexp_replace(lower(coalesce(qual, '')), '[[:space:]]+', '', 'g'),
+          '\(selectauth\.uid\(\)(asuid)?\)', 'auth.uid()', 'g'
+        ) as normalized_expression
+      from pg_policies
+      where schemaname = 'public' and tablename = 'rqs_uplinks'
+    ) policy
+    where cmd in ('SELECT', 'ALL')
+      and roles && array['authenticated', 'public']::name[]
+      and (
+        cmd <> 'SELECT'
+        or normalized_expression not in (
+          '(auth.uid()=user_id)', '(user_id=auth.uid())'
+        )
+      )
+  ) then
+    raise exception 'BROAD_SELECT_POLICY_PRESENT';
+  end if;
+
+  if v_state in ('expand', 'rollback') then
+    if not exists (
+      select 1
+      from (
+        select cmd, roles,
+          regexp_replace(
+            regexp_replace(lower(coalesce(with_check, '')), '[[:space:]]+', '', 'g'),
+            '\(selectauth\.uid\(\)(asuid)?\)', 'auth.uid()', 'g'
+          ) as normalized_expression
+        from pg_policies
+        where schemaname = 'public' and tablename = 'rqs_uplinks'
+      ) policy
+      where cmd = 'INSERT' and roles @> array['authenticated']::name[]
+        and normalized_expression in (
+          '(auth.uid()=user_id)', '(user_id=auth.uid())'
+        )
+    ) then
+      raise exception 'OWNER_INSERT_POLICY_INVALID';
+    end if;
+    if exists (
+      select 1
+      from (
+        select cmd, roles,
+          regexp_replace(
+            regexp_replace(lower(coalesce(with_check, '')), '[[:space:]]+', '', 'g'),
+            '\(selectauth\.uid\(\)(asuid)?\)', 'auth.uid()', 'g'
+          ) as normalized_expression
+        from pg_policies
+        where schemaname = 'public' and tablename = 'rqs_uplinks'
+      ) policy
+      where cmd in ('INSERT', 'ALL')
+        and roles && array['authenticated', 'public']::name[]
+        and (
+          cmd <> 'INSERT'
+          or normalized_expression not in (
+            '(auth.uid()=user_id)', '(user_id=auth.uid())'
+          )
+        )
+    ) then
+      raise exception 'BROAD_INSERT_POLICY_PRESENT';
+    end if;
+  elsif exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'rqs_uplinks'
+      and cmd in ('INSERT', 'ALL')
+      and roles && array['authenticated', 'public']::name[]
+  ) then
+    raise exception 'INSERT_POLICY_UNEXPECTED_AFTER_CONTRACT';
+  end if;
+
   if v_state = 'rollback' then
     if v_rpc is not null then raise exception 'RPC_UNEXPECTED_AFTER_ROLLBACK'; end if;
   else
@@ -69,6 +201,10 @@ begin
   end if;
 end;
 $security_contract$;
+
+\echo 'REAL_OPTIMIZED_RLS_POLICY_FORM: PASS'
+\echo 'DIRECT_OWNER_POLICY_FORM: PASS'
+\echo 'BROAD_POLICY_EXPRESSION_NORMALIZATION: PASS'
 
 -- Owner A is the authenticated test identity for functional checks.
 set local role authenticated;
