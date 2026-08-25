@@ -260,10 +260,25 @@ try {
     $postgresImage
   ) | Out-Null
 
+  # The official image briefly starts a temporary bootstrap server. A plain
+  # pg_isready can succeed during that window and race the final restart.
+  $initComplete = $false
+  foreach ($attempt in 1..120) {
+    $logs = (& docker logs $containerName 2>&1 | Out-String)
+    if ($logs -match 'PostgreSQL init process complete; ready for start up\.') {
+      $initComplete = $true
+      break
+    }
+    Start-Sleep -Milliseconds 250
+  }
+  if (-not $initComplete) {
+    throw 'LOCAL_POSTGRES_CONTAINER_INIT_NOT_COMPLETE'
+  }
+
   $ready = $false
   foreach ($attempt in 1..60) {
-    & docker exec $containerName pg_isready -U postgres 2>$null | Out-Null
-    if ($LASTEXITCODE -eq 0) {
+    $probe = & docker exec $containerName psql -Atc 'select 1;' -U postgres -d postgres 2>$null
+    if ($LASTEXITCODE -eq 0 -and ($probe | Out-String).Trim() -eq '1') {
       $ready = $true
       break
     }
