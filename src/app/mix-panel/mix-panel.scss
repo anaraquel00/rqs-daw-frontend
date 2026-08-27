@@ -32,34 +32,6 @@ $text-muted: #8b949e;
   }
 }
 
-/* 🟢 NOVO: TIMELINE DE WAVEFORM ESTILO AUDACITY NA TRILHA [1.1.2] */
-.waveform-lane-wrapper {
-  width: 100%;
-  height: 45px; // Altura estável da forma de onda dentro do card
-  background: #040406;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-  padding: 6px 12px;
-  margin-top: 15px;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.95);
-  box-sizing: border-box;
-}
-
-.cyber-waveform {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1px; // Espaçamento fino entre as barras verticais de espectro
-}
-
-.wave-bar {
-  flex: 1;
-  border-radius: 1px;
-  transition: height 0.3s ease, background-color 0.3s ease;
-}
-
 /* CONSOLE DE VALIDAÇÃO DE CONFORMIDADE */
 .validation-panel {
   background: rgba(255, 0, 85, 0.02);
@@ -177,6 +149,69 @@ $text-muted: #8b949e;
       box-shadow: 0 0 8px rgba(0, 240, 255, 0.15);
     }
   }
+}
+
+
+.upload-state {
+  font-size: 9px;
+  font-weight: bold;
+
+  &.uploading { color: #ffaa00; }
+  &.ready { color: #00f0ff; }
+  &.upload-error { color: #ff0055; }
+}
+
+.waveform-truthful-state {
+  margin-top: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 8px 10px;
+  color: #8b949e;
+  background: #040406;
+  font-size: 9px;
+}
+
+.vignette-console {
+  margin-bottom: 20px;
+  padding: 12px;
+  border: 1px solid rgba(0, 240, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 240, 255, 0.02);
+
+  .vignette-heading,
+  .vignette-state {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .panel-title {
+    margin: 0 0 4px;
+    color: #00f0ff;
+    font-size: 10px;
+  }
+
+  p,
+  span {
+    margin: 0;
+    color: #8b949e;
+    font-size: 9px;
+  }
+
+  .vignette-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .vignette-state {
+    margin-top: 10px;
+    flex-wrap: wrap;
+    font-size: 9px;
+  }
+
+  .upload-error { color: #ff0055; }
 }
 
 /* PLAYER DE TRANSIÇÃO UNIFICADO */
@@ -343,6 +378,7 @@ $text-muted: #8b949e;
 
 .controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 
   button {

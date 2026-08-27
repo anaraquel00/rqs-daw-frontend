@@ -1,26 +1,23 @@
-<!-- src/app/workspace/mix-panel.html -->
 <div class="mix-panel-container">
   <h2>{{ lang.tr().SETLIST_ENGINE }}</h2>
 
-  <!-- Zona de Drag & Drop -->
   <div
     class="dropzone"
     (drop)="onFileDrop($event)"
     (dragover)="onDragOver($event)"
     (click)="fileInput.click()">
     <span class="icon">📁</span>
-    <p>{{ lang.tr().MIX_DROP_PROMPT }}<br>ou <strong>{{ lang.tr().MIX_OR_CLICK }}</strong></p>
+    <p>{{ lang.tr().MIX_DROP_PROMPT }}<br><strong>{{ lang.tr().MIX_OR_CLICK }}</strong></p>
     <input
       type="file"
       #fileInput
       multiple
-      accept=".wav, .mp3"
+      accept=".wav,.mp3,audio/wav,audio/mpeg"
       (change)="onFileSelect($event)"
-      style="display: none;">
+      hidden>
   </div>
 
   @if (tracks.length > 0) {
-    <!-- CONSOLE DE VALIDAÇÃO TÉCNICA -->
     <div class="validation-panel">
       <h3 class="panel-title">{{ lang.tr().VALIDATION_TITLE }}</h3>
       <ul>
@@ -30,16 +27,12 @@
         <li *ngIf="!setlistName.trim()" class="status-item error">
           {{ lang.tr().VALIDATION_NAME_REQUIRED }}
         </li>
-        <li *ngIf="detectarDiferentesSampleRates()" class="status-item warning">
-          {{ lang.tr().VALIDATION_SR_MISMATCH }}
-        </li>
-        <li *ngIf="detectarDiferentesBitDepths()" class="status-item warning">
-          {{ lang.tr().VALIDATION_BD_MISMATCH }}
+        <li *ngIf="!canIgniteSetlist()" class="status-item warning">
+          {{ localCopy('renderBlocked') }}
         </li>
       </ul>
     </div>
 
-    <!-- SUMÁRIO TÉCNICO DE EXPORTAÇÃO -->
     <div class="summary-card">
       <h3 class="panel-title">{{ lang.tr().SUMMARY_TITLE }}</h3>
       <div class="summary-grid">
@@ -49,66 +42,100 @@
         </div>
         <div class="summary-item">
           <span>{{ lang.tr().SUMMARY_TOTAL_SOURCE }}</span>
-          <strong>{{ formatarTempo(calcularTempoTotalFontes()) }}</strong>
+          <strong>{{ formatDuration(calculateSourceDuration()) }}</strong>
         </div>
         <div class="summary-item">
           <span>{{ lang.tr().SUMMARY_TOTAL_FADE }}</span>
-          <strong>{{ formatarTempo(calcularTotalCrossfades()) }}</strong>
+          <strong>{{ formatDuration(calculateCrossfadeDuration()) }}</strong>
         </div>
         <div class="summary-item">
           <span>{{ lang.tr().SUMMARY_EST_OUTPUT }}</span>
-          <strong class="highlight-cyan">{{ formatarTempo(calcularTempoEstimadoOutput()) }}</strong>
+          <strong class="highlight-cyan">{{ formatDuration(calculateEstimatedOutputDuration()) }}</strong>
         </div>
         <div class="summary-item">
           <span>{{ lang.tr().SUMMARY_OUT_FORMAT }}</span>
-          <strong>WAV 24-bit / 44.1 kHz</strong>
+          <strong>WAV PCM 24-bit · 48 kHz · Stereo</strong>
         </div>
         <div class="summary-item">
           <span>{{ lang.tr().SUMMARY_EST_SIZE }}</span>
-          <strong>{{ calcularTamanhoEstimadoMB() }} MB</strong>
+          <strong>{{ calculateEstimatedSizeMb() }} MB</strong>
         </div>
       </div>
     </div>
 
-    <!-- EQUALIZADOR DE LOUDNESS PERCEBIDO -->
     <div class="loudness-match-console">
       <span class="console-label">{{ lang.tr().LOUDNESS_MATCH_LABEL }}</span>
       <div class="btn-group-match">
-        <button [class.active]="loudnessMatchMode === 'off'" (click)="setLoudnessMode('off')">
+        <button type="button" [class.active]="loudnessMatchMode === 'off'" (click)="setLoudnessMode('off')">
           {{ lang.tr().LOUDNESS_OFF }}
         </button>
-        <button [class.active]="loudnessMatchMode === 'perceived'" (click)="setLoudnessMode('perceived')">
-          {{ lang.tr().LOUDNESS_PERCEIVED }}
-        </button>
-        <button [class.active]="loudnessMatchMode === 'normalize'" (click)="setLoudnessMode('normalize')">
+        <button type="button" [class.active]="loudnessMatchMode === 'normalize'" (click)="setLoudnessMode('normalize')">
           {{ lang.tr().LOUDNESS_NORMALIZE }}
         </button>
       </div>
     </div>
 
-    <!-- SELETOR GLOBAL DE CURVA DE CROSSFADE -->
     <div class="curve-selection-console">
       <span class="console-label">{{ lang.tr().CROSSFADE_CURVE_LABEL }}</span>
       <div class="btn-group-match">
-        <button [class.active]="activeCurve === 'equal-power'" (click)="activeCurve = 'equal-power'">
+        <button type="button" [class.active]="activeCurve === 'equal-power'" (click)="activeCurve = 'equal-power'">
           {{ lang.tr().CURVE_EQUAL_POWER }}
         </button>
-        <button [class.active]="activeCurve === 'linear'" (click)="activeCurve = 'linear'">
+        <button type="button" [class.active]="activeCurve === 'linear'" (click)="activeCurve = 'linear'">
           {{ lang.tr().CURVE_LINEAR }}
         </button>
-        <button [class.active]="activeCurve === 'fast-cut'" (click)="activeCurve = 'fast-cut'">
+        <button type="button" [class.active]="activeCurve === 'fast-cut'" (click)="activeCurve = 'fast-cut'">
           {{ lang.tr().CURVE_FAST_CUT }}
         </button>
       </div>
     </div>
 
-    <!-- REPRODUTOR DE PRÉVIA DE TRANSIÇÃO UNIFICADO -->
+    <section class="vignette-console" aria-labelledby="vignette-title">
+      <div class="vignette-heading">
+        <div>
+          <h3 id="vignette-title" class="panel-title">{{ localCopy('vignette') }}</h3>
+          <p>{{ localCopy('vignetteOff') }}</p>
+        </div>
+        <label class="vignette-toggle">
+          <input
+            type="checkbox"
+            [(ngModel)]="vignetteEnabled"
+            (ngModelChange)="onVignetteToggle()">
+          <span>{{ vignetteEnabled ? 'ON' : 'OFF' }}</span>
+        </label>
+      </div>
+
+      @if (vignetteEnabled) {
+        <input
+          type="file"
+          #vignetteInput
+          accept=".wav,.mp3,audio/wav,audio/mpeg"
+          (change)="onVignetteSelect($event)"
+          hidden>
+        <button type="button" class="btn-preview-transition" (click)="vignetteInput.click()">
+          {{ localCopy('vignetteChoose') }}
+        </button>
+        @if (vignetteTrack) {
+          <div class="vignette-state">
+            <strong>{{ vignetteTrack.name }}</strong>
+            <span [class.upload-error]="vignetteTrack.uploadState === 'error'">
+              {{ uploadStatus(vignetteTrack) }}
+            </span>
+            @if (vignetteTrack.uploadState === 'error') {
+              <button type="button" (click)="retryVignetteUpload()">{{ localCopy('retry') }}</button>
+            }
+            <button type="button" class="btn-danger" (click)="removeVignette()">❌</button>
+          </div>
+        }
+      }
+    </section>
+
     <div class="unified-preview-player" *ngIf="previewingIndex !== -1">
       <div class="player-telemetry">
         <span class="status-text blink-block">
           {{ lang.tr().PREVIEWING_TRANSITION }} {{ previewingIndex + 1 }} ➡️ {{ lang.tr().TRACK_LABEL }} {{ previewingIndex + 2 }}
         </span>
-        <button class="btn-stop-preview" (click)="pararPreviewDeTransicao()">
+        <button type="button" class="btn-stop-preview" (click)="stopTransitionPreview()">
           {{ lang.tr().BTN_STOP_PREVIEW }}
         </button>
       </div>
@@ -117,7 +144,6 @@
       </div>
     </div>
 
-    <!-- LINHA DO TEMPO DAS FAIXAS -->
     <div class="track-list">
       <h3>{{ lang.tr().TIMELINE_TITLE }}</h3>
       <ul>
@@ -126,67 +152,68 @@
             <div class="track-main-row">
               <div class="track-info">
                 <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
-                 <span class="track-meta-tag" style="display: flex; align-items: center; gap: 6px;">
-                  WAV 44.1 kHz ·
-                  <span *ngIf="track.isUploadingS3" style="color: #ffaa00; font-family: monospace;" class="blink-block">
-                    {{ lang.tr().SYNCING_WITH_S3_BUNKER }}
-                  </span>
-                  <span *ngIf="!track.isUploadingS3 && track.s3Key" style="color: #00ff88; font-family: monospace;">
-                    {{ lang.tr().PROTECTED_IN_BUNKER }}
-                  </span>
+                <span class="track-meta-tag">
+                  {{ localCopy('metadataUnknown') }} · {{ formatDuration(track.duration) }}
                 </span>
-              </div>
-              <div class="controls">
-                <button (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
-                <button (click)="moveDown(i)" [disabled]="i === tracks.length - 1">🔽</button>
-                <button class="btn-danger" (click)="removeTrack(i)">❌</button>
-              </div>
-            </div>
-
-            <!-- WAVEFORM DINÂMICA ESTILO AUDACITY INTEGRADA NA TRILHA -->
-            <div class="waveform-lane-wrapper">
-              <div class="cyber-waveform">
-                <!-- 🟢 CORREÇÃO: Sintaxe do track ajustada para $index nativo do Angular 18 [1.1.2] -->
-                @for (bar of getWaveformBarArray(); track $index; let b = $index) {
-                  <div
-                    class="wave-bar"
-                    [ngStyle]="getWaveformBarStyles(i, b)">
-                  </div>
+                <span
+                  class="upload-state"
+                  [class.uploading]="track.uploadState === 'uploading'"
+                  [class.ready]="track.uploadState === 'ready'"
+                  [class.upload-error]="track.uploadState === 'error'">
+                  {{ uploadStatus(track) }}
+                </span>
+                @if (track.uploadState === 'error') {
+                  <button type="button" class="btn-preview-transition" (click)="retryTrackUpload(i)">
+                    {{ localCopy('retry') }}
+                  </button>
                 }
               </div>
+              <div class="controls">
+                <input
+                  type="file"
+                  #replacementInput
+                  accept=".wav,.mp3,audio/wav,audio/mpeg"
+                  (change)="replaceTrackFile(i, $event)"
+                  hidden>
+                <button type="button" (click)="replacementInput.click()">{{ localCopy('replace') }}</button>
+                <button type="button" (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
+                <button type="button" (click)="moveDown(i)" [disabled]="i === tracks.length - 1">🔽</button>
+                <button type="button" class="btn-danger" (click)="removeTrack(i)">❌</button>
+              </div>
             </div>
 
-            <!-- Ajuste de Crossfade entre faixas -->
+            <div class="waveform-truthful-state">
+              {{ localCopy('waveformNotAnalyzed') }}
+            </div>
+
             @if (i < tracks.length - 1) {
               <div class="custom-crossfade-bridge">
                 <div class="bridge-line"></div>
-
                 <div class="bridge-actions">
                   <label>{{ lang.tr().CROSSFADE_TO }} [{{ i + 2 }}]:</label>
-
-                  <!-- BOTÃO DE PREVIEW TRANSITION INDIVIDUAL -->
                   <button
+                    type="button"
                     class="btn-preview-transition"
-                    (click)="ouvirTransicao(i)"
-                    [disabled]="isProcessing || previewingIndex === i">
+                    (click)="previewTransition(i)"
+                    [disabled]="isProcessing || previewingIndex === i || track.duration <= 0 || tracks[i + 1].duration <= 0">
                     🔁 {{ previewingIndex === i ? lang.tr().PREVIEW_ACTIVE : lang.tr().BTN_PREVIEW_TRANSITION }}
                   </button>
                 </div>
-
                 <div class="slider-container-mini">
                   <input
-                    type="range" min="0" max="15" step="0.5"
+                    type="range" min="0.5" max="15" step="0.5"
                     [(ngModel)]="track.crossfadeNext"
-                    (ngModelChange)="atualizarCrossoverVisivel()"
+                    (ngModelChange)="updateCrossfadeView()"
                     class="cyber-slider-mini"
-                    title="Ajuste o crossfade" aria-label="Ajuste o crossfade em segundos" />
-
+                    title="Crossfade"
+                    aria-label="Crossfade in seconds">
                   <input
-                    type="number" min="0" max="15" step="0.5"
+                    type="number" min="0.5" max="15" step="0.5"
                     [(ngModel)]="track.crossfadeNext"
-                    (ngModelChange)="atualizarCrossoverVisivel()"
+                    (ngModelChange)="updateCrossfadeView()"
                     class="cyber-number-input-mini"
-                    title="Valor numérico" aria-label="Valor numérico do crossfade" />
+                    title="Crossfade value"
+                    aria-label="Crossfade value in seconds">
                   <span class="sec-label">{{ lang.tr().SECONDS }}</span>
                 </div>
               </div>
@@ -196,19 +223,18 @@
       </ul>
     </div>
 
-    <!-- Nome de exportação -->
     <div class="metadata-section">
       <label for="exportName">{{ lang.tr().DEPLOY_LABEL }}</label>
       <input
         type="text"
         id="exportName"
         class="cyber-input"
+        maxlength="80"
         [(ngModel)]="setlistName"
-        placeholder="Ex: THE_BLUEPRINT_SESSIONS_XXX" />
+        placeholder="RQS_SETLIST">
     </div>
   }
 
-  <!-- Status de Processamento -->
   @if (isProcessing) {
     <div class="processing-status">
       <div class="spinner"></div>
@@ -222,10 +248,17 @@
     </div>
   }
 
-  <!-- Botão de Ignição -->
-  <button class="btn-primary ignite-btn"
-          (click)="igniteSetlist()"
-          [disabled]="isProcessing || (tracks.length < 2) || (auth.userRole() === 'free' && tracks.length > 3)">
+  @if (setlistError) {
+    <div class="validation-panel" role="alert">
+      <p class="status-item error">{{ setlistError }}</p>
+    </div>
+  }
+
+  <button
+    type="button"
+    class="btn-primary ignite-btn"
+    (click)="igniteSetlist()"
+    [disabled]="!canIgniteSetlist()">
     {{ isProcessing ? lang.tr().IGNITE_ACTIVE : (auth.userRole() === 'free' && tracks.length > 3 ? lang.tr().IGNITE_LIMIT_ALERT : lang.tr().IGNITE_IDLE) }}
   </button>
   <p class="text-[9px] text-zinc-500 text-center font-mono mt-2" *ngIf="tracks.length > 0">
