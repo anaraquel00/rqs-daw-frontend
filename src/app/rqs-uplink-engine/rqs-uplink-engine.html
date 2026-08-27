@@ -32,7 +32,7 @@
       placeholder="ex: minha-nova-faixa">
   </div>
 
-  <button class="btn-magenta" (click)="compileLink()">{{ lang.tr().compileBtn }}</button>
+  <button class="btn-magenta" [disabled]="creating()" (click)="compileLink()">{{ lang.tr().compileBtn }}</button>
 
  @if (errorMessage()) {
     <div class="error-banner" style="background: rgba(255, 0, 85, 0.15); border: 1px solid #ff0055; color: #ff0055; padding: 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px;">

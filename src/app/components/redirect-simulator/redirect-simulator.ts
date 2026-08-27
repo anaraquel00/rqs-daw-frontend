@@ -1,6 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { DeepLinkService } from '../../services/deep-link.service';
 
 @Component({
   selector: 'app-redirect-simulator',
@@ -17,24 +16,15 @@ import { DeepLinkService } from '../../services/deep-link.service';
 })
 export class RedirectSimulatorComponent implements OnInit {
   private route = inject(ActivatedRoute);
-  private deepLinkService = inject(DeepLinkService);
 
   private platform = '';
   private id = '';
-  private slug = '';
 
   ngOnInit() {
     this.route.params.subscribe(params => {
       this.platform = params['platform'];
       this.id = params['id'];
     });
-
-    this.route.queryParams.subscribe(queryParams => {
-      this.slug = queryParams['slug'] || 'rqs-track';
-    });
-
-    // Computa o clique nas estatísticas automaticamente
-    this.deepLinkService.incrementClick(this.slug);
 
     // Executa o redirecionamento automático após 1.5s
     setTimeout(() => {

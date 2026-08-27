@@ -326,6 +326,11 @@ export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
 
   UPLINK_LOGIN_REQUIRED: 'LOGIN_REQUIRED : vous devez être connecté pour créer des deep links. Connectez-vous pour continuer.',
   UPLINK_LIMIT_REACHED: 'LIMIT_REACHED : le plan Free permet jusqu’à 3 Deep Links actifs. RQS PRO proposera des limites supérieures lors de son lancement.',
+  UPLINK_INVALID_URL: 'Saisissez une URL HTTPS valide.',
+  UPLINK_INVALID_SLUG: 'Utilisez 3 à 64 lettres minuscules, chiffres et tirets.',
+  UPLINK_SLUG_TAKEN: 'Cette adresse personnalisée est déjà utilisée.',
+  UPLINK_CREATE_FAILED: 'Impossible de créer le lien pour le moment. Réessayez.',
+  UPLINK_LOAD_FAILED: 'Impossible de charger vos liens pour le moment. Réessayez.',
 
   MASTER_LIMIT_REACHED: 'Limite gratuite atteinte',
   PRO_WAITLIST_NOTE: 'Rejoignez la liste de lancement RQS PRO et soyez informé lorsque l’offre sera disponible.',

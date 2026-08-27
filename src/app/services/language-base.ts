@@ -475,7 +475,12 @@ export const PT_TRANSLATIONS = {
   deleteBtn: 'Excluir',
 
   UPLINK_LOGIN_REQUIRED:'LOGIN_REQUIRED: Você precisa estar logado para criar deep links. Por favor, faça login na sua conta para continuar.',
-  UPLINK_LIMIT_REACHED: 'LIMIT_REACHED: O plano Free permite apenas 3 Deep Links ativos. Faça login para vincular sua conta e assine o RQS Pro para liberar links ilimitados.',
+  UPLINK_LIMIT_REACHED: 'LIMIT_REACHED: O plano Free permite até 3 Uplinks ativos. O RQS PRO oferecerá limites maiores quando estiver disponível.',
+  UPLINK_INVALID_URL: 'Informe uma URL HTTPS válida.',
+  UPLINK_INVALID_SLUG: 'Use de 3 a 64 caracteres: letras minúsculas, números e hífens.',
+  UPLINK_SLUG_TAKEN: 'Este endereço personalizado já está em uso.',
+  UPLINK_CREATE_FAILED: 'Não foi possível criar o link agora. Tente novamente.',
+  UPLINK_LOAD_FAILED: 'Não foi possível carregar seus links agora. Tente novamente.',
 
   MASTER_LIMIT_REACHED:
   "Limite gratuito atingido",
@@ -679,7 +684,12 @@ export const EN_TRANSLATIONS = {
 
   UPLINK_LOGIN_REQUIRED:'LOGIN_REQUIRED: You must be logged in to create deep links. Please sign in to your account to continue.',
   UPLINK_LIMIT_REACHED:
-  'LIMIT_REACHED: The Free plan allows up to 3 active Deep Links. Sign in to link your account and subscribe to RQS Pro to unlock unlimited links.',
+  'LIMIT_REACHED: The Free plan allows up to 3 active Uplinks. RQS PRO will offer higher limits when available.',
+  UPLINK_INVALID_URL: 'Enter a valid HTTPS URL.',
+  UPLINK_INVALID_SLUG: 'Use 3 to 64 lowercase letters, numbers, and hyphens.',
+  UPLINK_SLUG_TAKEN: 'This custom address is already in use.',
+  UPLINK_CREATE_FAILED: 'The link could not be created right now. Try again.',
+  UPLINK_LOAD_FAILED: 'Your links could not be loaded right now. Try again.',
 
   MASTER_LIMIT_REACHED:
   "Free limit reached",
@@ -869,6 +879,11 @@ HERO_TITLE: 'NADAJ SWOJEJ MUZYCE GOTOWE BRZMIENIE.',
   PRICE_CTA: '[ 💎 RQS PRO // WKRÓTCE ]',
   UPLINK_LOGIN_REQUIRED: 'LOGIN_REQUIRED: Musisz być zalogowany, aby tworzyć deep linki. Zaloguj się, aby kontynuować.',
   UPLINK_LIMIT_REACHED: 'LIMIT_REACHED: Plan Free pozwala na maksymalnie 3 aktywne Deep Linki. RQS PRO odblokuje nielimitowane linki.',
+  UPLINK_INVALID_URL: 'Wprowadź prawidłowy adres URL HTTPS.',
+  UPLINK_INVALID_SLUG: 'Użyj od 3 do 64 małych liter, cyfr i łączników.',
+  UPLINK_SLUG_TAKEN: 'Ten niestandardowy adres jest już używany.',
+  UPLINK_CREATE_FAILED: 'Nie udało się teraz utworzyć linku. Spróbuj ponownie.',
+  UPLINK_LOAD_FAILED: 'Nie udało się teraz wczytać linków. Spróbuj ponownie.',
   MASTER_LIMIT_REACHED: 'Osiągnięto bezpłatny limit',
   PRO_WAITLIST_NOTE: 'Dołącz do listy startowej RQS PRO i otrzymaj powiadomienie, gdy plan będzie dostępny.',
   PRO_WAITLIST_CTA: '[ 🔔 DOŁĄCZ DO LISTY STARTOWEJ ]',

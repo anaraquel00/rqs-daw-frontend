@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DeepLinkService } from '../services/deep-link.service';
@@ -21,6 +21,7 @@ export class RqsUplinkEngineComponent {
   customSlug = signal<string>('');
   compiledLink = signal<string>('');
   copied = signal<boolean>(false);
+  creating = signal<boolean>(false);
 
   detectedPlatform = computed(() => {
     return this.deepLinkService.detectPlatform(this.targetUrl());
@@ -28,31 +29,62 @@ export class RqsUplinkEngineComponent {
 
   errorMessage = signal<string>('');
 
+  private lastSessionEpoch = this.deepLinkService.sessionEpoch();
+  private latestCompileRequest = 0;
+
+  constructor() {
+    effect(() => {
+      const epoch = this.deepLinkService.sessionEpoch();
+      if (epoch === this.lastSessionEpoch) return;
+
+      this.lastSessionEpoch = epoch;
+      this.latestCompileRequest += 1;
+      this.compiledLink.set('');
+      this.errorMessage.set('');
+      this.copied.set(false);
+      this.creating.set(false);
+    });
+  }
+
   async compileLink(): Promise<void> {
+    if (this.creating()) return;
+    const requestId = ++this.latestCompileRequest;
     this.errorMessage.set('');
     if (!this.targetUrl()) return;
 
-    const slug = this.customSlug();
-    const result = await this.deepLinkService.compileAndRegisterLink(this.targetUrl(), this.customSlug());
+    this.creating.set(true);
+    try {
+      const result = await this.deepLinkService.compileAndRegisterLink(this.targetUrl(), this.customSlug());
 
-    if (!result.success) {
-      this.errorMessage.set(result.error || 'Erro ao compilar link.');
-      return;
+      if (requestId !== this.latestCompileRequest) return;
+      if (result.stale) return;
+      if (!result.success) {
+        this.errorMessage.set(result.error || this.lang.tr().UPLINK_CREATE_FAILED);
+        return;
+      }
+
+      this.compiledLink.set(result.url!);
+      this.copied.set(false);
+
+      const platform = this.detectedPlatform();
+      this.analytics.trackEvent('uplink_created', {
+        platform:
+          platform === 'spotify' ||
+          platform === 'soundcloud' ||
+          platform === 'youtube' ||
+          platform === 'bandcamp'
+            ? platform
+            : 'other'
+      });
+    } catch {
+      if (requestId === this.latestCompileRequest) {
+        this.errorMessage.set(this.lang.tr().UPLINK_CREATE_FAILED);
+      }
+    } finally {
+      if (requestId === this.latestCompileRequest) {
+        this.creating.set(false);
+      }
     }
-
-    this.compiledLink.set(result.url!);
-    this.copied.set(false);
-
-    const platform = this.detectedPlatform();
-    this.analytics.trackEvent('uplink_created', {
-      platform:
-        platform === 'spotify' ||
-        platform === 'soundcloud' ||
-        platform === 'youtube' ||
-        platform === 'bandcamp'
-          ? platform
-          : 'other'
-    });
   }
 
   copyToClipboard(): void {
