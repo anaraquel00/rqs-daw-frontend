@@ -10,11 +10,13 @@ describe('DspService Mastering V2 transport', () => {
   let http: HttpTestingController;
 
   const accessToken = 'test-user-access-token';
+  let currentSession: { access_token: string } | null;
   const authStub = {
-    session: () => ({ access_token: accessToken }),
+    session: () => currentSession,
   };
 
   beforeEach(() => {
+    currentSession = { access_token: accessToken };
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -94,5 +96,49 @@ describe('DspService Mastering V2 transport', () => {
     expect(request.request.headers.has('Authorization')).toBeFalse();
     expect(request.request.headers.get('Content-Type')).toBe('audio/wav');
     request.flush(null);
+  });
+
+  it('sends a local Stems split with the authenticated bearer token', () => {
+    const file = new File(['audio'], 'track.wav', { type: 'audio/wav' });
+    service.extractStems(file).subscribe();
+
+    const request = http.expectOne(`${environment.baseUrl}/stems/split`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.responseType).toBe('blob');
+    expect(request.request.body).toBeInstanceOf(FormData);
+    expect((request.request.body as FormData).get('audio')).toBe(file);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush(new Blob([], { type: 'application/zip' }));
+  });
+
+  it('sends a user-owned S3 Stems split with the authenticated bearer token', () => {
+    service.extractStemsS3('uploads/user-id/track.wav').subscribe();
+
+    const request = http.expectOne(`${environment.baseUrl}/stems/split-s3`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ s3Key: 'uploads/user-id/track.wav' });
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      success: true,
+      downloadUrl: 'https://s3.example.test/signed-download',
+    });
+  });
+
+  it('does not fabricate a bearer token for Stems without a session', () => {
+    currentSession = null;
+    const file = new File(['audio'], 'track.wav', { type: 'audio/wav' });
+
+    service.extractStems(file).subscribe();
+    service.extractStemsS3('uploads/user-id/track.wav').subscribe();
+
+    const uploadRequest = http.expectOne(`${environment.baseUrl}/stems/split`);
+    const s3Request = http.expectOne(`${environment.baseUrl}/stems/split-s3`);
+    expect(uploadRequest.request.headers.has('Authorization')).toBeFalse();
+    expect(s3Request.request.headers.has('Authorization')).toBeFalse();
+    uploadRequest.flush(new Blob([], { type: 'application/zip' }));
+    s3Request.flush({
+      success: true,
+      downloadUrl: 'https://s3.example.test/signed-download',
+    });
   });
 });

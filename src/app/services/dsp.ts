@@ -76,11 +76,18 @@ export class DspService {
   extractStems(file: File): Observable<Blob> {
     const formData = new FormData();
     formData.append('audio', file);
-    return this.http.post(`${this.baseUrl}/stems/split`, formData, { responseType: 'blob' });
+    return this.http.post(`${this.baseUrl}/stems/split`, formData, {
+      responseType: 'blob',
+      headers: this.masteringV2Headers(),
+    });
   }
 
   extractStemsS3(s3Key: string): Observable<{ success: boolean; downloadUrl: string }> {
-    return this.http.post<{ success: boolean; downloadUrl: string }>(`${this.baseUrl}/stems/split-s3`, { s3Key });
+    return this.http.post<{ success: boolean; downloadUrl: string }>(
+      `${this.baseUrl}/stems/split-s3`,
+      { s3Key },
+      { headers: this.masteringV2Headers() },
+    );
   }
 
   getPresignedUrl(filename: string): Observable<{ uploadUrl: string; s3Key: string }> {
