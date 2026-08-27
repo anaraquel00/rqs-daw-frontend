@@ -95,4 +95,49 @@ describe('DspService Mastering V2 transport', () => {
     expect(request.request.headers.get('Content-Type')).toBe('audio/wav');
     request.flush(null);
   });
+  it('requests a user-owned Setlist upload URL with authentication', () => {
+    service.getSetlistPresignedUrl('set-track.wav').subscribe();
+
+    const request = http.expectOne(
+      req => req.url === `${environment.baseUrl}/mix/presigned-url`
+        && req.params.get('filename') === 'set-track.wav',
+    );
+    expect(request.request.method).toBe('GET');
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      uploadUrl: 'https://s3.example.test/setlist-upload',
+      s3Key: 'uploads/user-id/setlist/set-track.wav',
+    });
+  });
+
+  it('sends only the explicit Setlist Stage 1 render contract with authentication', () => {
+    const payload = {
+      tracks: ['uploads/user-id/setlist/track-01.wav', 'uploads/user-id/setlist/track-02.wav'],
+      vignette: null,
+      crossfades: [8],
+      curve: 'equal-power' as const,
+      loudness: 'off' as const,
+      exportName: 'RQS_TEST_SETLIST',
+      outputFormat: 'wav' as const,
+    };
+
+    service.generateMixS3(payload).subscribe();
+
+    const request = http.expectOne(`${environment.baseUrl}/mix/generate-s3`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(payload);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      success: true,
+      downloadUrl: 'https://s3.example.test/setlist-download',
+      fileName: 'RQS_TEST_SETLIST.wav',
+      output: {
+        format: 'wav',
+        codec: 'pcm_s24le',
+        sampleRate: 48000,
+        channels: 2,
+        durationSeconds: 120,
+      },
+    });
+  });
 });

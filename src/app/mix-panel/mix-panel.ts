@@ -1,21 +1,30 @@
-// src/app/workspace/mix-panel.ts
 import {
+  afterNextRender,
   Component,
+  DestroyRef,
+  effect,
   inject,
   OnDestroy,
-  DestroyRef,
   signal,
-  afterNextRender
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DspService } from '../services/dsp';
-import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import {
+  DspService,
+  SetlistCurve,
+  SetlistLoudnessMode,
+  SetlistRenderRequest,
+} from '../services/dsp';
 import { LanguageService } from '../services/language.service';
+import type { UiLanguage } from '../services/language.service';
 import { AuthService } from '../services/auth.service';
 import { AudioComparisonService } from '../services/audio-comparison.service';
 import { AnalyticsService } from '../services/analytics.service';
+
+export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
 export interface RQSTrack {
   file: File;
@@ -25,444 +34,572 @@ export interface RQSTrack {
   rawUrl: string;
   duration: number;
   s3Key: string | null;
-  isUploadingS3: boolean;
+  uploadState: SetlistUploadState;
+  uploadError: string | null;
+  uploadAttempt: number;
 }
 
-export type CrossfadeCurve = 'linear' | 'equal-power' | 'fast-cut';
-export type LoudnessMatchMode = 'off' | 'perceived' | 'normalize';
+type LocalCopyKey =
+  | 'metadataUnknown'
+  | 'waveformNotAnalyzed'
+  | 'uploading'
+  | 'ready'
+  | 'uploadError'
+  | 'retry'
+  | 'replace'
+  | 'vignette'
+  | 'vignetteOff'
+  | 'vignetteChoose'
+  | 'renderBlocked'
+  | 'trackLimitSelection'
+  | 'trackLimitServer'
+  | 'serverError';
+
+const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
+  en: {
+    metadataUnknown: 'Duration measured locally · sample rate and bit depth not analyzed',
+    waveformNotAnalyzed: 'Waveform not analyzed — local playback preview only',
+    uploading: 'Uploading securely…',
+    ready: 'Secure upload ready',
+    uploadError: 'Upload failed',
+    retry: 'Retry',
+    replace: 'Replace',
+    vignette: 'Optional vignette / ID drop',
+    vignetteOff: 'Off by default',
+    vignetteChoose: 'Choose vignette',
+    renderBlocked: 'Every music track must finish uploading before render.',
+    trackLimitSelection: 'Your plan allows up to {max} music tracks. Extra files were not uploaded.',
+    trackLimitServer: 'Your account Setlist track limit was exceeded. Refresh your profile and try again.',
+    serverError: 'Setlist request failed safely. Review the highlighted inputs and retry.',
+  },
+  pt: {
+    metadataUnknown: 'Duração medida localmente · sample rate e bit depth não analisados',
+    waveformNotAnalyzed: 'Waveform não analisada — apenas preview local',
+    uploading: 'Enviando com segurança…',
+    ready: 'Upload seguro pronto',
+    uploadError: 'Falha no upload',
+    retry: 'Tentar novamente',
+    replace: 'Substituir',
+    vignette: 'Vinheta / ID drop opcional',
+    vignetteOff: 'Desligada por padrão',
+    vignetteChoose: 'Escolher vinheta',
+    renderBlocked: 'Todas as faixas precisam concluir o upload antes do render.',
+    trackLimitSelection: 'Seu plano permite até {max} faixas musicais. Os arquivos extras não foram enviados.',
+    trackLimitServer: 'O limite de faixas da Setlist da sua conta foi excedido. Atualize o perfil e tente novamente.',
+    serverError: 'A solicitação da setlist falhou com segurança. Revise os campos e tente novamente.',
+  },
+  pl: {
+    metadataUnknown: 'Czas odczytany lokalnie · sample rate i bit depth nieanalizowane',
+    waveformNotAnalyzed: 'Waveform nieanalizowany — tylko lokalny odsłuch',
+    uploading: 'Bezpieczne wysyłanie…',
+    ready: 'Bezpieczny upload gotowy',
+    uploadError: 'Błąd uploadu',
+    retry: 'Ponów',
+    replace: 'Zastąp',
+    vignette: 'Opcjonalna winieta / ID drop',
+    vignetteOff: 'Domyślnie wyłączona',
+    vignetteChoose: 'Wybierz winietę',
+    renderBlocked: 'Każdy utwór musi zakończyć upload przed renderem.',
+    trackLimitSelection: 'Twój plan pozwala na maksymalnie {max} utwory. Dodatkowe pliki nie zostały wysłane.',
+    trackLimitServer: 'Przekroczono limit utworów Setlisty dla konta. Odśwież profil i spróbuj ponownie.',
+    serverError: 'Żądanie setlisty bezpiecznie odrzucono. Sprawdź pola i spróbuj ponownie.',
+  },
+  fr: {
+    metadataUnknown: 'Durée mesurée localement · fréquence et profondeur non analysées',
+    waveformNotAnalyzed: 'Waveform non analysée — aperçu local uniquement',
+    uploading: 'Téléversement sécurisé…',
+    ready: 'Téléversement sécurisé prêt',
+    uploadError: 'Échec du téléversement',
+    retry: 'Réessayer',
+    replace: 'Remplacer',
+    vignette: 'Vignette / ID drop facultatif',
+    vignetteOff: 'Désactivée par défaut',
+    vignetteChoose: 'Choisir une vignette',
+    renderBlocked: 'Chaque piste doit terminer son téléversement avant le rendu.',
+    trackLimitSelection: 'Votre offre autorise jusqu’à {max} pistes musicales. Les fichiers supplémentaires n’ont pas été téléversés.',
+    trackLimitServer: 'La limite de pistes Setlist de votre compte a été dépassée. Actualisez le profil et réessayez.',
+    serverError: 'La requête Setlist a échoué de façon sécurisée. Vérifiez les champs et réessayez.',
+  },
+};
 
 @Component({
   selector: 'app-mix-panel',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './mix-panel.html',
-  styleUrls: ['./mix-panel.scss']
+  styleUrls: ['./mix-panel.scss'],
 })
 export class MixPanelComponent implements OnDestroy {
-  private audioComparison = inject(AudioComparisonService);
-
-
-  private dspService = inject(DspService);
-  private sanitizer = inject(DomSanitizer);
-  private destroyRef = inject(DestroyRef);
-
+  private readonly audioComparison = inject(AudioComparisonService);
+  private readonly dspService = inject(DspService);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly destroyRef = inject(DestroyRef);
   readonly lang = inject(LanguageService);
   readonly auth = inject(AuthService);
   private readonly analytics = inject(AnalyticsService);
 
   tracks: RQSTrack[] = [];
+  vignetteEnabled = false;
+  vignetteTrack: RQSTrack | null = null;
   isProcessing = false;
   mixSuccess = false;
+  setlistError: string | null = null;
   setlistName = 'THE_BLUEPRINT_SESSIONS_Vol_XYZ';
 
-  activeCurve: CrossfadeCurve = 'equal-power';
-  loudnessMatchMode: LoudnessMatchMode = 'off';
+  activeCurve: SetlistCurve = 'equal-power';
+  loudnessMatchMode: SetlistLoudnessMode = 'off';
   previewingIndex = -1;
   previewProgress = signal<number>(0);
 
-  // Cache para que os picos da onda não precisem ser recalculados a cada alteração
-  private peakCache = new Map<string, number[]>();
-
-  // Nós de áudio do player unificado de transição
-  private audioCtx!: AudioContext | null;
-  private sourceNode1!: MediaElementAudioSourceNode | null;
-  private sourceNode2!: MediaElementAudioSourceNode | null;
+  private audioCtx: AudioContext | null = null;
+  private sourceNode1: MediaElementAudioSourceNode | null = null;
+  private sourceNode2: MediaElementAudioSourceNode | null = null;
   private gainNode1!: GainNode;
   private gainNode2!: GainNode;
-  private playerElement1!: HTMLAudioElement;
-  private playerElement2!: HTMLAudioElement;
-  private previewIntervalId: any;
+  private playerElement1: HTMLAudioElement | null = null;
+  private playerElement2: HTMLAudioElement | null = null;
+  private previewIntervalId: ReturnType<typeof setInterval> | null = null;
+  private previousUserId: string | null = null;
+  private activeRenderSubscription: Subscription | null = null;
+  private renderAttempt = 0;
+  private successResetTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-  afterNextRender(() => {
-    this.inicializarPlayersDeTransicao();
-  });
-}
+    afterNextRender(() => this.initializeTransitionPlayers());
+    effect(() => {
+      const userId = this.auth.session()?.user?.id ?? null;
+      const previousUserId = this.previousUserId;
+      if (previousUserId && previousUserId !== userId) {
+        queueMicrotask(() => this.clearAllLocalAudio());
+      }
+      this.previousUserId = userId;
+    });
+  }
 
-  private inicializarPlayersDeTransicao() {
+  localCopy(key: LocalCopyKey): string {
+    return LOCAL_COPY[this.lang.currentLang()][key];
+  }
+
+  private initializeTransitionPlayers(): void {
     this.playerElement1 = new Audio();
     this.playerElement2 = new Audio();
   }
 
-  private iniciarWebAudio() {
-    if (this.audioCtx) return;
-
+  private initializeWebAudio(): boolean {
+    if (!this.playerElement1 || !this.playerElement2) return false;
+    if (this.audioCtx) return true;
     this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     this.sourceNode1 = this.audioCtx.createMediaElementSource(this.playerElement1);
     this.sourceNode2 = this.audioCtx.createMediaElementSource(this.playerElement2);
-
     this.gainNode1 = this.audioCtx.createGain();
     this.gainNode2 = this.audioCtx.createGain();
-
     this.sourceNode1.connect(this.gainNode1);
     this.sourceNode2.connect(this.gainNode2);
-
     this.gainNode1.connect(this.audioCtx.destination);
     this.gainNode2.connect(this.audioCtx.destination);
+    return true;
   }
 
-  onDragOver(event: DragEvent) {
+  onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
   }
 
-  onFileDrop(event: DragEvent) {
+  onFileDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    if (event.dataTransfer?.files) {
-      this.addFiles(Array.from(event.dataTransfer.files));
-    }
+    if (event.dataTransfer?.files) this.addFiles(Array.from(event.dataTransfer.files));
   }
 
-  onFileSelect(event: Event) {
+  onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
-      this.addFiles(Array.from(input.files));
-    }
+    if (input.files) this.addFiles(Array.from(input.files));
+    input.value = '';
   }
 
-  private addFiles(newFiles: File[]) {
-    const validFiles = newFiles.filter(f => f.name.endsWith('.wav') || f.name.endsWith('.mp3'));
+  maxTrackCount(): number {
+    return this.auth.userRole() === 'premium' ? 8 : 3;
+  }
 
-    validFiles.forEach(f => {
-      const url = URL.createObjectURL(f);
+  private trackLimitSelectionMessage(): string {
+    return this.localCopy('trackLimitSelection').replace('{max}', String(this.maxTrackCount()));
+  }
 
-      const track: RQSTrack = {
-        file: f,
-        name: f.name,
-        crossfadeNext: 8.0,
-        rawUrl: url,
-        previewUrl: this.sanitizer.bypassSecurityTrustUrl(url),
-        duration: 240,
-        s3Key: null,
-        isUploadingS3: false
-      };
-
+  private addFiles(newFiles: File[]): void {
+    const validFiles = newFiles.filter((file) => /\.(wav|mp3)$/i.test(file.name));
+    const remaining = Math.max(0, this.maxTrackCount() - this.tracks.length);
+    const acceptedFiles = validFiles.slice(0, remaining);
+    acceptedFiles.forEach((file) => {
+      const track = this.createTrack(file);
       this.tracks.push(track);
-      this.uploadFaixaParaS3Silencioso(track);
-
-      const tempAudio = new Audio(url);
-      tempAudio.addEventListener('loadedmetadata', () => {
-        track.duration = tempAudio.duration || 240;
-        this.atualizarCrossoverVisivel();
-      });
-      tempAudio.load();
+      this.uploadTrack(track);
     });
+    this.setlistError = validFiles.length > acceptedFiles.length
+      ? this.trackLimitSelectionMessage()
+      : null;
   }
 
-  private uploadFaixaParaS3Silencioso(track: RQSTrack) {
-    track.isUploadingS3 = true;
-    console.log(`[RQS SETLIST] Iniciando handshake S3 para a faixa: ${track.name}`);
-
-    this.dspService.getPresignedUrl(track.file.name).subscribe({
-      next: (s3Response) => {
-        this.dspService.uploadToS3(s3Response.uploadUrl, track.file).subscribe({
-          next: () => {
-            track.isUploadingS3 = false;
-            track.s3Key = s3Response.s3Key;
-            console.log(`[RQS SETLIST] Faixa persistida com sucesso no S3. Chave: ${s3Response.s3Key}`);
-          },
-          error: (err) => {
-            track.isUploadingS3 = false;
-            console.error(`[CRITICAL] Falha ao enviar bytes de ${track.name} para o bunker S3.`);
-          }
-        });
-      },
-      error: (err) => {
-        track.isUploadingS3 = false;
-        console.error(`[CRITICAL] Gateway do S3 rejeitou a pré-assinatura de URL para ${track.name}`);
-      }
-    });
+  onVignetteSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (!file || !/\.(wav|mp3)$/i.test(file.name)) return;
+    if (this.vignetteTrack) this.disposeTrack(this.vignetteTrack);
+    this.vignetteEnabled = true;
+    this.vignetteTrack = this.createTrack(file);
+    this.uploadTrack(this.vignetteTrack);
   }
 
-  getWaveformBarArray(): number[] {
-    return Array(80).fill(0);
+  onVignetteToggle(): void {
+    if (!this.vignetteEnabled) this.removeVignette();
   }
 
-  getCachedPeaks(trackName: string): number[] {
-    if (this.peakCache.has(trackName)) {
-      return this.peakCache.get(trackName)!;
-    }
-
-    const peaks: number[] = [];
-    let hash = 0;
-    for (let i = 0; i < trackName.length; i++) {
-      hash = trackName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    for (let i = 0; i < 80; i++) {
-      const seed = Math.sin(hash + i) * 10000;
-      const r = seed - Math.floor(seed);
-      const baseHeight = 15 + Math.floor(r * 80);
-      peaks.push(baseHeight);
-    }
-
-    this.peakCache.set(trackName, peaks);
-    return peaks;
+  replaceTrackFile(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (!file || !/\.(wav|mp3)$/i.test(file.name) || !this.tracks[index]) return;
+    const previous = this.tracks[index];
+    this.disposeTrack(previous);
+    const replacement = this.createTrack(file);
+    replacement.crossfadeNext = previous.crossfadeNext;
+    this.tracks[index] = replacement;
+    this.tracks = [...this.tracks];
+    this.uploadTrack(replacement);
   }
 
-  getWaveformBarStyles(trackIndex: number, barIndex: number, totalBars: number = 80): { [key: string]: string } {
-    const track = this.tracks[trackIndex];
-    const duration = track.duration || 240;
-    const peak = this.getCachedPeaks(track.name)[barIndex];
-
-    let opacity = 1.0;
-
-    if (trackIndex > 0) {
-      const prevTrack = this.tracks[trackIndex - 1];
-      const prevCrossfade = prevTrack.crossfadeNext;
-      const fadeInPercent = prevCrossfade / duration;
-      const fadeInBars = totalBars * fadeInPercent;
-
-      if (barIndex < fadeInBars) {
-        opacity = barIndex / fadeInBars;
-      }
-    }
-
-    if (trackIndex < this.tracks.length - 1) {
-      const crossfade = track.crossfadeNext;
-      const fadeOutPercent = crossfade / duration;
-      const fadeOutBars = totalBars * fadeOutPercent;
-      const fadeOutStartBar = totalBars - fadeOutBars;
-
-      if (barIndex >= fadeOutStartBar) {
-        opacity = (totalBars - barIndex) / fadeOutBars;
-      }
-    }
-
-    const color = trackIndex % 2 === 0 ? '0, 240, 255' : '255, 0, 85';
-
-    return {
-      'height': `${peak}%`,
-      'background-color': `rgba(${color}, ${0.15 + (opacity * 0.65)})`,
-      'box-shadow': opacity > 0.4 ? `0 0 4px rgba(${color}, ${opacity * 0.15})` : 'none'
+  private createTrack(file: File): RQSTrack {
+    const rawUrl = URL.createObjectURL(file);
+    const track: RQSTrack = {
+      file,
+      name: file.name,
+      crossfadeNext: 8,
+      rawUrl,
+      previewUrl: this.sanitizer.bypassSecurityTrustUrl(rawUrl),
+      duration: 0,
+      s3Key: null,
+      uploadState: 'idle',
+      uploadError: null,
+      uploadAttempt: 0,
     };
+    const audio = new Audio(rawUrl);
+    const finish = () => {
+      audio.removeAttribute('src');
+      audio.load();
+    };
+    audio.addEventListener('loadedmetadata', () => {
+      track.duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      this.tracks = [...this.tracks];
+      finish();
+    }, { once: true });
+    audio.addEventListener('error', finish, { once: true });
+    audio.load();
+    return track;
   }
 
-  detectarDiferentesSampleRates(): boolean {
-    return this.tracks.length > 1 && this.tracks.some(t => t.name.includes('48k'));
+  private uploadTrack(track: RQSTrack): void {
+    const attempt = ++track.uploadAttempt;
+    track.s3Key = null;
+    track.uploadError = null;
+    track.uploadState = 'uploading';
+    this.dspService.getSetlistPresignedUrl(track.file.name)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (presign) => {
+          if (!this.isCurrentAttempt(track, attempt)) return;
+          this.dspService.uploadToS3(presign.uploadUrl, track.file)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => {
+                if (!this.isCurrentAttempt(track, attempt)) return;
+                track.s3Key = presign.s3Key;
+                track.uploadState = 'ready';
+              },
+              error: () => this.markUploadError(track, attempt),
+            });
+        },
+        error: () => this.markUploadError(track, attempt),
+      });
   }
 
-  detectarDiferentesBitDepths(): boolean {
-    return this.tracks.length > 1 && this.tracks.some(t => t.name.includes('16bit'));
+  private isCurrentAttempt(track: RQSTrack, attempt: number): boolean {
+    return track.uploadAttempt === attempt
+      && (this.tracks.includes(track) || this.vignetteTrack === track);
   }
 
-  calcularTempoTotalFontes(): number {
-    return this.tracks.reduce((acc, t) => acc + t.duration, 0);
+  private markUploadError(track: RQSTrack, attempt: number): void {
+    if (!this.isCurrentAttempt(track, attempt)) return;
+    track.s3Key = null;
+    track.uploadState = 'error';
+    track.uploadError = this.localCopy('uploadError');
   }
 
-  calcularTotalCrossfades(): number {
-    if (this.tracks.length < 2) return 0;
-    return this.tracks.slice(0, -1).reduce((acc, t) => acc + t.crossfadeNext, 0);
+  retryTrackUpload(index: number): void {
+    const track = this.tracks[index];
+    if (track) this.uploadTrack(track);
   }
 
-  calcularTempoEstimadoOutput(): number {
-    return Math.max(0, this.calcularTempoTotalFontes() - this.calcularTotalCrossfades());
+  retryVignetteUpload(): void {
+    if (this.vignetteTrack) this.uploadTrack(this.vignetteTrack);
   }
 
-  calcularTamanhoEstimadoMB(): number {
-    const totalSegundos = this.calcularTempoEstimadoOutput();
-    const bytesPorSegundo = 44100 * 3 * 2;
-    const mb = (bytesPorSegundo * totalSegundos) / (1024 * 1024);
-    return Math.round(mb);
+  uploadStatus(track: RQSTrack): string {
+    if (track.uploadState === 'uploading') return this.localCopy('uploading');
+    if (track.uploadState === 'ready') return this.localCopy('ready');
+    if (track.uploadState === 'error') return this.localCopy('uploadError');
+    return '';
   }
 
-  setLoudnessMode(mode: LoudnessMatchMode) {
+  calculateSourceDuration(): number {
+    return this.tracks.reduce((sum, track) => sum + track.duration, 0);
+  }
+
+  calculateCrossfadeDuration(): number {
+    return this.tracks.slice(0, -1).reduce((sum, track) => sum + Number(track.crossfadeNext || 0), 0);
+  }
+
+  calculateEstimatedOutputDuration(): number {
+    return Math.max(0, this.calculateSourceDuration() - this.calculateCrossfadeDuration());
+  }
+
+  calculateEstimatedSizeMb(): number {
+    const bytesPerSecond = 48000 * 3 * 2;
+    return Math.round((bytesPerSecond * this.calculateEstimatedOutputDuration()) / (1024 * 1024));
+  }
+
+  setLoudnessMode(mode: SetlistLoudnessMode): void {
     this.loudnessMatchMode = mode;
-    console.log(`[RQS SETLIST] Modo de Loudness alterado para: ${mode.toUpperCase()}`);
   }
 
-  async ouvirTransicao(index: number) {
-    if (index >= this.tracks.length - 1) return;
-    this.pararPreviewDeTransicao();
-
-    this.iniciarWebAudio();
-    if (this.audioCtx && this.audioCtx.state === 'suspended') {
-      await this.audioCtx.resume();
+  canIgniteSetlist(): boolean {
+    if (this.isProcessing || this.tracks.length < 2 || this.tracks.length > this.maxTrackCount()) return false;
+    if (!this.setlistName.trim()) return false;
+    if (this.tracks.some((track) => track.uploadState !== 'ready' || !track.s3Key || track.duration <= 0)) {
+      return false;
     }
+    if (this.vignetteEnabled && (!this.vignetteTrack || this.vignetteTrack.uploadState !== 'ready' || !this.vignetteTrack.s3Key)) {
+      return false;
+    }
+    return this.tracks.slice(0, -1).every((track, index) => {
+      const fade = Number(track.crossfadeNext);
+      const adjacentDuration = Math.min(track.duration, this.tracks[index + 1].duration);
+      return Number.isFinite(fade) && fade >= 0.5 && fade <= 15 && fade < adjacentDuration;
+    });
+  }
+
+  async previewTransition(index: number): Promise<void> {
+    if (index >= this.tracks.length - 1) return;
+    this.stopTransitionPreview();
+    if (!this.initializeWebAudio() || !this.audioCtx || !this.playerElement1 || !this.playerElement2) return;
+    if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
 
     this.previewingIndex = index;
     this.previewProgress.set(0);
-
     const track1 = this.tracks[index];
     const track2 = this.tracks[index + 1];
-    const fadeDuration = track1.crossfadeNext;
-
-    const previewLead = 12.0;
-    const previewTail = 12.0;
+    const fadeDuration = Number(track1.crossfadeNext);
+    const previewLead = 12;
+    const previewTail = 12;
     const totalDuration = previewLead + fadeDuration + previewTail;
-
-    const outPointTrack1 = track1.duration;
-    const startTimeTrack1 = outPointTrack1 - previewLead - fadeDuration;
+    const startTimeTrack1 = Math.max(0, track1.duration - previewLead - fadeDuration);
 
     this.playerElement1.src = track1.rawUrl;
     this.playerElement2.src = track2.rawUrl;
-
     this.playerElement1.currentTime = startTimeTrack1;
     this.playerElement2.currentTime = 0;
-
     await this.playerElement1.play();
 
-    const now = this.audioCtx!.currentTime;
-    this.gainNode1.gain.setValueAtTime(1.0, now);
-    this.gainNode2.gain.setValueAtTime(0.0, now);
-
-    let progressSecs = 0;
+    const now = this.audioCtx.currentTime;
+    this.gainNode1.gain.setValueAtTime(1, now);
+    this.gainNode2.gain.setValueAtTime(0, now);
+    let progressSeconds = 0;
     const intervalMs = 100;
-
     this.previewIntervalId = setInterval(async () => {
-      progressSecs += intervalMs / 1000;
-      const percent = (progressSecs / totalDuration) * 100;
-      this.previewProgress.set(percent);
-
-      if (progressSecs >= previewLead && progressSecs < previewLead + (intervalMs / 1000)) {
-        await this.playerElement2.play();
-        this.aplicarCurvaDeCrossfade(fadeDuration);
+      progressSeconds += intervalMs / 1000;
+      this.previewProgress.set((progressSeconds / totalDuration) * 100);
+      if (progressSeconds >= previewLead && progressSeconds < previewLead + intervalMs / 1000) {
+        await this.playerElement2?.play();
+        this.applyCrossfadeCurve(fadeDuration);
       }
-
-      if (progressSecs >= totalDuration) {
-        this.pararPreviewDeTransicao();
-      }
+      if (progressSeconds >= totalDuration) this.stopTransitionPreview();
     }, intervalMs);
   }
 
-  private aplicarCurvaDeCrossfade(duration: number) {
-    const now = this.audioCtx!.currentTime;
-
+  private applyCrossfadeCurve(duration: number): void {
+    if (!this.audioCtx) return;
+    const now = this.audioCtx.currentTime;
     if (this.activeCurve === 'linear') {
-      this.gainNode1.gain.setValueAtTime(1.0, now);
-      this.gainNode1.gain.linearRampToValueAtTime(0.0, now + duration);
-
-      this.gainNode2.gain.setValueAtTime(0.0, now);
-      this.gainNode2.gain.linearRampToValueAtTime(1.0, now + duration);
-    }
-    else if (this.activeCurve === 'equal-power') {
+      this.gainNode1.gain.setValueAtTime(1, now);
+      this.gainNode1.gain.linearRampToValueAtTime(0, now + duration);
+      this.gainNode2.gain.setValueAtTime(0, now);
+      this.gainNode2.gain.linearRampToValueAtTime(1, now + duration);
+    } else if (this.activeCurve === 'equal-power') {
       const steps = 100;
       const curve1 = new Float32Array(steps);
       const curve2 = new Float32Array(steps);
-      for (let i = 0; i < steps; i++) {
-        const ratio = i / (steps - 1);
-        curve1[i] = Math.cos(ratio * Math.PI / 2);
-        curve2[i] = Math.sin(ratio * Math.PI / 2);
+      for (let index = 0; index < steps; index += 1) {
+        const ratio = index / (steps - 1);
+        curve1[index] = Math.cos(ratio * Math.PI / 2);
+        curve2[index] = Math.sin(ratio * Math.PI / 2);
       }
       this.gainNode1.gain.setValueCurveAtTime(curve1, now, duration);
       this.gainNode2.gain.setValueCurveAtTime(curve2, now, duration);
-    }
-    else if (this.activeCurve === 'fast-cut') {
-      this.gainNode1.gain.setValueAtTime(1.0, now);
-      this.gainNode1.gain.exponentialRampToValueAtTime(0.001, now + (duration * 0.3));
-
+    } else {
+      this.gainNode1.gain.setValueAtTime(1, now);
+      this.gainNode1.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.3);
       this.gainNode2.gain.setValueAtTime(0.001, now);
-      this.gainNode2.gain.exponentialRampToValueAtTime(1.0, now + duration);
+      this.gainNode2.gain.exponentialRampToValueAtTime(1, now + duration);
     }
   }
 
-  pararPreviewDeTransicao() {
-    clearInterval(this.previewIntervalId);
-    this.playerElement1.pause();
-    this.playerElement2.pause();
+  stopTransitionPreview(): void {
+    if (this.previewIntervalId) clearInterval(this.previewIntervalId);
+    this.previewIntervalId = null;
+    this.playerElement1?.pause();
+    this.playerElement2?.pause();
     this.previewingIndex = -1;
     this.previewProgress.set(0);
   }
 
-  moveUp(index: number) {
-    if (index > 0) {
-      const temp = this.tracks[index - 1];
-      this.tracks[index - 1] = this.tracks[index];
-      this.tracks[index] = temp;
-    }
-    this.pararPreviewDeTransicao();
+  moveUp(index: number): void {
+    if (index > 0) [this.tracks[index - 1], this.tracks[index]] = [this.tracks[index], this.tracks[index - 1]];
+    this.tracks = [...this.tracks];
+    this.stopTransitionPreview();
   }
 
-  moveDown(index: number) {
-    if (index < this.tracks.length - 1) {
-      const temp = this.tracks[index + 1];
-      this.tracks[index + 1] = this.tracks[index];
-      this.tracks[index] = temp;
-    }
-    this.pararPreviewDeTransicao();
+  moveDown(index: number): void {
+    if (index < this.tracks.length - 1) [this.tracks[index + 1], this.tracks[index]] = [this.tracks[index], this.tracks[index + 1]];
+    this.tracks = [...this.tracks];
+    this.stopTransitionPreview();
   }
 
-  removeTrack(index: number) {
+  removeTrack(index: number): void {
     const track = this.tracks[index];
-    if (track.rawUrl) {
-      URL.revokeObjectURL(track.rawUrl);
-    }
+    if (!track) return;
+    this.disposeTrack(track);
     this.tracks.splice(index, 1);
-    this.pararPreviewDeTransicao();
+    this.tracks = [...this.tracks];
+    this.stopTransitionPreview();
   }
 
-  igniteSetlist() {
-    if (this.tracks.length < 2) return;
+  removeVignette(): void {
+    if (this.vignetteTrack) this.disposeTrack(this.vignetteTrack);
+    this.vignetteTrack = null;
+    this.vignetteEnabled = false;
+  }
 
-    this.isProcessing = true;
+  private disposeTrack(track: RQSTrack): void {
+    track.uploadAttempt += 1;
+    track.s3Key = null;
+    track.uploadState = 'idle';
+    URL.revokeObjectURL(track.rawUrl);
+  }
+
+  private cancelActiveRender(): void {
+    this.renderAttempt += 1;
+    this.activeRenderSubscription?.unsubscribe();
+    this.activeRenderSubscription = null;
+    if (this.successResetTimer) clearTimeout(this.successResetTimer);
+    this.successResetTimer = null;
+    this.isProcessing = false;
     this.mixSuccess = false;
-    this.pararPreviewDeTransicao();
+  }
 
-    const safeName = this.setlistName.trim().replace(/[^a-zA-Z0-9_-]/g, '_') || 'RQS_SETLIST_MASTER';
-    this.audioComparison.audioProcessed.set(true);
-    this.audioComparison.processedFilename.set(`${safeName}.wav`); // Now safeName is defined
+  private isCurrentRender(attempt: number, userId: string | null): boolean {
+    return this.renderAttempt === attempt
+      && Boolean(userId)
+      && this.auth.session()?.user?.id === userId;
+  }
 
-    const crossfadesArray = this.tracks.slice(0, -1).map(track => {
-      return track.crossfadeNext !== undefined ? track.crossfadeNext : 8.0;
-    });
+  private renderErrorMessage(error: unknown): string {
+    const code = (error as { error?: { code?: unknown } })?.error?.code;
+    return code === 'SETLIST_PLAN_LIMIT_EXCEEDED'
+      ? this.localCopy('trackLimitServer')
+      : this.localCopy('serverError');
+  }
 
-    const s3KeysArray = this.tracks.map(t => t.s3Key!);
+  igniteSetlist(): void {
+    this.cancelActiveRender();
+    if (!this.canIgniteSetlist()) {
+      this.setlistError = this.localCopy('renderBlocked');
+      return;
+    }
+    const trackKeys = this.tracks.map((track) => track.s3Key);
+    if (trackKeys.some((key) => !key)) {
+      this.setlistError = this.localCopy('renderBlocked');
+      return;
+    }
 
-    const payload = {
-      s3Keys: s3KeysArray,
-      crossfades: crossfadesArray,
-      curva: this.activeCurve,
+    const payload: SetlistRenderRequest = {
+      tracks: trackKeys as string[],
+      vignette: this.vignetteEnabled ? this.vignetteTrack?.s3Key ?? null : null,
+      crossfades: this.tracks.slice(0, -1).map((track) => Number(track.crossfadeNext)),
+      curve: this.activeCurve,
       loudness: this.loudnessMatchMode,
-      exportName: this.setlistName
+      exportName: this.setlistName,
+      outputFormat: 'wav',
     };
 
-    this.dspService.generateMixS3(payload)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response: any) => {
-          this.isProcessing = false;
-          this.mixSuccess = true;
-          this.analytics.trackEvent('setlist_created');
-
-          const a = document.createElement('a');
-          a.href = response.downloadUrl;
-          a.download = `${safeName}.wav`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-
-          setTimeout(() => this.mixSuccess = false, 5000);
-        },
-        error: (err: any) => {
-          this.isProcessing = false;
-          console.error('Falha de Comunicação com a Matriz de Mixagem', err);
-        }
-      });
+    const userId = this.auth.session()?.user?.id ?? null;
+    const attempt = ++this.renderAttempt;
+    this.isProcessing = true;
+    this.mixSuccess = false;
+    this.setlistError = null;
+    this.stopTransitionPreview();
+    const subscription = this.dspService.generateMixS3(payload).subscribe({
+      next: (response) => {
+        if (!this.isCurrentRender(attempt, userId)) return;
+        this.activeRenderSubscription = null;
+        this.isProcessing = false;
+        this.mixSuccess = true;
+        this.audioComparison.audioProcessed.set(true);
+        this.audioComparison.processedFilename.set(response.fileName);
+        this.analytics.trackEvent('setlist_created');
+        const anchor = document.createElement('a');
+        anchor.href = response.downloadUrl;
+        anchor.download = response.fileName;
+        anchor.rel = 'noopener';
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        this.successResetTimer = setTimeout(() => {
+          if (this.isCurrentRender(attempt, userId)) this.mixSuccess = false;
+          this.successResetTimer = null;
+        }, 5000);
+      },
+      error: (error) => {
+        if (!this.isCurrentRender(attempt, userId)) return;
+        this.activeRenderSubscription = null;
+        this.isProcessing = false;
+        this.setlistError = this.renderErrorMessage(error);
+      },
+    });
+    this.activeRenderSubscription = subscription.closed ? null : subscription;
   }
 
-  // 🟢 MÉTODO 1: FORMATAR TEMPO (GARANTIDO DENTRO DA CLASSE!) [1.1.2]
-  formatarTempo(segundos: number): string {
-    if (isNaN(segundos) || segundos < 0) return '00:00';
-    const mins = Math.floor(segundos / 60);
-    const secs = Math.floor(segundos % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  formatDuration(seconds: number): string {
+    if (!Number.isFinite(seconds) || seconds < 0) return '00:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 
-  // 🟢 MÉTODO 2: ATUALIZAR CROSSOVER VISIVEL (GARANTIDO DENTRO DA CLASSE!) [1.1.2]
-  atualizarCrossoverVisivel() {
+  updateCrossfadeView(): void {
     this.tracks = [...this.tracks];
   }
 
-  ngOnDestroy() {
-    this.pararPreviewDeTransicao();
-    this.tracks.forEach(track => {
-      if (track.rawUrl) {
-        URL.revokeObjectURL(track.rawUrl);
-      }
-    });
-    if (this.audioCtx) {
-      this.audioCtx.close();
-    }
+  private clearAllLocalAudio(): void {
+    this.cancelActiveRender();
+    this.stopTransitionPreview();
+    this.tracks.forEach((track) => this.disposeTrack(track));
+    this.tracks = [];
+    this.removeVignette();
+    this.setlistError = null;
+  }
+
+  ngOnDestroy(): void {
+    this.clearAllLocalAudio();
+    if (this.audioCtx) void this.audioCtx.close();
+    this.audioCtx = null;
   }
 }
