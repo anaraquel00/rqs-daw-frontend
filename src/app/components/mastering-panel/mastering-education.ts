@@ -91,7 +91,7 @@ const EN: MasteringEducationCopy = {
       title: '15-second Preview',
       short: 'Renders the highlighted 15-second waveform region so you can check the settings before a full master.',
       details:
-        'Drag the highlighted region on the full-track waveform to choose the source excerpt. The Preview player uses a relative 00:00–00:15 timeline, while the source-window label shows the exact position in the complete song. Changing settings or moving the region invalidates the old Preview so you never compare against stale settings.',
+        'Drag the highlighted region on the full-track waveform to choose the source excerpt. The Preview player uses a relative 00:00–00:15 timeline, while the source-window label shows the exact position in the complete song. Changing settings or moving the region invalidates the old Preview so you never compare against stale settings. This is intentional and does not mean that mastering failed. Generate a new Preview after changing settings.',
     },
   },
 };
@@ -156,7 +156,7 @@ const PT: MasteringEducationCopy = {
       title: 'Prévia de 15 segundos',
       short: 'Renderiza a região destacada de 15 segundos da forma de onda antes do master completo.',
       details:
-        'Arraste a região destacada na forma de onda da faixa completa para escolher o trecho. O player da prévia usa uma linha do tempo relativa de 00:00 a 00:15, enquanto o trecho de origem mostra a posição exata na música. Alterar configurações ou mover a região invalida a prévia anterior.',
+        'Arraste a região destacada na forma de onda da faixa completa para escolher o trecho. O player da prévia usa uma linha do tempo relativa de 00:00 a 00:15, enquanto o trecho de origem mostra a posição exata na música. Alterar configurações ou mover a região invalida a prévia anterior. Isso é intencional e não significa que a masterização falhou. Gere uma nova prévia depois de alterar as configurações.',
     },
   },
 };
@@ -221,7 +221,7 @@ const PL: MasteringEducationCopy = {
       title: 'Preview 15 sekund',
       short: 'Renderuje podświetlony 15-sekundowy zakres waveformu przed pełnym masteringiem.',
       details:
-        'Przeciągnij podświetlony zakres na waveformie całego utworu, aby wybrać fragment. Player Preview pokazuje względne 00:00–00:15, a etykieta fragmentu źródłowego pokazuje dokładne miejsce w utworze. Zmiana ustawień lub przesunięcie zakresu unieważnia poprzedni Preview.',
+        'Przeciągnij podświetlony zakres na waveformie całego utworu, aby wybrać fragment. Player Preview pokazuje względne 00:00–00:15, a etykieta fragmentu źródłowego pokazuje dokładne miejsce w utworze. Zmiana ustawień lub przesunięcie zakresu unieważnia poprzedni Preview. To jest działanie zamierzone i nie oznacza błędu masteringu. Po zmianie ustawień wygeneruj nowy Preview.',
     },
   },
 };
@@ -287,7 +287,7 @@ const FR: MasteringEducationCopy = {
       title: 'Prévisualisation de 15 secondes',
       short: 'Effectue le rendu de la région de 15 secondes mise en évidence dans la forme d’onde afin de vérifier les réglages avant un master complet.',
       details:
-        'Faites glisser la région mise en évidence sur la forme d’onde de la piste complète pour choisir l’extrait source. Le lecteur de prévisualisation utilise une timeline relative de 00:00 à 00:15, tandis que l’étiquette de l’extrait source indique la position exacte dans la chanson complète. Toute modification des réglages ou déplacement de la région invalide l’ancienne prévisualisation afin d’éviter toute comparaison avec des paramètres obsolètes.',
+        'Faites glisser la région mise en évidence sur la forme d’onde de la piste complète pour choisir l’extrait source. Le lecteur de prévisualisation utilise une timeline relative de 00:00 à 00:15, tandis que l’étiquette de l’extrait source indique la position exacte dans la chanson complète. Toute modification des réglages ou déplacement de la région invalide l’ancienne prévisualisation afin d’éviter toute comparaison avec des paramètres obsolètes. Ce comportement est intentionnel et ne signifie pas que le mastering a échoué. Générez une nouvelle prévisualisation après avoir modifié les réglages.',
     },
   },
 };
