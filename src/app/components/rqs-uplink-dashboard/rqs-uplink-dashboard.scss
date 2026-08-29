@@ -143,6 +143,8 @@
         }
 
         .metric-sources {
+          min-width: 0;
+
           .label {
             font-size: 0.65rem;
             color: #777799;
@@ -152,7 +154,9 @@
 
           .sources-pills {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
+            min-width: 0;
             font-size: 0.7rem;
             color: #bbbbcc;
 
@@ -161,6 +165,7 @@
               padding: 2px 5px;
               border-radius: 3px;
               border: 1px solid #33334d;
+              white-space: nowrap;
             }
           }
         }
@@ -190,6 +195,16 @@
             border-color: #ff3333;
           }
         }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .links-table-container .link-card-item .metrics-grid-mini {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      .metric-sources {
+        grid-column: 1 / -1;
       }
     }
   }
