@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, ElementRef, OnDestroy, ViewChild, effect, inject } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, OnDestroy, ViewChild, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DspService } from '../../services/dsp';
 import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
@@ -10,6 +10,8 @@ import { MasteringProcessCommand, MasteringV2Request } from '../../services/mast
 import { MasteringService } from '../../services/mastering.service';
 import { environment } from '../../../environments/environment';
 import { AnalyticsService } from '../../services/analytics.service';
+
+type MasteringFeedback = 'invalid_format' | 'upload_failed' | 'source_preparing' | 'preview_failed' | 'full_failed';
 
 @Component({
   selector: 'app-upload-zone',
@@ -39,6 +41,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   s3Key: string | null = null;
   isUploadingS3 = false;
   isExtractingStems = false;
+  processingMode: 'preview' | 'full' | null = null;
+  readonly masteringFeedback = signal<MasteringFeedback | null>(null);
   renderProgressPercent = 0;
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
@@ -108,6 +112,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     }
 
     this.isUploadingS3 = true;
+    this.masteringFeedback.set(null);
     const generation = this.workspaceGeneration;
     this.addLog(`Iniciando handshake S3 para: ${file.name}`);
 
@@ -120,11 +125,13 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
             if (!this.isActiveWorkspace(generation)) return;
             this.isUploadingS3 = false;
             this.s3Key = s3Response.s3Key;
+            this.masteringFeedback.set(null);
             this.addLog(`Upload concluído! Arquivo persistido em: ${s3Response.s3Key}`);
           },
           error: (error: unknown) => {
             if (!this.isActiveWorkspace(generation)) return;
             this.isUploadingS3 = false;
+            this.masteringFeedback.set('upload_failed');
             this.addLog(`❌ ERRO CRÍTICO S3: ${this.errorMessage(error)}`);
           },
         });
@@ -132,6 +139,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       error: (error: unknown) => {
         if (!this.isActiveWorkspace(generation)) return;
         this.isUploadingS3 = false;
+        this.masteringFeedback.set('upload_failed');
         this.addLog(`❌ ERRO DE PROTOCOLO S3: ${this.errorMessage(error)}`);
       },
     });
@@ -144,6 +152,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       return;
     }
     if (!this.masteringV2DirectUpload && !this.s3Key) {
+      this.masteringFeedback.set('source_preparing');
       this.addLog('❌ MASTERING V2: source upload is not ready yet.');
       return;
     }
@@ -153,11 +162,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       return;
     }
 
-    this.analytics.trackEvent('master_started', {
-      source_format: this.analyticsSourceFormat(),
-      processing_mode: command.preview ? 'preview' : 'full'
-    });
-
+    this.masteringFeedback.set(null);
+    this.processingMode = command.preview ? 'preview' : 'full';
     this.isProcessing = true;
     const generation = this.workspaceGeneration;
     this.startEstimatedRenderProgress(command.preview);
@@ -176,22 +182,21 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
           if (!this.isActiveWorkspace(generation)) return;
           this.completeRenderProgress();
           this.isProcessing = false;
+          this.processingMode = null;
           this.releaseProcessedBlobUrl();
           this.processedAudioUrl = window.URL.createObjectURL(blob);
           this.processedAudioName = 'rqs_v2_preview.wav';
           this.isFullMasterCompleted = false;
           this.audioComparison.previewStatus.set('ready');
-          this.analytics.trackEvent('master_completed', {
-            source_format: this.analyticsSourceFormat(),
-            processing_mode: 'preview'
-          });
           this.addLog('Mastering V2 preview concluído com sucesso.');
         },
         error: (error: unknown) => {
           if (!this.isActiveWorkspace(generation)) return;
           this.stopEstimatedRenderProgress();
           this.isProcessing = false;
+          this.processingMode = null;
           this.audioComparison.previewStatus.set('error');
+          this.masteringFeedback.set('preview_failed');
           this.analytics.trackEvent('master_failed', {
             source_format: this.analyticsSourceFormat(),
             processing_mode: 'preview'
@@ -202,12 +207,17 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       return;
     }
 
+    this.analytics.trackEvent('master_started', {
+      source_format: this.analyticsSourceFormat(),
+      processing_mode: 'full'
+    });
     this.addLog(`Mastering V2 final: ${this.describeRequest(command.request)} | ${command.request.intensityPercent}%`);
     this.dspService.masterizeV2Final(formData).subscribe({
       next: (response) => {
         if (!this.isActiveWorkspace(generation)) return;
         this.completeRenderProgress();
         this.isProcessing = false;
+        this.processingMode = null;
         void this.auth.refreshProfile();
         this.releaseProcessedBlobUrl();
         this.processedAudioUrl = response.downloadUrl;
@@ -225,6 +235,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         if (!this.isActiveWorkspace(generation)) return;
         this.stopEstimatedRenderProgress();
         this.isProcessing = false;
+        this.processingMode = null;
+        this.masteringFeedback.set('full_failed');
         this.analytics.trackEvent('master_failed', {
           source_format: this.analyticsSourceFormat(),
           processing_mode: 'full'
@@ -253,10 +265,12 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.processedAudioName = '';
     this.s3Key = null;
     this.isProcessing = false;
+    this.processingMode = null;
     this.isUploadingS3 = false;
     this.isExtractingStems = false;
     this.systemLogs = [];
     this.isFullMasterCompleted = false;
+    this.masteringFeedback.set(null);
     this.masteringService.resetPreviewStartSeconds();
     this.stopEstimatedRenderProgress();
     this.audioComparison.resetAll();
@@ -309,6 +323,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   private acceptSelectedFile(file: File): void {
     const fileName = file.name.toLowerCase();
     if (!fileName.endsWith('.wav') && !fileName.endsWith('.mp3')) {
+      this.masteringFeedback.set('invalid_format');
       this.addLog('❌ Formato incompatível. Use WAV ou MP3.');
       return;
     }
@@ -320,7 +335,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.processedAudioName = '';
     this.s3Key = null;
     this.isProcessing = false;
+    this.processingMode = null;
     this.isFullMasterCompleted = false;
+    this.masteringFeedback.set(null);
     this.systemLogs = [];
     this.masteringService.resetPreviewStartSeconds();
     this.audioComparison.audioProcessed.set(false);
@@ -362,6 +379,16 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     }
     formData.append('preview', preview ? 'true' : 'false');
     return formData;
+  }
+
+  masteringFeedbackMessage(): string | null {
+    const feedback = this.masteringFeedback();
+    if (feedback === 'invalid_format') return this.lang.t().MASTERING_INVALID_FORMAT;
+    if (feedback === 'upload_failed') return this.lang.t().MASTERING_UPLOAD_FAILED;
+    if (feedback === 'source_preparing') return this.lang.t().MASTERING_SOURCE_PREPARING;
+    if (feedback === 'preview_failed') return this.lang.t().MASTERING_PREVIEW_FAILED;
+    if (feedback === 'full_failed') return this.lang.t().MASTERING_FULL_FAILED;
+    return null;
   }
 
   renderProgressStatus(): string {

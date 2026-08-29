@@ -145,6 +145,7 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
 
     masteringService = TestBed.inject(MasteringService);
     panel = TestBed.runInInjectionContext(() => new MasteringPanelComponent());
+    panel.sourceReady = true;
     panel.ngOnInit();
   });
 

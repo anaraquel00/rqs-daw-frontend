@@ -16,6 +16,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
   let dsp: jasmine.SpyObj<DspService>;
   let resetAll: jasmine.Spy;
   let clearMasterSrc: jasmine.Spy;
+  let analytics: jasmine.SpyObj<AnalyticsService>;
   const previewStatus = signal<'not-generated' | 'processing' | 'ready' | 'error'>('not-generated');
   const audioProcessed = signal(false);
   const processedFilename = signal('');
@@ -35,6 +36,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       'masterizeV2Preview',
       'masterizeV2Final',
     ]);
+    analytics = jasmine.createSpyObj<AnalyticsService>('AnalyticsService', ['trackEvent']);
 
     TestBed.configureTestingModule({
       providers: [
@@ -60,7 +62,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
             clearMasterSrc,
           },
         },
-        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy('trackEvent') } },
+        { provide: AnalyticsService, useValue: analytics },
       ],
     });
 
@@ -203,6 +205,43 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
     expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
     expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
+  });
+
+  it('does not report Preview as a Full Master analytics execution', () => {
+    dsp.masterizeV2Preview.and.returnValue(of(new Blob(['preview'], { type: 'audio/wav' })));
+    isLoggedIn.set(true);
+    TestBed.tick();
+    component.s3Key = 'staging/source.wav';
+
+    component.processarMaster(command(true));
+
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('master_started', jasmine.anything());
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('master_completed', jasmine.anything());
+  });
+
+  it('reports master_started and master_completed once for one successful Full Master', () => {
+    dsp.masterizeV2Final.and.returnValue(of({
+      success: true,
+      engine: 'rqs-core-mastering-v2',
+      downloadUrl: 'https://staging.invalid/master.wav',
+      fileName: 'master.wav',
+    }));
+    isLoggedIn.set(true);
+    TestBed.tick();
+    component.s3Key = 'staging/source.wav';
+
+    component.processarMaster(command(false));
+
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_started').length).toBe(1);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_completed').length).toBe(1);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_started', {
+      source_format: 'wav',
+      processing_mode: 'full',
+    });
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_completed', {
+      source_format: 'wav',
+      processing_mode: 'full',
+    });
   });
 
   function command(preview: boolean): MasteringProcessCommand {

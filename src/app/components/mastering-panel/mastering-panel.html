@@ -1,4 +1,28 @@
 <div class="mastering-board" *ngIf="originalFile">
+  <nav class="mastering-progress" [attr.aria-label]="lang.t().MASTERING_PROGRESS_ARIA">
+    <div class="progress-step done">
+      <span>1</span><strong>{{ lang.t().MASTERING_STEP_UPLOAD }}</strong>
+    </div>
+    <div class="progress-step" [class.done]="workflowStep() > 2" [class.active]="workflowStep() === 2">
+      <span>2</span><strong>{{ lang.t().MASTERING_STEP_ADJUST }}</strong>
+    </div>
+    <div class="progress-step" [class.done]="workflowStep() > 3" [class.active]="workflowStep() === 3">
+      <span>3</span><strong>{{ lang.t().MASTERING_STEP_PREVIEW }}</strong>
+    </div>
+    <div class="progress-step" [class.done]="hasCurrentFullMaster()" [class.active]="workflowStep() === 4">
+      <span>4</span><strong>{{ lang.t().MASTERING_STEP_FULL }}</strong>
+    </div>
+  </nav>
+
+  <div class="mastering-live-status" role="status" aria-live="polite" *ngIf="processingStatusText() as status">
+    <span class="status-spinner" aria-hidden="true"></span>
+    <strong>{{ status }}</strong>
+  </div>
+
+  <div class="mastering-feedback" role="alert" *ngIf="feedbackMessage">
+    ⚠ {{ feedbackMessage }}
+  </div>
+
   <div class="player-section custom-audio-console">
     <div class="console-telemetry">
       <span class="currentTime">{{ formatarTempo(audioComparison.displayCurrentTime()) }}</span>
@@ -68,6 +92,7 @@
         {{ masterVariantLabel() }} <span *ngIf="!audioComparison.canUseMaster()">🔒</span>
       </button>
     </div>
+    <p class="listening-status" aria-live="polite">{{ listeningStatusText() }}</p>
   </div>
 
   <div class="mastering-help-toolbar">
@@ -297,15 +322,25 @@
     </span>
   </div>
 
+  <div class="auth-flow-help" *ngIf="!auth.isLoggedIn()">
+    <strong>{{ lang.t().AUTH_REQUIRED_TITLE }}</strong>
+    <p>{{ lang.t().MASTERING_SIGN_IN_HELP }}</p>
+  </div>
+
+  <p class="full-master-block-reason" *ngIf="fullMasterBlockReason() as reason">
+    🔒 {{ reason }}
+  </p>
+
   <div class="action-buttons">
     <button
+      *ngIf="!hasCurrentPreview() && !hasCurrentFullMaster()"
       class="btn-secondary"
       (click)="dispararPreview()"
       [disabled]="!canGeneratePreview()">
       {{ audioComparison.previewStatus() === 'processing' ? lang.tr().AB_PREVIEW_GENERATING : lang.tr().BTN_GENERATE_PREVIEW }}
     </button>
     <button
-      *ngIf="!auth.isLoggedIn() || auth.canMaster()"
+      *ngIf="hasCurrentPreview() && !hasCurrentFullMaster()"
       class="btn-process"
       (click)="dispararProcessamentoCompleto()"
       [disabled]="!canGenerateFullMaster()">

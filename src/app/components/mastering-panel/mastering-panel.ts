@@ -51,6 +51,10 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() originalFile: File | null = null;
   @Input() isProcessing = false;
+  @Input() isUploading = false;
+  @Input() sourceReady = false;
+  @Input() processingMode: 'preview' | 'full' | null = null;
+  @Input() feedbackMessage: string | null = null;
   @Input() masteredAudioUrl: string | null = null;
   @Input() isFullMaster = false;
 
@@ -73,6 +77,39 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   readonly education = computed(() => masteringEducation(this.lang.currentLang()));
   readonly capabilitiesLoading = computed(() => this.capabilities() === null && this.capabilitiesError() === null);
+
+  workflowStep(): 1 | 2 | 3 | 4 {
+    if (this.hasCurrentFullMaster() || this.processingMode === 'full') return 4;
+    if (this.hasCurrentPreview()) return 4;
+    if (this.processingMode === 'preview') return 3;
+    return 2;
+  }
+
+  processingStatusText(): string | null {
+    if (this.isUploading) return this.lang.t().MASTERING_STATUS_UPLOADING;
+    if (this.isProcessing && this.processingMode === 'preview') return this.lang.t().MASTERING_STATUS_PREVIEW;
+    if (this.isProcessing && this.processingMode === 'full') return this.lang.t().MASTERING_STATUS_FULL;
+    return null;
+  }
+
+  fullMasterBlockReason(): string | null {
+    if (this.hasCurrentFullMaster()) return null;
+    if (this.isUploading) return this.lang.t().MASTERING_SOURCE_PREPARING;
+    if (!this.hasCurrentPreview()) return this.lang.t().MASTERING_PREVIEW_FIRST;
+    if (!this.auth.isLoggedIn()) return this.lang.t().MASTERING_SIGN_IN_HELP;
+    if (!this.auth.canMaster()) return this.lang.t().LIMIT_EXCEEDED_ALERT;
+    if (!this.sourceReady) return this.lang.t().MASTERING_SOURCE_PREPARING;
+    return null;
+  }
+
+  listeningStatusText(): string {
+    if (this.audioComparison.activeVariant() === 'original') {
+      return this.lang.t().MASTERING_LISTENING_ORIGINAL;
+    }
+    return this.hasCurrentFullMaster()
+      ? this.lang.t().MASTERING_LISTENING_FULL
+      : this.lang.t().MASTERING_LISTENING_PREVIEW;
+  }
 
   readonly previewWindowString = computed(() => {
     const start = this.audioComparison.previewStart();
@@ -259,7 +296,9 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   canGeneratePreview(): boolean {
     return !this.isProcessing
+      && !this.isUploading
       && this.requestReady()
+      && (!this.auth.isLoggedIn() || this.sourceReady)
       && this.audioComparison.previewStatus() !== 'processing'
       && !this.hasCurrentPreview()
       && !this.hasCurrentFullMaster();
@@ -267,6 +306,8 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   canGenerateFullMaster(): boolean {
     return !this.isProcessing
+      && !this.isUploading
+      && this.sourceReady
       && this.requestReady()
       && this.hasCurrentPreview()
       && (!this.auth.isLoggedIn() || this.auth.canMaster());
