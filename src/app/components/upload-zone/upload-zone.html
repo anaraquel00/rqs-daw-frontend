@@ -33,18 +33,6 @@
     <span>{{ feedback }}</span>
   </div>
 
-  <div class="stem-action-panel" style="margin-top: 15px; margin-bottom: 15px;">
-    <button
-      class="btn-stem-extract"
-      (click)="extrairStems()"
-      [disabled]="!selectedFile || masteringV2DirectUpload || isProcessing || isExtractingStems || isUploadingS3">
-      {{ isExtractingStems ? lang.t().DISSECTING_MINI : lang.t().EXTRACT_STEMS }}
-    </button>
-    <p class="text-[10px] text-zinc-500 text-center mt-1.5 font-mono" *ngIf="!selectedFile">
-      * {{ lang.t().UPLOAD_FIRST_STEMS }}
-    </p>
-  </div>
-
   <app-mastering-panel
     *ngIf="selectedFile && !isExtractingStems"
     [originalFile]="selectedFile"

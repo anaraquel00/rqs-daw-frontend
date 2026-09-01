@@ -40,7 +40,6 @@
         <li>{{ copy().freeItem1 }}</li>
         <li>{{ copy().freeItem2 }}</li>
         <li>{{ copy().freeItem3 }}</li>
-        <li>{{ copy().freeItem4 }}</li>
       </ul>
       <a routerLink="/app" class="plan-cta secondary">{{ copy().openStudio }}</a>
     </article>
@@ -83,10 +82,7 @@
       <p class="feature-heading">{{ copy().features }}</p>
       <ul>
         <li>{{ copy().proItem1 }}</li>
-        <li>{{ copy().proItem2 }}</li>
-        <li>{{ copy().proItem3 }}</li>
         <li>{{ copy().proposedQuota }}: 80 Full Masters/month</li>
-        <li>{{ copy().proposedQuota }}: 10 stem jobs/month</li>
       </ul>
       <button type="button" class="plan-cta" (click)="scrollToWaitlist('pro')">{{ copy().joinWaitlist }}</button>
     </article>
@@ -111,7 +107,6 @@
           <tr><th>{{ copy().ab }}</th><td>{{ copy().currentBetaAccess }}</td><td>✓</td><td>✓</td><td>✓</td></tr>
           <tr><th>{{ copy().setlist }}</th><td>{{ copy().availableBeta }}</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · planned ✓</td><td>{{ copy().availableBeta }} · planned ✓</td></tr>
           <tr><th>{{ copy().uplink }}</th><td>{{ copy().availableBeta }}</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · planned ✓</td><td>{{ copy().availableBeta }} · planned ✓</td></tr>
-          <tr><th>{{ copy().stems }}</th><td>{{ copy().availableBeta }}</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · 10 jobs/mo planned</td></tr>
         </tbody>
       </table>
     </div>
