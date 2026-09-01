@@ -347,7 +347,7 @@ export const PT_TRANSLATIONS = {
   // Landing premium redesign
   LANDING_HERO_EYEBROW: "CONSTRUÍDO PELA RAQUEL SYNTHS // BETA PÚBLICO",
   LANDING_HERO_TITLE: "DO SINAL BRUTO AO ENVIO.",
-  LANDING_HERO_SUB: "Masterize. Separe stems. Construa sets. Envie sua música.",
+  LANDING_HERO_SUB: "Masterize. Construa setlists. Envie sua música.",
   LANDING_CTA_OPEN: "ABRIR RQS STUDIO",
   LANDING_CTA_EXPLORE: "EXPLORAR RECURSOS",
   LANDING_HERO_NOTE: "Ferramentas de produção musical desenvolvidas dentro de um projeto independente real.",
@@ -379,7 +379,7 @@ export const PT_TRANSLATIONS = {
 
   LANDING_ORIGIN_TITLE: "CONSTRUÍDO DENTRO DA MÚSICA.",
   LANDING_ORIGIN_TAGLINE: "Nós usamos as mesmas ferramentas.",
-  LANDING_ORIGIN_DESC: "O RQS Studio nasceu de ferramentas internas do workflow da RaQuel Synths — masterização, separação de stems, preparação de setlists e deep links musicais. Agora esse sistema está sendo aberto para outros criadores.",
+  LANDING_ORIGIN_DESC: "O RQS Studio nasceu de ferramentas internas do workflow da RaQuel Synths — masterização, preparação de setlists e deep links musicais. Agora esse sistema está sendo aberto para outros criadores.",
   LANDING_ORIGIN_CTA: "EXPLORAR RAQUEL SYNTHS",
 
   LANDING_PROOF_TITLE: "OUÇA A DIFERENÇA.",
@@ -395,7 +395,7 @@ export const PT_TRANSLATIONS = {
 
   LANDING_PRO_DESC: "O RQS PRO continua em preparação para o lançamento público. A prévia de preços e limites planejados já está disponível, mas nenhuma assinatura paga ou checkout está ativo.",
   LANDING_PRO_ITEM_1: "Prévia de preços localizada em BRL, USD e PLN",
-  LANDING_PRO_ITEM_2: "Limites planejados de MASTER, SPLIT, BUILD e DEPLOY",
+  LANDING_PRO_ITEM_2: "Limites planejados de MASTER, BUILD e DEPLOY",
   LANDING_PRO_ITEM_3: "Assinaturas pagas continuam desativadas durante o Public Beta",
   LANDING_PRO_STATUS: "PRÉVIA DE LANÇAMENTO",
   LANDING_PRO_CTA: "VER PREÇOS // PRÉVIA",
@@ -423,7 +423,7 @@ export const PT_TRANSLATIONS = {
   },
 
   LANDING_FINAL_TITLE: "SEU SINAL ESTÁ PRONTO.",
-  LANDING_FINAL_DESC: "Masterize. Separe. Construa. Envie.",
+  LANDING_FINAL_DESC: "Masterize. Construa. Envie.",
 
 
   HERO_TITLE: "REESCREVA O CÓDIGO SÔNICO DAS SUAS MÚSICAS.",
@@ -563,7 +563,7 @@ export const EN_TRANSLATIONS = {
   // Premium landing redesign
   LANDING_HERO_EYEBROW: "BUILT BY RAQUEL SYNTHS // PUBLIC BETA",
   LANDING_HERO_TITLE: "FROM RAW SIGNAL TO RELEASE.",
-  LANDING_HERO_SUB: "Master. Split stems. Build sets. Send your music.",
+  LANDING_HERO_SUB: "Master. Build setlists. Send your music.",
   LANDING_CTA_OPEN: "OPEN RQS STUDIO",
   LANDING_CTA_EXPLORE: "EXPLORE FEATURES",
   LANDING_HERO_NOTE: "Music production tools built inside a real independent project.",
@@ -595,7 +595,7 @@ export const EN_TRANSLATIONS = {
 
   LANDING_ORIGIN_TITLE: "BUILT IN THE MUSIC.",
   LANDING_ORIGIN_TAGLINE: "We use the same tools.",
-  LANDING_ORIGIN_DESC: "RQS Studio began as internal tooling for the RaQuel Synths workflow — mastering, stem separation, setlist preparation and music deep links. Now the system is opening to other creators.",
+  LANDING_ORIGIN_DESC: "RQS Studio began as internal tooling for the RaQuel Synths workflow — mastering, setlist preparation and music deep links. Now the system is opening to other creators.",
   LANDING_ORIGIN_CTA: "EXPLORE RAQUEL SYNTHS",
 
   LANDING_PROOF_TITLE: "HEAR THE DIFFERENCE.",
@@ -611,7 +611,7 @@ export const EN_TRANSLATIONS = {
 
   LANDING_PRO_DESC: "RQS PRO is still being prepared for public launch. A preview of planned pricing and limits is now available, but no paid subscription or checkout is active.",
   LANDING_PRO_ITEM_1: "Localized pricing preview in BRL, USD and PLN",
-  LANDING_PRO_ITEM_2: "Planned limits across MASTER, SPLIT, BUILD and DEPLOY",
+  LANDING_PRO_ITEM_2: "Planned limits across MASTER, BUILD and DEPLOY",
   LANDING_PRO_ITEM_3: "Paid subscriptions remain disabled during Public Beta",
   LANDING_PRO_STATUS: "LAUNCH PREVIEW",
   LANDING_PRO_CTA: "VIEW PRICING // PREVIEW",
@@ -630,7 +630,7 @@ export const EN_TRANSLATIONS = {
   },
 
   LANDING_FINAL_TITLE: "YOUR SIGNAL IS READY.",
-  LANDING_FINAL_DESC: "Master. Split. Build. Send.",
+  LANDING_FINAL_DESC: "Master. Build. Send.",
 
 
   HERO_TITLE: "REWRITE THE SONIC CODE OF YOUR MUSIC.",
@@ -774,7 +774,7 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   // Landing premium redesign — Polish
   LANDING_HERO_EYEBROW: "ZBUDOWANE PRZEZ RAQUEL SYNTHS // PUBLICZNA BETA",
   LANDING_HERO_TITLE: "OD SUROWEGO SYGNAŁU DO PREMIERY.",
-  LANDING_HERO_SUB: "Masteruj. Rozdziel stem-y. Zbuduj set. Wyślij swoją muzykę.",
+  LANDING_HERO_SUB: "Masteruj. Zbuduj setlistę. Wyślij swoją muzykę.",
   LANDING_CTA_OPEN: "OTWÓRZ RQS STUDIO",
   LANDING_CTA_EXPLORE: "POZNAJ FUNKCJE",
   LANDING_HERO_NOTE: "Narzędzia produkcji muzycznej stworzone wewnątrz prawdziwego niezależnego projektu.",
@@ -806,7 +806,7 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
 
   LANDING_ORIGIN_TITLE: "ZBUDOWANE WEWNĄTRZ MUZYKI.",
   LANDING_ORIGIN_TAGLINE: "Używamy tych samych narzędzi.",
-  LANDING_ORIGIN_DESC: "RQS Studio powstało jako wewnętrzne narzędzia workflow RaQuel Synths — do masteringu, separacji stemów, przygotowania setlist i muzycznych deep linków. Teraz system otwiera się na innych twórców.",
+  LANDING_ORIGIN_DESC: "RQS Studio powstało jako wewnętrzne narzędzia workflow RaQuel Synths — do masteringu, przygotowania setlist i muzycznych deep linków. Teraz system otwiera się na innych twórców.",
   LANDING_ORIGIN_CTA: "ODKRYJ RAQUEL SYNTHS",
 
   LANDING_PROOF_TITLE: "USŁYSZ RÓŻNICĘ.",
@@ -822,7 +822,7 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
 
   LANDING_PRO_DESC: "RQS PRO jest nadal przygotowywany do publicznej premiery. Podgląd planowanych cen i limitów jest już dostępny, ale płatne subskrypcje i checkout pozostają wyłączone.",
   LANDING_PRO_ITEM_1: "Lokalny podgląd cen w BRL, USD i PLN",
-  LANDING_PRO_ITEM_2: "Planowane limity dla MASTER, SPLIT, BUILD i DEPLOY",
+  LANDING_PRO_ITEM_2: "Planowane limity dla MASTER, BUILD i DEPLOY",
   LANDING_PRO_ITEM_3: "Płatne subskrypcje pozostają wyłączone podczas Public Beta",
   LANDING_PRO_STATUS: "PODGLĄD PREMIERY",
   LANDING_PRO_CTA: "ZOBACZ CENY // PODGLĄD",
@@ -841,7 +841,7 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   },
 
   LANDING_FINAL_TITLE: "TWÓJ SYGNAŁ JEST GOTOWY.",
-  LANDING_FINAL_DESC: "Masteruj. Rozdziel. Zbuduj. Wyślij.",
+  LANDING_FINAL_DESC: "Masteruj. Zbuduj. Wyślij.",
 HERO_TITLE: 'NADAJ SWOJEJ MUZYCE GOTOWE BRZMIENIE.',
   HERO_SUB: 'RQS Studio to inteligentne narzędzia masteringu, setlist i DSP dla producentów, DJ-ów i twórców muzyki generowanej przez AI.',
   HERO_CTA: '[ 🎛️ WEJDŹ DO RQS STUDIO ]',

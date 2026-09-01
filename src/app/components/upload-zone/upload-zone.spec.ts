@@ -93,7 +93,6 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     component.isFullMasterCompleted = true;
     component.isProcessing = true;
     component.isUploadingS3 = true;
-    component.isExtractingStems = true;
     component.systemLogs = ['previous session'];
     audioProcessed.set(true);
     processedFilename.set('result.wav');
@@ -108,7 +107,6 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(component.isFullMasterCompleted).toBeFalse();
     expect(component.isProcessing).toBeFalse();
     expect(component.isUploadingS3).toBeFalse();
-    expect(component.isExtractingStems).toBeFalse();
     expect(component.systemLogs).toEqual([]);
     expect(resetAll).toHaveBeenCalled();
     expect(audioProcessed()).toBeFalse();

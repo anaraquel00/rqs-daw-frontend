@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { ViewportScroller } from '@angular/common';
 import { Footer } from '../footer/footer';
 import { LanguageService, UiLanguage } from '../services/language.service';
-import { SeoService } from '../services/seo.service';
+import { SeoConfig, SeoService } from '../services/seo.service';
 import { AnalyticsService } from '../services/analytics.service';
 
 type PricingCurrency = 'BRL' | 'USD' | 'PLN';
@@ -15,6 +15,46 @@ const PRICING = {
   USD: { free: 0, master: 4.99, plus: 7.99, pro: 11.99 },
   PLN: { free: 0, master: 19.99, plus: 29.99, pro: 44.99 }
 } as const;
+
+export function pricingSeoConfig(currentLang: UiLanguage): SeoConfig {
+  const isPt = currentLang === 'pt';
+  const isPl = currentLang === 'pl';
+  const canonicalUrl = 'https://studio.raquelsynths.com/pricing';
+
+  return {
+    title: isPt
+      ? 'Preços do RQS Studio | Masterização, Setlists e Uplink'
+      : isPl
+        ? 'Cennik RQS Studio | Mastering, Setlisty i Uplink'
+        : 'RQS Studio Pricing | Mastering, Setlists & Uplink',
+    description: isPt
+      ? 'Conheça os preços planejados do RQS Studio para masterização, setlists e RQS Uplink. Public Beta disponível agora.'
+      : isPl
+        ? 'Poznaj planowany cennik RQS Studio dla masteringu, workflow setlist i RQS Uplink. Public Beta jest już dostępna.'
+        : 'Explore planned RQS Studio pricing for mastering, setlist workflows and RQS Uplink. Public Beta available now.',
+    url: canonicalUrl,
+    type: 'website',
+    locale: isPt ? 'pt_BR' : isPl ? 'pl_PL' : 'en_US',
+    siteName: 'RQS Studio',
+    robots: 'index, follow',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: isPt ? 'Preços do RQS Studio' : isPl ? 'Cennik RQS Studio' : 'RQS Studio Pricing',
+      url: canonicalUrl,
+      description: isPt
+        ? 'Prévia de preços de lançamento do RQS Studio durante o Public Beta.'
+        : isPl
+          ? 'Podgląd cen premierowych RQS Studio podczas Public Beta.'
+          : 'RQS Studio launch pricing preview during Public Beta.',
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'RQS Studio',
+        url: 'https://studio.raquelsynths.com/'
+      }
+    }
+  };
+}
 
 @Component({
   selector: 'app-pricing-page',
@@ -44,43 +84,7 @@ export class PricingPageComponent implements AfterViewInit {
         this.currency.set(this.defaultCurrency(currentLang));
       }
 
-      const isPt = currentLang === 'pt';
-      const isPl = currentLang === 'pl';
-      const canonicalUrl = 'https://studio.raquelsynths.com/pricing';
-
-      this.seo.update({
-        title: isPt
-          ? 'Preços do RQS Studio | Masterização, Stems, Setlists e Uplink'
-          : isPl
-            ? 'Cennik RQS Studio | Mastering, Stemy, Setlisty i Uplink'
-            : 'RQS Studio Pricing | Mastering, Stems, Setlists & Uplink',
-        description: isPt
-          ? 'Conheça os preços planejados do RQS Studio para masterização, separação de stems, setlists e RQS Uplink. Public Beta disponível agora.'
-          : isPl
-            ? 'Poznaj planowany cennik RQS Studio dla masteringu, separacji stemów, workflow setlist i RQS Uplink. Public Beta jest już dostępna.'
-            : 'Explore planned RQS Studio pricing for mastering, stem separation, setlist workflows and RQS Uplink. Public Beta available now.',
-        url: canonicalUrl,
-        type: 'website',
-        locale: isPt ? 'pt_BR' : currentLang === 'pl' ? 'pl_PL' : 'en_US',
-        siteName: 'RQS Studio',
-        robots: 'index, follow',
-        jsonLd: {
-          '@context': 'https://schema.org',
-          '@type': 'WebPage',
-          name: isPt ? 'Preços do RQS Studio' : isPl ? 'Cennik RQS Studio' : 'RQS Studio Pricing',
-          url: canonicalUrl,
-          description: isPt
-            ? 'Prévia de preços de lançamento do RQS Studio durante o Public Beta.'
-            : isPl
-              ? 'Podgląd cen premierowych RQS Studio podczas Public Beta.'
-              : 'RQS Studio launch pricing preview during Public Beta.',
-          isPartOf: {
-            '@type': 'WebSite',
-            name: 'RQS Studio',
-            url: 'https://studio.raquelsynths.com/'
-          }
-        }
-      });
+      this.seo.update(pricingSeoConfig(currentLang));
     });
   }
   ngAfterViewInit(): void {
