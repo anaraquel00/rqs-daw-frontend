@@ -34,7 +34,7 @@
   </div>
 
   <app-mastering-panel
-    *ngIf="selectedFile && !isExtractingStems"
+    *ngIf="selectedFile"
     [originalFile]="selectedFile"
     [isProcessing]="isProcessing || isUploadingS3"
     [isUploading]="isUploadingS3"
@@ -47,7 +47,7 @@
     (configChanged)="invalidateMasteringResult()">
   </app-mastering-panel>
 
-  <div class="cyber-terminal" *ngIf="isProcessing || isUploadingS3 || isExtractingStems">
+  <div class="cyber-terminal" *ngIf="isProcessing || isUploadingS3">
     <div class="terminal-header">
       <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
       <span class="terminal-title">rqs_mainframe_logger.sh</span>
@@ -59,7 +59,7 @@
       <div class="terminal-line active-status">
         <span class="prompt">>></span>
         <span class="status-text">
-          {{ isUploadingS3 ? lang.t().SYNCHRONIZING : (isExtractingStems ? lang.t().DISSECTING : renderProgressStatus()) }}
+          {{ isUploadingS3 ? lang.t().SYNCHRONIZING : renderProgressStatus() }}
         </span>
         <span class="blink-block">█</span>
       </div>

@@ -313,6 +313,16 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
       && (!this.auth.isLoggedIn() || this.auth.canMaster());
   }
 
+  shouldShowFullMasterAction(): boolean {
+    return this.hasCurrentPreview()
+      && !this.hasCurrentFullMaster()
+      && this.auth.canMaster();
+  }
+
+  shouldShowProLimitCard(): boolean {
+    return !this.auth.isPremium() && this.auth.remainingMasters() === 0;
+  }
+
   workflowStatusText(): string {
     const language = this.lang.currentLang();
     if (this.hasCurrentFullMaster()) {

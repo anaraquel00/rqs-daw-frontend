@@ -40,7 +40,6 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   systemLogs: string[] = [];
   s3Key: string | null = null;
   isUploadingS3 = false;
-  isExtractingStems = false;
   processingMode: 'preview' | 'full' | null = null;
   readonly masteringFeedback = signal<MasteringFeedback | null>(null);
   renderProgressPercent = 0;
@@ -267,7 +266,6 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isProcessing = false;
     this.processingMode = null;
     this.isUploadingS3 = false;
-    this.isExtractingStems = false;
     this.systemLogs = [];
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
@@ -276,43 +274,6 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.audioComparison.resetAll();
     this.audioComparison.audioProcessed.set(false);
     this.audioComparison.processedFilename.set('');
-  }
-
-  extrairStems(): void {
-    if (!this.selectedFile || !this.s3Key) return;
-
-    this.analytics.trackEvent('stem_started', {
-      source_format: this.analyticsSourceFormat()
-    });
-    this.isExtractingStems = true;
-    const generation = this.workspaceGeneration;
-    this.addLog(`Iniciando dissecação acústica de 6 canais (Demucs) via S3 para: ${this.selectedFile.name}`);
-
-    this.dspService.extractStemsS3(this.s3Key).subscribe({
-      next: (response) => {
-        if (!this.isActiveWorkspace(generation)) return;
-        this.isExtractingStems = false;
-        const a = document.createElement('a');
-        a.href = response.downloadUrl;
-        const originalName = this.selectedFile?.name.replace(/\.[^/.]+$/, '') ?? 'RQS_Track';
-        a.download = `RQS_6_STEMS_${originalName}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        this.analytics.trackEvent('stem_completed', {
-          source_format: this.analyticsSourceFormat()
-        });
-        this.addLog('ZIP de 6 canais entregue com sucesso!');
-      },
-      error: (error: unknown) => {
-        if (!this.isActiveWorkspace(generation)) return;
-        this.isExtractingStems = false;
-        this.analytics.trackEvent('stem_failed', {
-          source_format: this.analyticsSourceFormat()
-        });
-        this.addLog(`❌ ERRO DE DISSECAÇÃO: ${this.errorMessage(error)}`);
-      },
-    });
   }
 
   ngOnDestroy(): void {

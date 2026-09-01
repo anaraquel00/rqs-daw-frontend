@@ -78,6 +78,8 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
   const canUseMaster = signal(false);
   const isLoggedIn = signal(true);
   const canMaster = signal(true);
+  const isPremium = signal(false);
+  const remainingMasters = signal(3);
   let requestSignIn: jasmine.Spy;
   let clearCalls = 0;
   let stopResetCalls = 0;
@@ -88,6 +90,8 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
     canUseMaster.set(false);
     isLoggedIn.set(true);
     canMaster.set(true);
+    isPremium.set(false);
+    remainingMasters.set(3);
     requestSignIn = jasmine.createSpy('requestSignIn');
     currentLang.set('en');
 
@@ -139,7 +143,10 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
             tr: () => ({ MASTER_LABEL: 'B - MASTER PREVIEW' }),
           },
         },
-        { provide: AuthService, useValue: { canMaster, isLoggedIn, requestSignIn } },
+        {
+          provide: AuthService,
+          useValue: { canMaster, isLoggedIn, isPremium, remainingMasters, requestSignIn },
+        },
       ],
     });
 
@@ -274,6 +281,35 @@ it('sends the selected source start with the Preview command', () => {
     canUseMaster.set(true);
 
     expect(panel.canGenerateFullMaster()).toBeTrue();
+  });
+
+  it('shows the Full Master action only while the authenticated plan can still master', () => {
+    panel.audioComparison.previewStatus.set('ready');
+    panel.audioComparison.playbackMode.set('preview-15s');
+    canUseMaster.set(true);
+
+    canMaster.set(true);
+    expect(panel.shouldShowFullMasterAction()).toBeTrue();
+
+    canMaster.set(false);
+    expect(panel.shouldShowFullMasterAction()).toBeFalse();
+
+    canMaster.set(true);
+    panel.isFullMaster = true;
+    panel.audioComparison.playbackMode.set('full-track');
+    expect(panel.shouldShowFullMasterAction()).toBeFalse();
+  });
+
+  it('shows the Final Beta waitlist card only for an exhausted Free plan', () => {
+    isPremium.set(false);
+    remainingMasters.set(1);
+    expect(panel.shouldShowProLimitCard()).toBeFalse();
+
+    remainingMasters.set(0);
+    expect(panel.shouldShowProLimitCard()).toBeTrue();
+
+    isPremium.set(true);
+    expect(panel.shouldShowProLimitCard()).toBeFalse();
   });
 
   it('invalidates stale results and resets audition when the Preview range moves', () => {

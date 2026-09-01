@@ -35,7 +35,6 @@
 .console-topbar,
 .console-module,
 .ui-head,
-.stem-row,
 .track-row,
 .crossfade,
 .platforms,
@@ -156,7 +155,6 @@
 
 .hero-console,
 .master-ui,
-.stem-ui,
 .setlist-ui,
 .uplink-ui {
   border: 1px solid var(--line);
@@ -353,7 +351,6 @@
 }
 
 .master-ui,
-.stem-ui,
 .setlist-ui,
 .uplink-ui { min-height: 28rem; padding: 1rem; }
 
@@ -400,26 +397,6 @@
   font-family: "Fira Code", "Courier New", monospace;
   font-size: 0.62rem;
   text-align: center;
-}
-
-.stem-row {
-  min-height: 3.65rem;
-  margin-top: 0.7rem;
-  padding: 0 0.9rem;
-  border: 1px solid rgba(255,255,255,.05);
-  border-radius: 0.55rem;
-  display: grid;
-  grid-template-columns: 5rem 1fr;
-  align-items: center;
-  gap: 1rem;
-  background: rgba(255,255,255,.012);
-}
-
-.stem-row span { color: #8b949f; font-size: 0.62rem; letter-spacing: 0.08em; }
-.stem-row i {
-  height: 1.15rem;
-  opacity: 0.75;
-  background: repeating-linear-gradient(90deg, transparent 0 6px, var(--cyan) 6px 8px, transparent 8px 13px);
 }
 
 .track-row {
@@ -845,7 +822,6 @@
   backdrop-filter: blur(2px);
 }
 
-.feature--split,
 .feature--deploy,
 .proof,
 .final-cta {

@@ -116,7 +116,7 @@ export const FR_DICT: typeof PT_DICT = {
 export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   LANDING_HERO_EYEBROW: 'CRÉÉ PAR RAQUEL SYNTHS // BÊTA PUBLIQUE',
   LANDING_HERO_TITLE: 'DU SIGNAL BRUT À LA SORTIE.',
-  LANDING_HERO_SUB: 'Masterisez. Séparez les stems. Construisez vos sets. Diffusez votre musique.',
+  LANDING_HERO_SUB: 'Masterisez. Construisez vos setlists. Diffusez votre musique.',
   LANDING_CTA_OPEN: 'OUVRIR RQS STUDIO',
   LANDING_CTA_EXPLORE: 'DÉCOUVRIR LES FONCTIONNALITÉS',
   LANDING_HERO_NOTE: 'Des outils de production musicale conçus au sein d’un véritable projet indépendant.',
@@ -148,7 +148,7 @@ export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
 
   LANDING_ORIGIN_TITLE: 'CONÇU AU CŒUR DE LA MUSIQUE.',
   LANDING_ORIGIN_TAGLINE: 'Nous utilisons les mêmes outils.',
-  LANDING_ORIGIN_DESC: 'RQS Studio est né comme un ensemble d’outils internes du workflow RaQuel Synths — mastering, séparation de stems, préparation de setlists et deep links musicaux. Le système s’ouvre maintenant à d’autres créateurs.',
+  LANDING_ORIGIN_DESC: 'RQS Studio est né comme un ensemble d’outils internes du workflow RaQuel Synths — mastering, préparation de setlists et deep links musicaux. Le système s’ouvre maintenant à d’autres créateurs.',
   LANDING_ORIGIN_CTA: 'DÉCOUVRIR RAQUEL SYNTHS',
 
   LANDING_PROOF_TITLE: 'ÉCOUTEZ LA DIFFÉRENCE.',
@@ -164,7 +164,7 @@ export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
 
   LANDING_PRO_DESC: 'RQS PRO est encore en préparation pour son lancement public. Un aperçu des tarifs et limites prévus est disponible, mais aucun abonnement payant ni checkout n’est actif.',
   LANDING_PRO_ITEM_1: 'Aperçu des tarifs localisés en BRL, USD et PLN',
-  LANDING_PRO_ITEM_2: 'Limites prévues pour MASTER, SPLIT, BUILD et DEPLOY',
+  LANDING_PRO_ITEM_2: 'Limites prévues pour MASTER, BUILD et DEPLOY',
   LANDING_PRO_ITEM_3: 'Les abonnements payants restent désactivés pendant la bêta publique',
   LANDING_PRO_STATUS: 'APERÇU DU LANCEMENT',
   LANDING_PRO_CTA: 'VOIR LES TARIFS // APERÇU',
@@ -239,7 +239,7 @@ export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   },
 
   LANDING_FINAL_TITLE: 'VOTRE SIGNAL EST PRÊT.',
-  LANDING_FINAL_DESC: 'Masterisez. Séparez. Construisez. Diffusez.',
+  LANDING_FINAL_DESC: 'Masterisez. Construisez. Diffusez.',
 
   HERO_TITLE: 'RÉÉCRIVEZ LE CODE SONORE DE VOTRE MUSIQUE.',
   HERO_SUB: 'RQS Studio est une workstation cloud intelligente conçue pour les producteurs indépendants, les DJs et les créateurs de musique générative.',

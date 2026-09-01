@@ -291,7 +291,7 @@
 
   <div
     class="pro-limit-card"
-    *ngIf="!auth.isPremium() && auth.remainingMasters() === 0">
+    *ngIf="shouldShowProLimitCard()">
     <div class="pro-limit-header">
       <span class="pro-limit-icon">💎</span>
       <div>
@@ -340,7 +340,7 @@
       {{ audioComparison.previewStatus() === 'processing' ? lang.tr().AB_PREVIEW_GENERATING : lang.tr().BTN_GENERATE_PREVIEW }}
     </button>
     <button
-      *ngIf="hasCurrentPreview() && !hasCurrentFullMaster()"
+      *ngIf="shouldShowFullMasterAction()"
       class="btn-process"
       (click)="dispararProcessamentoCompleto()"
       [disabled]="!canGenerateFullMaster()">
