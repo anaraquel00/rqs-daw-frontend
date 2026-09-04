@@ -251,7 +251,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.processedAudioUrl = null;
     this.processedAudioName = '';
     this.isFullMasterCompleted = false;
-    this.audioComparison.clearMasterSrc();
+    this.audioComparison.clearMasterSrc('UPLOAD_ZONE_INVALIDATE_MASTERING_RESULT');
     this.audioComparison.audioProcessed.set(false);
     this.audioComparison.processedFilename.set('');
   }
@@ -271,7 +271,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.masteringFeedback.set(null);
     this.masteringService.resetPreviewStartSeconds();
     this.stopEstimatedRenderProgress();
-    this.audioComparison.resetAll();
+    this.audioComparison.resetAll('UPLOAD_ZONE_EJECT_TRACK');
     this.audioComparison.audioProcessed.set(false);
     this.audioComparison.processedFilename.set('');
   }
