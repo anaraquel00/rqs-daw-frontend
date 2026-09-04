@@ -426,4 +426,190 @@ describe('AudioComparisonService V2 preview mapping', () => {
     });
   });
 
+  describe('Gate 140 preview boundary reset regression', () => {
+    let internal: AudioComparisonInternals;
+
+    beforeEach(() => {
+      internal = service as unknown as AudioComparisonInternals;
+      diagnosticApi().clear();
+      service.duration.set(259);
+      service.previewStart.set(122);
+      service.previewEnd.set(137);
+      service.previewStatus.set('not-generated');
+      service.playbackMode.set('preview-15s');
+    });
+
+    for (const currentTime of [121.999999, 121.9995, 121.999]) {
+      it(`does not interrupt pending first play at lower-bound precision ${currentTime}`, async () => {
+        const pendingPlay = deferred();
+        let interrupted = false;
+        spyOn(internal.originalAudio, 'play').and.returnValue(pendingPlay.promise);
+        const pause = spyOn(internal.originalAudio, 'pause').and.callFake(() => {
+          interrupted = true;
+          pendingPlay.reject(abortError('play interrupted by preview boundary reset'));
+        });
+
+        const playback = internal.playActiveSource();
+        internal.originalAudio.currentTime = currentTime;
+        internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+        if (!interrupted) pendingPlay.resolve();
+        await playback;
+
+        expect(pause).not.toHaveBeenCalled();
+        expect(diagnosticApi().summary()).toContain('FIRST_PLAY_RESULT = PASS');
+      });
+    }
+
+    it('does not reset while pending first play is exactly at previewStart', async () => {
+      const pendingPlay = deferred();
+      spyOn(internal.originalAudio, 'play').and.returnValue(pendingPlay.promise);
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      const playback = internal.playActiveSource();
+      internal.originalAudio.currentTime = 122;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+      pendingPlay.resolve();
+      await playback;
+
+      expect(reset).not.toHaveBeenCalled();
+    });
+
+    it('does not reset a fractional previewStart for a sub-frame lower-bound value while play is pending', async () => {
+      const pendingPlay = deferred();
+      service.previewStart.set(122.345678);
+      service.previewEnd.set(137.345678);
+      spyOn(internal.originalAudio, 'play').and.returnValue(pendingPlay.promise);
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      const playback = internal.playActiveSource();
+      internal.originalAudio.currentTime = 122.345677;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+      pendingPlay.resolve();
+      await playback;
+
+      expect(reset).not.toHaveBeenCalled();
+      expect(service.isPlaying()).toBeTrue();
+    });
+
+    it('does not repeat reset when seek quantization returns below previewStart', () => {
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      internal.originalAudio.currentTime = 121.999999;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+      internal.originalAudio.currentTime = 121.999999;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+
+      expect(service.isPlaying()).toBeFalse();
+      expect(reset).not.toHaveBeenCalled();
+    });
+
+    it('does not let master timeupdate pause original during pending first play', async () => {
+      const pendingPlay = deferred();
+      spyOn(internal.originalAudio, 'play').and.returnValue(pendingPlay.promise);
+      const pause = spyOn(internal.originalAudio, 'pause');
+
+      const playback = internal.playActiveSource();
+      internal.originalAudio.currentTime = 121.999999;
+      internal.masterAudio.dispatchEvent(new Event('timeupdate'));
+      pendingPlay.resolve();
+      await playback;
+
+      expect(pause).not.toHaveBeenCalled();
+    });
+
+    it('stops and resets once when active playback reaches previewEnd', () => {
+      service.isPlaying.set(true);
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      internal.originalAudio.currentTime = 137;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+
+      expect(reset).toHaveBeenCalledTimes(1);
+      expect(service.isPlaying()).toBeFalse();
+      expect(internal.originalAudio.currentTime).toBeCloseTo(122, 6);
+    });
+
+    it('keeps an after-end reset bounded when reset seek emits another timeupdate', () => {
+      service.isPlaying.set(true);
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      internal.originalAudio.currentTime = 137.001;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+      internal.originalAudio.currentTime = 121.999999;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+
+      expect(reset).toHaveBeenCalledTimes(1);
+    });
+
+    it('allows normal original and master first play to resolve', async () => {
+      service.previewStatus.set('ready');
+      spyOn(internal.originalAudio, 'play').and.returnValue(Promise.resolve());
+      spyOn(internal.masterAudio, 'play').and.returnValue(Promise.resolve());
+
+      await internal.playActiveSource();
+
+      expect(service.isPlaying()).toBeTrue();
+      expect(diagnosticApi().summary()).toContain('ORIGINAL_PLAY_RESULT = RESOLVE');
+      expect(diagnosticApi().summary()).toContain('MASTER_PLAY_RESULT = RESOLVE');
+    });
+
+    it('retains second-play success without reset recovery', async () => {
+      spyOn(internal.originalAudio, 'play').and.returnValue(Promise.resolve());
+
+      await internal.playActiveSource();
+      service.stopAndReset('TEST_BETWEEN_PLAYS');
+      await internal.playActiveSource();
+
+      expect(service.isPlaying()).toBeTrue();
+      expect(diagnosticApi().summary()).toContain('PLAY_ATTEMPT = 2');
+    });
+
+    it('keeps existing A/B source mapping unchanged', async () => {
+      service.previewStatus.set('ready');
+      service.activeVariant.set('original');
+      internal.audioCtx = audioContextStub('running');
+      spyOn(internal, 'iniciarContextoDeAudio');
+      const originalPause = spyOn(internal.originalAudio, 'pause');
+      const masterPause = spyOn(internal.masterAudio, 'pause');
+      internal.originalAudio.currentTime = 125;
+      internal.masterAudio.currentTime = 0;
+
+      await service.switchVariant('master');
+      expect(originalPause).toHaveBeenCalledTimes(1);
+      expect(internal.masterAudio.currentTime).toBeCloseTo(3, 6);
+      expect(service.activeVariant()).toBe('master');
+
+      await service.switchVariant('original');
+      expect(masterPause).toHaveBeenCalledTimes(1);
+      expect(internal.originalAudio.currentTime).toBeCloseTo(125, 6);
+      expect(service.activeVariant()).toBe('original');
+    });
+
+    it('keeps short-track preview boundary behavior unchanged', () => {
+      service.duration.set(8.25);
+      service.previewStart.set(0);
+      service.previewEnd.set(8.25);
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      service.isPlaying.set(true);
+      internal.originalAudio.currentTime = 8.25;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+
+      expect(reset).toHaveBeenCalledTimes(1);
+      expect(internal.originalAudio.currentTime).toBe(0);
+    });
+
+    it('does not apply preview boundary resets in full-track mode', () => {
+      service.playbackMode.set('full-track');
+      service.isPlaying.set(true);
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      internal.originalAudio.currentTime = 258.5;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+      internal.masterAudio.dispatchEvent(new Event('timeupdate'));
+
+      expect(reset).not.toHaveBeenCalled();
+    });
+  });
+
 });
