@@ -202,6 +202,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
         this.audioComparison.setOriginalSrc(
           this.originalObjectUrl,
           this.masteringService.previewStartSeconds(),
+          'MASTERING_PANEL_NG_ON_CHANGES_ORIGINAL',
         );
       }
     }
@@ -209,10 +210,14 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     if (changes['masteredAudioUrl']) {
       if (this.masteredAudioUrl) {
         const mode = this.isFullMaster ? 'full-track' : 'preview-15s';
-        this.audioComparison.setMasterSrc(this.masteredAudioUrl, mode);
+        this.audioComparison.setMasterSrc(
+          this.masteredAudioUrl,
+          mode,
+          'MASTERING_PANEL_NG_ON_CHANGES_PREVIEW_REPLACEMENT',
+        );
         this.configInvalidatedResult.set(false);
       } else {
-        this.audioComparison.clearMasterSrc();
+        this.audioComparison.clearMasterSrc('MASTERING_PANEL_NG_ON_CHANGES_MASTER_CLEAR');
       }
     }
   }
@@ -350,11 +355,11 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     this.audioComparison.setPreviewStart(normalized);
 
     if (hadCurrentResult) {
-      this.audioComparison.clearMasterSrc();
+      this.audioComparison.clearMasterSrc('MASTERING_PANEL_PREVIEW_RANGE_INVALIDATION');
       this.configInvalidatedResult.set(true);
       this.configChanged.emit();
     } else {
-      this.audioComparison.stopAndReset();
+      this.audioComparison.stopAndReset('MASTERING_PANEL_PREVIEW_RANGE_RESET');
     }
   }
 
@@ -397,7 +402,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   pararReproducao(): void {
-    this.audioComparison.stopAndReset();
+    this.audioComparison.stopAndReset('MASTERING_PANEL_STOP_BUTTON');
   }
 
   formatarTempo(segundos: number): string {
@@ -455,12 +460,12 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     this.releaseOriginalObjectUrl();
-    this.audioComparison.resetAll();
+    this.audioComparison.resetAll('MASTERING_PANEL_NG_ON_DESTROY');
   }
 
   private notifyConfigChanged(): void {
     const hadMaster = this.audioComparison.canUseMaster();
-    this.audioComparison.clearMasterSrc();
+    this.audioComparison.clearMasterSrc('MASTERING_PANEL_NOTIFY_CONFIG_CHANGED');
     if (hadMaster) this.configInvalidatedResult.set(true);
     this.configChanged.emit();
   }
