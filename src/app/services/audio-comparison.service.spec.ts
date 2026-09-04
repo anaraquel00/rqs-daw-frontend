@@ -517,6 +517,45 @@ describe('AudioComparisonService V2 preview mapping', () => {
       expect(pause).not.toHaveBeenCalled();
     });
 
+    it('enforces previewEnd while original resolved and master play remains pending', async () => {
+      service.previewStatus.set('ready');
+      const pendingMaster = deferred();
+      let masterInterrupted = false;
+      spyOn(console, 'error');
+      spyOn(internal.originalAudio, 'play').and.returnValue(Promise.resolve());
+      spyOn(internal.masterAudio, 'play').and.returnValue(pendingMaster.promise);
+      spyOn(internal.masterAudio, 'pause').and.callFake(() => {
+        masterInterrupted = true;
+        pendingMaster.reject(abortError('master play interrupted at preview end'));
+      });
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      const playback = internal.playActiveSource();
+      await Promise.resolve();
+      expect(diagnosticApi().summary()).toContain('MASTER_PLAY_RESULT = PENDING');
+
+      internal.originalAudio.currentTime = 137;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+      internal.originalAudio.currentTime = 121.999999;
+      internal.masterAudio.dispatchEvent(new Event('timeupdate'));
+      if (!masterInterrupted) pendingMaster.resolve();
+      await playback;
+
+      expect(reset).toHaveBeenCalledTimes(1);
+      expect(service.isPlaying()).toBeFalse();
+    });
+
+    it('retains lower-bound reset enforcement during active playback', () => {
+      service.isPlaying.set(true);
+      const reset = spyOn(service, 'stopAndReset').and.callThrough();
+
+      internal.originalAudio.currentTime = 121.999999;
+      internal.originalAudio.dispatchEvent(new Event('timeupdate'));
+
+      expect(reset).toHaveBeenCalledTimes(1);
+      expect(service.isPlaying()).toBeFalse();
+    });
+
     it('stops and resets once when active playback reaches previewEnd', () => {
       service.isPlaying.set(true);
       const reset = spyOn(service, 'stopAndReset').and.callThrough();
