@@ -9,6 +9,8 @@ interface DiagnosticApi {
 interface AudioComparisonInternals {
   originalAudio: HTMLAudioElement;
   masterAudio: HTMLAudioElement;
+  audioCtx: AudioContext | null;
+  iniciarContextoDeAudio(): void;
   playActiveSource(): Promise<void>;
   pauseAll(callerOperation?: string): void;
 }
@@ -35,6 +37,17 @@ function abortError(message = 'Playback interrupted'): Error {
   const error = new Error(message);
   error.name = 'AbortError';
   return error;
+}
+
+function audioContextStub(
+  state: AudioContextState,
+  resume: () => Promise<void> = () => Promise.resolve(),
+): AudioContext {
+  return {
+    state,
+    resume,
+    close: () => Promise.resolve(),
+  } as unknown as AudioContext;
 }
 
 describe('AudioComparisonService V2 preview mapping', () => {
@@ -285,6 +298,130 @@ describe('AudioComparisonService V2 preview mapping', () => {
       expect(summary).not.toContain('SUPERSECRET');
       expect(summary).not.toContain('JWTSECRET');
       expect(summary).toContain('SRC_KIND=HTTP');
+      expect(summary).toContain('SECRET_OR_URL_CONTENT_INCLUDED = NO');
+    });
+
+    it('I records successful init and skips resume when AudioContext is already running', async () => {
+      internal.audioCtx = audioContextStub('running');
+      spyOn(internal, 'iniciarContextoDeAudio');
+      spyOn(internal.originalAudio, 'play').and.returnValue(Promise.resolve());
+      spyOn(internal.masterAudio, 'play').and.returnValue(Promise.resolve());
+
+      await service.togglePlayback();
+
+      const summary = diagnosticApi().summary();
+      expect(summary).toContain('PLAY_ATTEMPT = 1');
+      expect(summary).toContain('AUDIO_CONTEXT_INIT_RESULT = PASS');
+      expect(summary).toContain('AUDIO_CONTEXT_RESUME_RESULT = NOT_REQUIRED');
+      expect(summary).toContain('operation=PLAY_ACTIVE_SOURCE_ENTER');
+    });
+
+    it('J records successful resume before entering playActiveSource', async () => {
+      const resume = jasmine.createSpy('resume').and.returnValue(Promise.resolve());
+      internal.audioCtx = audioContextStub('suspended', resume);
+      spyOn(internal, 'iniciarContextoDeAudio');
+      spyOn(internal.originalAudio, 'play').and.returnValue(Promise.resolve());
+      spyOn(internal.masterAudio, 'play').and.returnValue(Promise.resolve());
+
+      await service.togglePlayback();
+
+      const summary = diagnosticApi().summary();
+      expect(resume).toHaveBeenCalledTimes(1);
+      expect(summary).toContain('AUDIO_CONTEXT_INIT_RESULT = PASS');
+      expect(summary).toContain('AUDIO_CONTEXT_RESUME_RESULT = PASS');
+      expect(summary).toContain('operation=AUDIO_CONTEXT_RESUME_RESOLVE');
+      expect(summary).toContain('operation=PLAY_ACTIVE_SOURCE_ENTER');
+    });
+
+    it('K classifies AudioContext initialization failure and propagates the same exception', async () => {
+      const error = new Error('AudioContext initialization failed');
+      error.name = 'InvalidStateError';
+      spyOn(internal, 'iniciarContextoDeAudio').and.callFake(() => { throw error; });
+      const originalPlay = spyOn(internal.originalAudio, 'play').and.returnValue(Promise.resolve());
+      const masterPlay = spyOn(internal.masterAudio, 'play').and.returnValue(Promise.resolve());
+
+      await expectAsync(service.togglePlayback()).toBeRejectedWith(error);
+
+      const summary = diagnosticApi().summary();
+      expect(summary).toContain('PLAY_ATTEMPT = 1');
+      expect(summary).toContain('FIRST_PLAY_RESULT = FAIL:InvalidStateError');
+      expect(summary).toContain('AUDIO_CONTEXT_INIT_RESULT = FAIL:InvalidStateError');
+      expect(summary).toContain('AUDIO_CONTEXT_RESUME_RESULT = NOT_REACHED');
+      expect(summary).toContain('FAILURE_STAGE = AUDIO_CONTEXT_INIT');
+      expect(summary).toContain('ORIGINAL_PLAY_RESULT = NOT_CALLED');
+      expect(summary).toContain('MASTER_PLAY_RESULT = NOT_CALLED');
+      expect(originalPlay).not.toHaveBeenCalled();
+      expect(masterPlay).not.toHaveBeenCalled();
+    });
+
+    it('L classifies AudioContext resume failure and propagates the same rejection', async () => {
+      const error = new Error('AudioContext resume rejected');
+      error.name = 'NotAllowedError';
+      const resume = jasmine.createSpy('resume').and.returnValue(Promise.reject(error));
+      internal.audioCtx = audioContextStub('suspended', resume);
+      spyOn(internal, 'iniciarContextoDeAudio');
+      const originalPlay = spyOn(internal.originalAudio, 'play').and.returnValue(Promise.resolve());
+      const masterPlay = spyOn(internal.masterAudio, 'play').and.returnValue(Promise.resolve());
+
+      await expectAsync(service.togglePlayback()).toBeRejectedWith(error);
+
+      const summary = diagnosticApi().summary();
+      expect(summary).toContain('PLAY_ATTEMPT = 1');
+      expect(summary).toContain('FIRST_PLAY_RESULT = FAIL:NotAllowedError');
+      expect(summary).toContain('AUDIO_CONTEXT_INIT_RESULT = PASS');
+      expect(summary).toContain('AUDIO_CONTEXT_RESUME_RESULT = FAIL:NotAllowedError');
+      expect(summary).toContain('FAILURE_STAGE = AUDIO_CONTEXT_RESUME');
+      expect(summary).toContain('ORIGINAL_PLAY_RESULT = NOT_CALLED');
+      expect(summary).toContain('MASTER_PLAY_RESULT = NOT_CALLED');
+      expect(originalPlay).not.toHaveBeenCalled();
+      expect(masterPlay).not.toHaveBeenCalled();
+    });
+
+    it('M retains original AbortError attribution through the full toggle path', async () => {
+      spyOn(console, 'error');
+      internal.audioCtx = audioContextStub('running');
+      spyOn(internal, 'iniciarContextoDeAudio');
+      spyOn(internal.originalAudio, 'play').and.returnValue(Promise.reject(abortError()));
+      const masterPlay = spyOn(internal.masterAudio, 'play').and.returnValue(Promise.resolve());
+
+      await service.togglePlayback();
+
+      const summary = diagnosticApi().summary();
+      expect(summary).toContain('FAILURE_STAGE = ORIGINAL_PENDING');
+      expect(summary).toContain('ORIGINAL_PLAY_RESULT = REJECT:AbortError');
+      expect(summary).toContain('MASTER_PLAY_RESULT = NOT_CALLED');
+      expect(masterPlay).not.toHaveBeenCalled();
+    });
+
+    it('N retains master AbortError attribution through the full toggle path', async () => {
+      spyOn(console, 'error');
+      internal.audioCtx = audioContextStub('running');
+      spyOn(internal, 'iniciarContextoDeAudio');
+      spyOn(internal.originalAudio, 'play').and.returnValue(Promise.resolve());
+      spyOn(internal.masterAudio, 'play').and.returnValue(Promise.reject(abortError()));
+
+      await service.togglePlayback();
+
+      const summary = diagnosticApi().summary();
+      expect(summary).toContain('FAILURE_STAGE = MASTER_PENDING');
+      expect(summary).toContain('ORIGINAL_PLAY_RESULT = RESOLVE');
+      expect(summary).toContain('MASTER_PLAY_RESULT = REJECT:AbortError');
+    });
+
+    it('O sanitizes pre-media AudioContext failures without exposing raw URL or token content', async () => {
+      const error = new Error(
+        'Init failed https://example.invalid/context?token=SUPERSECRET Authorization: Bearer JWTSECRET',
+      );
+      error.name = 'InvalidStateError';
+      spyOn(internal, 'iniciarContextoDeAudio').and.callFake(() => { throw error; });
+
+      await expectAsync(service.togglePlayback()).toBeRejectedWith(error);
+
+      const summary = diagnosticApi().summary();
+      expect(summary).not.toContain('https://example.invalid');
+      expect(summary).not.toContain('SUPERSECRET');
+      expect(summary).not.toContain('JWTSECRET');
+      expect(summary).toContain('AUDIO_CONTEXT_INIT_RESULT = FAIL:InvalidStateError');
       expect(summary).toContain('SECRET_OR_URL_CONTENT_INCLUDED = NO');
     });
   });

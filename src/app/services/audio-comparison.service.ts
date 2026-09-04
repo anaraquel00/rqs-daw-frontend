@@ -9,6 +9,8 @@ export type PlaybackMode = 'full-track' | 'preview-15s';
 type Gate140Source = 'ORIGINAL' | 'MASTER' | 'SYSTEM';
 type Gate140PlayStage = 'NONE' | 'ORIGINAL_PENDING' | 'ORIGINAL_RESOLVED' | 'MASTER_PENDING' | 'MASTER_RESOLVED';
 type Gate140PlayResult = 'RESOLVE' | `REJECT:${string}` | 'NOT_CALLED' | 'PENDING';
+type Gate140ContextResult = 'PASS' | `FAIL:${string}` | 'NOT_REQUIRED' | 'NOT_REACHED';
+type Gate140FailureStage = 'AUDIO_CONTEXT_INIT' | 'AUDIO_CONTEXT_RESUME' | 'ORIGINAL_PENDING' | 'MASTER_PENDING' | 'NONE';
 
 interface Gate140SafeMediaState {
   readyState: number;
@@ -84,7 +86,9 @@ export class AudioComparisonService implements OnDestroy {
   private gate140OriginalPlayPending = false;
   private gate140MasterPlayPending = false;
   private gate140FirstPlayResult = 'UNKNOWN';
-  private gate140FailureStage: Gate140PlayStage = 'NONE';
+  private gate140FailureStage: Gate140FailureStage = 'NONE';
+  private gate140AudioContextInitResult: Gate140ContextResult = 'NOT_REACHED';
+  private gate140AudioContextResumeResult: Gate140ContextResult = 'NOT_REACHED';
   private gate140OriginalPlayResult: Gate140PlayResult = 'NOT_CALLED';
   private gate140MasterPlayResult: Gate140PlayResult = 'NOT_CALLED';
   private gate140OriginalStateBeforePlay: Gate140SafeMediaState | null = null;
@@ -245,12 +249,33 @@ export class AudioComparisonService implements OnDestroy {
 
   async togglePlayback(): Promise<void> {
     const nextAttempt = this.isPlaying() ? this.gate140PlayAttempt : this.gate140PlayAttempt + 1;
+    if (!this.isPlaying()) this.gate140BeginAttempt(nextAttempt);
     this.gate140Record('TOGGLE_PLAYBACK_ENTER', 'SYSTEM', undefined, 'TOGGLE_PLAYBACK', undefined, nextAttempt);
-    this.iniciarContextoDeAudio();
+    this.gate140Record('AUDIO_CONTEXT_INIT_ENTER', 'SYSTEM', undefined, 'TOGGLE_PLAYBACK', undefined, nextAttempt);
+    try {
+      this.iniciarContextoDeAudio();
+      this.gate140AudioContextInitResult = 'PASS';
+      this.gate140Record('AUDIO_CONTEXT_INIT_RESOLVE', 'SYSTEM', undefined, 'TOGGLE_PLAYBACK', undefined, nextAttempt);
+    } catch (err) {
+      this.gate140ClassifyPreMediaFailure('AUDIO_CONTEXT_INIT', err, nextAttempt);
+      this.gate140Record('AUDIO_CONTEXT_INIT_THROW', 'SYSTEM', undefined, 'TOGGLE_PLAYBACK', err, nextAttempt);
+      throw err;
+    }
+    this.gate140Record('AUDIO_CONTEXT_STATE_AFTER_INIT', 'SYSTEM', undefined, this.audioCtx?.state ?? 'NONE', undefined, nextAttempt);
     this.gate140Record('AUDIO_CONTEXT_STATE_BEFORE', 'SYSTEM', undefined, this.audioCtx?.state ?? 'NONE', undefined, nextAttempt);
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
       this.gate140Record('AUDIO_CONTEXT_RESUME_CALL', 'SYSTEM', undefined, 'TOGGLE_PLAYBACK', undefined, nextAttempt);
-      await this.audioCtx.resume();
+      try {
+        await this.audioCtx.resume();
+        this.gate140AudioContextResumeResult = 'PASS';
+        this.gate140Record('AUDIO_CONTEXT_RESUME_RESOLVE', 'SYSTEM', undefined, 'TOGGLE_PLAYBACK', undefined, nextAttempt);
+      } catch (err) {
+        this.gate140ClassifyPreMediaFailure('AUDIO_CONTEXT_RESUME', err, nextAttempt);
+        this.gate140Record('AUDIO_CONTEXT_RESUME_REJECT', 'SYSTEM', undefined, 'TOGGLE_PLAYBACK', err, nextAttempt);
+        throw err;
+      }
+    } else {
+      this.gate140AudioContextResumeResult = 'NOT_REQUIRED';
     }
     this.gate140Record('AUDIO_CONTEXT_STATE_AFTER', 'SYSTEM', undefined, this.audioCtx?.state ?? 'NONE', undefined, nextAttempt);
 
@@ -262,7 +287,8 @@ export class AudioComparisonService implements OnDestroy {
   }
 
   private async playActiveSource(attempt = this.gate140PlayAttempt + 1): Promise<void> {
-    this.gate140BeginAttempt(attempt);
+    if (this.gate140PlayAttempt !== attempt) this.gate140BeginAttempt(attempt);
+    this.gate140Record('PLAY_ACTIVE_SOURCE_ENTER', 'SYSTEM', undefined, 'PLAY_ACTIVE_SOURCE');
     const isMasterReady = this.canUseMaster();
     const mode = this.playbackMode();
 
@@ -326,7 +352,9 @@ export class AudioComparisonService implements OnDestroy {
       }
       this.gate140OriginalPlayPending = false;
       this.gate140MasterPlayPending = false;
-      this.gate140FailureStage = failureStage;
+      this.gate140FailureStage = failureStage === 'ORIGINAL_PENDING' || failureStage === 'MASTER_PENDING'
+        ? failureStage
+        : 'NONE';
       if (attempt === 1) this.gate140FirstPlayResult = `FAIL:${errorName}`;
       this.gate140Record('CATCH_ENTER', 'SYSTEM', undefined, 'PLAY_ACTIVE_SOURCE', err);
       this.isPlaying.set(false);
@@ -476,6 +504,8 @@ export class AudioComparisonService implements OnDestroy {
     this.gate140OriginalPlayPending = false;
     this.gate140MasterPlayPending = false;
     this.gate140FailureStage = 'NONE';
+    this.gate140AudioContextInitResult = 'NOT_REACHED';
+    this.gate140AudioContextResumeResult = 'NOT_REACHED';
     this.gate140OriginalPlayResult = 'NOT_CALLED';
     this.gate140MasterPlayResult = 'NOT_CALLED';
     this.gate140OriginalStateBeforePlay = null;
@@ -597,6 +627,9 @@ export class AudioComparisonService implements OnDestroy {
       `PLAY_ATTEMPT = ${this.gate140PlayAttempt}`,
       `FIRST_PLAY_RESULT = ${this.gate140FirstPlayResult}`,
       `PLAY_STAGE_AT_FAILURE = ${this.gate140FailureStage}`,
+      `AUDIO_CONTEXT_INIT_RESULT = ${this.gate140AudioContextInitResult}`,
+      `AUDIO_CONTEXT_RESUME_RESULT = ${this.gate140AudioContextResumeResult}`,
+      `FAILURE_STAGE = ${this.gate140FailureStage}`,
       `ORIGINAL_PLAY_RESULT = ${this.gate140OriginalPlayResult}`,
       `MASTER_PLAY_RESULT = ${this.gate140MasterPlayResult}`,
       `ORIGINAL_READY_STATE_BEFORE_PLAY = ${originalBefore?.readyState ?? 'NOT_REACHED'}`,
@@ -621,9 +654,23 @@ export class AudioComparisonService implements OnDestroy {
     this.gate140MasterPlayPending = false;
     this.gate140FirstPlayResult = 'UNKNOWN';
     this.gate140FailureStage = 'NONE';
+    this.gate140AudioContextInitResult = 'NOT_REACHED';
+    this.gate140AudioContextResumeResult = 'NOT_REACHED';
     this.gate140OriginalPlayResult = 'NOT_CALLED';
     this.gate140MasterPlayResult = 'NOT_CALLED';
     this.gate140OriginalStateBeforePlay = null;
     this.gate140MasterStateBeforePlay = null;
+  }
+
+  private gate140ClassifyPreMediaFailure(
+    stage: 'AUDIO_CONTEXT_INIT' | 'AUDIO_CONTEXT_RESUME',
+    error: unknown,
+    attempt: number,
+  ): void {
+    const result = `FAIL:${this.gate140ErrorName(error)}` as const;
+    this.gate140FailureStage = stage;
+    if (stage === 'AUDIO_CONTEXT_INIT') this.gate140AudioContextInitResult = result;
+    else this.gate140AudioContextResumeResult = result;
+    if (attempt === 1) this.gate140FirstPlayResult = result;
   }
 }
