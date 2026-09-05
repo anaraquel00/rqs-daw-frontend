@@ -239,11 +239,17 @@ export class AudioComparisonService implements OnDestroy {
   }
 
   private verificarFimDaPrevia(): void {
-    if (this.playbackMode() === 'preview-15s') {
-      const current = this.originalAudio.currentTime;
-      if (current < this.previewStart() || current >= this.previewEnd()) {
-        this.stopAndReset();
-      }
+    if (this.playbackMode() !== 'preview-15s') return;
+
+    const current = this.originalAudio.currentTime;
+    if (current < this.previewStart()) {
+      if (!this.isPlaying()) return;
+      this.stopAndReset();
+      return;
+    }
+
+    if (current >= this.previewEnd()) {
+      this.stopAndReset();
     }
   }
 
