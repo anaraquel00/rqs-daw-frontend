@@ -1,0 +1,9 @@
+.cyber-footer { margin-top: 0; padding: 64px 48px 32px; border-top-color: var(--studio-border); background: var(--studio-bg); font-family: var(--studio-font); }
+.cyber-footer .footer-grid { gap: 48px; }
+.cyber-footer .footer-col h4 { color: var(--studio-violet); font-size: 10px; letter-spacing: 3px; text-shadow: none; }
+.cyber-footer .branding { text-align: center; }
+.cyber-footer .branding .footer-logo { color: var(--studio-cyan); text-shadow: none; }
+.cyber-footer .social-icons { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+.cyber-footer .social-badge { text-decoration: none; font-size: 9px; padding: 8px; border: 1px solid #204149; border-radius: 3px; color: var(--studio-cyan); }
+.cyber-footer a:focus-visible, .cyber-footer button:focus-visible { outline: 2px solid var(--studio-cyan); outline-offset: 4px; }
+@media (max-width: 600px) { .cyber-footer { padding: 40px 20px 24px; } .cyber-footer .footer-grid { gap: 32px; } }

@@ -1,0 +1,64 @@
+<a class="skip-link" href="#studio-content">Skip to content</a>
+<header class="studio-header">
+  <a class="brand" routerLink="/studio"><img src="assets/studio/approved-satellite.png" alt="" width="40" height="40"><span>RAQUEL SYNTHS DIGITAL AUDIO WORKSTATION</span></a>
+  <div class="header-controls">
+    <div class="languages" aria-label="Interface language">
+      @for (code of languages; track code) {
+        <button type="button" (click)="lang.setLanguage(code)" [attr.aria-pressed]="lang.currentLang() === code">{{ code === 'pt' ? 'PT-BR' : code.toUpperCase() }}</button>
+      }
+    </div>
+    @if (auth.session()) {
+      <a class="account-link" routerLink="/studio/account">{{ auth.isPremium() ? 'RQS PRO' : 'FREE' }} · {{ copy().account }}</a>
+      <button type="button" (click)="auth.logout()">{{ copy().signOut }}</button>
+    } @else {
+      <button type="button" (click)="auth.loginWithProvider('github')">GITHUB</button>
+      <button type="button" (click)="auth.loginWithProvider('google')">GOOGLE</button>
+      <button type="button" (click)="auth.requestSignIn('general', 'email')">{{ lang.t().AUTH_EMAIL_CONTINUE }}</button>
+    }
+  </div>
+  <span class="core-status"><i aria-hidden="true"></i> CORE STATUS: OPERATIONAL</span>
+</header>
+<nav class="studio-navigation" aria-label="Studio">
+  @if (surface() !== 'home') {
+    <a routerLink="/studio">← {{ copy().back }}</a>
+    @for (module of modules; track module) {
+      <a [routerLink]="['/studio', module]" routerLinkActive="active" ariaCurrentWhenActive="page">{{ module.toUpperCase() }}</a>
+    }
+  }
+  <span class="nav-spacer"></span>
+  <a routerLink="/studio/learn" routerLinkActive="active" ariaCurrentWhenActive="page">{{ copy().learn }}</a>
+  <a routerLink="/studio/account" routerLinkActive="active" ariaCurrentWhenActive="page">{{ copy().account }}</a>
+</nav>
+<main id="studio-content" tabindex="-1" [class.selector-surface]="surface() === 'home'">
+  <router-outlet></router-outlet>
+  @if (surface() === 'home') { <app-module-selector></app-module-selector> }
+  @if (visited().has('master')) {
+    <section [hidden]="surface() !== 'master'" [attr.inert]="surface() !== 'master' ? '' : null" aria-label="MASTER"><app-upload-zone></app-upload-zone></section>
+  }
+  @if (visited().has('build')) {
+    <section [hidden]="surface() !== 'build'" [attr.inert]="surface() !== 'build' ? '' : null" aria-label="BUILD"><app-mix-panel></app-mix-panel></section>
+  }
+  @if (visited().has('uplink')) {
+    <section [hidden]="surface() !== 'uplink'" [attr.inert]="surface() !== 'uplink' ? '' : null" aria-label="UPLINK"><app-rqs-uplink-engine></app-rqs-uplink-engine><app-rqs-uplink-dashboard></app-rqs-uplink-dashboard></section>
+  }
+  @if (surface() === 'split') {
+    <section class="simple-surface"><h1>SPLIT</h1><p>{{ copy().split }}</p></section>
+  }
+  @if (surface() === 'learn') {
+    <section class="simple-surface"><h1>{{ copy().learn }}</h1><p>{{ copy().learnNotice }}</p><a routerLink="/studio/master">MASTER →</a></section>
+  }
+  @if (surface() === 'account') {
+    <section class="simple-surface"><h1>{{ copy().account }}</h1>
+      @if (auth.session()) {
+        <p class="user-email">{{ auth.session()?.user?.email }}</p>
+        <p>{{ auth.isPremium() ? 'RQS PRO' : 'FREE' }}</p>
+        @if (!auth.isPremium()) { <p>{{ copy().quota }}: {{ auth.remainingMasters() }}</p> }
+        <button type="button" (click)="auth.logout()">{{ copy().signOut }}</button>
+      } @else {
+        <p>{{ copy().accountNotice }}</p><button type="button" (click)="auth.requestSignIn('general', 'email')">{{ lang.t().AUTH_EMAIL_CONTINUE }}</button>
+      }
+    </section>
+  }
+</main>
+<app-studio-footer></app-studio-footer>
+<app-auth-prompt></app-auth-prompt>

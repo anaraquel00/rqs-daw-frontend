@@ -9,6 +9,10 @@ import { CookiesPageComponent } from './cookies-page/cookies-page';
 
 export const routes: Routes = [
   {
+    path: 'studio',
+    loadChildren: () => import('./studio/studio.routes').then(m => m.STUDIO_ROUTES)
+  },
+  {
     path: '',
     component: LandingPageComponent,
     title: 'RaQuel Synths - Intelligent Workstation'

@@ -1,0 +1,16 @@
+// UX Pilot 82lANKGypmZsZcFfTPrY — scoped to Studio V2, never the V1 engine UI.
+@mixin tokens {
+  --studio-bg: #000;
+  --studio-card: #050507;
+  --studio-display: #020203;
+  --studio-text: #f5f7fb;
+  --studio-muted: #9aa2af;
+  --studio-cyan: #35dcec;
+  --studio-violet: #976dff;
+  --studio-pink: #ff008c;
+  --studio-border: rgba(255, 255, 255, .05);
+  --studio-radius: 12px;
+  --studio-gap: 32px;
+  --studio-font: Inter, Arial, sans-serif;
+  --studio-mono: 'Fira Code', monospace;
+}

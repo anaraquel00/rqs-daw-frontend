@@ -1,0 +1,29 @@
+<div class="module-grid" aria-label="RQS Studio modules">
+  @for (module of modules; track module.id) {
+    <a class="module-card" [class]="'module-card ' + module.id" [id]="'module-' + module.id" [routerLink]="['/studio', module.id]" [attr.aria-label]="module.name + ' — ' + copy().open">
+      <div class="card-heading">
+        <div><div class="engine"><i></i>{{ module.engine }}</div><h2>{{ module.name }}</h2><p class="subtitle">{{ module.subtitle }}</p></div>
+        <span class="module-icon" aria-hidden="true">{{ module.icon }}</span>
+      </div>
+      <div class="visual-container" aria-hidden="true">
+        @switch (module.id) {
+          @case ('master') {
+            <svg class="wave" viewBox="0 0 300 80"><path d="M0 40H300" stroke="rgba(53,220,236,.1)"/><path class="wave-signal" d="M0 40 Q20 10 40 40 T80 40 T120 40 T160 40 T200 40 T240 40 T280 40 T300 40" fill="none" stroke="#35dcec" stroke-width="1.5"/></svg>
+            <div class="meters">@for (channel of [0, 1]; track channel) { <div class="meter">@for (led of meters; track led) { <i [class.lit]="led < 5 - channel"></i> }</div> }</div>
+          }
+          @case ('split') {
+            <svg viewBox="0 0 300 100" class="stems"><path d="M0 50H80" opacity=".5" stroke="white" stroke-width="2"/><path d="M80 50C120 50 140 20 200 20" fill="none" stroke="#35dcec" stroke-width="1.5"/><path d="M80 50C120 50 140 40 200 40" fill="none" stroke="#976dff" stroke-width="1.5"/><path d="M80 50C120 50 140 60 200 60" fill="none" stroke="#ff008c" stroke-width="1.5"/><path d="M80 50C120 50 140 80 200 80" fill="none" stroke="#9aa2af" stroke-width="1.5"/><text x="210" y="24" fill="#35dcec">VOCALS</text><text x="210" y="44" fill="#976dff">DRUMS</text><text x="210" y="64" fill="#ff008c">BASS</text><text x="210" y="84" fill="#9aa2af">OTHER</text></svg>
+          }
+          @case ('build') {
+            <div class="timeline"><div class="track pink"><i></i><b></b></div><div class="track violet"><i></i><b></b></div><div class="track cyan"><i></i></div><div class="playhead"><i></i></div></div>
+          }
+          @case ('uplink') {
+            <div class="distribution"><svg width="100%" height="100%"><g stroke="rgba(255,255,255,.2)" stroke-dasharray="4 4"><line x1="50%" x2="80%" y1="50%" y2="20%"/><line x1="50%" x2="85%" y1="50%" y2="75%"/><line x1="50%" x2="15%" y1="50%" y2="35%"/><line x1="50%" x2="25%" y1="50%" y2="85%"/></g></svg><span>⦿</span></div>
+          }
+        }
+      </div>
+      <p class="description">{{ module.description }}</p>
+      <div class="card-bottom"><div class="tags">@for (tag of module.tags; track tag) { <span>{{ tag }}</span> }</div><span class="open">{{ copy().open }} →</span></div>
+    </a>
+  }
+</div>
