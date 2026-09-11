@@ -68,3 +68,12 @@ export interface MasteringV2FinalResponse {
   downloadUrl: string;
   fileName: string;
 }
+
+export interface MasteringV2Analysis {
+  integrated_lufs: number;
+  true_peak_dbtp: number;
+  rms_dbfs: number;
+  crest_factor_db: number;
+  loudness_range_lu: number;
+  duration_seconds: number;
+}

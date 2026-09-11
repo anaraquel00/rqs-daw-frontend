@@ -72,6 +72,28 @@ describe('DspService Mastering V2 transport', () => {
     });
   });
 
+  it('requests existing audio measurements without invoking the render contract', () => {
+    const formData = new FormData();
+    formData.append('s3Key', 'uploads/user-id/track.wav');
+
+    service.analyzeMasteringV2(formData).subscribe(result => {
+      expect(result.duration_seconds).toBe(5);
+    });
+
+    const request = http.expectOne(`${environment.baseUrl}/mastering/v2/analysis`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBe(formData);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      integrated_lufs: -14.2,
+      true_peak_dbtp: -1.1,
+      rms_dbfs: -12.04,
+      crest_factor_db: 6.02,
+      loudness_range_lu: 4.3,
+      duration_seconds: 5,
+    });
+  });
+
   it('requests a user-owned V2 presigned URL with authentication', () => {
     service.getMasteringV2PresignedUrl('track.wav').subscribe();
 
