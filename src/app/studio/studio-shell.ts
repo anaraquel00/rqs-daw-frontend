@@ -42,7 +42,11 @@ export class StudioShellComponent {
     effect(() => {
       const user = this.auth.session()?.user.id ?? null;
       if (user !== previousUser) {
+        const previous = previousUser;
         previousUser = user;
+        // A sign-in callback must keep its validated V2 destination. A full
+        // identity exit or user-to-user switch still disposes retained engines.
+        if (previous === null && user !== null) return;
         this.visited.set(new Set());
         // Re-enter the selected surface on the next navigation, after disposal.
         void this.router.navigateByUrl('/app');

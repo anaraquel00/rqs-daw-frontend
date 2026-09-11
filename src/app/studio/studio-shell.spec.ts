@@ -76,7 +76,17 @@ describe('Studio V2 shell integration', () => {
     expect(harness.routeNativeElement!.querySelector('input')).toBe(source);
     expect(source.value).toBe('user-selected-file');
   });
-  it('clears retained engine views at a user identity boundary', async () => {
+  it('preserves the requested V2 surface when an anonymous user signs in', async () => {
+    await harness.navigateByUrl('/app/master');
+    const source = harness.routeNativeElement!.querySelector('input');
+    session.set({ user: { id: 'owner-a', email: 'test@example.invalid' } });
+    harness.detectChanges(); await harness.fixture.whenStable(); harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/app/master');
+    expect(harness.routeNativeElement!.querySelector('input')).toBe(source);
+  });
+  it('clears retained engine views at a user-to-user identity boundary', async () => {
+    session.set({ user: { id: 'owner-a', email: 'first@example.invalid' } });
+    harness.detectChanges(); await harness.fixture.whenStable();
     await harness.navigateByUrl('/app/master');
     const source = harness.routeNativeElement!.querySelector('input');
     session.set({ user: { id: 'owner-b', email: 'test@example.invalid' } });

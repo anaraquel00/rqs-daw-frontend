@@ -6,6 +6,7 @@ import {
   inject
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 import {
   createClient,
   SupabaseClient,
@@ -30,6 +31,7 @@ export type AuthMessageKey =
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly analytics = inject(AnalyticsService);
+  private readonly router = inject(Router, { optional: true });
   private supabase!: SupabaseClient;
 
   readonly session = signal<Session | null>(null);
@@ -41,6 +43,16 @@ export class AuthService {
   readonly authEmailSending = signal(false);
   readonly reselectAudioRequired = signal(false);
   private readonly resumeMasteringKey = 'rqs_resume_mastering';
+  private readonly authReturnPathKey = 'rqs_auth_return_path';
+  private readonly allowedV2ReturnPaths = new Set([
+    '/app',
+    '/app/master',
+    '/app/build',
+    '/app/uplink',
+    '/app/split',
+    '/app/learn',
+    '/app/account',
+  ]);
 
   // =================================================
   // PAYWALL / LIMITES
@@ -198,6 +210,8 @@ export class AuthService {
   requestSignIn(intent: 'general' | 'mastering' = 'general', mode: AuthPromptMode = 'providers'): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
+    this.captureCurrentReturnPath();
+
     if (intent === 'mastering') {
       window.sessionStorage.setItem(this.resumeMasteringKey, 'true');
     }
@@ -208,6 +222,9 @@ export class AuthService {
   }
 
   closeAuthPrompt(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      window.sessionStorage.removeItem(this.authReturnPathKey);
+    }
     this.authPromptOpen.set(false);
     this.authPromptMode.set('providers');
     this.authMessageKey.set(null);
@@ -244,13 +261,14 @@ export class AuthService {
     this.authMessageKey.set(null);
     this.authEmailSending.set(true);
     this.analytics.trackEvent('auth_email_started');
+    const returnPath = this.captureCurrentReturnPath();
 
     try {
       const { error } = await this.supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/app`
+          emailRedirectTo: `${window.location.origin}${returnPath}`
         }
       });
 
@@ -273,10 +291,11 @@ export class AuthService {
       return;
     }
 
+    const returnPath = this.captureCurrentReturnPath();
     const { error } = await this.supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/app`
+        redirectTo: `${window.location.origin}${returnPath}`
       }
     });
 
@@ -307,6 +326,7 @@ export class AuthService {
   private handleAuthCallbackReturn(callback: AuthCallbackState, session: Session | null): void {
     if (!callback.present || !isPlatformBrowser(this.platformId)) return;
 
+    const returnPath = this.callbackReturnPath();
     window.history.replaceState({}, document.title, window.location.pathname);
     const resumeMastering = window.sessionStorage.getItem(this.resumeMasteringKey) === 'true';
 
@@ -316,6 +336,7 @@ export class AuthService {
       this.authPromptMode.set('email');
       this.authPromptOpen.set(true);
       window.sessionStorage.removeItem(this.resumeMasteringKey);
+      window.sessionStorage.removeItem(this.authReturnPathKey);
       return;
     }
 
@@ -324,6 +345,7 @@ export class AuthService {
       this.authPromptMode.set('email');
       this.authPromptOpen.set(true);
       window.sessionStorage.removeItem(this.resumeMasteringKey);
+      window.sessionStorage.removeItem(this.authReturnPathKey);
       return;
     }
 
@@ -331,7 +353,36 @@ export class AuthService {
       this.reselectAudioRequired.set(true);
       window.sessionStorage.removeItem(this.resumeMasteringKey);
     }
+    window.sessionStorage.removeItem(this.authReturnPathKey);
     this.closeAuthPrompt();
+    this.restoreReturnPath(returnPath);
+  }
+
+  private captureCurrentReturnPath(): string {
+    const returnPath = this.sanitizeReturnPath(window.location.pathname) ?? '/app';
+    window.sessionStorage.setItem(this.authReturnPathKey, returnPath);
+    return returnPath;
+  }
+
+  private callbackReturnPath(): string {
+    return this.sanitizeReturnPath(window.sessionStorage.getItem(this.authReturnPathKey))
+      ?? this.sanitizeReturnPath(window.location.pathname)
+      ?? '/app';
+  }
+
+  private sanitizeReturnPath(candidate: string | null): string | null {
+    return candidate && this.allowedV2ReturnPaths.has(candidate) ? candidate : null;
+  }
+
+  private restoreReturnPath(returnPath: string): void {
+    if (window.location.pathname === returnPath) return;
+
+    if (this.router) {
+      void this.router.navigateByUrl(returnPath, { replaceUrl: true });
+      return;
+    }
+
+    window.history.replaceState({}, document.title, returnPath);
   }
 
   private analyticsAuthMethod(session: Session): 'google' | 'github' | 'email' | 'unknown' {
