@@ -73,14 +73,14 @@ describe('Studio MASTER full-width integration', () => {
       uploadToS3: jasmine.createSpy().and.returnValue(of({})),
       analyzeMasteringV2: jasmine.createSpy().and.returnValue(of({integrated_lufs:-14,true_peak_dbtp:-1.3,
         rms_dbfs:-18,crest_factor_db:8,loudness_range_lu:5,duration_seconds:60}))};
-    TestBed.configureTestingModule({providers:[provideRouter([{path:'studio',children:STUDIO_ROUTES}]),
+    TestBed.configureTestingModule({providers:[provideRouter([{path:'app',children:STUDIO_ROUTES}]),
       {provide:AuthService,useValue:auth}, {provide:AudioComparisonService,useValue:audio}, {provide:DspService,useValue:dsp},
       {provide:AnalyticsService,useValue:{trackEvent:jasmine.createSpy()}},
       {provide:CookieConsentService,useValue:{openPreferences:jasmine.createSpy()}}]});
     TestBed.overrideComponent(StudioShellComponent,{remove:{imports:[AuthPromptComponent]},add:{imports:[AuthPromptStub]}});
     TestBed.overrideComponent(UploadZoneComponent,{remove:{imports:[EkgMonitorComponent]},add:{imports:[ResultMeterStub]}});
     TestBed.inject(LanguageService).setLanguage('en');
-    harness = await RouterTestingHarness.create('/studio');
+    harness = await RouterTestingHarness.create('/app');
     document.body.appendChild(harness.fixture.nativeElement);
     harness.detectChanges();
     (root().querySelector('#module-master') as HTMLAnchorElement).click();
@@ -90,7 +90,7 @@ describe('Studio MASTER full-width integration', () => {
   afterEach(() => { harness?.fixture.nativeElement.remove(); });
 
   it('opens the real MASTER alone at full content width and returns without remounting the source', async () => {
-    expect(TestBed.inject(Router).url).toBe('/studio/master');
+    expect(TestBed.inject(Router).url).toBe('/app/master');
     expect(root().querySelectorAll('section:not([hidden])').length).toBe(1);
     const section = root().querySelector('.master-workspace')!;
     const glass = section.querySelector('.glass-panel')!;
@@ -101,7 +101,7 @@ describe('Studio MASTER full-width integration', () => {
     const file = upload.selectedFile;
     (root().querySelector('.studio-navigation a') as HTMLAnchorElement).click();
     await harness.fixture.whenStable(); harness.detectChanges();
-    expect(TestBed.inject(Router).url).toBe('/studio');
+    expect(TestBed.inject(Router).url).toBe('/app');
     expect((section as HTMLElement).hidden).toBeTrue();
     (root().querySelector('#module-master') as HTMLAnchorElement).click();
     await harness.fixture.whenStable(); harness.detectChanges();
@@ -180,7 +180,7 @@ describe('Studio MASTER full-width integration', () => {
     auth.isPremium.set(true); auth.canMaster.set(true); harness.detectChanges();
     expect((root().querySelector('.action-buttons .btn-process') as HTMLButtonElement).disabled).toBeFalse();
     auth.session.set({user:{id:'other-owner'}}); harness.detectChanges(); await harness.fixture.whenStable(); harness.detectChanges();
-    expect(TestBed.inject(Router).url).toBe('/studio'); expect(root().querySelector('app-upload-zone')).toBeNull();
+    expect(TestBed.inject(Router).url).toBe('/app'); expect(root().querySelector('app-upload-zone')).toBeNull();
   });
   it('retains loading and failure surfaces without allowing control changes during processing', async () => {
     await selectFile(); upload.isProcessing=true; upload.processingMode='preview'; harness.detectChanges();

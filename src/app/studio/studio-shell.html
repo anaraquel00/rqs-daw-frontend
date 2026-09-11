@@ -1,6 +1,6 @@
 <a class="skip-link" href="#studio-content">Skip to content</a>
 <header class="studio-header">
-  <a class="brand" routerLink="/studio"><img src="assets/studio/approved-satellite.png" alt="" width="40" height="40"><span>RAQUEL SYNTHS DIGITAL AUDIO WORKSTATION</span></a>
+  <a class="brand" routerLink="/app"><img src="assets/studio/approved-satellite.png" alt="" width="40" height="40"><span>RAQUEL SYNTHS DIGITAL AUDIO WORKSTATION</span></a>
   <div class="header-controls">
     <div class="languages" aria-label="Interface language">
       @for (code of languages; track code) {
@@ -8,7 +8,7 @@
       }
     </div>
     @if (auth.session()) {
-      <a class="account-link" routerLink="/studio/account">{{ auth.isPremium() ? 'RQS PRO' : 'FREE' }} · {{ copy().account }}</a>
+      <a class="account-link" routerLink="/app/account">{{ auth.isPremium() ? 'RQS PRO' : 'FREE' }} · {{ copy().account }}</a>
       <button type="button" (click)="auth.logout()">{{ copy().signOut }}</button>
     } @else {
       <button type="button" (click)="auth.loginWithProvider('github')">GITHUB</button>
@@ -20,14 +20,14 @@
 </header>
 <nav class="studio-navigation" aria-label="Studio">
   @if (surface() !== 'home') {
-    <a routerLink="/studio">← {{ copy().back }}</a>
+    <a routerLink="/app">← {{ copy().back }}</a>
     @for (module of modules; track module) {
-      <a [routerLink]="['/studio', module]" routerLinkActive="active" ariaCurrentWhenActive="page">{{ module.toUpperCase() }}</a>
+      <a [routerLink]="['/app', module]" routerLinkActive="active" ariaCurrentWhenActive="page">{{ module.toUpperCase() }}</a>
     }
   }
   <span class="nav-spacer"></span>
-  <a routerLink="/studio/learn" routerLinkActive="active" ariaCurrentWhenActive="page">{{ copy().learn }}</a>
-  <a routerLink="/studio/account" routerLinkActive="active" ariaCurrentWhenActive="page">{{ copy().account }}</a>
+  <a routerLink="/app/learn" routerLinkActive="active" ariaCurrentWhenActive="page">{{ copy().learn }}</a>
+  <a routerLink="/app/account" routerLinkActive="active" ariaCurrentWhenActive="page">{{ copy().account }}</a>
 </nav>
 <main id="studio-content" tabindex="-1" [class.selector-surface]="surface() === 'home'">
   <router-outlet></router-outlet>
@@ -48,7 +48,7 @@
     <section class="simple-surface"><h1>SPLIT</h1><p>{{ copy().split }}</p></section>
   }
   @if (surface() === 'learn') {
-    <section class="simple-surface"><h1>{{ copy().learn }}</h1><p>{{ copy().learnNotice }}</p><a routerLink="/studio/master">MASTER →</a></section>
+    <section class="simple-surface"><h1>{{ copy().learn }}</h1><p>{{ copy().learnNotice }}</p><a routerLink="/app/master">MASTER →</a></section>
   }
   @if (surface() === 'account') {
     <section class="simple-surface"><h1>{{ copy().account }}</h1>

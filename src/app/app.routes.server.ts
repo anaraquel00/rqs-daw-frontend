@@ -32,6 +32,14 @@ export const serverRoutes: ServerRoute[] = [
     path: 'app',
     renderMode: RenderMode.Client
   },
+  {
+    path: 'app/**',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'legacy',
+    renderMode: RenderMode.Client
+  },
 
   {
     path: '**',

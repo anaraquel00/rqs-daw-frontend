@@ -27,7 +27,7 @@ describe('Studio V2 shell integration', () => {
   beforeEach(async () => {
     session.set(null); premium.set(false); requestSignIn.calls.reset();
     TestBed.configureTestingModule({ providers: [
-      provideRouter([{ path: 'studio', children: STUDIO_ROUTES }]),
+      provideRouter([{ path: 'app', children: STUDIO_ROUTES }]),
       { provide: AuthService, useValue: { session, isPremium: premium, remainingMasters: () => 2, requestSignIn, loginWithProvider: jasmine.createSpy(), logout: jasmine.createSpy() } },
       { provide: CookieConsentService, useValue: { openPreferences: jasmine.createSpy() } },
     ] });
@@ -35,7 +35,7 @@ describe('Studio V2 shell integration', () => {
       remove: { imports: [UploadZoneComponent, MixPanelComponent, RqsUplinkEngineComponent, RqsUplinkDashboardComponent, AuthPromptComponent] },
       add: { imports: [MasterStub, BuildStub, UplinkStub, DashboardStub, AuthStub] },
     });
-    harness = await RouterTestingHarness.create('/studio');
+    harness = await RouterTestingHarness.create('/app');
     document.body.appendChild(harness.fixture.nativeElement);
     harness.detectChanges();
   });
@@ -48,51 +48,57 @@ describe('Studio V2 shell integration', () => {
     expect(root.querySelector('footer')).not.toBeNull();
     expect(root.querySelector('app-upload-zone')).toBeNull();
   });
+  it('uses only canonical /app links throughout the V2 shell', () => {
+    const links = Array.from(harness.routeNativeElement!.querySelectorAll('a[href]')) as HTMLAnchorElement[];
+    const internalStudioLinks = links.map(link => link.getAttribute('href')).filter(path => path?.startsWith('/app'));
+    expect(internalStudioLinks.length).toBeGreaterThan(0);
+    expect(links.some(link => link.getAttribute('href')?.startsWith('/studio'))).toBeFalse();
+  });
   it('opens each module through the selector and retains only one visible workspace', async () => {
     for (const name of ['master', 'build', 'uplink']) {
-      await harness.navigateByUrl('/studio');
+      await harness.navigateByUrl('/app');
       (harness.routeNativeElement!.querySelector(`#module-${name}`) as HTMLAnchorElement).click();
       await harness.fixture.whenStable(); harness.detectChanges();
-      expect(TestBed.inject(Router).url).toBe(`/studio/${name}`);
+      expect(TestBed.inject(Router).url).toBe(`/app/${name}`);
       expect(harness.routeNativeElement!.querySelectorAll('section:not([hidden])').length).toBe(1);
       expect(harness.routeNativeElement!.querySelector(`section[aria-label="${name.toUpperCase()}"]`)).not.toBeNull();
     }
   });
   it('preserves the MASTER instance and local input across selector and BUILD navigation', async () => {
-    await harness.navigateByUrl('/studio/master');
+    await harness.navigateByUrl('/app/master');
     const source = harness.routeNativeElement!.querySelector('input')!;
     source.value = 'user-selected-file';
-    await harness.navigateByUrl('/studio/build');
+    await harness.navigateByUrl('/app/build');
     expect(source.closest('section')!.hidden).toBeTrue();
     expect(source.closest('section')!.hasAttribute('inert')).toBeTrue();
-    await harness.navigateByUrl('/studio');
-    await harness.navigateByUrl('/studio/master');
+    await harness.navigateByUrl('/app');
+    await harness.navigateByUrl('/app/master');
     expect(harness.routeNativeElement!.querySelector('input')).toBe(source);
     expect(source.value).toBe('user-selected-file');
   });
   it('clears retained engine views at a user identity boundary', async () => {
-    await harness.navigateByUrl('/studio/master');
+    await harness.navigateByUrl('/app/master');
     const source = harness.routeNativeElement!.querySelector('input');
     session.set({ user: { id: 'owner-b', email: 'test@example.invalid' } });
     harness.detectChanges(); await harness.fixture.whenStable(); harness.detectChanges();
-    expect(TestBed.inject(Router).url).toBe('/studio');
+    expect(TestBed.inject(Router).url).toBe('/app');
     expect(harness.routeNativeElement!.querySelector('input')).toBeNull();
-    await harness.navigateByUrl('/studio/master');
+    await harness.navigateByUrl('/app/master');
     expect(harness.routeNativeElement!.querySelector('input')).not.toBe(source);
   });
   it('uses existing sign-in and profile/quota state in Account', async () => {
-    await harness.navigateByUrl('/studio/account');
+    await harness.navigateByUrl('/app/account');
     (harness.routeNativeElement!.querySelector('.simple-surface button') as HTMLButtonElement).click();
     expect(requestSignIn).toHaveBeenCalledWith('general', 'email');
     session.set({ user: { id: 'owner', email: 'test@example.invalid' } }); premium.set(true);
     harness.detectChanges(); await harness.fixture.whenStable();
-    await harness.navigateByUrl('/studio/account');
+    await harness.navigateByUrl('/app/account');
     expect(harness.routeNativeElement!.textContent).toContain('RQS PRO');
     expect(harness.routeNativeElement!.textContent).toContain('test@example.invalid');
   });
   it('exposes Learn and SPLIT without creating processing or billing controls', async () => {
     for (const path of ['learn', 'split']) {
-      await harness.navigateByUrl(`/studio/${path}`);
+      await harness.navigateByUrl(`/app/${path}`);
       const root = harness.routeNativeElement!;
       expect(root.querySelector('.simple-surface h1')).not.toBeNull();
       expect(root.querySelector('input[type=file]')).toBeNull();

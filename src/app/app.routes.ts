@@ -10,6 +10,41 @@ import { CookiesPageComponent } from './cookies-page/cookies-page';
 export const routes: Routes = [
   {
     path: 'studio',
+    redirectTo: 'app',
+    pathMatch: 'full'
+  },
+  {
+    path: 'studio/master',
+    redirectTo: 'app/master',
+    pathMatch: 'full'
+  },
+  {
+    path: 'studio/build',
+    redirectTo: 'app/build',
+    pathMatch: 'full'
+  },
+  {
+    path: 'studio/uplink',
+    redirectTo: 'app/uplink',
+    pathMatch: 'full'
+  },
+  {
+    path: 'studio/split',
+    redirectTo: 'app/split',
+    pathMatch: 'full'
+  },
+  {
+    path: 'studio/learn',
+    redirectTo: 'app/learn',
+    pathMatch: 'full'
+  },
+  {
+    path: 'studio/account',
+    redirectTo: 'app/account',
+    pathMatch: 'full'
+  },
+  {
+    path: 'app',
     loadChildren: () => import('./studio/studio.routes').then(m => m.STUDIO_ROUTES)
   },
   {
@@ -18,9 +53,9 @@ export const routes: Routes = [
     title: 'RaQuel Synths - Intelligent Workstation'
   },
   {
-    path: 'app',
+    path: 'legacy',
     component: WorkspaceComponent,
-    title: 'RQS Studio - DAW Mainframe'
+    title: 'RQS Studio - Legacy DAW Mainframe'
   },
   {
     path: 'contact',

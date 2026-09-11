@@ -45,7 +45,7 @@ export class StudioShellComponent {
         previousUser = user;
         this.visited.set(new Set());
         // Re-enter the selected surface on the next navigation, after disposal.
-        void this.router.navigateByUrl('/studio');
+        void this.router.navigateByUrl('/app');
       }
     });
   }

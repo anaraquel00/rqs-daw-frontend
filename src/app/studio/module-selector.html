@@ -1,6 +1,6 @@
 <div class="module-grid" aria-label="RQS Studio modules">
   @for (module of modules; track module.id) {
-    <a class="module-card" [class]="'module-card ' + module.id" [id]="'module-' + module.id" [routerLink]="['/studio', module.id]" [attr.aria-label]="module.name + ' — ' + copy().open">
+    <a class="module-card" [class]="'module-card ' + module.id" [id]="'module-' + module.id" [routerLink]="['/app', module.id]" [attr.aria-label]="module.name + ' — ' + copy().open">
       <div class="card-heading">
         <div><div class="engine"><i></i>{{ module.engine }}</div><h2>{{ module.name }}</h2><p class="subtitle">{{ module.subtitle }}</p></div>
         <span class="module-icon" aria-hidden="true">{{ module.icon }}</span>
