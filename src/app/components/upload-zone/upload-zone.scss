@@ -250,3 +250,28 @@ transition: all 0.3s ease;
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Presentation opt-in for /studio/master; the existing /app panel is unchanged. */
+:host(.studio-master) {
+  display: block;
+  min-width: 0;
+
+  .glass-panel {
+    max-width: none;
+    margin: 0;
+    padding: clamp(16px, 3vw, 40px);
+    background: var(--studio-card, #050507);
+    border-color: var(--studio-border, #242428);
+    box-shadow: none;
+  }
+  .header-auth-bar:empty { display: none; }
+  .scanner-header { margin-bottom: 24px; }
+  .drop-zone { padding: 32px 20px; }
+  .drop-text, .log-text, .status-text { overflow-wrap: anywhere; min-width: 0; }
+  .download-section { gap: 16px; flex-wrap: wrap; }
+  .download-section > * { flex: 1 1 240px; width: auto; box-sizing: border-box; }
+  @media (max-width: 600px) {
+    .drop-zone { padding: 24px 12px; }
+    .download-section > * { flex-basis: 100%; }
+  }
+}

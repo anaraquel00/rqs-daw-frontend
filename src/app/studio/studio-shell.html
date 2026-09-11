@@ -33,7 +33,10 @@
   <router-outlet></router-outlet>
   @if (surface() === 'home') { <app-module-selector></app-module-selector> }
   @if (visited().has('master')) {
-    <section [hidden]="surface() !== 'master'" [attr.inert]="surface() !== 'master' ? '' : null" aria-label="MASTER"><app-upload-zone></app-upload-zone></section>
+    <section class="master-workspace" [hidden]="surface() !== 'master'" [attr.inert]="surface() !== 'master' ? '' : null" aria-label="MASTER">
+      <h1 class="master-title">MASTER</h1>
+      <app-upload-zone class="studio-master"></app-upload-zone>
+    </section>
   }
   @if (visited().has('build')) {
     <section [hidden]="surface() !== 'build'" [attr.inert]="surface() !== 'build' ? '' : null" aria-label="BUILD"><app-mix-panel></app-mix-panel></section>
