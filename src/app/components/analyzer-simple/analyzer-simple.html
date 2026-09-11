@@ -1,0 +1,55 @@
+<section class="analyzer" [attr.data-state]="state" aria-labelledby="analyzer-title">
+  <header class="analyzer-header">
+    <div>
+      <span class="eyebrow">{{ copy().eyebrow }}</span>
+      <h3 id="analyzer-title">{{ copy().title }}</h3>
+      <p>{{ copy().description }}</p>
+    </div>
+    @if (state === 'success') {
+      <span class="status" [class]="'status ' + overallStatus()" data-testid="overall-status">
+        {{ statusLabel(overallStatus()) }}
+      </span>
+    }
+  </header>
+
+  @if (state === 'empty') {
+    <p class="state-message" data-testid="analysis-empty">{{ copy().empty }}</p>
+  } @else if (state === 'loading') {
+    <p class="state-message loading" role="status" data-testid="analysis-loading">
+      <span class="spinner" aria-hidden="true"></span>{{ copy().loading }}
+    </p>
+  } @else if (state === 'auth_required') {
+    <p class="state-message" data-testid="analysis-auth">{{ copy().auth }}</p>
+  } @else if (state === 'error') {
+    <p class="state-message error" role="alert" data-testid="analysis-error">{{ copy().error }}</p>
+  } @else if (metrics) {
+    <div class="metric-grid" data-testid="analysis-success">
+      <article class="metric policy-metric" [attr.data-policy-status]="lufsStatus()">
+        <div class="metric-heading"><span>{{ copy().loudness }}</span><b [class]="lufsStatus()">{{ statusLabel(lufsStatus()) }}</b></div>
+        <strong>{{ number(metrics.integrated_lufs, 'LUFS') }}</strong>
+        @if (target) { <small>{{ copy().policy }}: {{ target.min_lufs }} … {{ target.max_lufs }} LUFS</small> }
+      </article>
+
+      <article class="metric policy-metric" [attr.data-policy-status]="truePeakStatus()">
+        <div class="metric-heading"><span>{{ copy().truePeak }}</span><b [class]="truePeakStatus()">{{ statusLabel(truePeakStatus()) }}</b></div>
+        <strong>{{ number(metrics.true_peak_dbtp, 'dBTP') }}</strong>
+        @if (target) { <small>{{ copy().policy }}: ≤ {{ target.true_peak_ceiling_dbtp }} dBTP</small> }
+      </article>
+
+      <article class="metric dynamics" data-policy-status="info">
+        <div class="metric-heading"><span>{{ copy().dynamics }}</span><b class="info">{{ copy().info }}</b></div>
+        <dl>
+          <div><dt>{{ copy().lra }}</dt><dd>{{ number(metrics.loudness_range_lu, 'LU') }}</dd></div>
+          <div><dt>{{ copy().crest }}</dt><dd>{{ number(metrics.crest_factor_db, 'dB') }}</dd></div>
+          <div><dt>{{ copy().rms }}</dt><dd>{{ number(metrics.rms_dbfs, 'dBFS') }}</dd></div>
+        </dl>
+      </article>
+
+      <article class="metric" data-policy-status="info">
+        <div class="metric-heading"><span>{{ copy().track }}</span><b class="info">{{ copy().info }}</b></div>
+        <strong>{{ duration(metrics.duration_seconds) }}</strong>
+        <small>{{ copy().duration }}</small>
+      </article>
+    </div>
+  }
+</section>

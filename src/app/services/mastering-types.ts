@@ -77,3 +77,5 @@ export interface MasteringV2Analysis {
   loudness_range_lu: number;
   duration_seconds: number;
 }
+
+export type MasteringAnalysisState = 'empty' | 'loading' | 'success' | 'error' | 'auth_required';

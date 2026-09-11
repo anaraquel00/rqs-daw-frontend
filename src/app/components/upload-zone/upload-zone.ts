@@ -6,7 +6,12 @@ import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
-import { MasteringProcessCommand, MasteringV2Request } from '../../services/mastering-types';
+import {
+  MasteringAnalysisState,
+  MasteringProcessCommand,
+  MasteringV2Analysis,
+  MasteringV2Request,
+} from '../../services/mastering-types';
 import { MasteringService } from '../../services/mastering.service';
 import { environment } from '../../../environments/environment';
 import { AnalyticsService } from '../../services/analytics.service';
@@ -42,19 +47,29 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   isUploadingS3 = false;
   processingMode: 'preview' | 'full' | null = null;
   readonly masteringFeedback = signal<MasteringFeedback | null>(null);
+  readonly analysisState = signal<MasteringAnalysisState>('empty');
+  readonly analysisMetrics = signal<MasteringV2Analysis | null>(null);
   renderProgressPercent = 0;
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
   private renderProgressTimer: ReturnType<typeof setInterval> | undefined;
-  private wasAuthenticated = this.auth.isLoggedIn();
+  private previousUserId = this.auth.session()?.user.id ?? null;
   private workspaceGeneration = 0;
+  private analysisRequestedGeneration: number | null = null;
   private readonly authenticatedUploadEffect = effect(() => {
     const isAuthenticated = this.auth.isLoggedIn();
+    const userId = this.auth.session()?.user.id ?? null;
 
-    if (this.wasAuthenticated && !isAuthenticated) {
+    if (this.previousUserId !== null && userId !== this.previousUserId) {
       this.ejetarFaixa();
     }
-    this.wasAuthenticated = isAuthenticated;
+    this.previousUserId = userId;
+
+    if (!isAuthenticated) return;
+
+    if (this.selectedFile && this.masteringV2DirectUpload) {
+      this.requestSourceAnalysis(this.selectedFile, this.workspaceGeneration);
+    }
 
     if (
       isAuthenticated
@@ -126,11 +141,13 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
             this.s3Key = s3Response.s3Key;
             this.masteringFeedback.set(null);
             this.addLog(`Upload concluído! Arquivo persistido em: ${s3Response.s3Key}`);
+            this.requestSourceAnalysis(file, generation);
           },
           error: (error: unknown) => {
             if (!this.isActiveWorkspace(generation)) return;
             this.isUploadingS3 = false;
             this.masteringFeedback.set('upload_failed');
+            this.analysisState.set('error');
             this.addLog(`❌ ERRO CRÍTICO S3: ${this.errorMessage(error)}`);
           },
         });
@@ -139,6 +156,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         if (!this.isActiveWorkspace(generation)) return;
         this.isUploadingS3 = false;
         this.masteringFeedback.set('upload_failed');
+        this.analysisState.set('error');
         this.addLog(`❌ ERRO DE PROTOCOLO S3: ${this.errorMessage(error)}`);
       },
     });
@@ -269,6 +287,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.systemLogs = [];
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
+    this.clearAnalysisState();
     this.masteringService.resetPreviewStartSeconds();
     this.stopEstimatedRenderProgress();
     this.audioComparison.resetAll('UPLOAD_ZONE_EJECT_TRACK');
@@ -299,6 +318,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.processingMode = null;
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
+    this.clearAnalysisState();
     this.systemLogs = [];
     this.masteringService.resetPreviewStartSeconds();
     this.audioComparison.audioProcessed.set(false);
@@ -308,12 +328,57 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     if (this.masteringV2DirectUpload) {
       this.isUploadingS3 = false;
       this.addLog('Modo local Mastering V2: upload direto ao backend, sem S3.');
+      if (this.auth.isLoggedIn()) {
+        this.requestSourceAnalysis(file, this.workspaceGeneration);
+      } else {
+        this.analysisState.set('auth_required');
+      }
       return;
     }
 
     if (this.auth.isLoggedIn()) {
+      this.analysisState.set('loading');
       this.iniciarUploadS3Silencioso(file);
+    } else {
+      this.analysisState.set('auth_required');
     }
+  }
+
+  private requestSourceAnalysis(file: File, generation: number): void {
+    if (!this.isActiveWorkspace(generation) || this.analysisRequestedGeneration === generation) return;
+    if (!this.masteringV2DirectUpload && !this.s3Key) return;
+
+    this.analysisRequestedGeneration = generation;
+    this.analysisMetrics.set(null);
+    this.analysisState.set('loading');
+    const formData = new FormData();
+    if (this.masteringV2DirectUpload) {
+      formData.append('audio', file, file.name);
+    } else {
+      formData.append('s3Key', this.s3Key!);
+    }
+
+    this.dspService.analyzeMasteringV2(formData).subscribe({
+      next: (metrics) => {
+        if (!this.isActiveWorkspace(generation)) return;
+        this.analysisMetrics.set(metrics);
+        this.analysisState.set('success');
+      },
+      error: (error: unknown) => {
+        if (!this.isActiveWorkspace(generation)) return;
+        const status = typeof error === 'object' && error !== null
+          ? Number((error as { status?: unknown }).status)
+          : 0;
+        this.analysisMetrics.set(null);
+        this.analysisState.set(status === 401 || status === 403 ? 'auth_required' : 'error');
+      },
+    });
+  }
+
+  private clearAnalysisState(): void {
+    this.analysisRequestedGeneration = null;
+    this.analysisMetrics.set(null);
+    this.analysisState.set('empty');
   }
 
   private buildMasteringV2FormData(

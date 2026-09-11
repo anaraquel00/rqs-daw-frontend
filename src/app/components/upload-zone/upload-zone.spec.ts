@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
-import { MasteringProcessCommand } from '../../services/mastering-types';
+import { MasteringProcessCommand, MasteringV2Analysis } from '../../services/mastering-types';
 import { UploadZoneComponent } from './upload-zone';
 
 describe('UploadZoneComponent protected Mastering V2 guard', () => {
@@ -21,6 +21,15 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
   const audioProcessed = signal(false);
   const processedFilename = signal('');
   const isLoggedIn = signal(false);
+  const userId = signal('owner-a');
+  const analysis: MasteringV2Analysis = {
+    integrated_lufs: -14.2,
+    true_peak_dbtp: -1.3,
+    rms_dbfs: -18.4,
+    crest_factor_db: 8.1,
+    loudness_range_lu: 5.2,
+    duration_seconds: 185,
+  };
 
   beforeEach(() => {
     isLoggedIn.set(false);
@@ -33,9 +42,11 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     dsp = jasmine.createSpyObj<DspService>('DspService', [
       'getMasteringV2PresignedUrl',
       'uploadToS3',
+      'analyzeMasteringV2',
       'masterizeV2Preview',
       'masterizeV2Final',
     ]);
+    dsp.analyzeMasteringV2.and.returnValue(of(analysis));
     analytics = jasmine.createSpyObj<AnalyticsService>('AnalyticsService', ['trackEvent']);
 
     TestBed.configureTestingModule({
@@ -46,6 +57,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
           provide: AuthService,
           useValue: {
             isLoggedIn,
+            session: () => isLoggedIn() ? { user: { id: userId() } } : null,
             requestSignIn,
             canMaster: signal(true),
             refreshProfile: jasmine.createSpy('refreshProfile'),
@@ -69,6 +81,87 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     component = TestBed.runInInjectionContext(() => new UploadZoneComponent());
     TestBed.tick();
     component.selectedFile = new File(['audio'], 'track.wav', { type: 'audio/wav' });
+  });
+
+  it('analyzes one authenticated source exactly once without a second upload', () => {
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
+    const body = dsp.analyzeMasteringV2.calls.mostRecent().args[0];
+    expect((body.get('audio') as File).name).toBe(component.selectedFile!.name);
+    expect(body.has('s3Key')).toBeFalse();
+    expect(component.analysisState()).toBe('success');
+    expect(component.analysisMetrics()).toEqual(analysis);
+
+    TestBed.tick();
+    expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows loading and ignores a stale analysis after source replacement', () => {
+    const first = new Subject<MasteringV2Analysis>();
+    dsp.analyzeMasteringV2.and.returnValues(first, of({ ...analysis, duration_seconds: 42 }));
+    isLoggedIn.set(true);
+    TestBed.tick();
+    expect(component.analysisState()).toBe('loading');
+
+    const replacement = new File(['replacement'], 'replacement.wav', { type: 'audio/wav' });
+    (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(replacement);
+    expect(component.analysisState()).toBe('success');
+    expect(component.analysisMetrics()?.duration_seconds).toBe(42);
+
+    first.next({ ...analysis, duration_seconds: 999 });
+    first.complete();
+    expect(component.analysisMetrics()?.duration_seconds).toBe(42);
+    expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(2);
+  });
+
+  it('maps analysis failure without invoking Preview or Full Master', () => {
+    dsp.analyzeMasteringV2.and.returnValue(new Subject<MasteringV2Analysis>());
+    isLoggedIn.set(true);
+    TestBed.tick();
+    const request = dsp.analyzeMasteringV2.calls.mostRecent().returnValue as Subject<MasteringV2Analysis>;
+    request.error({ status: 503 });
+
+    expect(component.analysisState()).toBe('error');
+    expect(component.analysisMetrics()).toBeNull();
+    expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
+    expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
+  });
+
+  it('clears analysis on logout and user switch', () => {
+    isLoggedIn.set(true);
+    TestBed.tick();
+    expect(component.analysisState()).toBe('success');
+
+    userId.set('owner-b');
+    TestBed.tick();
+    expect(component.selectedFile).toBeNull();
+    expect(component.analysisState()).toBe('empty');
+    expect(component.analysisMetrics()).toBeNull();
+
+    component.selectedFile = new File(['audio'], 'again.wav', { type: 'audio/wav' });
+    isLoggedIn.set(false);
+    TestBed.tick();
+    expect(component.selectedFile).toBeNull();
+    expect(component.analysisMetrics()).toBeNull();
+  });
+
+  it('does not consume quota, emit mastering analytics, or modify the DSP request', () => {
+    const mastering = TestBed.inject(MasteringService);
+    const before = mastering.getRequest();
+    const auth = TestBed.inject(AuthService) as unknown as { canMaster: jasmine.Spy; refreshProfile: jasmine.Spy };
+    const canMaster = jasmine.createSpy('canMaster').and.returnValue(true);
+    (auth as unknown as { canMaster: () => boolean }).canMaster = canMaster;
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(canMaster).not.toHaveBeenCalled();
+    expect(auth.refreshProfile).not.toHaveBeenCalled();
+    expect(analytics.trackEvent).not.toHaveBeenCalled();
+    expect(mastering.getRequest()).toEqual(before);
+    expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
+    expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
   });
 
   it('preserves a local selection while the initial auth state remains anonymous', () => {

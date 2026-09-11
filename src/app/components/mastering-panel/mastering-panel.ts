@@ -20,21 +20,24 @@ import { AudioComparisonService, AudioVariant } from '../../services/audio-compa
 import { DspService } from '../../services/dsp';
 import { MasteringService } from '../../services/mastering.service';
 import {
+  MasteringAnalysisState,
   MasteringAtmosphere,
   MasteringDeliveryTargetCapabilities,
   MasteringDestination,
   MasteringPlatform,
   MasteringProcessCommand,
   MasteringV2Capabilities,
+  MasteringV2Analysis,
   SoundCloudMode,
 } from '../../services/mastering-types';
 import { MasteringHelpTopic, masteringEducation } from './mastering-education';
 import { PreviewWaveformComponent } from './preview-waveform';
+import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
 
 @Component({
   selector: 'app-mastering-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, PreviewWaveformComponent],
+  imports: [CommonModule, FormsModule, PreviewWaveformComponent, AnalyzerSimpleComponent],
   templateUrl: './mastering-panel.html',
   styleUrls: ['./mastering-panel.scss'],
 })
@@ -57,6 +60,8 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() feedbackMessage: string | null = null;
   @Input() masteredAudioUrl: string | null = null;
   @Input() isFullMaster = false;
+  @Input() analysisState: MasteringAnalysisState = 'empty';
+  @Input() analysisMetrics: MasteringV2Analysis | null = null;
 
   @Output() processMaster = new EventEmitter<MasteringProcessCommand>();
   @Output() configChanged = new EventEmitter<void>();

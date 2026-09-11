@@ -43,6 +43,8 @@
     [feedbackMessage]="masteringFeedbackMessage()"
     [masteredAudioUrl]="processedAudioUrl"
     [isFullMaster]="isFullMasterCompleted"
+    [analysisState]="analysisState()"
+    [analysisMetrics]="analysisMetrics()"
     (processMaster)="processarMaster($event)"
     (configChanged)="invalidateMasteringResult()">
   </app-mastering-panel>

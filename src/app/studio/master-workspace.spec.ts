@@ -70,7 +70,9 @@ describe('Studio MASTER full-width integration', () => {
       clearMasterSrc:() => {audio.canUseMaster.set(false); audio.previewStatus.set('not-generated');}};
     dsp = {getMasteringV2Capabilities: jasmine.createSpy().and.returnValue(of(capabilities)),
       getMasteringV2PresignedUrl: jasmine.createSpy().and.returnValue(of({uploadUrl:'https://example.invalid/local', s3Key:'test-only'})),
-      uploadToS3: jasmine.createSpy().and.returnValue(of({}))};
+      uploadToS3: jasmine.createSpy().and.returnValue(of({})),
+      analyzeMasteringV2: jasmine.createSpy().and.returnValue(of({integrated_lufs:-14,true_peak_dbtp:-1.3,
+        rms_dbfs:-18,crest_factor_db:8,loudness_range_lu:5,duration_seconds:60}))};
     TestBed.configureTestingModule({providers:[provideRouter([{path:'studio',children:STUDIO_ROUTES}]),
       {provide:AuthService,useValue:auth}, {provide:AudioComparisonService,useValue:audio}, {provide:DspService,useValue:dsp},
       {provide:AnalyticsService,useValue:{trackEvent:jasmine.createSpy()}},
@@ -112,7 +114,7 @@ describe('Studio MASTER full-width integration', () => {
     console.info('MASTER_LAYOUT_VIEWPORT', window.innerWidth, window.innerHeight);
     const grid = root().querySelector('.controls-section')!;
     expect(getComputedStyle(grid).gridTemplateColumns.split(' ').length).toBe(window.innerWidth >= 1100 ? 2 : 1);
-    for (const element of Array.from(root().querySelectorAll('.glass-panel,.drop-zone,.mastering-board,.waveform-host,.control-group,.action-buttons button'))) {
+    for (const element of Array.from(root().querySelectorAll('.glass-panel,.drop-zone,.mastering-board,.waveform-host,.analyzer,.metric-grid,.metric,.control-group,.action-buttons button'))) {
       const r = element.getBoundingClientRect();
       expect(r.width).toBeGreaterThan(0); expect(r.left).toBeGreaterThanOrEqual(0);
       expect(r.right).toBeLessThanOrEqual(window.innerWidth + 1);
@@ -123,6 +125,9 @@ describe('Studio MASTER full-width integration', () => {
     await selectFile();
     expect(upload.selectedFile?.name).toBe('local-source.wav');
     expect(audio.setOriginalSrc).toHaveBeenCalled();
+    expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
+    expect(root().querySelector('[data-testid=analysis-success]')).not.toBeNull();
+    expect(root().querySelector('[data-testid=overall-status]')?.textContent).toContain('WITHIN DELIVERY RANGE');
     const waveform = harness.fixture.debugElement.query(By.directive(PreviewWaveformComponent)).componentInstance as PreviewWaveformComponent;
     expect(waveform.file).toBe(upload.selectedFile);
     expect(root().querySelector('canvas')).not.toBeNull();

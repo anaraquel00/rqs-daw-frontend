@@ -95,6 +95,12 @@
     <p class="listening-status" aria-live="polite">{{ listeningStatusText() }}</p>
   </div>
 
+  <app-analyzer-simple
+    [state]="analysisState"
+    [metrics]="analysisMetrics"
+    [target]="activeTarget()">
+  </app-analyzer-simple>
+
   <div class="mastering-help-toolbar">
     <button class="guide-button" type="button" (click)="toggleGuide()">
       ⓘ {{ education().help }} · {{ education().guideTitle }}
