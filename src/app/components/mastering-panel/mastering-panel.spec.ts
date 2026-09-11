@@ -1,13 +1,18 @@
-import { signal } from '@angular/core';
+import { SimpleChange, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { MasteringPanelComponent } from './mastering-panel';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
 import { AuthService } from '../../services/auth.service';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
-import { MasteringV2Capabilities } from '../../services/mastering-types';
+import {
+  MasteringAutoRecommendation,
+  MasteringAutoRecommendationRequest,
+  MasteringV2Analysis,
+  MasteringV2Capabilities,
+} from '../../services/mastering-types';
 
 const capabilities: MasteringV2Capabilities = {
   engine: 'rqs-core-mastering-v2',
@@ -82,6 +87,8 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
   const isPremium = signal(false);
   const remainingMasters = signal(3);
   let requestSignIn: jasmine.Spy;
+  let recommendAuto: jasmine.Spy;
+  let autoResponse: Subject<MasteringAutoRecommendation>;
   let clearCalls = 0;
   let stopResetCalls = 0;
 
@@ -94,6 +101,8 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
     isPremium.set(false);
     remainingMasters.set(3);
     requestSignIn = jasmine.createSpy('requestSignIn');
+    autoResponse = new Subject<MasteringAutoRecommendation>();
+    recommendAuto = jasmine.createSpy('recommendMasteringV2Auto').and.returnValue(autoResponse);
     currentLang.set('en');
 
     const previewStartSignal = signal(0);
@@ -133,15 +142,26 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
     };
 
     TestBed.configureTestingModule({
+      imports: [MasteringPanelComponent],
       providers: [
         MasteringService,
-        { provide: DspService, useValue: { getMasteringV2Capabilities: () => of(capabilities) } },
+        {
+          provide: DspService,
+          useValue: {
+            getMasteringV2Capabilities: () => of(capabilities),
+            recommendMasteringV2Auto: recommendAuto,
+          },
+        },
         { provide: AudioComparisonService, useValue: audioComparisonStub },
         {
           provide: LanguageService,
           useValue: {
             currentLang,
-            tr: () => ({ MASTER_LABEL: 'B - MASTER PREVIEW' }),
+            t: () => new Proxy({}, { get: (_target, property) => String(property) }),
+            tr: () => new Proxy(
+              { MASTER_LABEL: 'B - MASTER PREVIEW' },
+              { get: (target, property) => Reflect.get(target, property) ?? String(property) },
+            ),
           },
         },
         {
@@ -156,6 +176,54 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
     panel.sourceReady = true;
     panel.ngOnInit();
   });
+
+  const metrics: MasteringV2Analysis = {
+    integrated_lufs: -14,
+    true_peak_dbtp: -1.3,
+    rms_dbfs: -18,
+    crest_factor_db: 8,
+    loudness_range_lu: 5,
+    duration_seconds: 180,
+  };
+
+  function prepareAnalyzedSource(): void {
+    const previousFile = panel.originalFile;
+    panel.originalFile = new File(['audio'], 'source.wav', { type: 'audio/wav' });
+    panel.analysisState = 'success';
+    panel.analysisMetrics = metrics;
+    panel.ngOnChanges({
+      originalFile: new SimpleChange(previousFile, panel.originalFile, previousFile === null),
+      analysisState: new SimpleChange('empty', 'success', false),
+      analysisMetrics: new SimpleChange(null, metrics, false),
+    });
+  }
+
+  function recommendation(request: MasteringAutoRecommendationRequest): MasteringAutoRecommendation {
+    return {
+      recommendation_id: 'auto-ui-test',
+      policy_version: request.expected_policy_version,
+      status: 'RECOMMENDATION_AVAILABLE',
+      current_snapshot: {
+        source_generation: request.source_generation,
+        analyzer_generation: request.analyzer_generation,
+        metrics: request.metrics,
+        context: { ...request.context },
+      },
+      proposed_patch: { requestedLufs: -14 },
+      reason_codes: ['CUSTOM_LUFS_DIFFERS_FROM_POLICY'],
+      explanations: [],
+      confidence: 'OBJECTIVE_POLICY',
+      requires_confirmation: true,
+      separate_delivery_intent_confirmation_required: false,
+      stale_key: 'test-digest',
+      snapshot_digest: 'test-digest',
+      delivery_policy_source: 'test-policy',
+      delivery_policy_id: 'streaming:spotify:standard',
+      analyzer_generation: request.analyzer_generation,
+      analyzer_version: 'analyzer-simple-v1',
+      created_at: '2026-09-11T00:00:00.000Z',
+    };
+  }
 
   it('blocks an out-of-range requested LUFS before sending a render', () => {
     masteringService.setDestination('club');
@@ -227,14 +295,54 @@ it('sends the selected source start with the Preview command', () => {
 
   it('opens Auth UX and emits no protected Preview command for an anonymous user', () => {
     isLoggedIn.set(false);
+    panel.originalFile = new File(['audio'], 'anonymous-source.wav', { type: 'audio/wav' });
+    panel.capabilities.set(null);
     const processMaster = jasmine.createSpy('processMaster');
     panel.processMaster.subscribe(processMaster);
+    const remainingBefore = remainingMasters();
 
+    expect(panel.canGeneratePreview()).toBeFalse();
+    expect(panel.canActivatePreviewAction()).toBeTrue();
     panel.dispararPreview();
 
     expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
     expect(processMaster).not.toHaveBeenCalled();
     expect(panel.audioComparison.previewStatus()).toBe('not-generated');
+    expect(panel.isProcessing).toBeFalse();
+    expect(remainingMasters()).toBe(remainingBefore);
+  });
+
+  it('keeps authenticated technical Preview guards authoritative', () => {
+    panel.originalFile = new File(['audio'], 'authenticated-source.wav', { type: 'audio/wav' });
+    panel.capabilities.set(null);
+    const processMaster = jasmine.createSpy('processMaster');
+    panel.processMaster.subscribe(processMaster);
+
+    expect(panel.canActivatePreviewAction()).toBeFalse();
+    panel.dispararPreview();
+
+    expect(requestSignIn).not.toHaveBeenCalled();
+    expect(processMaster).not.toHaveBeenCalled();
+    expect(panel.audioComparison.previewStatus()).toBe('not-generated');
+  });
+
+  it('keeps the initial anonymous template free of an auth block and Preview actionable', () => {
+    isLoggedIn.set(false);
+    const fixture = TestBed.createComponent(MasteringPanelComponent);
+    fixture.componentInstance.originalFile = new File(['audio'], 'anonymous-source.wav', { type: 'audio/wav' });
+    fixture.detectChanges();
+    fixture.componentInstance.capabilities.set(null);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const previewButton = element.querySelector('.action-buttons .btn-secondary') as HTMLButtonElement;
+    expect(element.querySelector('.auth-flow-help')).toBeNull();
+    expect(previewButton).not.toBeNull();
+    expect(previewButton.disabled).toBeFalse();
+
+    previewButton.click();
+    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    fixture.destroy();
   });
 
   it('opens Auth UX and emits no Full Master command for an anonymous user', () => {
@@ -339,6 +447,78 @@ it('sends the selected source start with the Preview command', () => {
     expect(panel.masterVariantLabel()).toContain('MASTER PREVIEW');
     panel.isFullMaster = true;
     expect(panel.masterVariantLabel()).toBe('B - FULL MASTER');
+  });
+
+  it('requests AUTO explicitly from the current source, Analyzer and delivery snapshot', () => {
+    prepareAnalyzedSource();
+
+    panel.requestAutoRecommendation();
+
+    expect(recommendAuto).toHaveBeenCalledTimes(1);
+    const request = recommendAuto.calls.mostRecent().args[0] as MasteringAutoRecommendationRequest;
+    expect(request.metrics).toEqual(metrics);
+    expect(request.source_generation).toBe(request.analyzer_generation);
+    expect(request.context).toEqual(masteringService.getRequest());
+    expect(request.expected_policy_version).toBe('mastering-v2-v1:delivery-auto-v1');
+    expect(panel.autoUiState()).toBe('loading');
+  });
+
+  it('does not render Preview or Full Master while requesting a recommendation', () => {
+    prepareAnalyzedSource();
+    const processMaster = jasmine.createSpy('processMaster');
+    panel.processMaster.subscribe(processMaster);
+    const remainingBefore = remainingMasters();
+
+    panel.requestAutoRecommendation();
+
+    expect(processMaster).not.toHaveBeenCalled();
+    expect(remainingMasters()).toBe(remainingBefore);
+  });
+
+  it('applies only Requested LUFS after explicit confirmation and uses existing invalidation', () => {
+    prepareAnalyzedSource();
+    masteringService.setRequestedLufs(-12);
+    canUseMaster.set(true);
+    const configChanged = jasmine.createSpy('configChanged');
+    panel.configChanged.subscribe(configChanged);
+    panel.requestAutoRecommendation();
+    const request = recommendAuto.calls.mostRecent().args[0] as MasteringAutoRecommendationRequest;
+    autoResponse.next(recommendation(request));
+    const before = masteringService.getRequest();
+
+    panel.applyAutoRequestedLufs();
+
+    expect(masteringService.requestedLufs()).toBe(-14);
+    expect(masteringService.destination()).toBe(before.destination);
+    expect(masteringService.platform()).toBe(before.platform);
+    expect(masteringService.soundcloudMode()).toBe(before.soundcloudMode);
+    expect(masteringService.atmosphere()).toBe(before.atmosphere);
+    expect(masteringService.intensityPercent()).toBe(before.intensityPercent);
+    expect(clearCalls).toBe(1);
+    expect(configChanged).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks Apply after source, Analyzer or relevant Manual context becomes stale', () => {
+    prepareAnalyzedSource();
+    masteringService.setRequestedLufs(-12);
+    panel.requestAutoRecommendation();
+    const request = recommendAuto.calls.mostRecent().args[0] as MasteringAutoRecommendationRequest;
+    autoResponse.next(recommendation(request));
+
+    masteringService.setIntensityPercent(70);
+    expect(panel.autoUiState()).toBe('stale');
+    panel.applyAutoRequestedLufs();
+    expect(masteringService.requestedLufs()).toBe(-12);
+
+    masteringService.setIntensityPercent(50);
+    panel.analysisMetrics = { ...metrics, integrated_lufs: -13 };
+    expect(panel.autoUiState()).toBe('stale');
+
+    panel.analysisMetrics = metrics;
+    const previousFile = panel.originalFile;
+    panel.originalFile = new File(['replacement'], 'replacement.wav', { type: 'audio/wav' });
+    panel.ngOnChanges({ originalFile: new SimpleChange(previousFile, panel.originalFile, false) });
+    expect(panel.autoUiState()).toBe('stale');
   });
 
 });

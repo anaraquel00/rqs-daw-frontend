@@ -1,0 +1,86 @@
+<section class="delivery-auto" [attr.data-state]="state" aria-labelledby="delivery-auto-title">
+  <header class="auto-header">
+    <div>
+      <span class="eyebrow">{{ copy().eyebrow }}</span>
+      <h3 id="delivery-auto-title">{{ copy().title }}</h3>
+      <p>{{ copy().description }}</p>
+    </div>
+    @if (state !== 'empty' && state !== 'loading') {
+      <span class="state-badge" [class]="'state-badge ' + state" data-testid="auto-state-label">
+        {{ stateLabel() }}
+      </span>
+    }
+  </header>
+
+  @if (state === 'empty') {
+    <div class="auto-state" data-testid="auto-empty">
+      <p>{{ emptyDetail() }}</p>
+      <button type="button" class="auto-request" [disabled]="!canRequest" (click)="requestRecommendation.emit()">
+        {{ copy().request }}
+      </button>
+    </div>
+  } @else if (state === 'loading') {
+    <div class="auto-state loading" role="status" data-testid="auto-loading">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>{{ copy().loading }}</p>
+    </div>
+  } @else if (state === 'error') {
+    <div class="auto-state error" role="alert" data-testid="auto-error">
+      <p>{{ copy().error }}</p>
+      <button type="button" class="auto-request" [disabled]="!canRequest" (click)="requestRecommendation.emit()">
+        {{ copy().recalculate }}
+      </button>
+    </div>
+  } @else if (recommendation) {
+    <div class="auto-result" [class.outdated]="state === 'stale'" [attr.data-testid]="'auto-' + state">
+      @if (state === 'stale') {
+        <p class="stale-message">{{ copy().stale }}</p>
+      } @else if (state === 'no_change') {
+        <p class="result-summary">{{ copy().noChange }}</p>
+      } @else if (state === 'abstain') {
+        <p class="result-summary">{{ copy().abstain }}</p>
+      }
+
+      @if (policyContext()) {
+        <p class="policy-context"><strong>{{ copy().policy }}:</strong> {{ policyContext() }}</p>
+      }
+
+      <div class="reason-block">
+        <strong>{{ copy().why }}</strong>
+        <ul>
+          @for (code of recommendation.reason_codes; track code) {
+            <li>{{ reasonText(code) }}</li>
+          }
+        </ul>
+      </div>
+
+      @if (proposedRequestedLufs() !== null) {
+        <div class="patch-review" data-testid="auto-requested-lufs-review">
+          <div>
+            <span>{{ copy().current }}</span>
+            <strong>{{ currentSetting() }}</strong>
+          </div>
+          <span class="patch-arrow" aria-hidden="true">→</span>
+          <div>
+            <span>{{ copy().recommended }}</span>
+            <strong>{{ formatLufs(proposedRequestedLufs()!) }}</strong>
+          </div>
+        </div>
+        <p class="confirmation-note">{{ copy().confirmation }}</p>
+      } @else {
+        <p class="review-only">{{ copy().reviewOnly }}</p>
+      }
+
+      <div class="auto-actions">
+        @if (canApply()) {
+          <button type="button" class="auto-apply" data-testid="auto-apply" (click)="applyRequestedLufs.emit()">
+            {{ copy().apply }}
+          </button>
+        }
+        <button type="button" class="auto-request" [disabled]="!canRequest" (click)="requestRecommendation.emit()">
+          {{ copy().recalculate }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

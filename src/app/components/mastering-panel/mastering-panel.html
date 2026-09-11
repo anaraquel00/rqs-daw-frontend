@@ -101,6 +101,17 @@
     [target]="activeTarget()">
   </app-analyzer-simple>
 
+  <app-delivery-auto
+    [state]="autoUiState()"
+    [recommendation]="autoRecommendation()"
+    [currentRequestedLufs]="requestedLufs()"
+    [policyTargetLufs]="activeTarget()?.target_lufs ?? null"
+    [canRequest]="canRequestAutoRecommendation()"
+    [authenticated]="auth.isLoggedIn()"
+    (requestRecommendation)="requestAutoRecommendation()"
+    (applyRequestedLufs)="applyAutoRequestedLufs()">
+  </app-delivery-auto>
+
   <div class="mastering-help-toolbar">
     <button class="guide-button" type="button" (click)="toggleGuide()">
       ⓘ {{ education().help }} · {{ education().guideTitle }}
@@ -328,11 +339,6 @@
     </span>
   </div>
 
-  <div class="auth-flow-help" *ngIf="!auth.isLoggedIn()">
-    <strong>{{ lang.t().AUTH_REQUIRED_TITLE }}</strong>
-    <p>{{ lang.t().MASTERING_SIGN_IN_HELP }}</p>
-  </div>
-
   <p class="full-master-block-reason" *ngIf="fullMasterBlockReason() as reason">
     🔒 {{ reason }}
   </p>
@@ -342,7 +348,7 @@
       *ngIf="!hasCurrentPreview() && !hasCurrentFullMaster()"
       class="btn-secondary"
       (click)="dispararPreview()"
-      [disabled]="!canGeneratePreview()">
+      [disabled]="!canActivatePreviewAction()">
       {{ audioComparison.previewStatus() === 'processing' ? lang.tr().AB_PREVIEW_GENERATING : lang.tr().BTN_GENERATE_PREVIEW }}
     </button>
     <button

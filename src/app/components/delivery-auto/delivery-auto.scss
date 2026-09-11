@@ -1,0 +1,147 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.delivery-auto {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 24px 0;
+  padding: clamp(16px, 2.5vw, 26px);
+  overflow: hidden;
+  border: 1px solid rgba(0, 240, 255, .24);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(7, 16, 24, .95), rgba(12, 11, 27, .92));
+  box-shadow: inset 0 0 34px rgba(0, 240, 255, .035);
+  text-align: left;
+}
+
+.auto-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.eyebrow {
+  color: #65dded;
+  font: 700 10px/1.2 monospace;
+  letter-spacing: .18em;
+}
+
+h3 {
+  margin: 5px 0;
+  color: #f4f7ff;
+  font-size: clamp(18px, 2vw, 24px);
+}
+
+p {
+  margin: 0;
+  color: #9ca9b8;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.state-badge {
+  display: inline-flex;
+  padding: 7px 9px;
+  border: 1px solid rgba(110, 220, 255, .34);
+  border-radius: 999px;
+  color: #88e9f5;
+  background: rgba(0, 240, 255, .045);
+  white-space: nowrap;
+  font: 700 9px/1 monospace;
+  letter-spacing: .07em;
+}
+
+.state-badge.recommendation { color: #45efb2; border-color: rgba(69, 239, 178, .36); }
+.state-badge.stale,
+.state-badge.error { color: #ffb6c1; border-color: rgba(255, 92, 118, .32); }
+.state-badge.abstain { color: #ffcf79; border-color: rgba(255, 207, 121, .3); }
+
+.auto-state,
+.auto-result {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .22);
+}
+
+.auto-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.auto-state.loading { justify-content: flex-start; color: #c9f9ff; }
+.auto-state.error { border-color: rgba(255, 92, 118, .24); }
+.auto-result.outdated { border-color: rgba(255, 92, 118, .24); }
+.result-summary { color: #dce8f2; font-weight: 700; }
+.stale-message { color: #ffb6c1; font-weight: 700; }
+.policy-context { margin-top: 12px; overflow-wrap: anywhere; color: #8294a7; }
+.policy-context strong { color: #afc3d5; }
+
+.reason-block {
+  margin-top: 16px;
+  color: #c9d7e3;
+  font-size: 12px;
+}
+
+.reason-block > strong { font: 700 10px/1.2 monospace; letter-spacing: .1em; color: #88e9f5; }
+.reason-block ul { display: grid; gap: 7px; margin: 10px 0 0; padding-left: 18px; }
+.reason-block li { line-height: 1.45; }
+
+.patch-review {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 15px;
+  border: 1px solid rgba(124, 92, 255, .24);
+  border-radius: 9px;
+  background: rgba(124, 92, 255, .045);
+}
+
+.patch-review div { min-width: 0; }
+.patch-review span:not(.patch-arrow) { display: block; margin-bottom: 6px; color: #8392a2; font-size: 10px; }
+.patch-review strong { display: block; color: #fff; font: 700 14px/1.3 monospace; overflow-wrap: anywhere; }
+.patch-arrow { color: #8f7cff; font-size: 20px; }
+.confirmation-note,
+.review-only { margin-top: 12px; color: #9cadbd; }
+
+.auto-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+button {
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font: 700 10px/1.2 monospace;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+
+button:disabled { opacity: .42; cursor: not-allowed; }
+.auto-request { border: 1px solid rgba(110, 220, 255, .28); color: #aeeef6; background: rgba(0, 240, 255, .035); }
+.auto-apply { border: 1px solid #54e9bc; color: #03150f; background: #54e9bc; box-shadow: 0 0 14px rgba(84, 233, 188, .16); }
+.spinner { width: 13px; height: 13px; flex: 0 0 13px; border: 2px solid rgba(110, 220, 255, .2); border-top-color: #6edcff; border-radius: 50%; animation: spin .8s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 680px) {
+  .auto-header,
+  .auto-state { align-items: stretch; flex-direction: column; }
+  .state-badge { align-self: flex-start; white-space: normal; }
+  .patch-review { grid-template-columns: minmax(0, 1fr); }
+  .patch-arrow { transform: rotate(90deg); justify-self: start; }
+  .auto-actions { flex-direction: column; }
+  .auto-actions button,
+  .auto-state button { width: 100%; min-height: 46px; }
+}

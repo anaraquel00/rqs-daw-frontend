@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService, AudioVariant } from '../../services/audio-comparison.service';
@@ -21,6 +22,8 @@ import { DspService } from '../../services/dsp';
 import { MasteringService } from '../../services/mastering.service';
 import {
   MasteringAnalysisState,
+  MasteringAutoRecommendation,
+  MasteringAutoRecommendationRequest,
   MasteringAtmosphere,
   MasteringDeliveryTargetCapabilities,
   MasteringDestination,
@@ -30,14 +33,25 @@ import {
   MasteringV2Analysis,
   SoundCloudMode,
 } from '../../services/mastering-types';
+import {
+  confirmedMasteringAutoPatch,
+  isMasteringAutoRecommendationStale,
+} from '../../services/mastering-auto';
 import { MasteringHelpTopic, masteringEducation } from './mastering-education';
 import { PreviewWaveformComponent } from './preview-waveform';
 import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
+import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
 
 @Component({
   selector: 'app-mastering-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, PreviewWaveformComponent, AnalyzerSimpleComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PreviewWaveformComponent,
+    AnalyzerSimpleComponent,
+    DeliveryAutoComponent,
+  ],
   templateUrl: './mastering-panel.html',
   styleUrls: ['./mastering-panel.scss'],
 })
@@ -78,7 +92,14 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   readonly activeHelpTopic = signal<MasteringHelpTopic | null>(null);
   readonly guideOpen = signal(false);
   readonly configInvalidatedResult = signal(false);
+  readonly autoRecommendation = signal<MasteringAutoRecommendation | null>(null);
+  readonly autoRequestStatus = signal<'idle' | 'loading' | 'error'>('idle');
   private originalObjectUrl: string | null = null;
+  private sourceGenerationIndex = 0;
+  private readonly sourceGeneration = signal('source-0');
+  private readonly analyzerGeneration = signal('analysis-pending-0');
+  private autoRequestIndex = 0;
+  private autoRecommendationSubscription: Subscription | null = null;
 
   readonly education = computed(() => masteringEducation(this.lang.currentLang()));
   readonly capabilitiesLoading = computed(() => this.capabilities() === null && this.capabilitiesError() === null);
@@ -200,6 +221,9 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['originalFile']) {
+      this.sourceGenerationIndex += 1;
+      this.sourceGeneration.set(`source-${this.sourceGenerationIndex}`);
+      this.analyzerGeneration.set(`analysis-pending-${this.sourceGenerationIndex}`);
       this.releaseOriginalObjectUrl();
       this.configInvalidatedResult.set(false);
       if (this.originalFile && isPlatformBrowser(this.platformId)) {
@@ -209,6 +233,14 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
           this.masteringService.previewStartSeconds(),
           'MASTERING_PANEL_NG_ON_CHANGES_ORIGINAL',
         );
+      }
+    }
+
+    if (changes['analysisState'] || changes['analysisMetrics'] || changes['originalFile']) {
+      if (this.analysisState === 'success' && this.analysisMetrics) {
+        this.analyzerGeneration.set(this.sourceGeneration());
+      } else {
+        this.analyzerGeneration.set(`analysis-pending-${this.sourceGenerationIndex}`);
       }
     }
 
@@ -280,6 +312,64 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     this.notifyConfigChanged();
   }
 
+  canRequestAutoRecommendation(): boolean {
+    return this.auth.isLoggedIn()
+      && !this.isProcessing
+      && !this.isUploading
+      && this.analysisState === 'success'
+      && this.analysisMetrics !== null
+      && Boolean(this.capabilities()?.auto?.delivery_recommendation_policy_version)
+      && this.autoRequestStatus() !== 'loading';
+  }
+
+  autoUiState(): DeliveryAutoUiState {
+    const requestStatus = this.autoRequestStatus();
+    if (requestStatus === 'loading') return 'loading';
+    if (requestStatus === 'error') return 'error';
+
+    const recommendation = this.autoRecommendation();
+    if (!recommendation) return 'empty';
+    const currentRequest = this.currentAutoRequest();
+    if (!currentRequest || isMasteringAutoRecommendationStale(recommendation, currentRequest)) {
+      return 'stale';
+    }
+    if (recommendation.status === 'RECOMMENDATION_AVAILABLE') return 'recommendation';
+    if (recommendation.status === 'NO_CHANGE_RECOMMENDED') return 'no_change';
+    return 'abstain';
+  }
+
+  requestAutoRecommendation(): void {
+    if (!this.canRequestAutoRecommendation()) return;
+    const request = this.currentAutoRequest();
+    if (!request) return;
+
+    const requestIndex = ++this.autoRequestIndex;
+    this.autoRecommendationSubscription?.unsubscribe();
+    this.autoRequestStatus.set('loading');
+    this.autoRecommendationSubscription = this.dspService.recommendMasteringV2Auto(request).subscribe({
+      next: (recommendation) => {
+        if (requestIndex !== this.autoRequestIndex) return;
+        this.autoRecommendation.set(recommendation);
+        this.autoRequestStatus.set('idle');
+      },
+      error: () => {
+        if (requestIndex !== this.autoRequestIndex) return;
+        this.autoRequestStatus.set('error');
+      },
+    });
+  }
+
+  applyAutoRequestedLufs(): void {
+    const recommendation = this.autoRecommendation();
+    const currentRequest = this.currentAutoRequest();
+    if (!recommendation || !currentRequest || this.autoUiState() !== 'recommendation') return;
+
+    const patch = confirmedMasteringAutoPatch(recommendation, currentRequest, { confirmed: true });
+    if (!patch) return;
+    this.masteringService.setRequestedLufs(patch.requestedLufs);
+    this.notifyConfigChanged();
+  }
+
   toggleHelp(topic: MasteringHelpTopic): void {
     this.activeHelpTopic.set(this.activeHelpTopic() === topic ? null : topic);
   }
@@ -312,6 +402,12 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
       && this.audioComparison.previewStatus() !== 'processing'
       && !this.hasCurrentPreview()
       && !this.hasCurrentFullMaster();
+  }
+
+  canActivatePreviewAction(): boolean {
+    return this.auth.isLoggedIn()
+      ? this.canGeneratePreview()
+      : this.originalFile !== null;
   }
 
   canGenerateFullMaster(): boolean {
@@ -380,11 +476,11 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   dispararPreview(): void {
-    if (!this.canGeneratePreview()) return;
     if (!this.auth.isLoggedIn()) {
       this.auth.requestSignIn('mastering');
       return;
     }
+    if (!this.canGeneratePreview()) return;
     const previewStartSeconds = this.audioComparison.previewStart();
     this.masteringService.setPreviewStartSeconds(previewStartSeconds);
     this.configInvalidatedResult.set(false);
@@ -464,6 +560,9 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.autoRequestIndex += 1;
+    this.autoRecommendationSubscription?.unsubscribe();
+    this.autoRecommendationSubscription = null;
     this.releaseOriginalObjectUrl();
     this.audioComparison.resetAll('MASTERING_PANEL_NG_ON_DESTROY');
   }
@@ -473,6 +572,18 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     this.audioComparison.clearMasterSrc('MASTERING_PANEL_NOTIFY_CONFIG_CHANGED');
     if (hadMaster) this.configInvalidatedResult.set(true);
     this.configChanged.emit();
+  }
+
+  private currentAutoRequest(): MasteringAutoRecommendationRequest | null {
+    const policyVersion = this.capabilities()?.auto?.delivery_recommendation_policy_version;
+    if (!policyVersion) return null;
+    return {
+      source_generation: this.sourceGeneration(),
+      analyzer_generation: this.analyzerGeneration(),
+      metrics: this.analysisState === 'success' ? this.analysisMetrics : null,
+      context: this.masteringService.getRequest(),
+      expected_policy_version: policyVersion,
+    };
   }
 
   private releaseOriginalObjectUrl(): void {
