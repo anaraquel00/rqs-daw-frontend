@@ -94,6 +94,41 @@ describe('DspService Mastering V2 transport', () => {
     });
   });
 
+  it('requests a typed delivery AUTO proposal without invoking a render contract', () => {
+    const body = {
+      source_generation: 'source-7',
+      analyzer_generation: 'source-7',
+      metrics: {
+        integrated_lufs: -14.2,
+        true_peak_dbtp: -1.3,
+        rms_dbfs: -18,
+        crest_factor_db: 8,
+        loudness_range_lu: 5,
+        duration_seconds: 180,
+      },
+      context: {
+        destination: 'streaming' as const,
+        platform: 'spotify' as const,
+        soundcloudMode: 'standard' as const,
+        atmosphere: 'clear_sky' as const,
+        intensityPercent: 50,
+        requestedLufs: null,
+      },
+      expected_policy_version: 'mastering-v2-v1:delivery-auto-v1',
+    };
+
+    service.recommendMasteringV2Auto(body).subscribe(result => {
+      expect(result.status).toBe('NO_CHANGE_RECOMMENDED');
+    });
+
+    const request = http.expectOne(`${environment.baseUrl}/mastering/v2/auto/recommend`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBe(body);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({ status: 'NO_CHANGE_RECOMMENDED' });
+    http.expectNone(`${environment.baseUrl}/mastering/v2/process`);
+  });
+
   it('requests a user-owned V2 presigned URL with authentication', () => {
     service.getMasteringV2PresignedUrl('track.wav').subscribe();
 

@@ -12,6 +12,7 @@ import { MasteringV2Capabilities } from '../../services/mastering-types';
 const capabilities: MasteringV2Capabilities = {
   engine: 'rqs-core-mastering-v2',
   release: 'mastering-v2-v1',
+  auto: { delivery_recommendation_policy_version: 'mastering-v2-v1:delivery-auto-v1' },
   preview_seconds: 15,
   intensity: { min: 0, max: 100, step: 1, default: 50 },
   atmospheres: [

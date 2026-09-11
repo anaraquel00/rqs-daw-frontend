@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import {
+  MasteringAutoRecommendation,
+  MasteringAutoRecommendationRequest,
   MasteringV2Analysis,
   MasteringV2Capabilities,
   MasteringV2FinalResponse,
@@ -72,6 +74,16 @@ export class DspService {
     return this.http.post<MasteringV2Analysis>(`${this.baseUrl}/mastering/v2/analysis`, formData, {
       headers: this.masteringV2Headers(),
     });
+  }
+
+  recommendMasteringV2Auto(
+    request: MasteringAutoRecommendationRequest,
+  ): Observable<MasteringAutoRecommendation> {
+    return this.http.post<MasteringAutoRecommendation>(
+      `${this.baseUrl}/mastering/v2/auto/recommend`,
+      request,
+      { headers: this.masteringV2Headers() },
+    );
   }
 
   generateMixS3(payload: SetlistRenderRequest): Observable<SetlistRenderResponse> {
