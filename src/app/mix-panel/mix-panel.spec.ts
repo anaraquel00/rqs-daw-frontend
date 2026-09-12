@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed } from '@angular/core/testing';
-import { SafeUrl } from '@angular/platform-browser';
+import { By, SafeUrl } from '@angular/platform-browser';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 import { MixPanelComponent, RQSTrack } from './mix-panel';
 import {
@@ -11,6 +11,7 @@ import {
 import { AuthService } from '../services/auth.service';
 import { AudioComparisonService } from '../services/audio-comparison.service';
 import { AnalyticsService } from '../services/analytics.service';
+import { PreviewWaveformComponent } from '../components/mastering-panel/preview-waveform';
 
 describe('MixPanelComponent Setlist Stage 1 contract', () => {
   const session = signal<{ access_token: string; user: { id: string } } | null>({
@@ -75,6 +76,29 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     component.tracks[1].uploadState = 'ready';
     component.tracks[1].s3Key = 'uploads/user-id/setlist/track-02.wav';
     expect(component.canIgniteSetlist()).toBeTrue();
+  });
+
+  it('renders one compact non-interactive waveform for every local track', () => {
+    component.tracks = readyTracks(3);
+    fixture.detectChanges();
+
+    const waveforms = fixture.debugElement.queryAll(By.directive(PreviewWaveformComponent));
+    expect(waveforms.length).toBe(3);
+    for (const waveform of waveforms) {
+      const instance = waveform.componentInstance as PreviewWaveformComponent;
+      expect(instance.compact).toBeTrue();
+      expect(waveform.query(By.css('.preview-region'))).toBeNull();
+      expect(waveform.query(By.css('.waveform-playhead'))).toBeNull();
+    }
+  });
+
+  it('renders local waveforms without starting additional network operations', () => {
+    component.tracks = readyTracks(2);
+    fixture.detectChanges();
+
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
+    expect(generateMixS3).not.toHaveBeenCalled();
   });
 
   it('keeps Track 01 first and sends no vignette when the option is disabled', () => {

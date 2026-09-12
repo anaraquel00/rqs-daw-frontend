@@ -23,6 +23,7 @@ import type { UiLanguage } from '../services/language.service';
 import { AuthService } from '../services/auth.service';
 import { AudioComparisonService } from '../services/audio-comparison.service';
 import { AnalyticsService } from '../services/analytics.service';
+import { PreviewWaveformComponent } from '../components/mastering-panel/preview-waveform';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -41,7 +42,7 @@ export interface RQSTrack {
 
 type LocalCopyKey =
   | 'metadataUnknown'
-  | 'waveformNotAnalyzed'
+  | 'waveformLocal'
   | 'uploading'
   | 'ready'
   | 'uploadError'
@@ -58,7 +59,7 @@ type LocalCopyKey =
 const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
   en: {
     metadataUnknown: 'Duration measured locally · sample rate and bit depth not analyzed',
-    waveformNotAnalyzed: 'Waveform not analyzed — local playback preview only',
+    waveformLocal: 'Local waveform · generated in this browser',
     uploading: 'Uploading securely…',
     ready: 'Secure upload ready',
     uploadError: 'Upload failed',
@@ -74,7 +75,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
   },
   pt: {
     metadataUnknown: 'Duração medida localmente · sample rate e bit depth não analisados',
-    waveformNotAnalyzed: 'Waveform não analisada — apenas preview local',
+    waveformLocal: 'Forma de onda local · gerada neste navegador',
     uploading: 'Enviando com segurança…',
     ready: 'Upload seguro pronto',
     uploadError: 'Falha no upload',
@@ -90,7 +91,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
   },
   pl: {
     metadataUnknown: 'Czas odczytany lokalnie · sample rate i bit depth nieanalizowane',
-    waveformNotAnalyzed: 'Waveform nieanalizowany — tylko lokalny odsłuch',
+    waveformLocal: 'Lokalny przebieg fali · wygenerowany w tej przeglądarce',
     uploading: 'Bezpieczne wysyłanie…',
     ready: 'Bezpieczny upload gotowy',
     uploadError: 'Błąd uploadu',
@@ -106,7 +107,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
   },
   fr: {
     metadataUnknown: 'Durée mesurée localement · fréquence et profondeur non analysées',
-    waveformNotAnalyzed: 'Waveform non analysée — aperçu local uniquement',
+    waveformLocal: 'Forme d’onde locale · générée dans ce navigateur',
     uploading: 'Téléversement sécurisé…',
     ready: 'Téléversement sécurisé prêt',
     uploadError: 'Échec du téléversement',
@@ -125,7 +126,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
 @Component({
   selector: 'app-mix-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PreviewWaveformComponent],
   templateUrl: './mix-panel.html',
   styleUrls: ['./mix-panel.scss'],
 })

@@ -182,8 +182,13 @@
               </div>
             </div>
 
-            <div class="waveform-truthful-state">
-              {{ localCopy('waveformNotAnalyzed') }}
+            <div class="track-waveform">
+              <app-preview-waveform
+                [file]="track.file"
+                [duration]="track.duration"
+                [compact]="true">
+              </app-preview-waveform>
+              <span class="waveform-truthful-state">{{ localCopy('waveformLocal') }}</span>
             </div>
 
             @if (i < tracks.length - 1) {

@@ -28,6 +28,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   @Input() previewStart = 0;
   @Input() previewEnd = 15;
   @Input() disabled = false;
+  @Input() compact = false;
 
   @Output() rangeStartChange = new EventEmitter<number>();
   @Output() seekTo = new EventEmitter<number>();
@@ -93,7 +94,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   onRegionPointerDown(event: PointerEvent): void {
-    if (this.disabled || this.duration <= this.rangeSeconds() + 0.001 || !this.waveformHost) return;
+    if (this.compact || this.disabled || this.duration <= this.rangeSeconds() + 0.001 || !this.waveformHost) return;
     event.preventDefault();
     event.stopPropagation();
 
@@ -106,14 +107,14 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   onHostPointerMove(event: PointerEvent): void {
-    if (!this.dragging || this.dragPointerId !== event.pointerId) return;
+    if (this.compact || !this.dragging || this.dragPointerId !== event.pointerId) return;
     event.preventDefault();
     const next = this.normalizeRangeStart(this.secondsAtClientX(event.clientX) - this.dragOffsetSeconds);
     if (Math.abs(next - this.previewStart) >= 0.005) this.rangeStartChange.emit(next);
   }
 
   onHostPointerUp(event: PointerEvent): void {
-    if (!this.dragging || this.dragPointerId !== event.pointerId || !this.waveformHost) return;
+    if (this.compact || !this.dragging || this.dragPointerId !== event.pointerId || !this.waveformHost) return;
     const host = this.waveformHost.nativeElement;
     if (host.hasPointerCapture(event.pointerId)) host.releasePointerCapture(event.pointerId);
     this.dragging = false;
@@ -121,7 +122,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   onHostPointerDown(event: PointerEvent): void {
-    if (this.disabled || this.dragging) return;
+    if (this.compact || this.disabled || this.dragging) return;
     this.seekTo.emit(this.secondsAtClientX(event.clientX));
   }
 
