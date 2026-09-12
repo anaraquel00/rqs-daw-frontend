@@ -22,6 +22,7 @@ export class RqsUplinkEngineComponent {
   compiledLink = signal<string>('');
   copied = signal<boolean>(false);
   creating = signal<boolean>(false);
+  readonly createOpen = signal(false);
 
   detectedPlatform = computed(() => {
     return this.deepLinkService.detectPlatform(this.targetUrl());
@@ -43,7 +44,12 @@ export class RqsUplinkEngineComponent {
       this.errorMessage.set('');
       this.copied.set(false);
       this.creating.set(false);
+      this.createOpen.set(false);
     });
+  }
+
+  toggleCreate(): void {
+    if (!this.creating()) this.createOpen.update(open => !open);
   }
 
   async compileLink(): Promise<void> {

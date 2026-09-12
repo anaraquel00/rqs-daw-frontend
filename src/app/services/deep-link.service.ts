@@ -39,6 +39,12 @@ export interface DeepLinkCreateResult {
   stale?: boolean;
 }
 
+export interface DeepLinkDeleteResult {
+  success: boolean;
+  error?: string;
+  stale?: boolean;
+}
+
 interface SessionContext {
   userId: string;
   epoch: number;
@@ -146,6 +152,29 @@ export class DeepLinkService {
     } catch {
       if (!this.isCurrentSession(context)) return { success: false, stale: true };
       return { success: false, error: this.lang.tr().UPLINK_CREATE_FAILED };
+    }
+  }
+
+  async deleteLink(linkId: string): Promise<DeepLinkDeleteResult> {
+    const context = this.captureSessionContext();
+    if (!context) return { success: false, error: this.lang.tr().UPLINK_LOGIN_REQUIRED };
+
+    try {
+      const { data, error } = await this.auth.getSupabaseClient().rpc('delete_rqs_uplink', {
+        link_id: linkId
+      });
+      if (!this.isCurrentSession(context)) return { success: false, stale: true };
+      if (error || data !== true) {
+        return { success: false, error: this.lang.tr().UPLINK_DELETE_FAILED };
+      }
+
+      await this.refreshLinks();
+      if (!this.isCurrentSession(context)) return { success: false, stale: true };
+      if (this.error()) return { success: false, error: this.lang.tr().UPLINK_LOAD_FAILED };
+      return { success: true };
+    } catch {
+      if (!this.isCurrentSession(context)) return { success: false, stale: true };
+      return { success: false, error: this.lang.tr().UPLINK_DELETE_FAILED };
     }
   }
 

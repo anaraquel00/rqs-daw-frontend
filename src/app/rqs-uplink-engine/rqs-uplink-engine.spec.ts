@@ -3,9 +3,37 @@ import { TestBed } from '@angular/core/testing';
 import { AnalyticsService } from '../services/analytics.service';
 import { DeepLinkService } from '../services/deep-link.service';
 import { LanguageService } from '../services/language.service';
+import { EN_TRANSLATIONS } from '../services/language.service';
 import { RqsUplinkEngineComponent } from './rqs-uplink-engine';
 
 describe('RqsUplinkEngineComponent', () => {
+  it('keeps creation collapsed by default and opens and closes it without creating a link', async () => {
+    const create = jasmine.createSpy();
+    await TestBed.configureTestingModule({
+      imports: [RqsUplinkEngineComponent],
+      providers: [
+        { provide: DeepLinkService, useValue: { detectPlatform: () => null, sessionEpoch: signal(0), compileAndRegisterLink: create } },
+        { provide: LanguageService, useValue: { tr: () => EN_TRANSLATIONS } },
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } }
+      ]
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(RqsUplinkEngineComponent);
+    fixture.detectChanges();
+    const toggle: HTMLButtonElement = fixture.nativeElement.querySelector('.create-toggle');
+    const form: HTMLElement = fixture.nativeElement.querySelector('#uplink-create-form');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(form.hidden).toBeTrue();
+    toggle.click();
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(form.hidden).toBeFalse();
+    toggle.click();
+    fixture.detectChanges();
+    expect(form.hidden).toBeTrue();
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('always clears creating after an unexpected dependency rejection', async () => {
     const deepLinkService = {
       detectPlatform: () => null,

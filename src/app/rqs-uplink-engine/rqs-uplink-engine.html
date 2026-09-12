@@ -1,13 +1,21 @@
-<div class="rqs-linktwin-panel">
-  <h3>🔗 {{ lang.tr().uplinkTitle }}</h3>
-
-  <div class="status-badge">
-    <span class="pulse">●</span> {{ lang.tr().uplinkBadge }}
+<header class="uplink-page-header">
+  <div>
+    <h1>{{ lang.tr().UPLINK_PAGE_TITLE }}</h1>
+    <p>{{ lang.tr().UPLINK_PAGE_DESC }}</p>
   </div>
+  <button class="create-toggle" type="button" [disabled]="creating()" [attr.aria-expanded]="createOpen()" aria-controls="uplink-create-form" (click)="toggleCreate()">
+    {{ createOpen() ? lang.tr().UPLINK_HIDE_CREATE : lang.tr().UPLINK_CREATE_LINK }}
+  </button>
+</header>
 
-  <p class="desc">{{ lang.tr().uplinkDesc }}</p>
+<div class="rqs-linktwin-panel" id="uplink-create-form" [hidden]="!createOpen()">
+  <h2>{{ lang.tr().UPLINK_CREATE_LINK }}</h2>
+  <details class="uplink-info">
+    <summary>{{ lang.tr().UPLINK_ABOUT }}</summary>
+    <p>{{ lang.tr().uplinkDesc }}</p>
+  </details>
 
-  <div class="platform-indicators">
+  <div class="platform-indicators" aria-hidden="true">
     <span class="platform-icon" [class.active]="detectedPlatform() === 'spotify'">Spotify</span>
     <span class="platform-icon" [class.active]="detectedPlatform() === 'soundcloud'">SoundCloud</span>
     <span class="platform-icon" [class.active]="detectedPlatform() === 'youtube'">YouTube</span>
@@ -15,35 +23,25 @@
   </div>
 
   <div class="input-group">
-    <label>{{ lang.tr().urlLabel }}</label>
-    <input
-      type="text"
-      [ngModel]="targetUrl()"
-      (ngModelChange)="targetUrl.set($event)"
-      placeholder="https://open.spotify.com/track/...">
+    <label for="uplink-target-url">{{ lang.tr().UPLINK_DESTINATION }}</label>
+    <input id="uplink-target-url" type="url" [ngModel]="targetUrl()" (ngModelChange)="targetUrl.set($event)" placeholder="https://open.spotify.com/track/...">
   </div>
 
   <div class="input-group">
-    <label>{{ lang.tr().slugLabel }}</label>
-    <input
-      type="text"
-      [ngModel]="customSlug()"
-      (ngModelChange)="customSlug.set($event)"
-      placeholder="ex: minha-nova-faixa">
+    <label for="uplink-custom-slug">{{ lang.tr().slugLabel }}</label>
+    <input id="uplink-custom-slug" type="text" [ngModel]="customSlug()" (ngModelChange)="customSlug.set($event)" placeholder="factory-reset">
   </div>
 
-  <button class="btn-magenta" [disabled]="creating()" (click)="compileLink()">{{ lang.tr().compileBtn }}</button>
+  <button class="create-submit" type="button" [disabled]="creating()" (click)="compileLink()">{{ lang.tr().UPLINK_CREATE_LINK }}</button>
 
- @if (errorMessage()) {
-    <div class="error-banner" style="background: rgba(255, 0, 85, 0.15); border: 1px solid #ff0055; color: #ff0055; padding: 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px;">
-      ⚠️ {{ errorMessage() }}
-    </div>
+  @if (errorMessage()) {
+    <p class="error-banner" role="alert">{{ errorMessage() }}</p>
   }
 
   @if (compiledLink()) {
-    <div class="output-box">
+    <div class="output-box" role="status">
       <span class="url-result">{{ compiledLink() }}</span>
-      <button class="btn-copy" (click)="copyToClipboard()">
+      <button class="btn-copy" type="button" (click)="copyToClipboard()">
         {{ copied() ? lang.tr().copiedLink : lang.tr().copyLink }}
       </button>
     </div>

@@ -10,6 +10,7 @@ describe('DeepLinkService', () => {
   let rpc: jasmine.Spy;
   let select: jasmine.Spy;
   let order: jasmine.Spy;
+  let from: jasmine.Spy;
 
   beforeEach(() => {
     session.set({ user: { id: 'owner-a' } });
@@ -22,7 +23,8 @@ describe('DeepLinkService', () => {
     order = jasmine.createSpy().and.resolveTo({ data: rows, error: null });
     select = jasmine.createSpy().and.returnValue({ order });
     rpc = jasmine.createSpy().and.resolveTo({ data: rows[0], error: null });
-    const client = { from: () => ({ select }), rpc };
+    from = jasmine.createSpy().and.returnValue({ select });
+    const client = { from, rpc };
 
     TestBed.configureTestingModule({
       providers: [
@@ -40,7 +42,8 @@ describe('DeepLinkService', () => {
           UPLINK_INVALID_SLUG: 'INVALID_SLUG',
           UPLINK_SLUG_TAKEN: 'SLUG_TAKEN',
           UPLINK_CREATE_FAILED: 'CREATE_FAILED',
-          UPLINK_LOAD_FAILED: 'LOAD_FAILED'
+          UPLINK_LOAD_FAILED: 'LOAD_FAILED',
+          UPLINK_DELETE_FAILED: 'DELETE_FAILED'
         })}}
       ]
     });
@@ -203,6 +206,52 @@ describe('DeepLinkService', () => {
     const service = TestBed.inject(DeepLinkService);
     const result = await service.compileAndRegisterLink('https://example.com', 'slug');
     expect(result).toEqual({ success: false, error: 'CREATE_FAILED' });
+  });
+
+  it('deletes through the owner RPC only, refreshes list, and restores the Free slot', async () => {
+    const service = TestBed.inject(DeepLinkService);
+    rows.push(uplinkRow('link-2', 'second'), uplinkRow('link-3', 'third'));
+    await service.refreshLinks();
+    expect(service.limitReached()).toBeTrue();
+    rows.shift();
+    rpc.and.resolveTo({ data: true, error: null });
+    const result = await service.deleteLink('link-1');
+    expect(result).toEqual({ success: true });
+    expect(rpc).toHaveBeenCalledWith('delete_rqs_uplink', { link_id: 'link-1' });
+    expect(from).toHaveBeenCalledWith('rqs_uplinks');
+    expect(service.links().map(link => link.id)).toEqual(['link-2', 'link-3']);
+    expect(service.limitReached()).toBeFalse();
+    expect(Object.keys(from.calls.mostRecent().returnValue)).not.toContain('delete');
+  });
+
+  it('preserves the list on a rejected owner-only Delete and never reveals database details', async () => {
+    const service = TestBed.inject(DeepLinkService);
+    await service.refreshLinks();
+    rpc.and.resolveTo({ data: null, error: { message: 'UPLINK_DELETE_NOT_FOUND_OR_NOT_OWNED: internal' } });
+    expect(await service.deleteLink('link-1')).toEqual({ success: false, error: 'DELETE_FAILED' });
+    expect(service.links().map(link => link.id)).toEqual(['link-1']);
+  });
+
+  it('does not call the Delete RPC anonymously', async () => {
+    const service = TestBed.inject(DeepLinkService);
+    session.set(null);
+    expect(await service.deleteLink('link-1')).toEqual({ success: false, error: 'LOGIN_REQUIRED' });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('does not refresh or expose feedback for a Delete completing after user switch', async () => {
+    const pending = deferred<{ data: boolean; error: null }>();
+    rpc.and.returnValue(pending.promise);
+    const service = TestBed.inject(DeepLinkService);
+    TestBed.flushEffects();
+    const request = service.deleteLink('link-a');
+    session.set({ user: { id: 'owner-b' } });
+    TestBed.flushEffects();
+    const calls = from.calls.count();
+    pending.resolve({ data: true, error: null });
+    expect(await request).toEqual({ success: false, stale: true });
+    expect(from.calls.count()).toBe(calls);
+    expect(service.links().every(link => link.id !== 'link-a')).toBeTrue();
   });
 
   it('does not access Supabase or browser storage during SSR', async () => {
