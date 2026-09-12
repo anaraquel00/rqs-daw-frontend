@@ -23,6 +23,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   let generateMixS3: jasmine.Spy;
   let getSetlistPresignedUrl: jasmine.Spy;
   let uploadToS3: jasmine.Spy;
+  let requestSignIn: jasmine.Spy;
   let analytics: { trackEvent: jasmine.Spy };
   let audioComparison: {
     audioProcessed: ReturnType<typeof signal<boolean>>;
@@ -35,6 +36,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     generateMixS3 = jasmine.createSpy('generateMixS3').and.returnValue(of(renderResponse()));
     getSetlistPresignedUrl = jasmine.createSpy('getSetlistPresignedUrl').and.returnValue(NEVER);
     uploadToS3 = jasmine.createSpy('uploadToS3').and.returnValue(NEVER);
+    requestSignIn = jasmine.createSpy('requestSignIn');
     analytics = { trackEvent: jasmine.createSpy('trackEvent') };
     audioComparison = {
       audioProcessed: signal(false),
@@ -50,7 +52,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
           provide: DspService,
           useValue: { generateMixS3, getSetlistPresignedUrl, uploadToS3 },
         },
-        { provide: AuthService, useValue: { session, userRole } },
+        { provide: AuthService, useValue: { session, userRole, requestSignIn } },
         { provide: AudioComparisonService, useValue: audioComparison },
         { provide: AnalyticsService, useValue: analytics },
       ],
@@ -175,6 +177,75 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.tracks.length).toBe(3);
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('keeps anonymous track selection local and opens auth without presign or upload', () => {
+    session.set(null);
+    stubTrackCreation();
+
+    (component as any).addFiles(audioFiles(1));
+
+    expect(component.tracks.length).toBe(1);
+    expect(component.tracks[0].uploadState).toBe('idle');
+    expect(requestSignIn).toHaveBeenCalledWith('general');
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('does not presign while session restoration has no access token', () => {
+    session.set({ access_token: '   ', user: { id: 'user-id' } });
+    stubTrackCreation();
+
+    (component as any).addFiles(audioFiles(1));
+
+    expect(requestSignIn).toHaveBeenCalledWith('general');
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('re-reads the current session token when retrying after authentication', () => {
+    const pendingTrack = track('retry.wav', 60, 'error', null);
+    component.tracks = [pendingTrack];
+    session.set(null);
+
+    component.retryTrackUpload(0);
+
+    expect(requestSignIn).toHaveBeenCalledWith('general');
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(pendingTrack.uploadState).toBe('error');
+
+    session.set({ access_token: 'current-token', user: { id: 'user-id' } });
+    component.retryTrackUpload(0);
+
+    expect(getSetlistPresignedUrl).toHaveBeenCalledOnceWith('retry.wav');
+    expect(pendingTrack.uploadState).toBe('uploading');
+  });
+
+  it('protects vignette upload with the same authenticated-session gate', () => {
+    session.set(null);
+    stubTrackCreation();
+    const vignette = new File(['audio'], 'id-drop.wav', { type: 'audio/wav' });
+    const input = { files: [vignette], value: 'selected' } as unknown as HTMLInputElement;
+
+    component.onVignetteSelect({ target: input } as unknown as Event);
+
+    expect(component.vignetteTrack?.uploadState).toBe('idle');
+    expect(requestSignIn).toHaveBeenCalledWith('general');
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('blocks generate-s3 before processing-state mutation when authentication is unavailable', () => {
+    component.tracks = readyTracks(2);
+    component.setlistError = 'preserved';
+    session.set(null);
+
+    component.igniteSetlist();
+
+    expect(requestSignIn).toHaveBeenCalledWith('general');
+    expect(generateMixS3).not.toHaveBeenCalled();
+    expect(component.isProcessing).toBeFalse();
+    expect(component.setlistError).toBe('preserved');
   });
 
   it('allows replacement while Free already has three music tracks', () => {

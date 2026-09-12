@@ -299,6 +299,7 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   private uploadTrack(track: RQSTrack): void {
+    if (!this.hasAuthenticatedBuildSession()) return;
     const attempt = ++track.uploadAttempt;
     track.s3Key = null;
     track.uploadError = null;
@@ -321,6 +322,13 @@ export class MixPanelComponent implements OnDestroy {
         },
         error: () => this.markUploadError(track, attempt),
       });
+  }
+
+  private hasAuthenticatedBuildSession(): boolean {
+    const session = this.auth.session();
+    if (session?.user?.id && session.access_token?.trim()) return true;
+    this.auth.requestSignIn('general');
+    return false;
   }
 
   private isCurrentAttempt(track: RQSTrack, attempt: number): boolean {
@@ -520,6 +528,7 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   igniteSetlist(): void {
+    if (!this.hasAuthenticatedBuildSession()) return;
     this.cancelActiveRender();
     if (!this.canIgniteSetlist()) {
       this.setlistError = this.localCopy('renderBlocked');
