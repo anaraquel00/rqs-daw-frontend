@@ -76,18 +76,25 @@
     </div>
 
     <div class="curve-selection-console">
-      <span class="console-label">{{ lang.tr().CROSSFADE_CURVE_LABEL }}</span>
+      <span class="console-label">{{ transitionCopy('defaults') }}</span>
+      <label class="default-duration">{{ transitionCopy('duration') }}
+        <input type="number" min="0.5" max="15" step="0.5" [ngModel]="defaultDuration"
+          (ngModelChange)="updateDefaults($event, activeCurve)">
+        {{ lang.tr().SECONDS }}
+      </label>
+      <span>{{ transitionCopy('curve') }}</span>
       <div class="btn-group-match">
-        <button type="button" [class.active]="activeCurve === 'equal-power'" (click)="activeCurve = 'equal-power'">
+        <button type="button" [class.active]="activeCurve === 'equal-power'" (click)="updateDefaults(defaultDuration, 'equal-power')">
           {{ lang.tr().CURVE_EQUAL_POWER }}
         </button>
-        <button type="button" [class.active]="activeCurve === 'linear'" (click)="activeCurve = 'linear'">
+        <button type="button" [class.active]="activeCurve === 'linear'" (click)="updateDefaults(defaultDuration, 'linear')">
           {{ lang.tr().CURVE_LINEAR }}
         </button>
-        <button type="button" [class.active]="activeCurve === 'fast-cut'" (click)="activeCurve = 'fast-cut'">
+        <button type="button" [class.active]="activeCurve === 'fast-cut'" (click)="updateDefaults(defaultDuration, 'fast-cut')">
           {{ lang.tr().CURVE_FAST_CUT }}
         </button>
       </div>
+      <button type="button" class="btn-preview-transition" (click)="applyDefaultsToAll()">{{ transitionCopy('apply') }}</button>
     </div>
 
     <section class="vignette-console" aria-labelledby="vignette-title">
@@ -147,7 +154,7 @@
     <div class="track-list">
       <h3>{{ lang.tr().TIMELINE_TITLE }}</h3>
       <ul>
-        @for (track of tracks; track track.rawUrl; let i = $index) {
+        @for (track of tracks; track track.id; let i = $index) {
           <li class="track-item">
             <div class="track-main-row">
               <div class="track-info">
@@ -183,47 +190,62 @@
             </div>
 
             <div class="track-waveform">
+              @let incoming = transitionRegion(i, 'in');
+              @let outgoing = transitionRegion(i, 'out');
+              <div class="transition-waveform">
               <app-preview-waveform
                 [file]="track.file"
                 [duration]="track.duration"
                 [compact]="true">
               </app-preview-waveform>
+                <div class="transition-shades" aria-hidden="true">
+                  @if (incoming) {
+                    <div class="transition-shade transition-in" [style.left.%]="incoming.left" [style.width.%]="incoming.width"></div>
+                  }
+                  @if (outgoing) {
+                    <div class="transition-shade transition-out" [style.left.%]="outgoing.left" [style.width.%]="outgoing.width"></div>
+                  }
+                </div>
+              </div>
+              <div class="transition-region-labels">
+                @if (incoming) { <span class="region-in" [title]="incoming.label">{{ incoming.label }}</span> }
+                @if (outgoing) { <span class="region-out" [title]="outgoing.label">{{ outgoing.label }}</span> }
+              </div>
               <span class="waveform-truthful-state">{{ localCopy('waveformLocal') }}</span>
             </div>
 
-            @if (i < tracks.length - 1) {
-              <div class="custom-crossfade-bridge">
-                <div class="bridge-line"></div>
-                <div class="bridge-actions">
-                  <label>{{ lang.tr().CROSSFADE_TO }} [{{ i + 2 }}]:</label>
-                  <button
-                    type="button"
-                    class="btn-preview-transition"
-                    (click)="previewTransition(i)"
-                    [disabled]="isProcessing || previewingIndex === i || track.duration <= 0 || tracks[i + 1].duration <= 0">
-                    🔁 {{ previewingIndex === i ? lang.tr().PREVIEW_ACTIVE : lang.tr().BTN_PREVIEW_TRANSITION }}
-                  </button>
-                </div>
-                <div class="slider-container-mini">
-                  <input
-                    type="range" min="0.5" max="15" step="0.5"
-                    [(ngModel)]="track.crossfadeNext"
-                    (ngModelChange)="updateCrossfadeView()"
-                    class="cyber-slider-mini"
-                    title="Crossfade"
-                    aria-label="Crossfade in seconds">
-                  <input
-                    type="number" min="0.5" max="15" step="0.5"
-                    [(ngModel)]="track.crossfadeNext"
-                    (ngModelChange)="updateCrossfadeView()"
-                    class="cyber-number-input-mini"
-                    title="Crossfade value"
-                    aria-label="Crossfade value in seconds">
-                  <span class="sec-label">{{ lang.tr().SECONDS }}</span>
-                </div>
-              </div>
-            }
           </li>
+          @if (transitions[i]; as transition) {
+            <li class="transition-item">
+              <div class="transition-summary">
+                <strong>{{ transitionCopy('transition') }} {{ i + 1 }} → {{ i + 2 }}</strong>
+                <span>{{ transition.duration }} {{ lang.tr().SECONDS }} · {{ curveLabel(transition.curve) }}</span>
+                <span class="transition-inheritance">{{ transitionCopy(transition.usesDefault ? 'inherited' : 'custom') }}</span>
+                <button type="button" class="btn-preview-transition" (click)="previewTransition(i)"
+                  [disabled]="!canPreviewTransition(i) || previewingIndex === i">{{ lang.tr().BTN_PREVIEW_TRANSITION }}</button>
+                <button type="button" (click)="toggleTransition(transition)"
+                  [attr.aria-expanded]="expandedTransition === transitionKey(transition)"
+                  [attr.aria-controls]="'transition-' + transition.fromTrackId">{{ transitionCopy('edit') }}</button>
+              </div>
+              @if (expandedTransition === transitionKey(transition)) {
+                <div class="transition-editor" [id]="'transition-' + transition.fromTrackId">
+                  <label>{{ transitionCopy('duration') }}
+                    <input type="number" min="0.5" max="15" step="0.5" [ngModel]="transition.duration"
+                      (ngModelChange)="editTransition(i, $event, transition.curve)">
+                  </label>
+                  <p>{{ transitionCopy('limits') }}</p>
+                  <label>{{ transitionCopy('curve') }}
+                    <select [ngModel]="transition.curve" (ngModelChange)="editTransition(i, transition.duration, $event)">
+                      <option value="equal-power">{{ lang.tr().CURVE_EQUAL_POWER }}</option>
+                      <option value="linear">{{ lang.tr().CURVE_LINEAR }}</option>
+                      <option value="fast-cut">{{ lang.tr().CURVE_FAST_CUT }}</option>
+                    </select>
+                  </label>
+                  <button type="button" (click)="resetTransition(i)">{{ transitionCopy('reset') }}</button>
+                </div>
+              }
+            </li>
+          }
         }
       </ul>
     </div>

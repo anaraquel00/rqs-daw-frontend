@@ -28,6 +28,7 @@ import { PreviewWaveformComponent } from '../components/mastering-panel/preview-
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
 export interface RQSTrack {
+  id: string;
   file: File;
   name: string;
   crossfadeNext: number;
@@ -38,6 +39,14 @@ export interface RQSTrack {
   uploadState: SetlistUploadState;
   uploadError: string | null;
   uploadAttempt: number;
+}
+
+export interface SetlistTransition {
+  fromTrackId: string;
+  toTrackId: string;
+  duration: number;
+  curve: SetlistCurve;
+  usesDefault: boolean;
 }
 
 type LocalCopyKey =
@@ -123,6 +132,13 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
   },
 };
 
+const TRANSITION_COPY = {
+  en: { defaults: 'Default transition', duration: 'Duration', curve: 'Curve', apply: 'Apply to all transitions', transition: 'Transition', edit: 'Edit', reset: 'Reset to default', inherited: 'Default', custom: 'Custom', limits: '0.5–15 seconds · shorter than both adjacent tracks' },
+  pt: { defaults: 'Transição padrão', duration: 'Duração', curve: 'Curva', apply: 'Aplicar a todas as transições', transition: 'Transição', edit: 'Editar', reset: 'Restaurar padrão', inherited: 'Padrão', custom: 'Personalizada', limits: '0,5–15 segundos · menor que ambas as faixas adjacentes' },
+  pl: { defaults: 'Domyślne przejście', duration: 'Czas', curve: 'Krzywa', apply: 'Zastosuj do wszystkich przejść', transition: 'Przejście', edit: 'Edytuj', reset: 'Przywróć domyślne', inherited: 'Domyślne', custom: 'Własne', limits: '0,5–15 sekund · krócej niż oba sąsiednie utwory' },
+  fr: { defaults: 'Transition par défaut', duration: 'Durée', curve: 'Courbe', apply: 'Appliquer à toutes les transitions', transition: 'Transition', edit: 'Modifier', reset: 'Rétablir les valeurs par défaut', inherited: 'Par défaut', custom: 'Personnalisée', limits: '0,5–15 secondes · plus court que les deux pistes adjacentes' },
+};
+
 @Component({
   selector: 'app-mix-panel',
   standalone: true,
@@ -139,7 +155,15 @@ export class MixPanelComponent implements OnDestroy {
   readonly auth = inject(AuthService);
   private readonly analytics = inject(AnalyticsService);
 
-  tracks: RQSTrack[] = [];
+  private currentTracks: RQSTrack[] = [];
+  transitions: SetlistTransition[] = [];
+  defaultDuration = 8;
+  expandedTransition: string | null = null;
+  get tracks(): RQSTrack[] { return this.currentTracks; }
+  set tracks(value: RQSTrack[]) {
+    this.currentTracks = value;
+    this.reconcileTransitions();
+  }
   vignetteEnabled = false;
   vignetteTrack: RQSTrack | null = null;
   isProcessing = false;
@@ -164,6 +188,89 @@ export class MixPanelComponent implements OnDestroy {
   private activeRenderSubscription: Subscription | null = null;
   private renderAttempt = 0;
   private successResetTimer: ReturnType<typeof setTimeout> | null = null;
+  private previewAttempt = 0;
+
+  reconcileTransitions(): void {
+    const previous = new Map(this.transitions.map(t => [this.transitionKey(t), t]));
+    this.transitions = this.tracks.slice(0, -1).map((track, i) => {
+      const pair = { fromTrackId: track.id, toTrackId: this.tracks[i + 1].id };
+      return previous.get(this.transitionKey(pair)) ?? {
+        ...pair, duration: this.defaultDuration, curve: this.activeCurve, usesDefault: true,
+      };
+    });
+    if (!this.transitions.some(t => this.transitionKey(t) === this.expandedTransition)) {
+      this.expandedTransition = null;
+    }
+  }
+
+  transitionKey(t: Pick<SetlistTransition, 'fromTrackId' | 'toTrackId'>): string {
+    return `${t.fromTrackId}:${t.toTrackId}`;
+  }
+
+  transitionRegion(index: number, direction: 'in' | 'out') {
+    const track = this.tracks[index];
+    const transition = this.transitions[direction === 'in' ? index - 1 : index];
+    if (!track || !transition || !Number.isFinite(track.duration) || track.duration <= 0
+      || !Number.isFinite(transition.duration) || transition.duration <= 0
+      || (direction === 'in' ? transition.toTrackId : transition.fromTrackId) !== track.id) return null;
+    const seconds = Math.min(track.duration, transition.duration);
+    const start = direction === 'in' ? 0 : track.duration - seconds;
+    const end = start + seconds;
+    const labels = {
+      en: { in: 'Transition in', out: 'Transition out' },
+      pt: { in: 'Entrada da transição', out: 'Saída da transição' },
+      pl: { in: 'Wejście przejścia', out: 'Wyjście przejścia' },
+      fr: { in: 'Entrée de transition', out: 'Sortie de transition' },
+    };
+    const label = labels[this.lang.currentLang()][direction];
+    return { start, end, seconds, left: 100 * start / track.duration,
+      width: 100 * seconds / track.duration,
+      label: `${label}: ${seconds} s · ${this.formatDuration(start)} → ${this.formatDuration(end)}` };
+  }
+
+  updateDefaults(duration: number, curve: SetlistCurve): void {
+    this.stopTransitionPreview();
+    this.defaultDuration = Number(duration);
+    this.activeCurve = curve;
+    this.transitions = this.transitions.map(t => t.usesDefault
+      ? { ...t, duration: this.defaultDuration, curve } : t);
+  }
+
+  editTransition(index: number, duration: number, curve: SetlistCurve): void {
+    if (!this.transitions[index]) return;
+    this.stopTransitionPreview();
+    this.transitions = this.transitions.map((t, i) => i === index
+      ? { ...t, duration: Number(duration), curve, usesDefault: false } : t);
+  }
+
+  resetTransition(index: number): void {
+    this.stopTransitionPreview();
+    this.transitions = this.transitions.map((t, i) => i === index
+      ? { ...t, duration: this.defaultDuration, curve: this.activeCurve, usesDefault: true } : t);
+  }
+
+  applyDefaultsToAll(): void {
+    this.stopTransitionPreview();
+    this.transitions = this.transitions.map(t => ({
+      ...t, duration: this.defaultDuration, curve: this.activeCurve, usesDefault: true,
+    }));
+  }
+
+  toggleTransition(t: SetlistTransition): void {
+    const key = this.transitionKey(t);
+    this.expandedTransition = this.expandedTransition === key ? null : key;
+  }
+
+  canPreviewTransition(index: number): boolean {
+    const t = this.transitions[index];
+    const a = this.tracks[index];
+    const b = this.tracks[index + 1];
+    return !this.isProcessing && !!t && !!a && !!b
+      && t.fromTrackId === a.id && t.toTrackId === b.id
+      && Number.isFinite(t.duration) && t.duration >= 0.5 && t.duration <= 15
+      && t.duration < Math.min(a.duration, b.duration)
+      && ['equal-power', 'linear', 'fast-cut'].includes(t.curve);
+  }
 
   constructor() {
     afterNextRender(() => this.initializeTransitionPlayers());
@@ -179,6 +286,16 @@ export class MixPanelComponent implements OnDestroy {
 
   localCopy(key: LocalCopyKey): string {
     return LOCAL_COPY[this.lang.currentLang()][key];
+  }
+
+  transitionCopy(key: keyof typeof TRANSITION_COPY.en): string {
+    return TRANSITION_COPY[this.lang.currentLang()][key];
+  }
+
+  curveLabel(curve: SetlistCurve): string {
+    const copy = this.lang.tr();
+    return curve === 'linear' ? copy.CURVE_LINEAR
+      : curve === 'fast-cut' ? copy.CURVE_FAST_CUT : copy.CURVE_EQUAL_POWER;
   }
 
   private initializeTransitionPlayers(): void {
@@ -235,6 +352,8 @@ export class MixPanelComponent implements OnDestroy {
       this.tracks.push(track);
       this.uploadTrack(track);
     });
+    this.tracks = [...this.tracks];
+    this.stopTransitionPreview();
     this.setlistError = validFiles.length > acceptedFiles.length
       ? this.trackLimitSelectionMessage()
       : null;
@@ -261,8 +380,10 @@ export class MixPanelComponent implements OnDestroy {
     input.value = '';
     if (!file || !/\.(wav|mp3)$/i.test(file.name) || !this.tracks[index]) return;
     const previous = this.tracks[index];
+    this.stopTransitionPreview();
     this.disposeTrack(previous);
     const replacement = this.createTrack(file);
+    replacement.id = previous.id;
     replacement.crossfadeNext = previous.crossfadeNext;
     this.tracks[index] = replacement;
     this.tracks = [...this.tracks];
@@ -272,6 +393,7 @@ export class MixPanelComponent implements OnDestroy {
   private createTrack(file: File): RQSTrack {
     const rawUrl = URL.createObjectURL(file);
     const track: RQSTrack = {
+      id: crypto.randomUUID(),
       file,
       name: file.name,
       crossfadeNext: 8,
@@ -364,7 +486,7 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   calculateCrossfadeDuration(): number {
-    return this.tracks.slice(0, -1).reduce((sum, track) => sum + Number(track.crossfadeNext || 0), 0);
+    return this.transitions.reduce((sum, transition) => sum + transition.duration, 0);
   }
 
   calculateEstimatedOutputDuration(): number {
@@ -389,25 +511,25 @@ export class MixPanelComponent implements OnDestroy {
     if (this.vignetteEnabled && (!this.vignetteTrack || this.vignetteTrack.uploadState !== 'ready' || !this.vignetteTrack.s3Key)) {
       return false;
     }
-    return this.tracks.slice(0, -1).every((track, index) => {
-      const fade = Number(track.crossfadeNext);
-      const adjacentDuration = Math.min(track.duration, this.tracks[index + 1].duration);
-      return Number.isFinite(fade) && fade >= 0.5 && fade <= 15 && fade < adjacentDuration;
-    });
+    return this.transitions.length === this.tracks.length - 1
+      && this.transitions.every((_, index) => this.canPreviewTransition(index));
   }
 
   async previewTransition(index: number): Promise<void> {
-    if (index >= this.tracks.length - 1) return;
+    if (!this.canPreviewTransition(index)) return;
     this.stopTransitionPreview();
+    const attempt = this.previewAttempt;
+    const transition = { ...this.transitions[index] };
+    const track1 = this.tracks[index];
+    const track2 = this.tracks[index + 1];
     if (!this.initializeWebAudio() || !this.audioCtx || !this.playerElement1 || !this.playerElement2) return;
     if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
+    if (attempt !== this.previewAttempt) return;
 
     this.previewingIndex = index;
     this.previewProgress.set(0);
-    const track1 = this.tracks[index];
-    const track2 = this.tracks[index + 1];
-    const fadeDuration = Number(track1.crossfadeNext);
-    const previewLead = 12;
+    const fadeDuration = transition.duration;
+    const previewLead = Math.min(12, Math.max(0, track1.duration - transition.duration));
     const previewTail = 12;
     const totalDuration = previewLead + fadeDuration + previewTail;
     const startTimeTrack1 = Math.max(0, track1.duration - previewLead - fadeDuration);
@@ -417,6 +539,7 @@ export class MixPanelComponent implements OnDestroy {
     this.playerElement1.currentTime = startTimeTrack1;
     this.playerElement2.currentTime = 0;
     await this.playerElement1.play();
+    if (attempt !== this.previewAttempt) return;
 
     const now = this.audioCtx.currentTime;
     this.gainNode1.gain.setValueAtTime(1, now);
@@ -428,21 +551,22 @@ export class MixPanelComponent implements OnDestroy {
       this.previewProgress.set((progressSeconds / totalDuration) * 100);
       if (progressSeconds >= previewLead && progressSeconds < previewLead + intervalMs / 1000) {
         await this.playerElement2?.play();
-        this.applyCrossfadeCurve(fadeDuration);
+        if (attempt !== this.previewAttempt) return;
+        this.applyCrossfadeCurve(fadeDuration, transition.curve);
       }
       if (progressSeconds >= totalDuration) this.stopTransitionPreview();
     }, intervalMs);
   }
 
-  private applyCrossfadeCurve(duration: number): void {
+  private applyCrossfadeCurve(duration: number, curve: SetlistCurve): void {
     if (!this.audioCtx) return;
     const now = this.audioCtx.currentTime;
-    if (this.activeCurve === 'linear') {
+    if (curve === 'linear') {
       this.gainNode1.gain.setValueAtTime(1, now);
       this.gainNode1.gain.linearRampToValueAtTime(0, now + duration);
       this.gainNode2.gain.setValueAtTime(0, now);
       this.gainNode2.gain.linearRampToValueAtTime(1, now + duration);
-    } else if (this.activeCurve === 'equal-power') {
+    } else if (curve === 'equal-power') {
       const steps = 100;
       const curve1 = new Float32Array(steps);
       const curve2 = new Float32Array(steps);
@@ -462,6 +586,7 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   stopTransitionPreview(): void {
+    this.previewAttempt += 1;
     if (this.previewIntervalId) clearInterval(this.previewIntervalId);
     this.previewIntervalId = null;
     this.playerElement1?.pause();
@@ -543,7 +668,8 @@ export class MixPanelComponent implements OnDestroy {
     const payload: SetlistRenderRequest = {
       tracks: trackKeys as string[],
       vignette: this.vignetteEnabled ? this.vignetteTrack?.s3Key ?? null : null,
-      crossfades: this.tracks.slice(0, -1).map((track) => Number(track.crossfadeNext)),
+      crossfades: this.transitions.map(t => t.duration),
+      curves: this.transitions.map(t => t.curve),
       curve: this.activeCurve,
       loudness: this.loudnessMatchMode,
       exportName: this.setlistName,

@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed, tick } from '@angular/core/testing';
 import { By, SafeUrl } from '@angular/platform-browser';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 import { MixPanelComponent, RQSTrack } from './mix-panel';
@@ -65,6 +65,222 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
 
   afterEach(() => {
     if (!fixture.componentRef.hostView.destroyed) fixture.destroy();
+  });
+
+  for (const count of [1, 2, 3]) {
+    it(`reconciles ${count} tracks into exactly ${count - 1} directed transitions`, () => {
+      component.tracks = readyTracks(count);
+      expect(component.transitions.length).toBe(count - 1);
+      component.transitions.forEach((t, i) => {
+        expect(t.fromTrackId).toBe(component.tracks[i].id);
+        expect(t.toTrackId).toBe(component.tracks[i + 1].id);
+        expect(t.duration).toBe(8);
+        expect(t.curve).toBe('equal-power');
+        expect(t.usesDefault).toBeTrue();
+      });
+    });
+  }
+
+  it('preserves stable IDs and exact surviving pair overrides on reorder', () => {
+    const [a, b, c, d] = readyTracks(4);
+    component.tracks = [a, b, c, d];
+    component.editTransition(0, 3, 'fast-cut');
+    component.moveUp(3);
+    expect(component.tracks.map(t => t.id)).toEqual([a.id, b.id, d.id, c.id]);
+    expect(component.transitions[0]).toEqual({ fromTrackId: a.id, toTrackId: b.id, duration: 3, curve: 'fast-cut', usesDefault: false });
+    expect(component.transitions.slice(1).every(t => t.usesDefault && t.duration === 8)).toBeTrue();
+    component.moveDown(0);
+    expect(component.transitions[0].fromTrackId).toBe(b.id);
+    expect(component.transitions[0].toTrackId).toBe(a.id);
+    expect(component.transitions[0].usesDefault).toBeTrue();
+  });
+
+  it('removing a middle track creates a new default pair without transferring overrides', () => {
+    component.tracks = readyTracks(3);
+    const [a, , c] = component.tracks;
+    component.editTransition(0, 3, 'linear');
+    component.removeTrack(1);
+    expect(component.transitions).toEqual([{ fromTrackId: a.id, toTrackId: c.id, duration: 8, curve: 'equal-power', usesDefault: true }]);
+  });
+
+  it('adding a track reconciles the new pair and preserves the existing override', () => {
+    component.tracks = readyTracks(2);
+    component.editTransition(0, 3, 'linear');
+    const preserved = component.transitions[0];
+    component.onFileSelect({ target: { files: audioFiles(1, 3), value: '' } } as unknown as Event);
+    expect(component.transitions.length).toBe(2);
+    expect(component.transitions[0]).toBe(preserved);
+    expect(component.transitions[1].toTrackId).toBe(component.tracks[2].id);
+    expect(component.transitions[1].usesDefault).toBeTrue();
+  });
+
+  it('replacement preserves slot identity and both adjacent transitions', () => {
+    component.tracks = readyTracks(3);
+    const id = component.tracks[1].id;
+    component.editTransition(0, 3, 'linear');
+    const before = [...component.transitions];
+    component.replaceTrackFile(1, { target: { files: audioFiles(1, 9), value: '' } } as unknown as Event);
+    expect(component.tracks[1].id).toBe(id);
+    expect(component.transitions).toEqual(before);
+  });
+
+  it('individual edit affects only that pair and default changes preserve custom overrides', () => {
+    component.tracks = readyTracks(3);
+    component.editTransition(0, 3, 'fast-cut');
+    expect(component.transitions[0].usesDefault).toBeFalse();
+    expect(component.transitions[1].duration).toBe(8);
+    component.updateDefaults(5, 'linear');
+    expect(component.transitions.map(t => [t.duration, t.curve, t.usesDefault])).toEqual([
+      [3, 'fast-cut', false], [5, 'linear', true],
+    ]);
+  });
+
+  it('Apply to all deliberately replaces overrides and reset restores current defaults', () => {
+    component.tracks = readyTracks(3);
+    component.editTransition(0, 3, 'fast-cut');
+    component.updateDefaults(5, 'linear');
+    component.resetTransition(0);
+    expect(component.transitions[0].usesDefault).toBeTrue();
+    expect(component.transitions[0].duration).toBe(5);
+    component.editTransition(1, 4, 'equal-power');
+    component.applyDefaultsToAll();
+    expect(component.transitions.every(t => t.duration === 5 && t.curve === 'linear' && t.usesDefault)).toBeTrue();
+  });
+
+  it('sends ordered heterogeneous curves and durations while preserving the legacy curve', () => {
+    component.tracks = readyTracks(3);
+    component.editTransition(1, 3, 'fast-cut');
+    spyOn(HTMLAnchorElement.prototype, 'click');
+    component.igniteSetlist();
+    const payload = generateMixS3.calls.mostRecent().args[0] as SetlistRenderRequest;
+    expect(payload.crossfades).toEqual([8, 3]);
+    expect(payload.curves).toEqual(['equal-power', 'fast-cut']);
+    expect(payload.curve).toBe('equal-power');
+    expect(component.calculateCrossfadeDuration()).toBe(11);
+    expect(component.calculateEstimatedOutputDuration()).toBe(169);
+  });
+
+  for (const duration of [0, 0.49, 16, 60, NaN]) {
+    it(`continues to reject invalid transition duration ${duration}`, () => {
+      component.tracks = readyTracks(2);
+      component.editTransition(0, duration, 'linear');
+      expect(component.canIgniteSetlist()).toBeFalse();
+      expect(component.canPreviewTransition(0)).toBeFalse();
+    });
+  }
+
+  it('renders a separate editable transition between each pair of track cards', () => {
+    component.tracks = readyTracks(3);
+    fixture.detectChanges();
+    const items = fixture.nativeElement.querySelectorAll('.track-list li');
+    expect(Array.from(items).map((item: any) => item.className)).toEqual([
+      'track-item', 'transition-item', 'track-item', 'transition-item', 'track-item',
+    ]);
+    expect(fixture.nativeElement.querySelector('.transition-editor')).toBeNull();
+    component.toggleTransition(component.transitions[0]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.transition-editor').length).toBe(1);
+  });
+
+  for (const language of ['en', 'pt', 'pl', 'fr'] as const) {
+    it(`provides localized transition editing in ${language}`, () => {
+      component.lang.currentLang.set(language);
+      component.tracks = readyTracks(2);
+      component.toggleTransition(component.transitions[0]);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain(component.transitionCopy('defaults'));
+      expect(fixture.nativeElement.textContent).toContain(component.transitionCopy('reset'));
+      expect(component.transitionCopy('limits').length).toBeGreaterThan(10);
+      component.lang.currentLang.set('en');
+    });
+  }
+
+  it('clears transitions with the existing owner-switch lifecycle', fakeAsync(() => {
+    component.tracks = readyTracks(3);
+    component.editTransition(0, 3, 'fast-cut');
+    session.set({ access_token: 'owner-b-token', user: { id: 'owner-b' } });
+    fixture.detectChanges();
+    flushMicrotasks();
+    expect(component.tracks).toEqual([]);
+    expect(component.transitions).toEqual([]);
+    component.tracks = readyTracks(2);
+    expect(component.transitions[0].usesDefault).toBeTrue();
+    expect(component.transitions[0].duration).toBe(8);
+  }));
+
+  it('previews the exact selected pair, duration and curve independently of the default', fakeAsync(() => {
+    component.tracks = readyTracks(3);
+    component.editTransition(0, 8, 'linear');
+    component.editTransition(1, 3, 'fast-cut');
+    const internal = component as any;
+    internal.playerElement1 = { src: '', currentTime: 0, play: () => Promise.resolve(), pause: () => {} };
+    internal.playerElement2 = { src: '', currentTime: 0, play: () => Promise.resolve(), pause: () => {} };
+    internal.audioCtx = { state: 'running', currentTime: 0, close: () => Promise.resolve() };
+    internal.gainNode1 = { gain: { setValueAtTime: () => {} } };
+    internal.gainNode2 = { gain: { setValueAtTime: () => {} } };
+    spyOn(internal, 'initializeWebAudio').and.returnValue(true);
+    const apply = spyOn(internal, 'applyCrossfadeCurve');
+    for (const [index, duration, curve] of [[0, 8, 'linear'], [1, 3, 'fast-cut']] as const) {
+      void component.previewTransition(index);
+      flushMicrotasks();
+      expect(internal.playerElement1.src).toBe(component.tracks[index].rawUrl);
+      expect(internal.playerElement2.src).toBe(component.tracks[index + 1].rawUrl);
+      tick(12200);
+      flushMicrotasks();
+      expect(apply).toHaveBeenCalledWith(duration, curve);
+      component.stopTransitionPreview();
+    }
+  }));
+
+  for (const testCase of [
+    { duration: 240, fade: 8, lead: 12, start: 220 },
+    { duration: 10, fade: 3, lead: 7, start: 0 },
+    { duration: 3.5, fade: 3, lead: 0.5, start: 0 },
+    { duration: 3.001, fade: 3, lead: 0.001, start: 0 },
+  ]) {
+    it(`aligns preview overlap for ${testCase.duration}s source and ${testCase.fade}s transition`, fakeAsync(() => {
+      component.tracks = readyTracks(2);
+      component.tracks[0].duration = testCase.duration;
+      component.editTransition(0, testCase.fade, 'linear');
+      const outgoing = component.transitionRegion(0, 'out');
+      const incoming = component.transitionRegion(1, 'in');
+      const internal = component as any;
+      const incomingPlay = jasmine.createSpy('incomingPlay').and.returnValue(Promise.resolve());
+      internal.playerElement1 = { src: '', currentTime: 0, play: () => Promise.resolve(), pause: () => {} };
+      internal.playerElement2 = { src: '', currentTime: 0, play: incomingPlay, pause: () => {} };
+      internal.audioCtx = { state: 'running', currentTime: 0, close: () => Promise.resolve() };
+      internal.gainNode1 = { gain: { setValueAtTime: () => {} } };
+      internal.gainNode2 = { gain: { setValueAtTime: () => {} } };
+      spyOn(internal, 'initializeWebAudio').and.returnValue(true);
+      const apply = spyOn(internal, 'applyCrossfadeCurve');
+      void component.previewTransition(0);
+      flushMicrotasks();
+      expect(internal.playerElement1.currentTime).toBeCloseTo(testCase.start, 8);
+      expect(internal.playerElement1.currentTime).toBeGreaterThanOrEqual(0);
+      expect(testCase.start + testCase.lead).toBeCloseTo(outgoing!.start, 8);
+      const beforeOverlapMs = Math.max(0, Math.floor(testCase.lead * 1000) - 100);
+      tick(beforeOverlapMs);
+      flushMicrotasks();
+      expect(incomingPlay).not.toHaveBeenCalled();
+      tick(200);
+      flushMicrotasks();
+      expect(incomingPlay).toHaveBeenCalledTimes(1);
+      expect(internal.playerElement2.currentTime).toBe(incoming!.start);
+      expect(apply).toHaveBeenCalledWith(testCase.fade, 'linear');
+      expect(component.transitionRegion(0, 'out')).toEqual(outgoing);
+      expect(component.transitionRegion(1, 'in')).toEqual(incoming);
+      component.stopTransitionPreview();
+    }));
+  }
+
+  it('blocks an invalid overlap rather than starting a preview with negative available lead', async () => {
+    component.tracks = readyTracks(2);
+    component.tracks[0].duration = 2;
+    component.editTransition(0, 3, 'linear');
+    const initialize = spyOn(component as any, 'initializeWebAudio');
+    await component.previewTransition(0);
+    expect(initialize).not.toHaveBeenCalled();
+    expect(component.previewingIndex).toBe(-1);
   });
 
   it('blocks render until every music upload is ready', () => {
@@ -466,6 +682,7 @@ function track(
   s3Key: string | null,
 ): RQSTrack {
   return {
+    id: crypto.randomUUID(),
     file: new File(['audio'], name, { type: 'audio/wav' }),
     name,
     crossfadeNext: 8,

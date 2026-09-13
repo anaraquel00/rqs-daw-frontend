@@ -213,6 +213,24 @@ describe('DspService Mastering V2 transport', () => {
     request.flush(new Blob([], { type: 'application/zip' }));
   });
 
+  it('preserves ordered per-transition curves alongside the legacy Setlist curve', () => {
+    const payload = {
+      tracks: ['uploads/user-id/setlist/a.wav', 'uploads/user-id/setlist/b.wav', 'uploads/user-id/setlist/c.wav'],
+      vignette: null,
+      crossfades: [8, 3],
+      curves: ['equal-power', 'fast-cut'] as ('equal-power' | 'fast-cut')[],
+      curve: 'equal-power' as const,
+      loudness: 'off' as const,
+      exportName: 'RQS_R2',
+      outputFormat: 'wav' as const,
+    };
+    service.generateMixS3(payload).subscribe();
+    const request = http.expectOne(`${environment.baseUrl}/mix/generate-s3`);
+    expect(request.request.body).toEqual(payload);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({ success: true });
+  });
+
   it('sends a user-owned S3 Stems split with the authenticated bearer token', () => {
     service.extractStemsS3('uploads/user-id/track.wav').subscribe();
 

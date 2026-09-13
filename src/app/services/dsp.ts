@@ -19,6 +19,7 @@ export interface SetlistRenderRequest {
   vignette: string | null;
   crossfades: number[];
   curve: SetlistCurve;
+  curves?: SetlistCurve[];
   loudness: SetlistLoudnessMode;
   exportName: string;
   outputFormat: 'wav';
