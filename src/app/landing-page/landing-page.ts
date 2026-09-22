@@ -16,19 +16,24 @@ import { SeoConfig, SeoService } from '../services/seo.service';
 export function landingSeoConfig(currentLang: UiLanguage): SeoConfig {
   const isPt = currentLang === 'pt';
   const isPl = currentLang === 'pl';
+  const isFr = currentLang === 'fr';
   const canonicalUrl = 'https://studio.raquelsynths.com/';
 
   return {
     title: isPt
-      ? 'RQS Studio | Masterização, Setlists e Uplink'
+      ? 'RQS Studio | Masterização Online para Artistas Independentes'
       : isPl
-        ? 'RQS Studio | Mastering, Setlisty i Uplink'
-        : 'RQS Studio | Mastering, Setlists & Uplink',
+        ? 'RQS Studio | Mastering Online dla Niezależnych Artystów'
+        : isFr
+          ? 'RQS Studio | Mastering en Ligne pour Artistes Indépendants'
+          : 'RQS Studio | Online Music Mastering for Independent Artists',
     description: isPt
-      ? 'RQS Studio reúne masterização, criação de setlists e o RQS Uplink Engine em um workflow web para criadores.'
+      ? 'Masterize sua faixa online no navegador com o RQS MASTER. Public Beta gratuita para músicos independentes, produtores e criadores de música assistida por IA.'
       : isPl
-        ? 'RQS Studio łączy mastering, tworzenie setlist i RQS Uplink Engine w jednym webowym workflow dla twórców.'
-        : 'RQS Studio brings mastering, setlist creation and the RQS Uplink Engine into one web workflow for creators.',
+        ? 'Masteruj utwór online w przeglądarce dzięki RQS MASTER. Darmowa Public Beta dla niezależnych muzyków, producentów i twórców muzyki wspieranej przez AI.'
+        : isFr
+          ? 'Masterisez votre morceau en ligne dans le navigateur avec RQS MASTER. Public Beta gratuite pour les musiciens indépendants, producteurs et créateurs assistés par IA.'
+          : 'Master your track online in the browser with RQS MASTER. Free Public Beta for independent musicians, producers and AI-assisted music creators.',
     url: canonicalUrl,
     image: 'https://studio.raquelsynths.com/assets/images/studio.webp',
     type: 'website',
@@ -42,10 +47,12 @@ export function landingSeoConfig(currentLang: UiLanguage): SeoConfig {
       alternateName: 'RaQuel Synths Studio',
       url: canonicalUrl,
       description: isPt
-        ? 'Ferramentas web para masterização, setlists e links musicais.'
+        ? 'Ferramentas web para masterização online e criação musical independente.'
         : isPl
-          ? 'Narzędzia webowe do masteringu, setlist i linków muzycznych.'
-          : 'Web tools for mastering, setlists and music links.',
+          ? 'Narzędzia webowe do masteringu online dla niezależnych twórców muzyki.'
+          : isFr
+            ? 'Outils web de mastering en ligne pour les créateurs de musique indépendants.'
+            : 'Browser-based online mastering for independent music creators.',
       publisher: {
         '@type': 'Organization',
         name: 'RaQuel Synths',

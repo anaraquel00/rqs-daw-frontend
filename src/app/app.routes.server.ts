@@ -26,11 +26,15 @@ export const serverRoutes: ServerRoute[] = [
     path: 'cookies',
     renderMode: RenderMode.Prerender
   },
+  {
+    path: 'contact',
+    renderMode: RenderMode.Prerender
+  },
 
-  // A DAW depende fortemente das APIs do navegador.
+  // O selector público do Studio é prerenderizado; os workspaces continuam client-only.
   {
     path: 'app',
-    renderMode: RenderMode.Client
+    renderMode: RenderMode.Prerender
   },
   {
     path: 'app/**',

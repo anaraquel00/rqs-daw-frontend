@@ -45,8 +45,8 @@ describe('V2 canonical app routes', () => {
     }
   });
 
-  it('keeps direct /app and /app child refreshes in client render mode', () => {
-    expect(serverRoutes.find(route => route.path === 'app')?.renderMode).toBe(RenderMode.Client);
+  it('prerenders public /app while keeping child workspaces client-rendered', () => {
+    expect(serverRoutes.find(route => route.path === 'app')?.renderMode).toBe(RenderMode.Prerender);
     expect(serverRoutes.find(route => route.path === 'app/**')?.renderMode).toBe(RenderMode.Client);
   });
 });

@@ -116,6 +116,26 @@ describe('Studio V2 shell integration', () => {
       expect(root.querySelector('app-mix-panel')).toBeNull();
     }
   });
+  it('restores SEO metadata across home, operational and account navigation', async () => {
+    await harness.navigateByUrl('/app');
+    expect(document.title).toBe('RQS Studio Apps | Online Mastering, Stems, Setlists & Music Links');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('index, follow');
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://studio.raquelsynths.com/app');
+
+    await harness.navigateByUrl('/app/master');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, follow');
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://studio.raquelsynths.com/app/master');
+
+    await harness.navigateByUrl('/app/account');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, nofollow');
+
+    await harness.navigateByUrl('/app');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('index, follow');
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://studio.raquelsynths.com/app');
+    expect(document.querySelectorAll('meta[name="robots"]').length).toBe(1);
+    expect(document.querySelectorAll('link[rel="canonical"]').length).toBe(1);
+  });
+
   it('keeps navigation localized for all four supported languages', () => {
     for (const code of ['en', 'pt', 'pl', 'fr'] as const) {
       TestBed.inject(LanguageService).setLanguage(code); harness.detectChanges();

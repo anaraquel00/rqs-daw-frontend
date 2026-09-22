@@ -12,8 +12,9 @@ import { AuthPromptComponent } from '../components/auth-prompt/auth-prompt';
 import { StudioFooterComponent } from './studio-footer';
 import { ModuleSelectorComponent } from './module-selector';
 import { STUDIO_COPY } from './studio-copy';
+import { SeoService } from '../services/seo.service';
+import { StudioSurface, studioSeoConfig } from './studio-seo';
 
-export type StudioSurface = 'home' | 'master' | 'build' | 'uplink' | 'split' | 'learn' | 'account';
 @Component({
   selector: 'app-studio-shell', standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, UploadZoneComponent, MixPanelComponent,
@@ -31,9 +32,13 @@ export class StudioShellComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly seo = inject(SeoService);
 
   constructor() {
     this.syncSurface();
+    effect(() => {
+      this.seo.update(studioSeoConfig(this.surface(), this.lang.currentLang()));
+    });
     this.router.events.pipe(filter(e => e instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.syncSurface());
     // Drop retained engine views across identity boundaries; no user A audio or

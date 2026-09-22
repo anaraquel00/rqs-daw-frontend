@@ -15,8 +15,8 @@ export class ModuleSelectorComponent {
   readonly meters = [0, 1, 2, 3, 4, 5, 6];
   readonly modules = [
     { id: 'master', name: 'MASTER', engine: 'DSP ENGINE 01', subtitle: 'CORE SIGNAL REFINEMENT', icon: 'ϟ', description: 'Professional DSP mastering chain. Finalize your tracks with surgical spectral balance and industry-standard loudness controls.', tags: ['LUFS', 'ANALYZE', 'DSP_CORE'] },
-    { id: 'split', name: 'SPLIT', engine: 'NEURAL ENGINE 02', subtitle: 'STEM EXTRACTION CORE', icon: '✂', description: 'Neural engine for clean stem extraction. Deconstruct any track into four high-fidelity musical components for remixing or analysis.', tags: ['AI_MODEL_V4', '4_STEMS'] },
+    { id: 'split', name: 'SPLIT', engine: 'STEM PREVIEW 02', subtitle: 'PUBLIC BETA STATUS', icon: '✂', description: 'Stem separation preview for vocals, drums, bass and other musical components. This module is not yet available in the Public Beta.', tags: ['VOCALS', 'DRUMS', 'BASS', 'OTHER'] },
     { id: 'build', name: 'BUILD', engine: 'SEQUENCER ENGINE 03', subtitle: 'SETLIST & FLOW ENGINE', icon: '≋', description: 'Architecture for your live sets. Sequence tracks, manage transitions, and analyze harmonic flow for a flawless performance.', tags: ['SETLIST', 'TRANSITION'] },
-    { id: 'uplink', name: 'UPLINK', engine: 'DISTRIBUTION ENGINE 04', subtitle: 'DEPLOYMENT CORE', icon: '↥', description: 'Global release engine. Direct uplink to streaming services, stores, and analytics nodes for immediate worldwide deployment.', tags: ['DSPs', 'ROUTING'] },
+    { id: 'uplink', name: 'UPLINK', engine: 'SMART LINK ENGINE 04', subtitle: 'RELEASE LINK CORE', icon: '↥', description: 'Create one smart music link for your release and connect listeners to your streaming destinations.', tags: ['SMART_LINKS', 'RELEASE_LINKS', 'ARTIST_LINKS'] },
   ];
 }
