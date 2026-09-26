@@ -28,3 +28,24 @@ dt { color: #8190a0; } dd { margin: 0; text-align: right; }
   .metric-grid { grid-template-columns: minmax(0, 1fr); }
   .status { white-space: normal; }
 }
+
+:host-context(app-studio-shell[data-theme='light']) {
+  .analyzer {
+    border-color: var(--studio-border);
+    background: var(--studio-display);
+    box-shadow: none;
+  }
+  .eyebrow { color: var(--studio-violet); }
+  h3, .metric > strong { color: var(--studio-text); }
+  p, .metric-heading, .metric small, dt { color: var(--studio-text-secondary); }
+  dl div { color: var(--studio-text); }
+  .metric, .state-message {
+    border-color: var(--studio-border);
+    background: var(--studio-card);
+  }
+  .within { color: var(--studio-success-text); border-color: var(--studio-success-border); background: var(--studio-success-bg); }
+  .attention { color: var(--studio-warning-text); border-color: var(--studio-warning-border); background: var(--studio-warning-bg); }
+  .info { color: var(--studio-cyan-strong); border-color: var(--studio-border-strong); background: var(--studio-cyan-soft); }
+  .state-message.loading { color: var(--studio-cyan-strong); }
+  .state-message.error { color: var(--studio-error-text); border-color: var(--studio-error-border); background: var(--studio-error-bg); }
+}

@@ -275,3 +275,37 @@ transition: all 0.3s ease;
     .download-section > * { flex-basis: 100%; }
   }
 }
+
+/* LIGHT is intentionally tone-on-tone; DARK declarations above remain untouched. */
+:host-context(app-studio-shell[data-theme='light']) {
+  .glass-panel {
+    background: var(--studio-card);
+    border-color: var(--studio-border);
+    color: var(--studio-text);
+  }
+
+  .drop-zone {
+    border-color: var(--studio-cyan);
+    background: var(--studio-panel);
+    color: var(--studio-text);
+
+    &.active {
+      border-color: var(--studio-cyan-strong);
+      background: var(--studio-cyan-soft);
+      box-shadow: 0 0 0 3px rgba(0, 122, 140, .12);
+    }
+
+    .drop-text { color: var(--studio-text-secondary); }
+    .drop-text span { color: var(--studio-cyan-strong) !important; opacity: 1 !important; }
+    .file-ready { color: var(--studio-success-text); }
+  }
+
+  .auth-resume-notice {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-cyan-soft);
+    color: var(--studio-cyan-strong);
+  }
+
+  .auth-resume-notice button,
+  .processing-status { color: var(--studio-cyan-strong); }
+}
