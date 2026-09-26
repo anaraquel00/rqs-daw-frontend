@@ -12,14 +12,16 @@
         <button type="button" (click)="setTheme(theme)" [attr.aria-pressed]="themePreference() === theme">{{ theme.toUpperCase() }}</button>
       }
     </div>
-    @if (auth.session()) {
-      <a class="account-link" routerLink="/app/account">{{ auth.isPremium() ? 'RQS PRO' : 'FREE' }} · {{ copy().account }}</a>
-      <button type="button" (click)="auth.logout()">{{ copy().signOut }}</button>
-    } @else {
-      <button type="button" (click)="auth.loginWithProvider('github')">GITHUB</button>
-      <button type="button" (click)="auth.loginWithProvider('google')">GOOGLE</button>
-      <button type="button" (click)="auth.requestSignIn('general', 'email')">{{ lang.t().AUTH_EMAIL_CONTINUE }}</button>
-    }
+    <div class="session-actions">
+      @if (auth.session()) {
+        <a class="account-link" routerLink="/app/account">{{ auth.isPremium() ? 'RQS PRO' : 'FREE' }} · {{ copy().account }}</a>
+        <button type="button" (click)="auth.logout()">{{ copy().signOut }}</button>
+      } @else {
+        <button type="button" (click)="auth.loginWithProvider('github')">GITHUB</button>
+        <button type="button" (click)="auth.loginWithProvider('google')">GOOGLE</button>
+        <button type="button" (click)="auth.requestSignIn('general', 'email')">{{ lang.t().AUTH_EMAIL_CONTINUE }}</button>
+      }
+    </div>
   </div>
   <span class="core-status"><i aria-hidden="true"></i> CORE STATUS: OPERATIONAL</span>
 </header>

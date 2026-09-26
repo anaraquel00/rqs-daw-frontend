@@ -42,6 +42,11 @@
   --studio-distribution-node-bg: #050507;
   --studio-distribution-node-shadow: #ffffff16;
   --studio-footer-badge-border: #204149;
+  --studio-footer-info-accent: #00f0ff;
+  --studio-footer-info-bg: rgba(0, 240, 255, .05);
+  --studio-footer-info-border: rgba(0, 240, 255, .2);
+  --studio-footer-logo-accent: #35dcec;
+  --studio-footer-value: #fff;
   --studio-radius: 12px;
   --studio-gap: 32px;
   --studio-font: Inter, Arial, sans-serif;
@@ -91,4 +96,9 @@
   --studio-distribution-node-bg: #fff;
   --studio-distribution-node-shadow: rgba(23, 32, 51, .12);
   --studio-footer-badge-border: #82aeb4;
+  --studio-footer-info-accent: #005966;
+  --studio-footer-info-bg: rgba(0, 89, 102, .06);
+  --studio-footer-info-border: rgba(0, 89, 102, .38);
+  --studio-footer-logo-accent: #005966;
+  --studio-footer-value: #172033;
 }
