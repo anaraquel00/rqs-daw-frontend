@@ -7,6 +7,11 @@
         <button type="button" (click)="lang.setLanguage(code)" [attr.aria-pressed]="lang.currentLang() === code">{{ code === 'pt' ? 'PT-BR' : code.toUpperCase() }}</button>
       }
     </div>
+    <div class="theme-selector" aria-label="Color theme">
+      @for (theme of themes; track theme) {
+        <button type="button" (click)="setTheme(theme)" [attr.aria-pressed]="themePreference() === theme">{{ theme.toUpperCase() }}</button>
+      }
+    </div>
     @if (auth.session()) {
       <a class="account-link" routerLink="/app/account">{{ auth.isPremium() ? 'RQS PRO' : 'FREE' }} · {{ copy().account }}</a>
       <button type="button" (click)="auth.logout()">{{ copy().signOut }}</button>

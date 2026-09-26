@@ -25,6 +25,7 @@ describe('Studio V2 shell integration', () => {
   const premium = signal(false);
   const requestSignIn = jasmine.createSpy('requestSignIn');
   beforeEach(async () => {
+    localStorage.removeItem('rqs_theme');
     session.set(null); premium.set(false); requestSignIn.calls.reset();
     TestBed.configureTestingModule({ providers: [
       provideRouter([{ path: 'app', children: STUDIO_ROUTES }]),
@@ -39,7 +40,31 @@ describe('Studio V2 shell integration', () => {
     document.body.appendChild(harness.fixture.nativeElement);
     harness.detectChanges();
   });
-  afterEach(() => harness.fixture.nativeElement.remove());
+  afterEach(() => { localStorage.removeItem('rqs_theme'); harness.fixture.nativeElement.remove(); });
+
+  it('defaults to DARK and persists explicit LIGHT and AUTO preferences', () => {
+    const host = harness.routeNativeElement!.closest('app-studio-shell') as HTMLElement;
+    expect(host.dataset['theme']).toBe('dark');
+
+    const buttons = Array.from(harness.routeNativeElement!.querySelectorAll('.theme-selector button')) as HTMLButtonElement[];
+    buttons.find(button => button.textContent?.trim() === 'LIGHT')!.click();
+    harness.detectChanges();
+    expect(host.dataset['theme']).toBe('light');
+    expect(localStorage.getItem('rqs_theme')).toBe('light');
+
+    buttons.find(button => button.textContent?.trim() === 'AUTO')!.click();
+    harness.detectChanges();
+    expect(host.dataset['theme']).toBe(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    expect(localStorage.getItem('rqs_theme')).toBe('auto');
+  });
+
+  it('restores a persisted explicit theme in a new shell instance', () => {
+    localStorage.setItem('rqs_theme', 'light');
+    const fixture = TestBed.createComponent(StudioShellComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.dataset['theme']).toBe('light');
+    fixture.destroy();
+  });
 
   it('renders the exact four approved module gateways and shared shell', () => {
     const root = harness.routeNativeElement!;
