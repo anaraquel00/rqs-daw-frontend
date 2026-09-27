@@ -661,3 +661,73 @@
     .controls-section { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
   }
 }
+
+/* Full LIGHT hierarchy for the Studio MASTER workspace; DARK remains byte-for-byte above. */
+:host-context(app-studio-shell[data-theme='light'] .studio-master) {
+  color: var(--studio-text);
+
+  .custom-audio-console,
+  .engineering-panel {
+    background: var(--studio-display) !important;
+    border-color: var(--studio-border) !important;
+    box-shadow: none;
+  }
+
+  .console-telemetry {
+    .currentTime { color: var(--studio-cyan-strong); text-shadow: none; }
+    .status-mode, .totalDuration { color: var(--studio-text-secondary); }
+  }
+  .cyber-scrubber { background: var(--studio-border-strong); }
+  .loop-indicator-bar .loop-badge {
+    color: var(--studio-error-text);
+    background: var(--studio-error-bg);
+    border-color: var(--studio-error-border);
+    &.full-master-active { color: var(--studio-success-text); background: var(--studio-success-bg); border-color: var(--studio-success-border); box-shadow: none; }
+  }
+  .btn-transport {
+    border-color: var(--studio-cyan-strong);
+    color: var(--studio-cyan-strong);
+    box-shadow: none;
+    &.btn-stop { border-color: var(--studio-error-text) !important; color: var(--studio-error-text) !important; }
+  }
+  .ab-btn,
+  .btn-group button,
+  .btn-secondary {
+    border-color: var(--studio-border-strong) !important;
+    background: var(--studio-card) !important;
+    color: var(--studio-text-secondary) !important;
+    box-shadow: none;
+    &:hover { border-color: var(--studio-cyan) !important; color: var(--studio-text) !important; background: var(--studio-cyan-soft) !important; }
+    &.active, &.selected { border-color: var(--studio-cyan-strong) !important; color: var(--studio-cyan-strong) !important; background: var(--studio-cyan-soft) !important; box-shadow: none; }
+    &:disabled { opacity: .62; color: var(--studio-disabled) !important; }
+  }
+  .switch { background: var(--studio-border); border-color: var(--studio-border-strong); }
+  .switch .slider { background: var(--studio-disabled); &.on { background: var(--studio-cyan-strong); box-shadow: none; } }
+  .volume-match,
+  .controls-section h4,
+  .eng-section h5,
+  .slider-header { color: var(--studio-text-secondary); }
+  .cyber-divider,
+  .eng-section { border-color: var(--studio-border); }
+  .engineering-panel h3,
+  .slider-header .slider-value { color: var(--studio-cyan-strong); text-shadow: none; }
+  .slider-row { border-color: var(--studio-border); background: var(--studio-card); }
+  .plan-usage-badge { border-color: var(--studio-border-strong); background: var(--studio-card); color: var(--studio-text-secondary); }
+  .plan-usage-badge .pro-badge { color: var(--studio-success-text); text-shadow: none; }
+  .btn-process { border-color: var(--studio-cyan-strong) !important; background: var(--studio-cyan-strong) !important; color: #fff !important; box-shadow: none; }
+  .btn-process:hover:not(:disabled) { background: var(--studio-cyan) !important; box-shadow: none !important; }
+  .pro-limit-card { border-color: var(--studio-border); background: var(--studio-card); box-shadow: none; }
+  .pro-limit-header h4 { color: var(--studio-text); }
+  .pro-limit-header p { color: var(--studio-text-secondary); }
+  .btn-pro-waitlist { border-color: var(--studio-cyan-strong); background: var(--studio-cyan-soft); color: var(--studio-cyan-strong); }
+  .waitlist-success { border-color: var(--studio-success-border); background: var(--studio-success-bg); color: var(--studio-success-text); }
+  .waitlist-error { border-color: var(--studio-error-border); background: var(--studio-error-bg); color: var(--studio-error-text); }
+  .progress-step { border-color: var(--studio-border); color: var(--studio-text-secondary); background: var(--studio-card); }
+  .progress-step.done { border-color: var(--studio-success-border); color: var(--studio-success-text); background: var(--studio-success-bg); }
+  .progress-step.active { border-color: var(--studio-cyan); color: var(--studio-cyan-strong); background: var(--studio-cyan-soft); box-shadow: none; }
+  .mastering-live-status,
+  .auth-flow-help { border-color: var(--studio-border-strong); color: var(--studio-cyan-strong); background: var(--studio-cyan-soft); }
+  .mastering-feedback,
+  .full-master-block-reason { border-color: var(--studio-warning-border); color: var(--studio-warning-text); background: var(--studio-warning-bg); }
+  .listening-status { border-color: var(--studio-border); color: var(--studio-text-secondary); background: var(--studio-card); }
+}

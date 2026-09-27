@@ -604,6 +604,94 @@ $text-muted: #8b949e;
   }
 }
 
+/* Tone-on-tone LIGHT styling. All original DARK rules stay unchanged above. */
+:host-context(app-studio-shell[data-theme='light']) {
+  .mix-panel-container {
+    background: var(--studio-card);
+    border-color: var(--studio-border);
+    box-shadow: none;
+    color: var(--studio-text);
+
+    h2, .summary-card .panel-title, .vignette-console .panel-title { color: var(--studio-cyan-strong); text-shadow: none; }
+  }
+  .dropzone,
+  .summary-card,
+  .vignette-console {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-display);
+  }
+  .dropzone {
+    &:hover { border-color: var(--studio-cyan); background: var(--studio-cyan-soft); }
+    p { color: var(--studio-text-secondary); }
+  }
+  .validation-panel {
+    border-color: var(--studio-error-border);
+    background: var(--studio-error-bg);
+    .panel-title, .status-item.error { color: var(--studio-error-text); }
+    .status-item.warning { color: var(--studio-warning-text); }
+  }
+  .summary-card .summary-item {
+    span { color: var(--studio-text-secondary); }
+    strong { color: var(--studio-text); }
+    .highlight-cyan { color: var(--studio-cyan-strong); text-shadow: none; }
+  }
+  .console-label,
+  .waveform-truthful-state,
+  .vignette-console p,
+  .vignette-console span,
+  .track-list h3,
+  .track-info .track-meta-tag,
+  .sec-label,
+  .metadata-section label,
+  .transition-inheritance { color: var(--studio-text-secondary); }
+  .btn-group-match button {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-card);
+    color: var(--studio-text-secondary);
+    &:hover { border-color: var(--studio-cyan); color: var(--studio-text); }
+    &.active { border-color: var(--studio-cyan-strong); background: var(--studio-cyan-soft); color: var(--studio-cyan-strong); box-shadow: none; }
+  }
+  .upload-state.uploading { color: var(--studio-warning-text); }
+  .upload-state.ready { color: var(--studio-cyan-strong); }
+  .upload-state.upload-error { color: var(--studio-error-text); }
+  .track-item {
+    border-color: var(--studio-border);
+    background: var(--studio-display);
+  }
+  .track-info .track-name,
+  .transition-summary strong { color: var(--studio-text); }
+  .controls button {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-card);
+    color: var(--studio-text);
+    &:disabled { opacity: .62; color: var(--studio-disabled); }
+  }
+  .custom-crossfade-bridge { border-color: var(--studio-border); }
+  .transition-item {
+    border-left-color: var(--studio-cyan);
+    background: var(--studio-cyan-soft);
+    color: var(--studio-text-secondary);
+  }
+  .transition-region-labels .region-in { color: var(--studio-cyan-strong); }
+  .transition-region-labels .region-out { color: var(--studio-violet); }
+  .transition-item button,
+  .transition-editor select,
+  .transition-editor input,
+  .default-duration input,
+  .metadata-section .cyber-input,
+  .cyber-number-input-mini {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-card);
+    color: var(--studio-text);
+  }
+  .cyber-slider-mini { background: var(--studio-border-strong); }
+  .ignite-btn:disabled {
+    border-color: var(--studio-border-strong) !important;
+    background: var(--studio-panel) !important;
+    color: var(--studio-disabled) !important;
+  }
+}
+
 .ignite-btn {
   width: 100%;
   background: #ff0055 !important;

@@ -145,3 +145,28 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   .auto-actions button,
   .auto-state button { width: 100%; min-height: 46px; }
 }
+
+:host-context(app-studio-shell[data-theme='light']) {
+  .delivery-auto {
+    border-color: var(--studio-border);
+    background: var(--studio-display);
+    box-shadow: none;
+  }
+  .eyebrow, .reason-block > strong { color: var(--studio-cyan-strong); }
+  h3, .patch-review strong { color: var(--studio-text); }
+  p, .policy-context, .confirmation-note, .review-only, .patch-review span:not(.patch-arrow) { color: var(--studio-text-secondary); }
+  .policy-context strong, .reason-block, .result-summary { color: var(--studio-text); }
+  .auto-state, .auto-result, .patch-review {
+    border-color: var(--studio-border);
+    background: var(--studio-card);
+  }
+  .state-badge { color: var(--studio-cyan-strong); border-color: var(--studio-border-strong); background: var(--studio-cyan-soft); }
+  .state-badge.recommendation { color: var(--studio-success-text); border-color: var(--studio-success-border); background: var(--studio-success-bg); }
+  .state-badge.stale, .state-badge.error, .stale-message { color: var(--studio-error-text); border-color: var(--studio-error-border); background: var(--studio-error-bg); }
+  .state-badge.abstain { color: var(--studio-warning-text); border-color: var(--studio-warning-border); background: var(--studio-warning-bg); }
+  .auto-state.loading { color: var(--studio-cyan-strong); }
+  .auto-state.error, .auto-result.outdated { border-color: var(--studio-error-border); background: var(--studio-error-bg); }
+  .auto-request { border-color: var(--studio-cyan); color: var(--studio-cyan-strong); background: var(--studio-cyan-soft); }
+  .auto-apply { border-color: var(--studio-cyan-strong); color: #fff; background: var(--studio-cyan-strong); box-shadow: none; }
+  button:disabled { opacity: .62; color: var(--studio-disabled); }
+}

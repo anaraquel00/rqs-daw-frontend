@@ -272,3 +272,56 @@
     }
   }
 }
+
+:host-context(app-studio-shell[data-theme='light']) {
+  .rqs-dashboard-panel { color: var(--studio-text); }
+  .dashboard-kpis .kpi,
+  .link-management,
+  .activity-panel {
+    border-color: var(--studio-border);
+    background: var(--studio-card);
+  }
+  .dashboard-kpis .kpi-label,
+  .dashboard-header .desc,
+  .list-controls label,
+  .link-card-item .metrics-grid-mini,
+  .activity-panel dt { color: var(--studio-text-secondary); }
+  .dashboard-kpis strong,
+  .dashboard-header .badge-active,
+  .link-card-item .short-url { color: var(--studio-cyan-strong); }
+  .list-controls input,
+  .list-controls select {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-display);
+    color: var(--studio-text);
+  }
+  .link-card-item {
+    border-color: var(--studio-border);
+    background: var(--studio-display);
+    &:hover { border-color: var(--studio-cyan); }
+    .slug-row .platform-tag { background: #f8dce9; color: var(--studio-pink); }
+    .slug-row .link-name,
+    .metrics-grid-mini .value,
+    .link-details h4 { color: var(--studio-text); }
+    .btn-action {
+      border-color: var(--studio-border-strong);
+      background: var(--studio-card);
+      color: var(--studio-text);
+      &:hover { border-color: var(--studio-cyan); background: var(--studio-cyan-soft); }
+      &:disabled { opacity: .62; color: var(--studio-disabled); }
+      &.delete { background: var(--studio-error-bg); border-color: var(--studio-error-border); color: var(--studio-error-text); }
+    }
+    .menu-panel { border-color: var(--studio-border-strong); background: var(--studio-card); box-shadow: 0 8px 22px rgba(22, 32, 42, .16); }
+    .link-details, .link-details .source-row.total-row, .link-details .target-text { border-color: var(--studio-border); }
+    .link-details .source-row.zero, .link-details .target-text { color: var(--studio-muted); }
+    .delete-confirm { border-color: var(--studio-error-border); background: var(--studio-error-bg); color: var(--studio-error-text); }
+  }
+  .activity-panel {
+    dl div { border-color: var(--studio-border); }
+    dd { color: var(--studio-text); }
+  }
+  .empty-state, .feedback, .action-error { color: var(--studio-text-secondary); background: var(--studio-display); }
+  .empty-state { border-color: var(--studio-border-strong); }
+  .feedback { border: 1px solid var(--studio-success-border); background: var(--studio-success-bg); color: var(--studio-success-text); }
+  .action-error { border: 1px solid var(--studio-error-border); background: var(--studio-error-bg); color: var(--studio-error-text); }
+}
