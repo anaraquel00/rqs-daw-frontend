@@ -1,0 +1,13 @@
+@use './studio/studio-tokens' as studio;
+
+:host {
+  @include studio.tokens;
+  display: block;
+  min-height: 100vh;
+  color-scheme: dark;
+}
+
+:host([data-theme='light']) {
+  @include studio.light-tokens;
+  color-scheme: light;
+}

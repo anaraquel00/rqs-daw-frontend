@@ -1,0 +1,122 @@
+/* RQS Studio landing — light-mode cinematic continuity. */
+
+app-root[data-theme='light'] .rqs-landing {
+  background:
+    radial-gradient(circle at 82% 6%, rgba(0, 122, 140, .09), transparent 30rem),
+    radial-gradient(circle at 70% 20%, rgba(105, 65, 181, .06), transparent 26rem),
+    linear-gradient(180deg, #f7f9fb 0%, #f1f5f8 52%, #eef3f6 100%) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .feature,
+app-root[data-theme='light'] .rqs-landing .origin,
+app-root[data-theme='light'] .rqs-landing .proof,
+app-root[data-theme='light'] .rqs-landing .pricing,
+app-root[data-theme='light'] .rqs-landing .final-cta {
+  border-color: var(--studio-border) !important;
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .feature--deploy,
+app-root[data-theme='light'] .rqs-landing .proof,
+app-root[data-theme='light'] .rqs-landing .final-cta {
+  background:
+    radial-gradient(circle at 82% 12%, rgba(0, 122, 140, .08), transparent 28rem),
+    radial-gradient(circle at 18% 74%, rgba(105, 65, 181, .055), transparent 30rem),
+    var(--studio-bg) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .section-motion-layer {
+  background: var(--studio-bg) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .section-motion {
+  opacity: 0 !important;
+  filter: saturate(.75) contrast(.9) brightness(1.12) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .section-motion.is-active {
+  opacity: .28 !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .section-motion-layer::after {
+  background:
+    linear-gradient(90deg, rgba(244,246,248,.97), rgba(244,246,248,.92) 22%, rgba(244,246,248,.78) 52%, rgba(244,246,248,.70) 74%, rgba(244,246,248,.84)),
+    linear-gradient(180deg, rgba(244,246,248,.88), rgba(244,246,248,.66) 34%, rgba(244,246,248,.70) 68%, rgba(244,246,248,.94)) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .section-motion-layer--origin::after {
+  background:
+    linear-gradient(90deg, rgba(244,246,248,.88), rgba(244,246,248,.72) 50%, rgba(244,246,248,.84)),
+    linear-gradient(180deg, rgba(244,246,248,.82), rgba(244,246,248,.68) 46%, rgba(244,246,248,.90)) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .section-motion-layer--pricing::after {
+  background:
+    linear-gradient(180deg, rgba(244,246,248,.91), rgba(244,246,248,.77) 32%, rgba(244,246,248,.82) 62%, rgba(244,246,248,.95)),
+    linear-gradient(90deg, rgba(244,246,248,.86), rgba(244,246,248,.70) 50%, rgba(244,246,248,.86)) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .feature h2,
+app-root[data-theme='light'] .rqs-landing .feature h3,
+app-root[data-theme='light'] .rqs-landing .origin h2,
+app-root[data-theme='light'] .rqs-landing .origin h3,
+app-root[data-theme='light'] .rqs-landing .proof h2,
+app-root[data-theme='light'] .rqs-landing .pricing h2,
+app-root[data-theme='light'] .rqs-landing .final-cta h2 {
+  color: var(--studio-heading) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .feature__copy > p:not(.module-label),
+app-root[data-theme='light'] .rqs-landing .origin__copy p,
+app-root[data-theme='light'] .rqs-landing .proof__copy > p:last-child,
+app-root[data-theme='light'] .rqs-landing .pricing__intro > p:last-child,
+app-root[data-theme='light'] .rqs-landing .plan > p,
+app-root[data-theme='light'] .rqs-landing .final-cta > p:not(.module-label) {
+  color: var(--studio-text-secondary) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .feature__copy li,
+app-root[data-theme='light'] .rqs-landing .origin a,
+app-root[data-theme='light'] .rqs-landing .proof-ui strong,
+app-root[data-theme='light'] .rqs-landing .plan li {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .module-label,
+app-root[data-theme='light'] .rqs-landing .kicker,
+app-root[data-theme='light'] .rqs-landing .proof-ui span,
+app-root[data-theme='light'] .rqs-landing .plan header span {
+  color: var(--studio-cyan-strong) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .master-ui,
+app-root[data-theme='light'] .rqs-landing .setlist-ui,
+app-root[data-theme='light'] .rqs-landing .uplink-ui,
+app-root[data-theme='light'] .rqs-landing .proof-ui > div,
+app-root[data-theme='light'] .rqs-landing .plan {
+  background: rgba(255,255,255,.94) !important;
+  border-color: var(--studio-border-strong) !important;
+  box-shadow: 0 20px 46px rgba(23,32,51,.10) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .plan--pro {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(105,65,181,.09), transparent 16rem),
+    rgba(255,255,255,.96) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .final-cta small {
+  color: var(--studio-muted) !important;
+}
+
+@media (max-width: 720px) {
+  app-root[data-theme='light'] .rqs-landing .feature,
+  app-root[data-theme='light'] .rqs-landing .origin,
+  app-root[data-theme='light'] .rqs-landing .pricing,
+  app-root[data-theme='light'] .rqs-landing .proof,
+  app-root[data-theme='light'] .rqs-landing .final-cta {
+    background:
+      radial-gradient(circle at 86% 8%, rgba(0,122,140,.07), transparent 20rem),
+      var(--studio-bg) !important;
+  }
+}
