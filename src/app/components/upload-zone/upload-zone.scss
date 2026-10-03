@@ -5,12 +5,9 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 40px;
-
-  /* 🛡️ BLINDAGEM RESPONSIVA */
-  width: 100%;          /* Ocupa a largura disponível da tela do telemóvel */
-  max-width: 600px;     /* Mas não passa de 600px no Desktop (mantém a sua estética) */
-  box-sizing: border-box; /* Garante que o padding não estoure a largura */
-
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
   margin: -1px auto;
   box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5);
   color: #fff;
@@ -136,21 +133,22 @@
   }
 }
 
-.btn-danger{
-background: linear-gradient(90deg, #ff003c, #8c0a0a);
-color: white;
-width: 77%;
-padding: 12px;
-font-weight: bold;
-border-radius: 6px;
-cursor: pointer;
-transition: all 0.3s ease;
-&:hover {
-      box-shadow: 0 0 25px rgba(255, 0, 60, 0.8);
-      transform: translateY(-2px);
-    }
+.btn-danger {
+  background: linear-gradient(90deg, #ff003c, #8c0a0a);
+  color: white;
+  width: 77%;
+  padding: 12px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 0 25px rgba(255, 0, 60, 0.8);
+    transform: translateY(-2px);
+  }
 }
-/* 📟 TERMINAL DE TELEMETRIA CYBERPUNK */
+
 .cyber-terminal {
   background: #05070a;
   border: 1px solid #00f0ff;
@@ -173,7 +171,6 @@ transition: all 0.3s ease;
       width: 8px;
       height: 8px;
       border-radius: 50%;
-
       &.red { background: #ff0055; box-shadow: 0 0 6px #ff0055; }
       &.yellow { background: #ffa600; box-shadow: 0 0 6px #ffa600; }
       &.green { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
@@ -198,7 +195,6 @@ transition: all 0.3s ease;
     font-size: 11px;
     color: #c9d1d9;
 
-    /* Custom Scrollbar */
     &::-webkit-scrollbar { width: 4px; }
     &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
     &::-webkit-scrollbar-thumb { background: #00f0ff; border-radius: 2px; }
@@ -214,44 +210,25 @@ transition: all 0.3s ease;
         font-weight: bold;
       }
 
-      .log-text {
-        font-family: 'Fira Code', monospace;
-      }
+      .log-text { font-family: 'Fira Code', monospace; }
 
       &.active-status {
         color: #00ff88;
         font-weight: bold;
-
-        .status-text {
-          font-family: 'Fira Code', monospace;
-          letter-spacing: 0.5px;
-        }
-
-        .blink-block {
-          display: inline-block;
-          margin-left: 4px;
-          animation: blink 1s step-end infinite;
-        }
+        .status-text { font-family: 'Fira Code', monospace; letter-spacing: 0.5px; }
+        .blink-block { display: inline-block; margin-left: 4px; animation: blink 1s step-end infinite; }
       }
     }
   }
 }
 
-@keyframes blink {
-  50% { opacity: 0; }
-}
-
-/* Transição de fade para entrada suave de logs */
-.animate-fade {
-  animation: fadeIn 0.25s ease-out;
-}
-
+@keyframes blink { 50% { opacity: 0; } }
+.animate-fade { animation: fadeIn 0.25s ease-out; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Presentation opt-in for /studio/master; the existing /app panel is unchanged. */
 :host(.studio-master) {
   display: block;
   min-width: 0;
@@ -276,7 +253,6 @@ transition: all 0.3s ease;
   }
 }
 
-/* LIGHT is intentionally tone-on-tone; DARK declarations above remain untouched. */
 :host-context(app-studio-shell[data-theme='light']) {
   .glass-panel {
     background: var(--studio-card);
@@ -308,4 +284,43 @@ transition: all 0.3s ease;
 
   .auth-resume-notice button,
   .processing-status { color: var(--studio-cyan-strong); }
+
+  .style-selectors .btn-suno-fix {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-display);
+    color: var(--studio-text);
+  }
+
+  .cyber-terminal {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-display);
+    color: var(--studio-text);
+    box-shadow: none;
+
+    .terminal-header {
+      border-bottom-color: var(--studio-border);
+      .terminal-title { color: var(--studio-text-secondary); }
+    }
+
+    .terminal-body {
+      color: var(--studio-text-secondary);
+      &::-webkit-scrollbar-track { background: var(--studio-card); }
+      &::-webkit-scrollbar-thumb { background: var(--studio-cyan-strong); }
+      .terminal-line .prompt { color: var(--studio-cyan-strong); text-shadow: none; }
+      .terminal-line.active-status { color: var(--studio-success-text); }
+    }
+  }
+
+  .processing-status .spinner {
+    border-color: var(--studio-border);
+    border-top-color: var(--studio-cyan-strong);
+  }
+
+  .btn-danger:focus-visible,
+  .download-section .btn-download:focus-visible,
+  .style-selectors button:focus-visible,
+  .auth-resume-notice button:focus-visible {
+    outline: 2px solid var(--studio-cyan-strong);
+    outline-offset: 3px;
+  }
 }
