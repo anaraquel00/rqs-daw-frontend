@@ -33,7 +33,8 @@
               "src/styles.scss",
               "src/stage4-ux.scss",
               "src/theme-consistency.scss",
-              "src/theme-readability.scss"
+              "src/theme-readability.scss",
+              "src/theme-landing-light.scss"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",
@@ -123,7 +124,8 @@
               "src/styles.scss",
               "src/stage4-ux.scss",
               "src/theme-consistency.scss",
-              "src/theme-readability.scss"
+              "src/theme-readability.scss",
+              "src/theme-landing-light.scss"
             ]
           }
         }
