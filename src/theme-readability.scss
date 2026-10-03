@@ -1,0 +1,309 @@
+/*
+ * RQS Studio light-mode readability hardening.
+ *
+ * These rules consume the existing Studio theme tokens; they do not introduce
+ * a second theme state. The narrow !important declarations are intentional:
+ * the legacy standalone routes still use Angular emulated component styles
+ * with dark-first hardcoded values and generated attribute specificity.
+ * Scope is restricted to app-root[data-theme='light'] and visual properties.
+ */
+
+/* CONTACT */
+app-root[data-theme='light'] app-contact-page {
+  background: var(--studio-bg) !important;
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-card,
+app-root[data-theme='light'] app-contact-page .contact-form {
+  background: var(--studio-card) !important;
+  border-color: var(--studio-border-strong) !important;
+  color: var(--studio-text) !important;
+  box-shadow: 0 18px 45px rgba(23, 32, 51, .09) !important;
+}
+
+app-root[data-theme='light'] app-contact-page h1,
+app-root[data-theme='light'] app-contact-page h2,
+app-root[data-theme='light'] app-contact-page .contact-card h2 {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .lead,
+app-root[data-theme='light'] app-contact-page .contact-card p,
+app-root[data-theme='light'] app-contact-page .contact-channel p:not(.eyebrow),
+app-root[data-theme='light'] app-contact-page .contact-form-section .form-copy > p:not(.eyebrow),
+app-root[data-theme='light'] app-contact-page .privacy-note,
+app-root[data-theme='light'] app-contact-page .contact-card .index,
+app-root[data-theme='light'] app-contact-page .contact-form label > span {
+  color: var(--studio-text-secondary) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .eyebrow,
+app-root[data-theme='light'] app-contact-page .inline-links a,
+app-root[data-theme='light'] app-contact-page .contact-language button.is-active,
+app-root[data-theme='light'] app-contact-page .privacy-note a {
+  color: var(--studio-cyan-strong) !important;
+  text-shadow: none !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-language,
+app-root[data-theme='light'] app-contact-page .contact-language button {
+  color: var(--studio-muted) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-language button:hover {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-channel,
+app-root[data-theme='light'] app-contact-page .contact-form-section {
+  border-color: var(--studio-border) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-form input,
+app-root[data-theme='light'] app-contact-page .contact-form select,
+app-root[data-theme='light'] app-contact-page .contact-form textarea {
+  border-color: var(--studio-border-strong) !important;
+  background: var(--studio-display) !important;
+  color: var(--studio-text) !important;
+  caret-color: var(--studio-cyan-strong);
+}
+
+app-root[data-theme='light'] app-contact-page .contact-form input::placeholder,
+app-root[data-theme='light'] app-contact-page .contact-form textarea::placeholder {
+  color: var(--studio-muted) !important;
+  opacity: 1;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-form select option {
+  background: var(--studio-card) !important;
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-form input:focus,
+app-root[data-theme='light'] app-contact-page .contact-form select:focus,
+app-root[data-theme='light'] app-contact-page .contact-form textarea:focus {
+  border-color: var(--studio-cyan-strong) !important;
+  background: var(--studio-card) !important;
+  box-shadow: 0 0 0 3px rgba(0, 95, 109, .12) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .submit-button,
+app-root[data-theme='light'] app-contact-page .primary-cta {
+  border-color: var(--studio-cyan-strong) !important;
+  background: var(--studio-cyan-strong) !important;
+  color: #fff !important;
+  opacity: 1;
+}
+
+app-root[data-theme='light'] app-contact-page .submit-button:hover:not(:disabled),
+app-root[data-theme='light'] app-contact-page .primary-cta:hover {
+  background: var(--studio-cyan) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .submit-button:disabled {
+  border-color: var(--studio-border-strong) !important;
+  background: #d9e2e7 !important;
+  color: #45525f !important;
+  opacity: 1 !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-nav a {
+  border-color: var(--studio-border-strong) !important;
+  background: var(--studio-card) !important;
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-nav a:hover {
+  border-color: var(--studio-cyan-strong) !important;
+  color: var(--studio-cyan-strong) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .contact-nav .primary {
+  border-color: var(--studio-cyan) !important;
+  background: var(--studio-cyan-soft) !important;
+  color: var(--studio-cyan-strong) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .form-status.success {
+  border-color: var(--studio-success-border) !important;
+  background: var(--studio-success-bg) !important;
+  color: var(--studio-success-text) !important;
+}
+
+app-root[data-theme='light'] app-contact-page .form-status.error {
+  border-color: var(--studio-error-border) !important;
+  background: var(--studio-error-bg) !important;
+  color: var(--studio-error-text) !important;
+}
+
+/* TERMS + PRIVACY */
+app-root[data-theme='light'] app-terms,
+app-root[data-theme='light'] app-privacy {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container,
+app-root[data-theme='light'] app-privacy .terms-container {
+  border-color: var(--studio-border-strong) !important;
+  background: var(--studio-card) !important;
+  color: var(--studio-text) !important;
+  box-shadow: 0 18px 45px rgba(23, 32, 51, .09) !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container h1,
+app-root[data-theme='light'] app-privacy .terms-container h1 {
+  border-color: var(--studio-border) !important;
+  color: var(--studio-cyan-strong) !important;
+  text-shadow: none !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container h2,
+app-root[data-theme='light'] app-privacy .terms-container h2 {
+  border-left-color: var(--studio-violet) !important;
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container h3,
+app-root[data-theme='light'] app-privacy .terms-container h3,
+app-root[data-theme='light'] app-terms .terms-container strong,
+app-root[data-theme='light'] app-privacy .terms-container strong,
+app-root[data-theme='light'] app-terms .terms-container .highlight,
+app-root[data-theme='light'] app-privacy .terms-container .highlight {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container p,
+app-root[data-theme='light'] app-privacy .terms-container p,
+app-root[data-theme='light'] app-terms .terms-container li,
+app-root[data-theme='light'] app-privacy .terms-container li {
+  color: #3f4c57 !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container .update-date,
+app-root[data-theme='light'] app-privacy .terms-container .update-date,
+app-root[data-theme='light'] app-terms .terms-container .lang-toggle-bar,
+app-root[data-theme='light'] app-privacy .terms-container .lang-toggle-bar,
+app-root[data-theme='light'] app-terms .terms-container .lang-toggle-bar button,
+app-root[data-theme='light'] app-privacy .terms-container .lang-toggle-bar button,
+app-root[data-theme='light'] app-terms .terms-container .bottom-nav .secondary,
+app-root[data-theme='light'] app-privacy .terms-container .bottom-nav .secondary {
+  color: var(--studio-text-secondary) !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container a,
+app-root[data-theme='light'] app-privacy .terms-container a,
+app-root[data-theme='light'] app-terms .terms-container .lang-toggle-bar button.is-active,
+app-root[data-theme='light'] app-privacy .terms-container .lang-toggle-bar button.is-active {
+  color: var(--studio-cyan-strong) !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container a:hover,
+app-root[data-theme='light'] app-privacy .terms-container a:hover,
+app-root[data-theme='light'] app-terms .terms-container .lang-toggle-bar button:hover,
+app-root[data-theme='light'] app-privacy .terms-container .lang-toggle-bar button:hover {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-terms .terms-container .bottom-nav,
+app-root[data-theme='light'] app-privacy .terms-container .bottom-nav {
+  border-color: var(--studio-border) !important;
+}
+
+/* COOKIES */
+app-root[data-theme='light'] app-cookies-page .cookies-page {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(0, 122, 140, .07), transparent 34rem),
+    var(--studio-bg) !important;
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-cookies-page .brand,
+app-root[data-theme='light'] app-cookies-page h1,
+app-root[data-theme='light'] app-cookies-page .preference-card strong,
+app-root[data-theme='light'] app-cookies-page .policy-content h2 {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-cookies-page .updated,
+app-root[data-theme='light'] app-cookies-page .intro,
+app-root[data-theme='light'] app-cookies-page .preference-card span,
+app-root[data-theme='light'] app-cookies-page .policy-content p,
+app-root[data-theme='light'] app-cookies-page .language-switcher,
+app-root[data-theme='light'] app-cookies-page .language-switcher button {
+  color: #3f4c57 !important;
+}
+
+app-root[data-theme='light'] app-cookies-page .language-switcher button.active,
+app-root[data-theme='light'] app-cookies-page .eyebrow,
+app-root[data-theme='light'] app-cookies-page .privacy-link a {
+  color: var(--studio-cyan-strong) !important;
+}
+
+app-root[data-theme='light'] app-cookies-page .language-switcher button:hover {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-cookies-page .preference-card {
+  border-color: var(--studio-border-strong) !important;
+  background: var(--studio-card) !important;
+  box-shadow: 0 12px 32px rgba(23, 32, 51, .07);
+}
+
+app-root[data-theme='light'] app-cookies-page .preference-card button {
+  border-color: var(--studio-cyan-strong) !important;
+  background: var(--studio-cyan-soft) !important;
+  color: var(--studio-cyan-strong) !important;
+}
+
+app-root[data-theme='light'] app-cookies-page .preference-card button:hover {
+  background: #c6eaee !important;
+}
+
+app-root[data-theme='light'] app-cookies-page .policy-content section {
+  border-color: var(--studio-border) !important;
+}
+
+/* COOKIE CONSENT */
+app-root[data-theme='light'] app-cookie-consent .cookie-panel {
+  border-color: var(--studio-border-strong) !important;
+  background: rgba(255, 255, 255, .99) !important;
+  box-shadow: 0 18px 55px rgba(23, 32, 51, .18) !important;
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-cookie-consent h2 {
+  color: var(--studio-text) !important;
+}
+
+app-root[data-theme='light'] app-cookie-consent .description,
+app-root[data-theme='light'] app-cookie-consent .policy-links,
+app-root[data-theme='light'] app-cookie-consent .close-button {
+  color: var(--studio-text-secondary) !important;
+}
+
+app-root[data-theme='light'] app-cookie-consent .eyebrow,
+app-root[data-theme='light'] app-cookie-consent .policy-links a {
+  color: var(--studio-cyan-strong) !important;
+}
+
+app-root[data-theme='light'] app-cookie-consent .primary {
+  border-color: var(--studio-cyan-strong) !important;
+  background: var(--studio-cyan-strong) !important;
+  color: #fff !important;
+}
+
+app-root[data-theme='light'] app-cookie-consent .secondary {
+  border-color: var(--studio-border-strong) !important;
+  background: var(--studio-card) !important;
+  color: var(--studio-text) !important;
+}
+
+/* Keyboard focus remains visible on all readability-critical routes. */
+app-root[data-theme='light'] app-contact-page :is(a, button, input, select, textarea):focus-visible,
+app-root[data-theme='light'] app-cookies-page :is(a, button):focus-visible,
+app-root[data-theme='light'] :is(app-terms, app-privacy) :is(a, button):focus-visible,
+app-root[data-theme='light'] app-cookie-consent :is(a, button):focus-visible {
+  outline: 2px solid var(--studio-cyan-strong) !important;
+  outline-offset: 3px;
+}
