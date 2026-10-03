@@ -32,7 +32,8 @@
             "styles": [
               "src/styles.scss",
               "src/stage4-ux.scss",
-              "src/theme-consistency.scss"
+              "src/theme-consistency.scss",
+              "src/theme-readability.scss"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",
@@ -121,7 +122,8 @@
             "styles": [
               "src/styles.scss",
               "src/stage4-ux.scss",
-              "src/theme-consistency.scss"
+              "src/theme-consistency.scss",
+              "src/theme-readability.scss"
             ]
           }
         }
