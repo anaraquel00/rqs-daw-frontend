@@ -2,14 +2,26 @@
   <section class="pricing-hero shell">
     <div class="hero-nav">
       <a routerLink="/app" class="brand">RQS STUDIO</a>
-      <div class="language-switcher" aria-label="Interface language">
-        <button type="button" [class.active]="lang.isLanguage('pt')" (click)="lang.setLanguage('pt')">PT-BR</button>
-        <span>|</span>
-        <button type="button" [class.active]="lang.isLanguage('en')" (click)="lang.setLanguage('en')">EN</button>
-        <span>|</span>
-        <button type="button" [class.active]="lang.isLanguage('pl')" (click)="lang.setLanguage('pl')">PL</button>
-        <span>|</span>
-        <button type="button" [class.active]="lang.isLanguage('fr')" (click)="lang.setLanguage('fr')">FR</button>
+      <div class="hero-controls">
+        <div class="language-switcher" aria-label="Interface language">
+          <button type="button" [class.active]="lang.isLanguage('pt')" (click)="lang.setLanguage('pt')">PT-BR</button>
+          <span>|</span>
+          <button type="button" [class.active]="lang.isLanguage('en')" (click)="lang.setLanguage('en')">EN</button>
+          <span>|</span>
+          <button type="button" [class.active]="lang.isLanguage('pl')" (click)="lang.setLanguage('pl')">PL</button>
+          <span>|</span>
+          <button type="button" [class.active]="lang.isLanguage('fr')" (click)="lang.setLanguage('fr')">FR</button>
+        </div>
+        <div class="theme-switcher" aria-label="Color theme">
+          @for (theme of themes; track theme) {
+            <button
+              type="button"
+              [class.active]="themePreference() === theme"
+              [attr.aria-pressed]="themePreference() === theme"
+              (click)="setTheme(theme)"
+            >{{ theme.toUpperCase() }}</button>
+          }
+        </div>
       </div>
     </div>
 
@@ -44,7 +56,7 @@
       <a routerLink="/app" class="plan-cta secondary">{{ copy().openStudio }}</a>
     </article>
 
-    <article class="plan-card">
+    <article class="plan-card master">
       <div class="card-topline"><span>MASTER</span></div>
       <h2>{{ copy().masterTagline }}</h2>
       <div class="price-row"><strong>{{ formatPrice('master') }}</strong><span>{{ copy().monthly }}</span></div>
