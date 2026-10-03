@@ -11,9 +11,10 @@ export class ThemeService {
   readonly themes = ['auto', 'light', 'dark'] as const;
   readonly themePreference = signal<StudioThemePreference>('dark');
   private readonly systemTheme = signal<ResolvedStudioTheme>('dark');
-  readonly resolvedTheme = computed<ResolvedStudioTheme>(() =>
-    this.themePreference() === 'auto' ? this.systemTheme() : this.themePreference()
-  );
+  readonly resolvedTheme = computed<ResolvedStudioTheme>(() => {
+    const preference = this.themePreference();
+    return preference === 'auto' ? this.systemTheme() : preference;
+  });
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
