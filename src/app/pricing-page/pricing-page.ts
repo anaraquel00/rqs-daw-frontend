@@ -7,6 +7,7 @@ import { Footer } from '../footer/footer';
 import { LanguageService, UiLanguage } from '../services/language.service';
 import { SeoConfig, SeoService } from '../services/seo.service';
 import { AnalyticsService } from '../services/analytics.service';
+import { StudioThemePreference, ThemeService } from '../services/theme.service';
 
 type PricingCurrency = 'BRL' | 'USD' | 'PLN';
 
@@ -65,6 +66,9 @@ export function pricingSeoConfig(currentLang: UiLanguage): SeoConfig {
 })
 export class PricingPageComponent implements AfterViewInit {
   readonly lang = inject(LanguageService);
+  readonly theme = inject(ThemeService);
+  readonly themes = this.theme.themes;
+  readonly themePreference = this.theme.themePreference;
   readonly currency = signal<PricingCurrency>('USD');
   readonly copy = computed(() => this.lang.tr().PRICING);
   readonly prices = computed(() => PRICING[this.currency()]);
@@ -87,9 +91,14 @@ export class PricingPageComponent implements AfterViewInit {
       this.seo.update(pricingSeoConfig(currentLang));
     });
   }
+
   ngAfterViewInit(): void {
-  this.viewportScroller.scrollToPosition([0, 0]);
-}
+    this.viewportScroller.scrollToPosition([0, 0]);
+  }
+
+  setTheme(theme: StudioThemePreference): void {
+    this.theme.setTheme(theme);
+  }
 
   setCurrency(currency: PricingCurrency): void {
     this.currencyManuallySelected = true;
