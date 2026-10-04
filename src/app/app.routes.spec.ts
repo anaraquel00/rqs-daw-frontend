@@ -49,4 +49,12 @@ describe('V2 canonical app routes', () => {
     expect(serverRoutes.find(route => route.path === 'app')?.renderMode).toBe(RenderMode.Prerender);
     expect(serverRoutes.find(route => route.path === 'app/**')?.renderMode).toBe(RenderMode.Client);
   });
+
+  it('serves /master/online as a dedicated prerendered acquisition page', () => {
+    const landing = routes.find(route => route.path === 'master/online');
+    expect(landing?.component).toBeDefined();
+    expect(landing?.redirectTo).toBeUndefined();
+    expect(serverRoutes.find(route => route.path === 'master/online')?.renderMode)
+      .toBe(RenderMode.Prerender);
+  });
 });

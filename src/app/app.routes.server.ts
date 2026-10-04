@@ -30,6 +30,10 @@ export const serverRoutes: ServerRoute[] = [
     path: 'contact',
     renderMode: RenderMode.Prerender
   },
+  {
+    path: 'master/online',
+    renderMode: RenderMode.Prerender
+  },
 
   // O selector público do Studio é prerenderizado; os workspaces continuam client-only.
   {

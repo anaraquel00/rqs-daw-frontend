@@ -53,6 +53,14 @@ export class AuthService {
     '/app/learn',
     '/app/account',
   ]);
+  private readonly allowedAttributionParams = new Set([
+    'gclid',
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+  ]);
 
   // =================================================
   // PAYWALL / LIMITES
@@ -359,7 +367,9 @@ export class AuthService {
   }
 
   private captureCurrentReturnPath(): string {
-    const returnPath = this.sanitizeReturnPath(window.location.pathname) ?? '/app';
+    const returnPath = this.sanitizeReturnPath(
+      `${window.location.pathname}${window.location.search}`
+    ) ?? '/app';
     window.sessionStorage.setItem(this.authReturnPathKey, returnPath);
     return returnPath;
   }
@@ -371,11 +381,38 @@ export class AuthService {
   }
 
   private sanitizeReturnPath(candidate: string | null): string | null {
-    return candidate && this.allowedV2ReturnPaths.has(candidate) ? candidate : null;
+    if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) {
+      return null;
+    }
+
+    let parsed: URL;
+    try {
+      parsed = new URL(candidate, 'https://studio.raquelsynths.com');
+    } catch {
+      return null;
+    }
+
+    if (
+      parsed.origin !== 'https://studio.raquelsynths.com' ||
+      !this.allowedV2ReturnPaths.has(parsed.pathname) ||
+      parsed.hash
+    ) {
+      return null;
+    }
+
+    const safeQuery = new URLSearchParams();
+    for (const [key, rawValue] of parsed.searchParams.entries()) {
+      if (!this.allowedAttributionParams.has(key)) continue;
+      const value = rawValue.trim();
+      if (value) safeQuery.set(key, value.slice(0, 256));
+    }
+
+    const query = safeQuery.toString();
+    return query ? `${parsed.pathname}?${query}` : parsed.pathname;
   }
 
   private restoreReturnPath(returnPath: string): void {
-    if (window.location.pathname === returnPath) return;
+    if (`${window.location.pathname}${window.location.search}` === returnPath) return;
 
     if (this.router) {
       void this.router.navigateByUrl(returnPath, { replaceUrl: true });

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = 'dist/rqs-daw/browser';
-const routes = ['', 'app', 'pricing', 'contact', 'terms', 'privacy', 'cookies'];
+const routes = ['', 'app', 'master/online', 'pricing', 'contact', 'terms', 'privacy', 'cookies'];
 const expected = {
   '': {
     title: 'RQS Studio | Online Music Mastering for Independent Artists',
@@ -14,6 +14,11 @@ const expected = {
     title: 'RQS Studio Apps | Online Mastering, Stems, Setlists & Music Links',
     robots: 'index, follow',
     canonical: 'https://studio.raquelsynths.com/app'
+  },
+  'master/online': {
+    title: 'Online Music Mastering | RQS MASTER',
+    robots: 'index, follow',
+    canonical: 'https://studio.raquelsynths.com/master/online'
   },
   pricing: { robots: 'index, follow', canonical: 'https://studio.raquelsynths.com/pricing' },
   contact: { robots: 'index, follow', canonical: 'https://studio.raquelsynths.com/contact' },
@@ -50,5 +55,10 @@ const landingHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 assert.match(landingHtml, /WebSite/);
 assert.doesNotMatch(landingHtml, /WebApplication/);
 assert.doesNotMatch(appHtml, /<app-root><\/app-root>/);
+
+const masterLandingHtml = fs.readFileSync(path.join(root, 'master', 'online', 'index.html'), 'utf8');
+assert.match(masterLandingHtml, /RQS MASTER/);
+assert.match(masterLandingHtml, /WebApplication/);
+assert.match(masterLandingHtml, /Master my music/);
 
 console.log('SEO build checks passed.');

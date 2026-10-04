@@ -6,6 +6,7 @@ const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]
 const expected = [
   'https://studio.raquelsynths.com/',
   'https://studio.raquelsynths.com/app',
+  'https://studio.raquelsynths.com/master/online',
   'https://studio.raquelsynths.com/pricing',
   'https://studio.raquelsynths.com/contact',
   'https://studio.raquelsynths.com/terms',

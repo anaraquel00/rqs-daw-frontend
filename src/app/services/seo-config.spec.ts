@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Meta, Title } from '@angular/platform-browser';
 import { landingSeoConfig } from '../landing-page/landing-page';
+import { masterLandingSeoConfig } from '../master-landing-page/master-landing-page';
 import { studioSeoConfig, StudioSurface } from '../studio/studio-seo';
 import { SeoService } from './seo.service';
 
@@ -26,6 +27,17 @@ describe('RQS Studio SEO configuration', () => {
     expect(config.description).toBe('Master your track online in the browser with RQS MASTER. Free Public Beta for independent musicians, producers and AI-assisted music creators.');
     expect(config.url).toBe('https://studio.raquelsynths.com/');
     expect(config.robots).toBe('index, follow');
+  });
+
+  it('uses dedicated canonical metadata for the paid-traffic Master landing', () => {
+    const config = masterLandingSeoConfig('pt');
+    expect(config.title).toContain('Masterização Online');
+    expect(config.url).toBe('https://studio.raquelsynths.com/master/online');
+    expect(config.robots).toBe('index, follow');
+    expect(config.jsonLd).toEqual(jasmine.objectContaining({
+      '@type': 'WebApplication',
+      name: 'RQS MASTER'
+    }));
   });
 
   it('uses indexable app discovery SEO and truthful WebApplication data', () => {
