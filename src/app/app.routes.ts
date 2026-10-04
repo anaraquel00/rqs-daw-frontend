@@ -6,6 +6,7 @@ import { LandingPageComponent } from './landing-page/landing-page';
 import { ContactPageComponent } from './contact-page/contact-page';
 import { PricingPageComponent } from './pricing-page/pricing-page';
 import { CookiesPageComponent } from './cookies-page/cookies-page';
+import { MasterLandingPageComponent } from './master-landing-page/master-landing-page';
 
 export const routes: Routes = [
   {
@@ -46,6 +47,11 @@ export const routes: Routes = [
   {
     path: 'app',
     loadChildren: () => import('./studio/studio.routes').then(m => m.STUDIO_ROUTES)
+  },
+  {
+    path: 'master/online',
+    component: MasterLandingPageComponent,
+    title: 'RQS MASTER | Masterização Online para Música'
   },
   {
     path: '',

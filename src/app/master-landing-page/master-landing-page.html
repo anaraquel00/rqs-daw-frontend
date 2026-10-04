@@ -1,0 +1,161 @@
+<a class="skip-link" href="#master-landing-content">{{ copy().skip }}</a>
+
+<main id="master-landing-content" class="master-landing">
+  <header class="site-header shell">
+    <a class="brand" routerLink="/" aria-label="RQS Studio home">
+      <span class="brand-mark">RQS</span>
+      <span>STUDIO</span>
+    </a>
+
+    <div class="header-controls">
+      <div class="language-switcher" aria-label="Interface language">
+        <button type="button" [class.active]="lang.isLanguage('pt')" (click)="lang.setLanguage('pt')">PT-BR</button>
+        <span aria-hidden="true">/</span>
+        <button type="button" [class.active]="lang.isLanguage('en')" (click)="lang.setLanguage('en')">EN</button>
+      </div>
+
+      <div class="theme-switcher" aria-label="Color theme">
+        @for (themeOption of themes; track themeOption) {
+          <button
+            type="button"
+            [class.active]="themePreference() === themeOption"
+            [attr.aria-pressed]="themePreference() === themeOption"
+            (click)="setTheme(themeOption)"
+          >{{ themeOption.toUpperCase() }}</button>
+        }
+      </div>
+
+      <a
+        class="header-cta"
+        routerLink="/app/master"
+        [queryParams]="attributionParams"
+        (click)="trackCta('header')"
+      >{{ copy().navCta }}</a>
+    </div>
+  </header>
+
+  <section class="hero shell" aria-labelledby="master-landing-title">
+    <div class="hero-copy">
+      <p class="eyebrow">{{ copy().eyebrow }}</p>
+      <h1 id="master-landing-title">{{ copy().title }}</h1>
+      <p class="hero-subtitle">{{ copy().subtitle }}</p>
+
+      <div class="hero-actions">
+        <a
+          class="button button--primary"
+          routerLink="/app/master"
+          [queryParams]="attributionParams"
+          (click)="trackCta('hero')"
+        >{{ copy().primaryCta }}</a>
+        <a class="button button--secondary" href="#workflow">{{ copy().secondaryCta }}</a>
+      </div>
+
+      <p class="beta-note"><span aria-hidden="true">●</span> {{ copy().betaNote }}</p>
+    </div>
+
+    <div class="product-proof" aria-label="RQS MASTER interface preview">
+      <div class="product-proof__topbar">
+        <span>RQS MASTER</span>
+        <span class="proof-status"><i></i> PREVIEW READY</span>
+      </div>
+      <div class="product-proof__crop">
+        <img src="/assets/images/studio.webp" alt="RQS MASTER interface with waveform, loudness meters and A/B comparison" width="1024" height="512">
+      </div>
+      <div class="product-proof__labels" aria-hidden="true">
+        <span>A // {{ copy().original }}</span>
+        <span>B // {{ copy().preview }}</span>
+        <span>{{ copy().fullMaster }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="proof-section section shell" aria-labelledby="proof-title">
+    <div class="section-copy">
+      <p class="eyebrow">{{ copy().proofEyebrow }}</p>
+      <h2 id="proof-title">{{ copy().proofTitle }}</h2>
+      <p>{{ copy().proofBody }}</p>
+    </div>
+
+    <div class="comparison-card" aria-hidden="true">
+      <div class="comparison-card__head">
+        <span>A/B COMPARISON</span>
+        <span>-14.0 LUFS · -1.0 dBTP</span>
+      </div>
+      <div class="comparison-track">
+        <span>A</span><strong>{{ copy().original }}</strong><i class="wave wave--original"></i>
+      </div>
+      <div class="comparison-track is-active">
+        <span>B</span><strong>{{ copy().preview }}</strong><i class="wave wave--preview"></i>
+      </div>
+      <div class="comparison-toggle"><span>A</span><b></b><span>B</span></div>
+    </div>
+  </section>
+
+  <section id="workflow" class="workflow section" aria-labelledby="workflow-title">
+    <div class="shell">
+      <div class="section-heading">
+        <p class="eyebrow">{{ copy().workflowEyebrow }}</p>
+        <h2 id="workflow-title">{{ copy().workflowTitle }}</h2>
+      </div>
+
+      <div class="workflow-grid">
+        @for (step of copy().steps; track step.number) {
+          <article class="workflow-step">
+            <span>{{ step.number }}</span>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.body }}</p>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="free-section section shell" aria-labelledby="free-title">
+    <div class="free-card">
+      <div>
+        <p class="eyebrow">{{ copy().freeEyebrow }}</p>
+        <h2 id="free-title">{{ copy().freeTitle }}</h2>
+        <p>{{ copy().freeBody }}</p>
+      </div>
+      <div class="quota-card" aria-label="Free beta quota">
+        <span>FREE // PUBLIC BETA</span>
+        <strong>3</strong>
+        <small>FULL MASTERS</small>
+      </div>
+    </div>
+    <p class="planned-price">{{ copy().plannedPrice }} <a routerLink="/pricing" [queryParams]="attributionParams">{{ copy().plansLink }}</a>.</p>
+  </section>
+
+  <section class="trust-section section" aria-labelledby="trust-title">
+    <div class="shell">
+      <div class="section-heading section-heading--center">
+        <p class="eyebrow">{{ copy().trustEyebrow }}</p>
+        <h2 id="trust-title">{{ copy().trustTitle }}</h2>
+      </div>
+
+      <div class="trust-grid">
+        @for (item of copy().trustItems; track item.title; let index = $index) {
+          <article>
+            <span aria-hidden="true">0{{ index + 1 }}</span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.body }}</p>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="final-cta section shell" aria-labelledby="final-title">
+    <p class="eyebrow">RQS MASTER // SIGNAL READY</p>
+    <h2 id="final-title">{{ copy().finalTitle }}</h2>
+    <p>{{ copy().finalBody }}</p>
+    <a
+      class="button button--primary"
+      routerLink="/app/master"
+      [queryParams]="attributionParams"
+      (click)="trackCta('final')"
+    >{{ copy().primaryCta }}</a>
+  </section>
+</main>
+
+<div class="footer-shell shell"><app-footer></app-footer></div>

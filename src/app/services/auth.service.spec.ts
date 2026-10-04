@@ -72,6 +72,36 @@ describe('AuthService OAuth and Magic Link', () => {
     });
   });
 
+  it('preserves allowlisted paid-traffic attribution through OAuth return', async () => {
+    window.history.replaceState({}, '', '/app/master?gclid=click-123&utm_source=google&utm_campaign=master-search&access_token=secret');
+    const signIn = spyOn(service.getSupabaseClient().auth, 'signInWithOAuth').and.resolveTo({ data: {}, error: null } as never);
+
+    service.requestSignIn('mastering');
+    await service.loginWithProvider('google');
+
+    const expected = '/app/master?gclid=click-123&utm_source=google&utm_campaign=master-search';
+    expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBe(expected);
+    expect(signIn).toHaveBeenCalledOnceWith({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}${expected}` },
+    });
+  });
+
+  it('restores allowlisted attribution and strips callback or arbitrary parameters', () => {
+    window.sessionStorage.setItem(
+      'rqs_auth_return_path',
+      '/app/master?utm_medium=cpc&utm_term=online+mastering&token_hash=secret&other=nope'
+    );
+    window.history.replaceState({}, '', '/app/master?code=callback-secret');
+
+    callbackHandler().handleAuthCallbackReturn({ present: true, errorCode: null }, authenticatedSession);
+
+    expect(router.navigateByUrl).toHaveBeenCalledOnceWith(
+      '/app/master?utm_medium=cpc&utm_term=online+mastering',
+      { replaceUrl: true }
+    );
+  });
+
   it('uses the existing Supabase client for Magic Link with the required options', async () => {
     const signIn = spyOn(service.getSupabaseClient().auth, 'signInWithOtp').and.resolveTo({ data: {}, error: null } as never);
 
