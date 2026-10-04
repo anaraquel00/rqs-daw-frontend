@@ -37,7 +37,18 @@
   <section class="hero shell" aria-labelledby="master-landing-title">
     <div class="hero-copy">
       <p class="eyebrow">{{ copy().eyebrow }}</p>
-      <h1 id="master-landing-title">{{ copy().title }}</h1>
+      <h1
+        id="master-landing-title"
+        [class.hero-title--pt]="lang.currentLang() === 'pt'"
+      >
+        @if (lang.currentLang() === 'pt') {
+          <span class="hero-title-line">Masterização</span>
+          <span class="hero-title-line">online para</span>
+          <span class="hero-title-line">sua música.</span>
+        } @else {
+          {{ copy().title }}
+        }
+      </h1>
       <p class="hero-subtitle">{{ copy().subtitle }}</p>
 
       <div class="hero-actions">

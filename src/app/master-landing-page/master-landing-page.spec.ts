@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { AnalyticsService } from '../services/analytics.service';
 import { SeoService } from '../services/seo.service';
+import { LanguageService } from '../services/language.service';
 import { MasterLandingPageComponent, masterLandingSeoConfig } from './master-landing-page';
 
 describe('MasterLandingPageComponent', () => {
@@ -64,5 +65,27 @@ describe('MasterLandingPageComponent', () => {
       source_page: '/master/online',
       destination: '/app/master'
     });
+  });
+
+  it('renders the PT-BR hero heading as three indivisible visual lines', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [MasterLandingPageComponent],
+      providers: [
+        provideRouter([]),
+        SeoService,
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } }
+      ]
+    });
+
+    TestBed.inject(LanguageService).setLanguage('pt');
+    const fixture = TestBed.createComponent(MasterLandingPageComponent);
+    fixture.detectChanges();
+
+    const lines = Array.from(
+      fixture.nativeElement.querySelectorAll('.hero-title-line') as NodeListOf<HTMLElement>
+    ).map(line => line.textContent?.trim());
+
+    expect(lines).toEqual(['Masterização', 'online para', 'sua música.']);
   });
 });
