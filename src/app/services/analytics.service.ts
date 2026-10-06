@@ -128,24 +128,47 @@ export class AnalyticsService {
   trackPageView(): void {
     if (!this.canTrack()) return;
 
-    // Never send query strings or fragments to GA4. OAuth codes, tokens,
-    // e-mail addresses or other user-provided values may legitimately appear
-    // there even though custom event parameters are separately filtered.
-    const pagePath = window.location.pathname || '/';
-    const pageLocation = `${window.location.origin}${pagePath}`;
-    const pageKey = pagePath;
+  // Preserve only attribution parameters that are safe and useful for analytics.
+  // Never forward arbitrary query parameters or URL fragments because OAuth
+  // codes, tokens, e-mail addresses or other user-provided values may appear there.
+  const pagePath = window.location.pathname || '/';
 
-    if (pageKey === this.lastPageKey) {
-      return;
+  const allowedAttributionParams = new Set([
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+    'gclid',
+    'gbraid',
+    'wbraid'
+  ]);
+
+  const safeSearchParams = new URLSearchParams();
+
+  for (const [key, value] of new URLSearchParams(window.location.search)) {
+    if (allowedAttributionParams.has(key)) {
+      safeSearchParams.set(key, value);
     }
+  }
 
-    this.lastPageKey = pageKey;
+  const safeQuery = safeSearchParams.toString();
+  const pageLocation =
+    `${window.location.origin}${pagePath}${safeQuery ? `?${safeQuery}` : ''}`;
 
-    this.send('event', 'page_view', {
-      page_path: pagePath,
-      page_location: pageLocation,
-      page_title: this.title.getTitle() || this.document.title
-    });
+  const pageKey = pagePath;
+
+  if (pageKey === this.lastPageKey) {
+    return;
+  }
+
+  this.lastPageKey = pageKey;
+
+  this.send('event', 'page_view', {
+    page_path: pagePath,
+    page_location: pageLocation,
+    page_title: this.title.getTitle() || this.document.title
+  });
   }
 
   trackEvent(name: string, params: AnalyticsParams = {}): void {
