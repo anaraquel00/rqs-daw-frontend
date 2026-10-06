@@ -30,6 +30,18 @@ export class AnalyticsService {
   private gtagConfigured = false;
   private routerSubscribed = false;
   private lastPageKey = '';
+  private lastPageLocation = '';
+
+  private readonly allowedAttributionParams = new Set([
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+    'gclid',
+    'gbraid',
+    'wbraid'
+  ]);
 
   private readonly blockedParamNames = new Set([
     'email',
@@ -115,6 +127,7 @@ export class AnalyticsService {
 
     this.active = false;
     this.lastPageKey = '';
+    this.lastPageLocation = '';
 
     if (typeof window.gtag === 'function') {
       window.gtag('consent', 'update', {
@@ -128,11 +141,13 @@ export class AnalyticsService {
   trackPageView(): void {
     if (!this.canTrack()) return;
 
-    // Never send query strings or fragments to GA4. OAuth codes, tokens,
-    // e-mail addresses or other user-provided values may legitimately appear
-    // there even though custom event parameters are separately filtered.
     const pagePath = window.location.pathname || '/';
-    const pageLocation = `${window.location.origin}${pagePath}`;
+    const pageLocation = this.sanitizeAnalyticsUrl(window.location.href);
+
+    const pageReferrer =
+      this.lastPageLocation ||
+      this.sanitizeAnalyticsUrl(this.document.referrer);
+
     const pageKey = pagePath;
 
     if (pageKey === this.lastPageKey) {
@@ -144,8 +159,32 @@ export class AnalyticsService {
     this.send('event', 'page_view', {
       page_path: pagePath,
       page_location: pageLocation,
+      page_referrer: pageReferrer || undefined,
       page_title: this.title.getTitle() || this.document.title
     });
+
+    this.lastPageLocation = pageLocation;
+  }
+
+  private sanitizeAnalyticsUrl(rawUrl: string): string {
+    if (!rawUrl) return '';
+
+    try {
+      const url = new URL(rawUrl, window.location.origin);
+      const safeSearchParams = new URLSearchParams();
+
+      for (const [key, value] of url.searchParams) {
+        if (this.allowedAttributionParams.has(key)) {
+          safeSearchParams.set(key, value);
+        }
+      }
+
+      const safeQuery = safeSearchParams.toString();
+
+      return `${url.origin}${url.pathname}${safeQuery ? `?${safeQuery}` : ''}`;
+    } catch {
+      return '';
+    }
   }
 
   trackEvent(name: string, params: AnalyticsParams = {}): void {
