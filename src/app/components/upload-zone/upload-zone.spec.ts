@@ -31,7 +31,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     duration_seconds: 185,
   };
   const audioDna: AudioDnaPayload = {
-    version: 'rqs-audio-dna-v1.1', status: 'available', source_sha256: 'a'.repeat(64),
+    version: 'rqs-audio-dna-v1.2', status: 'available', source_sha256: 'a'.repeat(64),
     technical: {
       lufs_integrated: -14.2, true_peak_dbtp: -1.3, lra_lu: 5.2, rms_dbfs: -18.4,
       crest_factor_db: 8.1, duration_seconds: 185, brightness: 0.3, warmth: 0.5,
@@ -39,11 +39,20 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       harshness: 0.2, dynamic_density: 0.4, overall_energy: 0.6,
     },
     music: {
-      status: 'experimental', method: 'held_back',
+      status: 'partial', method: 'deterministic_music_features_v1_2',
       bpm: { value: 63, confidence: 0.62, alternatives: [{ value: 126, confidence: 0.62, relation: 'double_time' }], ambiguous: true, method: 'test' },
       key: { value: null, confidence: 0, status: 'experimental' }, genres: [], genre_status: 'inconclusive', moods: [], mood_status: 'inconclusive',
       instruments: [], instrument_status: 'inconclusive', vocal: { status: 'inconclusive', presence: null, processed: null, method: 'held_back' },
-      energy: 0.6, energy_status: 'technical_composite', danceability: 0.5, danceability_status: 'experimental',
+      energy: 0.6, energy_label: 'moderate', energy_status: 'technical_composite',
+      danceability: 0.5, danceability_label: 'moderate', danceability_status: 'experimental',
+      semantic: {
+        status: 'unavailable', method: 'semantic_classifier_not_configured_v1_2', model: null,
+        genres: [], moods: [], instruments: [],
+        vocal: {
+          status: 'unavailable', presence: null, type: null, processed: null, confidence: null,
+          method: 'semantic_classifier_not_configured_v1_2',
+        },
+      },
     },
     master_profile: {
       atmosphere: 'aurora', character_intensity: 26, confidence: 0.57, confidence_level: 'medium', auto_configure: true,

@@ -39,25 +39,47 @@
       <div><span>{{ copy().dynamics }}</span><strong>{{ dynamicsLabel() }}</strong></div>
     </div>
 
-    <div class="tempo-grid">
-      <section aria-labelledby="dna-tempo-title">
-        <h4 id="dna-tempo-title">{{ copy().tempo }}</h4>
-        <strong>{{ music.bpm.value ?? '—' }}{{ music.bpm.value !== null ? ' BPM' : '' }}</strong>
-        @if (music.bpm.ambiguous && tempoAlternative(); as candidate) {
-          <span>{{ tempoAlternativeLabel(candidate.relation) }}: {{ candidate.value }} BPM</span>
-        }
-        <small>{{ confidenceLabel(music.bpm.confidence >= 0.75 ? 'high' : music.bpm.confidence >= 0.45 ? 'medium' : 'low') }} {{ copy().confidence.toLowerCase() }}</small>
-      </section>
-      <section aria-labelledby="dna-key-title">
-        <h4 id="dna-key-title">{{ copy().key }}</h4>
-        <strong>{{ music.key.value ?? '—' }}</strong>
-        <small>{{ copy().experimental }} · {{ confidenceLabel(music.key.confidence >= 0.75 ? 'high' : music.key.confidence >= 0.45 ? 'medium' : 'low') }}</small>
-      </section>
-    </div>
+    <section class="music-dna" aria-labelledby="music-dna-title">
+      <div class="title-row"><h4 id="music-dna-title">{{ copy().musicDna }}</h4><span>{{ musicMaturityLabel() }}</span></div>
+      <div class="music-feature-grid">
+        <section aria-labelledby="dna-tempo-title">
+          <h5 id="dna-tempo-title">{{ copy().tempo }}</h5>
+          <strong>{{ music.bpm.value ?? '—' }}{{ music.bpm.value !== null ? ' BPM' : '' }}</strong>
+          @if (music.bpm.ambiguous && tempoAlternative(); as candidate) {
+            <span>{{ tempoAlternativeLabel(candidate.relation) }}: {{ candidate.value }} BPM</span>
+          }
+          <small>{{ confidenceLabel(music.bpm.confidence >= 0.75 ? 'high' : music.bpm.confidence >= 0.45 ? 'medium' : 'low') }} {{ copy().confidence.toLowerCase() }}</small>
+        </section>
+        <section aria-labelledby="dna-key-title">
+          <h5 id="dna-key-title">{{ copy().key }}</h5>
+          <strong>{{ music.key.value ?? '—' }}</strong>
+          <small>{{ copy().experimental }} · {{ confidenceLabel(music.key.confidence >= 0.75 ? 'high' : music.key.confidence >= 0.45 ? 'medium' : 'low') }} {{ copy().confidence.toLowerCase() }}</small>
+        </section>
+        <section aria-labelledby="dna-energy-title">
+          <h5 id="dna-energy-title">{{ copy().energy }}</h5>
+          <strong>{{ musicFeatureLabel(music.energy, music.energy_label) }}</strong>
+          <small>{{ copy().normalizedValue }}: {{ normalizedPercent(music.energy) }}%</small>
+        </section>
+        <section aria-labelledby="dna-danceability-title">
+          <h5 id="dna-danceability-title">{{ copy().danceability }}</h5>
+          <strong>{{ musicFeatureLabel(music.danceability, music.danceability_label) }}</strong>
+          <small>{{ copy().experimental }} · {{ copy().normalizedValue }}: {{ normalizedPercent(music.danceability) }}%</small>
+        </section>
+      </div>
 
-    <section class="semantic" aria-labelledby="music-dna-title">
-      <div class="title-row"><h4 id="music-dna-title">{{ copy().musicDna }}</h4><span>{{ copy().experimental }}</span></div>
-      <p>{{ copy().semanticBody }}</p>
+      <section class="semantic" aria-labelledby="semantic-title">
+        <h5 id="semantic-title">{{ copy().semantic }}</h5>
+        @if (music.semantic?.status === 'available') {
+          <dl class="semantic-grid">
+            <div><dt>{{ copy().genre }}</dt><dd>{{ semanticLabels(music.semantic!.genres) || copy().inconclusive }}</dd></div>
+            <div><dt>{{ copy().mood }}</dt><dd>{{ semanticLabels(music.semantic!.moods) || copy().inconclusive }}</dd></div>
+            <div><dt>{{ copy().instrumentation }}</dt><dd>{{ semanticLabels(music.semantic!.instruments) || copy().inconclusive }}</dd></div>
+            <div><dt>{{ copy().vocals }}</dt><dd>{{ vocalLabel(music.semantic!.vocal.type) }}</dd></div>
+          </dl>
+        } @else {
+          <p>{{ copy().semanticBody }}</p>
+        }
+      </section>
     </section>
 
     <details class="advanced-details">

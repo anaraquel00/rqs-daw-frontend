@@ -14,12 +14,12 @@
 .title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .master-profile { padding: 15px; border-left: 3px solid #00ff88; background: rgba(0, 255, 136, 0.035); }
 .master-profile.inconclusive { border-left-color: #ffbe00; }
-.master-profile h3, .semantic h4 { margin: 0; color: #d7e8eb; font-size: 11px; letter-spacing: .9px; }
+.master-profile h3, .music-dna h4, .semantic h5 { margin: 0; color: #d7e8eb; font-size: 11px; letter-spacing: .9px; }
 .source-badge { padding: 5px 9px; border: 1px solid rgba(0,255,136,.35); border-radius: 999px; color: #00ff88; font-size: 9px; white-space: nowrap; }
 .source-badge.manual { border-color: rgba(255,190,0,.35); color: #ffbe00; }
 .profile-facts, .advanced-details dl { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 9px; margin: 14px 0 0; }
-.profile-facts div, .signal-grid > div, .tempo-grid section { min-width: 0; padding: 10px; border: 1px solid rgba(255,255,255,.07); border-radius: 7px; background: rgba(0,0,0,.18); }
-dt, .signal-grid span, .tempo-grid h4 { color: #68777c; font-size: 9px; letter-spacing: .65px; text-transform: uppercase; }
+.profile-facts div, .signal-grid > div, .music-feature-grid > section { min-width: 0; padding: 10px; border: 1px solid rgba(255,255,255,.07); border-radius: 7px; background: rgba(0,0,0,.18); }
+dt, .signal-grid span, .music-feature-grid h5 { color: #68777c; font-size: 9px; letter-spacing: .65px; text-transform: uppercase; }
 dd { margin: 5px 0 0; color: #fff; overflow-wrap: anywhere; }
 .profile-facts dd { font-size: 14px; font-weight: 700; text-transform: uppercase; }
 .dna-reset { min-height: 44px; margin-top: 10px; padding: 0; border: 0; background: transparent; color: #00f0ff; font: 10px monospace; text-decoration: underline; cursor: pointer; }
@@ -30,15 +30,18 @@ dd { margin: 5px 0 0; color: #fff; overflow-wrap: anywhere; }
 .signal-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 14px; }
 .signal-grid span { display: block; margin-bottom: 7px; }
 .signal-grid strong { display: block; color: #fff; font-size: clamp(11px,1.5vw,13px); line-height: 1.35; overflow-wrap: anywhere; text-transform: uppercase; }
-.tempo-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
-.tempo-grid h4 { margin: 0; }
-.tempo-grid strong, .tempo-grid span, .tempo-grid small { display: block; margin-top: 6px; }
-.tempo-grid strong { color: #fff; font-size: 15px; }
-.tempo-grid span { color: #00f0ff; font-size: 10px; }
-.tempo-grid small { color: #9db0b5; font-size: 9px; }
-.semantic { margin-top: 12px; padding: 12px; border: 1px solid rgba(142,124,255,.16); border-radius: 7px; background: rgba(142,124,255,.035); }
-.semantic .title-row { align-items: center; justify-content: flex-start; }
-.semantic .title-row span { color: #b4a8ff; font-size: 8px; letter-spacing: .6px; }
+.music-dna { margin-top: 12px; padding: 12px; border: 1px solid rgba(142,124,255,.16); border-radius: 7px; background: rgba(142,124,255,.035); }
+.music-dna > .title-row { align-items: center; justify-content: flex-start; }
+.music-dna > .title-row span { color: #b4a8ff; font-size: 8px; letter-spacing: .6px; }
+.music-feature-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
+.music-feature-grid h5 { margin: 0; }
+.music-feature-grid strong, .music-feature-grid span, .music-feature-grid small { display: block; margin-top: 6px; }
+.music-feature-grid strong { color: #fff; font-size: 15px; }
+.music-feature-grid span { color: #00f0ff; font-size: 10px; }
+.music-feature-grid small { color: #9db0b5; font-size: 9px; }
+.semantic { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(142,124,255,.16); }
+.semantic-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; margin: 10px 0 0; }
+.semantic-grid div { min-width: 0; }
 .advanced-details, .release-assistant { margin-top: 12px; color: #8b949e; font-size: 10px; }
 summary { display: flex; align-items: center; min-height: 44px; color: #00f0ff; cursor: pointer; overflow-wrap: anywhere; }
 .advanced-details dl div { min-width: 0; padding-top: 7px; border-top: 1px solid rgba(255,255,255,.05); }
@@ -50,7 +53,7 @@ summary { display: flex; align-items: center; min-height: 44px; color: #00f0ff; 
 @media (max-width: 560px) {
   .title-row { flex-direction: column; }
   .source-badge { white-space: normal; }
-  .signal-grid, .profile-facts, .tempo-grid, .advanced-details dl { grid-template-columns: minmax(0,1fr); }
+  .signal-grid, .profile-facts, .music-feature-grid, .semantic-grid, .advanced-details dl { grid-template-columns: minmax(0,1fr); }
 }
 
 @media (min-width: 561px) and (max-width: 900px) {
@@ -60,9 +63,10 @@ summary { display: flex; align-items: center; min-height: 44px; color: #00f0ff; 
 :host-context(app-studio-shell[data-theme='light']) {
   .audio-dna { border-color: var(--studio-border); background: var(--studio-card); color: var(--studio-text); }
   .master-profile { background: var(--studio-success-bg); }
-  .master-profile h3, dd, .signal-grid strong, .tempo-grid strong { color: var(--studio-text); }
-  .profile-facts div, .signal-grid > div, .tempo-grid section { border-color: var(--studio-border); background: var(--studio-display); }
-  .dna-heading > span, .dna-reset, summary, .tempo-grid span { color: var(--studio-cyan-strong); }
-  .dna-heading p, .semantic p, .release-assistant p, .tempo-grid small { color: var(--studio-text-secondary); }
-  .semantic { border-color: var(--studio-border); background: var(--studio-violet-soft, var(--studio-card)); }
+  .master-profile h3, .music-dna h4, .semantic h5, dd, .signal-grid strong, .music-feature-grid strong { color: var(--studio-text); }
+  .profile-facts div, .signal-grid > div, .music-feature-grid > section { border-color: var(--studio-border); background: var(--studio-display); }
+  .dna-heading > span, .dna-reset, summary, .music-feature-grid span { color: var(--studio-cyan-strong); }
+  .dna-heading p, .semantic p, .release-assistant p, .music-feature-grid small { color: var(--studio-text-secondary); }
+  .music-dna, .semantic { border-color: var(--studio-border); }
+  .music-dna { background: var(--studio-violet-soft, var(--studio-card)); }
 }

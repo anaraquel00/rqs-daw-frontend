@@ -6,7 +6,7 @@ import { AudioDnaPayload } from '../../services/mastering-types';
 import { AudioDnaCardComponent } from './audio-dna-card';
 
 const audioDna: AudioDnaPayload = {
-  version: 'rqs-audio-dna-v1.1',
+  version: 'rqs-audio-dna-v1.2',
   status: 'available',
   source_sha256: 'a'.repeat(64),
   technical: {
@@ -26,8 +26,8 @@ const audioDna: AudioDnaPayload = {
     overall_energy: 0.5618,
   },
   music: {
-    status: 'experimental',
-    method: 'global_signal_heuristics_held_back_v1_1',
+    status: 'partial',
+    method: 'deterministic_music_features_v1_2',
     bpm: {
       value: 63,
       confidence: 0.62,
@@ -42,7 +42,16 @@ const audioDna: AudioDnaPayload = {
     genres: [], genre_status: 'inconclusive', moods: [], mood_status: 'inconclusive',
     instruments: [], instrument_status: 'inconclusive',
     vocal: { status: 'inconclusive', presence: null, processed: null, method: 'unavailable_without_trained_vocal_classifier' },
-    energy: 0.56, energy_status: 'technical_composite', danceability: 0.63, danceability_status: 'experimental',
+    energy: 0.56, energy_label: 'moderate', energy_status: 'technical_composite',
+    danceability: 0.63, danceability_label: 'moderate', danceability_status: 'experimental',
+    semantic: {
+      status: 'unavailable', method: 'semantic_classifier_not_configured_v1_2', model: null,
+      genres: [], moods: [], instruments: [],
+      vocal: {
+        status: 'unavailable', presence: null, type: null, processed: null, confidence: null,
+        method: 'semantic_classifier_not_configured_v1_2',
+      },
+    },
   },
   master_profile: {
     atmosphere: 'aurora',
@@ -85,7 +94,7 @@ describe('AudioDnaCardComponent', () => {
     fixture.detectChanges();
   });
 
-  it('renders the approved qualitative profile, ambiguous tempo and controlled semantic state', () => {
+  it('renders the partial Music DNA state in the upload analysis card', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('MASTER PROFILE SUGGESTED');
     expect(text).toContain('Aurora');
@@ -101,8 +110,39 @@ describe('AudioDnaCardComponent', () => {
     expect(text).toContain('63 BPM');
     expect(text).toContain('Possible double-time: 126 BPM');
     expect(text).toContain('MUSIC DNA');
-    expect(text).toContain('Insufficient evidence');
+    expect(text).toContain('PARTIAL');
+    expect(text).toContain('Energy');
+    expect(text).toContain('Danceability');
+    expect(text).toContain('Normalized value: 56%');
+    expect(text).toContain('Normalized value: 63%');
+    expect(text).toContain('Semantic classification pending / insufficient evidence.');
     expect(text).not.toContain('Primary genre');
+    expect(fixture.nativeElement.querySelector('.analyze-music-dna')).toBeNull();
+  });
+
+  it('renders available semantic evidence without changing the Master Profile', () => {
+    const available = structuredClone(audioDna);
+    available.music!.status = 'available';
+    available.music!.semantic = {
+      status: 'available', method: 'zero_shot_audio_classifier_v1', model: 'candidate/model',
+      genres: [{ label: 'electronic', confidence: 0.88 }],
+      moods: [{ label: 'dark', confidence: 0.74 }],
+      instruments: [{ label: 'synthesizer', confidence: 0.91 }],
+      vocal: {
+        status: 'available', presence: 0.76, type: 'singing_voice', processed: null,
+        confidence: 0.81, method: 'zero_shot_audio_classifier_v1',
+      },
+    };
+    fixture.componentRef.setInput('audioDna', available);
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('electronic 88%');
+    expect(text).toContain('dark 74%');
+    expect(text).toContain('synthesizer 91%');
+    expect(text).toContain('singing voice');
+    expect(text).toContain('Aurora');
+    expect(text).toContain('26%');
   });
 
   it('keeps Release Assistant experimental with no auto-population or publishing control', () => {

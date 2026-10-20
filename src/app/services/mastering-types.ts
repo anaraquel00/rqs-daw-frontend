@@ -43,7 +43,7 @@ export interface AudioDnaTechnical {
 }
 
 export interface AudioDnaMusic {
-  status: 'experimental';
+  status: 'experimental' | 'partial' | 'available' | 'unavailable';
   method: string;
   bpm: {
     value: number | null;
@@ -70,9 +70,27 @@ export interface AudioDnaMusic {
     method: string;
   };
   energy: number;
+  energy_label?: 'low' | 'moderate' | 'high';
   energy_status: 'technical_composite';
   danceability: number;
+  danceability_label?: 'low' | 'moderate' | 'high';
   danceability_status: 'experimental';
+  semantic?: {
+    status: 'available' | 'inconclusive' | 'unavailable';
+    method: string;
+    model: string | null;
+    genres: Array<{ label: string; confidence: number }>;
+    moods: Array<{ label: string; confidence: number }>;
+    instruments: Array<{ label: string; confidence: number }>;
+    vocal: {
+      status: 'available' | 'inconclusive' | 'unavailable';
+      presence: number | null;
+      type: string | null;
+      processed: boolean | null;
+      confidence: number | null;
+      method: string;
+    };
+  };
 }
 
 export interface AudioDnaReleaseAssistant {
@@ -93,7 +111,7 @@ export interface AudioDnaReleaseAssistant {
 }
 
 export interface AudioDnaPayload {
-  version: 'rqs-audio-dna-v1.1';
+  version: 'rqs-audio-dna-v1.1' | 'rqs-audio-dna-v1.2';
   status: AudioDnaStatus;
   source_sha256: string;
   analysis_method?: string;
