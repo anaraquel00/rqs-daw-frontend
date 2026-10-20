@@ -54,9 +54,8 @@ interface AudioDnaCopy {
   possibleHalf: string;
   possibleAlternative: string;
   key: string;
+  coreMusicalFeatures: string;
   musicDna: string;
-  partial: string;
-  available: string;
   experimental: string;
   energy: string;
   danceability: string;
@@ -65,10 +64,10 @@ interface AudioDnaCopy {
   mood: string;
   instrumentation: string;
   vocals: string;
-  semantic: string;
   semanticBody: string;
-  releaseAssistant: string;
-  releaseBody: string;
+  semanticCategories: string;
+  pitchAssistant: string;
+  pitchAssistantBody: string;
   advanced: string;
   duration: string;
   brightness: string;
@@ -98,10 +97,11 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     restrained: 'Restrained', spacious: 'Spacious', focused: 'Focused', narrow: 'Narrow', pronounced: 'Pronounced', preserved: 'Preserved',
     soft: 'Soft', low: 'Low', controlled: 'Controlled', elevated: 'Elevated', open: 'Open', healthy: 'Healthy', compressed: 'Compressed',
     tempo: 'Tempo', possibleDouble: 'Possible double-time', possibleHalf: 'Possible half-time', possibleAlternative: 'Possible alternative', key: 'Key',
-    musicDna: 'MUSIC DNA', partial: 'PARTIAL', available: 'AVAILABLE', experimental: 'EXPERIMENTAL', energy: 'Energy', danceability: 'Danceability', normalizedValue: 'Normalized value',
-    genre: 'Genre', mood: 'Mood', instrumentation: 'Instrumentation', vocals: 'Vocals', semantic: 'Semantic classification',
-    semanticBody: 'Semantic classification pending / insufficient evidence.',
-    releaseAssistant: 'RELEASE ASSISTANT — EXPERIMENTAL', releaseBody: 'Review detected metadata manually before publishing. Spotify and SoundCloud are not auto-populated.',
+    coreMusicalFeatures: 'CORE MUSICAL FEATURES', musicDna: 'MUSIC DNA', experimental: 'EXPERIMENTAL', energy: 'Energy', danceability: 'Danceability', normalizedValue: 'Normalized value',
+    genre: 'Genre', mood: 'Mood', instrumentation: 'Instrumentation', vocals: 'Vocals',
+    semanticBody: 'Semantic analysis pending trained classifiers.',
+    semanticCategories: 'Genre · Subgenre · Mood · Instruments · Vocals · Character',
+    pitchAssistant: 'PITCH ASSISTANT', pitchAssistantBody: 'Pitch Assistant will be activated when semantic analysis is available.',
     advanced: 'ADVANCED AUDIO DETAILS', duration: 'Duration', brightness: 'Brightness', warmth: 'Warmth', transientStrength: 'Transient strength',
     stereoWidth: 'Stereo width', lowEndDensity: 'Low-end density', dynamicDensity: 'Dynamic density', overallEnergy: 'Overall energy',
     confidenceLow: 'Low', confidenceMedium: 'Medium', confidenceHigh: 'High', levelLow: 'Low', levelModerate: 'Moderate', levelHigh: 'High',
@@ -117,10 +117,11 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     restrained: 'Contido', spacious: 'Espaçosa', focused: 'Focada', narrow: 'Estreita', pronounced: 'Pronunciados', preserved: 'Preservados',
     soft: 'Suaves', low: 'Baixa', controlled: 'Controlada', elevated: 'Elevada', open: 'Aberta', healthy: 'Saudável', compressed: 'Comprimida',
     tempo: 'Tempo', possibleDouble: 'Possível double-time', possibleHalf: 'Possível half-time', possibleAlternative: 'Alternativa possível', key: 'Tonalidade',
-    musicDna: 'MUSIC DNA', partial: 'PARCIAL', available: 'DISPONÍVEL', experimental: 'EXPERIMENTAL', energy: 'Energia', danceability: 'Dançabilidade', normalizedValue: 'Valor normalizado',
-    genre: 'Gênero', mood: 'Mood', instrumentation: 'Instrumentação', vocals: 'Voz', semantic: 'Classificação semântica',
-    semanticBody: 'Classificação semântica pendente / evidência insuficiente.',
-    releaseAssistant: 'RELEASE ASSISTANT — EXPERIMENTAL', releaseBody: 'Revise os metadados manualmente antes da publicação. Spotify e SoundCloud não são preenchidos automaticamente.',
+    coreMusicalFeatures: 'CARACTERÍSTICAS MUSICAIS', musicDna: 'MUSIC DNA', experimental: 'EXPERIMENTAL', energy: 'Energia', danceability: 'Dançabilidade', normalizedValue: 'Valor normalizado',
+    genre: 'Gênero', mood: 'Astral / Mood', instrumentation: 'Instrumentação', vocals: 'Perfil vocal',
+    semanticBody: 'Análise semântica aguardando classificadores treinados.',
+    semanticCategories: 'Gênero · Subgênero · Astral / Mood · Instrumentação · Perfil vocal · Caráter',
+    pitchAssistant: 'PITCH ASSISTANT', pitchAssistantBody: 'O assistente de pitch será ativado quando a análise semântica estiver disponível.',
     advanced: 'DETALHES AVANÇADOS DO ÁUDIO', duration: 'Duração', brightness: 'Brilho', warmth: 'Calor', transientStrength: 'Força dos transientes',
     stereoWidth: 'Largura estéreo', lowEndDensity: 'Densidade dos graves', dynamicDensity: 'Densidade dinâmica', overallEnergy: 'Energia geral',
     confidenceLow: 'Baixa', confidenceMedium: 'Média', confidenceHigh: 'Alta', levelLow: 'Baixa', levelModerate: 'Moderada', levelHigh: 'Alta',
@@ -136,10 +137,11 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     restrained: 'Powściągliwe', spacious: 'Przestrzenny', focused: 'Skupiony', narrow: 'Wąski', pronounced: 'Wyraźne', preserved: 'Zachowane',
     soft: 'Łagodne', low: 'Niska', controlled: 'Kontrolowana', elevated: 'Podwyższona', open: 'Otwarta', healthy: 'Zdrowa', compressed: 'Skompresowana',
     tempo: 'Tempo', possibleDouble: 'Możliwe double-time', possibleHalf: 'Możliwe half-time', possibleAlternative: 'Możliwa alternatywa', key: 'Tonacja',
-    musicDna: 'MUSIC DNA', partial: 'CZĘŚCIOWE', available: 'DOSTĘPNE', experimental: 'EKSPERYMENTALNE', energy: 'Energia', danceability: 'Taneczność', normalizedValue: 'Wartość znormalizowana',
-    genre: 'Gatunek', mood: 'Nastrój', instrumentation: 'Instrumentarium', vocals: 'Wokal', semantic: 'Klasyfikacja semantyczna',
-    semanticBody: 'Klasyfikacja semantyczna oczekuje / niewystarczające dane.',
-    releaseAssistant: 'RELEASE ASSISTANT — EKSPERYMENTALNY', releaseBody: 'Przed publikacją sprawdź metadane ręcznie. Spotify i SoundCloud nie są uzupełniane automatycznie.',
+    coreMusicalFeatures: 'PODSTAWOWE CECHY MUZYCZNE', musicDna: 'MUSIC DNA', experimental: 'EKSPERYMENTALNE', energy: 'Energia', danceability: 'Taneczność', normalizedValue: 'Wartość znormalizowana',
+    genre: 'Gatunek', mood: 'Nastrój', instrumentation: 'Instrumentarium', vocals: 'Profil wokalny',
+    semanticBody: 'Analiza semantyczna oczekuje na wytrenowane klasyfikatory.',
+    semanticCategories: 'Gatunek · Podgatunek · Nastrój · Instrumentarium · Profil wokalny · Charakter',
+    pitchAssistant: 'PITCH ASSISTANT', pitchAssistantBody: 'Asystent pitchu zostanie aktywowany, gdy analiza semantyczna będzie dostępna.',
     advanced: 'ZAAWANSOWANE DANE AUDIO', duration: 'Czas trwania', brightness: 'Jasność', warmth: 'Ciepło', transientStrength: 'Siła transjentów',
     stereoWidth: 'Szerokość stereo', lowEndDensity: 'Gęstość dołu', dynamicDensity: 'Gęstość dynamiczna', overallEnergy: 'Ogólna energia',
     confidenceLow: 'Niska', confidenceMedium: 'Średnia', confidenceHigh: 'Wysoka', levelLow: 'Niska', levelModerate: 'Umiarkowana', levelHigh: 'Wysoka',
@@ -155,10 +157,11 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     restrained: 'Retenus', spacious: 'Spacieuse', focused: 'Ciblée', narrow: 'Étroite', pronounced: 'Prononcées', preserved: 'Préservées',
     soft: 'Douces', low: 'Faible', controlled: 'Maîtrisée', elevated: 'Élevée', open: 'Ouverte', healthy: 'Saine', compressed: 'Compressée',
     tempo: 'Tempo', possibleDouble: 'Double-time possible', possibleHalf: 'Half-time possible', possibleAlternative: 'Alternative possible', key: 'Tonalité',
-    musicDna: 'MUSIC DNA', partial: 'PARTIEL', available: 'DISPONIBLE', experimental: 'EXPÉRIMENTAL', energy: 'Énergie', danceability: 'Dansabilité', normalizedValue: 'Valeur normalisée',
-    genre: 'Genre', mood: 'Ambiance', instrumentation: 'Instrumentation', vocals: 'Voix', semantic: 'Classification sémantique',
-    semanticBody: 'Classification sémantique en attente / données insuffisantes.',
-    releaseAssistant: 'RELEASE ASSISTANT — EXPÉRIMENTAL', releaseBody: 'Vérifiez les métadonnées manuellement avant publication. Spotify et SoundCloud ne sont pas remplis automatiquement.',
+    coreMusicalFeatures: 'CARACTÉRISTIQUES MUSICALES', musicDna: 'MUSIC DNA', experimental: 'EXPÉRIMENTAL', energy: 'Énergie', danceability: 'Dansabilité', normalizedValue: 'Valeur normalisée',
+    genre: 'Genre', mood: 'Ambiance', instrumentation: 'Instrumentation', vocals: 'Profil vocal',
+    semanticBody: 'Analyse sémantique en attente de classificateurs entraînés.',
+    semanticCategories: 'Genre · Sous-genre · Ambiance · Instrumentation · Profil vocal · Caractère',
+    pitchAssistant: 'PITCH ASSISTANT', pitchAssistantBody: 'L’assistant de pitch sera activé lorsque l’analyse sémantique sera disponible.',
     advanced: 'DÉTAILS AUDIO AVANCÉS', duration: 'Durée', brightness: 'Brillance', warmth: 'Chaleur', transientStrength: 'Force des transitoires',
     stereoWidth: 'Largeur stéréo', lowEndDensity: 'Densité des graves', dynamicDensity: 'Densité dynamique', overallEnergy: 'Énergie globale',
     confidenceLow: 'Faible', confidenceMedium: 'Moyenne', confidenceHigh: 'Élevée', levelLow: 'Faible', levelModerate: 'Modérée', levelHigh: 'Élevée',
@@ -226,12 +229,6 @@ export class AudioDnaCardComponent {
     return this.copy().possibleAlternative;
   }
 
-  musicMaturityLabel(): string {
-    if (this.audioDna?.music?.status === 'partial') return this.copy().partial;
-    if (this.audioDna?.music?.status === 'available') return this.copy().available;
-    return this.copy().experimental;
-  }
-
   musicFeatureLabel(value: number, provided?: 'low' | 'moderate' | 'high'): string {
     const level = provided ?? (value < 0.34 ? 'low' : value < 0.67 ? 'moderate' : 'high');
     if (level === 'high') return this.copy().levelHigh;
@@ -244,7 +241,7 @@ export class AudioDnaCardComponent {
   }
 
   semanticLabels(items: Array<{ label: string; confidence: number }>): string {
-    return items.map((item) => `${item.label} ${Math.round(item.confidence * 100)}%`).join(' · ');
+    return items.map((item) => item.label).join(' · ');
   }
 
   vocalLabel(type: string | null): string {

@@ -77,6 +77,7 @@ describe('AudioDnaCardComponent', () => {
   const currentLang = signal<'en' | 'pt' | 'pl' | 'fr'>('en');
 
   beforeEach(async () => {
+    currentLang.set('en');
     await TestBed.configureTestingModule({
       imports: [AudioDnaCardComponent],
       providers: [
@@ -94,7 +95,7 @@ describe('AudioDnaCardComponent', () => {
     fixture.detectChanges();
   });
 
-  it('renders the partial Music DNA state in the upload analysis card', () => {
+  it('renders V1.2 metrics under Core Musical Features, separate from Music DNA', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('MASTER PROFILE SUGGESTED');
     expect(text).toContain('Aurora');
@@ -109,13 +110,17 @@ describe('AudioDnaCardComponent', () => {
     expect(text).toContain('Healthy');
     expect(text).toContain('63 BPM');
     expect(text).toContain('Possible double-time: 126 BPM');
-    expect(text).toContain('MUSIC DNA');
-    expect(text).toContain('PARTIAL');
-    expect(text).toContain('Energy');
-    expect(text).toContain('Danceability');
-    expect(text).toContain('Normalized value: 56%');
-    expect(text).toContain('Normalized value: 63%');
-    expect(text).toContain('Semantic classification pending / insufficient evidence.');
+    const core = fixture.nativeElement.querySelector('.core-musical-features') as HTMLElement;
+    const semantic = fixture.nativeElement.querySelector('.music-dna') as HTMLElement;
+    expect(core.textContent).toContain('CORE MUSICAL FEATURES');
+    expect(core.textContent).toContain('Tempo');
+    expect(core.textContent).toContain('Key');
+    expect(core.textContent).toContain('Energy');
+    expect(core.textContent).toContain('Danceability');
+    expect(core.textContent).not.toContain('Normalized value');
+    expect(semantic.textContent).toContain('MUSIC DNA');
+    expect(semantic.textContent).toContain('Semantic analysis pending trained classifiers.');
+    expect(semantic.textContent).toContain('Genre · Subgenre · Mood · Instruments · Vocals · Character');
     expect(text).not.toContain('Primary genre');
     expect(fixture.nativeElement.querySelector('.analyze-music-dna')).toBeNull();
   });
@@ -137,18 +142,20 @@ describe('AudioDnaCardComponent', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('electronic 88%');
-    expect(text).toContain('dark 74%');
-    expect(text).toContain('synthesizer 91%');
+    expect(text).toContain('electronic');
+    expect(text).toContain('dark');
+    expect(text).toContain('synthesizer');
+    expect(text).not.toContain('electronic 88%');
     expect(text).toContain('singing voice');
     expect(text).toContain('Aurora');
     expect(text).toContain('26%');
   });
 
-  it('keeps Release Assistant experimental with no auto-population or publishing control', () => {
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('RELEASE ASSISTANT — EXPERIMENTAL');
-    expect(text).toContain('not auto-populated');
+  it('keeps Pitch Assistant collapsed and inactive without semantic data', () => {
+    const details = fixture.nativeElement.querySelector('.pitch-assistant') as HTMLDetailsElement;
+    expect(details.open).toBeFalse();
+    expect(details.querySelector('summary')?.textContent).toContain('PITCH ASSISTANT');
+    expect(details.textContent).toContain('Pitch Assistant will be activated when semantic analysis is available.');
     const buttons = Array.from(fixture.nativeElement.querySelectorAll('button'))
       .map((button) => (button as HTMLButtonElement).textContent ?? '').join(' ');
     expect(buttons).not.toContain('Apply');
@@ -171,8 +178,31 @@ describe('AudioDnaCardComponent', () => {
     const details = fixture.nativeElement.querySelector('.advanced-details') as HTMLDetailsElement;
     expect(details.open).toBeFalse();
     expect(details.textContent).toContain('0.2332');
+    expect(details.textContent).toContain('Energy — Normalized value');
+    expect(details.textContent).toContain('56%');
+    expect(details.textContent).toContain('Danceability — Normalized value');
+    expect(details.textContent).toContain('63%');
     expect(fixture.nativeElement.querySelector('.signal-grid')?.textContent).not.toContain('0.2332');
+    expect(fixture.nativeElement.querySelector('.core-musical-features')?.textContent).not.toContain('Normalized value');
     expect(details.querySelector('summary')).toBeTruthy();
+  });
+
+  it('uses the approved artist-facing PT-BR copy without fake semantic values', () => {
+    currentLang.set('pt');
+    fixture.detectChanges();
+
+    const core = fixture.nativeElement.querySelector('.core-musical-features') as HTMLElement;
+    const semantic = fixture.nativeElement.querySelector('.music-dna') as HTMLElement;
+    const pitch = fixture.nativeElement.querySelector('.pitch-assistant') as HTMLDetailsElement;
+    expect(core.textContent).toContain('CARACTERÍSTICAS MUSICAIS');
+    expect(core.textContent).toContain('Tonalidade');
+    expect(core.textContent).toContain('Energia');
+    expect(core.textContent).toContain('Dançabilidade');
+    expect(semantic.textContent).toContain('Análise semântica aguardando classificadores treinados.');
+    expect(semantic.textContent).not.toContain('Electronic');
+    expect(semantic.textContent).not.toContain('Progressive House');
+    expect(pitch.open).toBeFalse();
+    expect(pitch.textContent).toContain('O assistente de pitch será ativado quando a análise semântica estiver disponível.');
   });
 
   it('contains the card at every required content width', () => {

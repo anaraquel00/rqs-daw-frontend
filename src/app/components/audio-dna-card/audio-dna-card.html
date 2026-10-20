@@ -39,8 +39,8 @@
       <div><span>{{ copy().dynamics }}</span><strong>{{ dynamicsLabel() }}</strong></div>
     </div>
 
-    <section class="music-dna" aria-labelledby="music-dna-title">
-      <div class="title-row"><h4 id="music-dna-title">{{ copy().musicDna }}</h4><span>{{ musicMaturityLabel() }}</span></div>
+    <section class="core-musical-features" aria-labelledby="core-musical-features-title">
+      <h4 id="core-musical-features-title">{{ copy().coreMusicalFeatures }}</h4>
       <div class="music-feature-grid">
         <section aria-labelledby="dna-tempo-title">
           <h5 id="dna-tempo-title">{{ copy().tempo }}</h5>
@@ -58,29 +58,34 @@
         <section aria-labelledby="dna-energy-title">
           <h5 id="dna-energy-title">{{ copy().energy }}</h5>
           <strong>{{ musicFeatureLabel(music.energy, music.energy_label) }}</strong>
-          <small>{{ copy().normalizedValue }}: {{ normalizedPercent(music.energy) }}%</small>
         </section>
         <section aria-labelledby="dna-danceability-title">
           <h5 id="dna-danceability-title">{{ copy().danceability }}</h5>
           <strong>{{ musicFeatureLabel(music.danceability, music.danceability_label) }}</strong>
-          <small>{{ copy().experimental }} · {{ copy().normalizedValue }}: {{ normalizedPercent(music.danceability) }}%</small>
+          <small>{{ copy().experimental }}</small>
         </section>
       </div>
-
-      <section class="semantic" aria-labelledby="semantic-title">
-        <h5 id="semantic-title">{{ copy().semantic }}</h5>
-        @if (music.semantic?.status === 'available') {
-          <dl class="semantic-grid">
-            <div><dt>{{ copy().genre }}</dt><dd>{{ semanticLabels(music.semantic!.genres) || copy().inconclusive }}</dd></div>
-            <div><dt>{{ copy().mood }}</dt><dd>{{ semanticLabels(music.semantic!.moods) || copy().inconclusive }}</dd></div>
-            <div><dt>{{ copy().instrumentation }}</dt><dd>{{ semanticLabels(music.semantic!.instruments) || copy().inconclusive }}</dd></div>
-            <div><dt>{{ copy().vocals }}</dt><dd>{{ vocalLabel(music.semantic!.vocal.type) }}</dd></div>
-          </dl>
-        } @else {
-          <p>{{ copy().semanticBody }}</p>
-        }
-      </section>
     </section>
+
+    <section class="music-dna" aria-labelledby="music-dna-title">
+      <h4 id="music-dna-title">{{ copy().musicDna }}</h4>
+      @if (music.semantic?.status === 'available') {
+        <dl class="semantic-grid">
+          <div><dt>{{ copy().genre }}</dt><dd>{{ semanticLabels(music.semantic!.genres) || copy().inconclusive }}</dd></div>
+          <div><dt>{{ copy().mood }}</dt><dd>{{ semanticLabels(music.semantic!.moods) || copy().inconclusive }}</dd></div>
+          <div><dt>{{ copy().instrumentation }}</dt><dd>{{ semanticLabels(music.semantic!.instruments) || copy().inconclusive }}</dd></div>
+          <div><dt>{{ copy().vocals }}</dt><dd>{{ vocalLabel(music.semantic!.vocal.type) }}</dd></div>
+        </dl>
+      } @else {
+        <p class="semantic-pending">{{ copy().semanticBody }}</p>
+        <p class="semantic-categories">{{ copy().semanticCategories }}</p>
+      }
+    </section>
+
+    <details class="pitch-assistant">
+      <summary>{{ copy().pitchAssistant }}</summary>
+      <p>{{ copy().pitchAssistantBody }}</p>
+    </details>
 
     <details class="advanced-details">
       <summary>{{ copy().advanced }}</summary>
@@ -99,14 +104,9 @@
         <div><dt>{{ copy().harshness }}</dt><dd>{{ audioDna!.technical.harshness | number:'1.4-4' }}</dd></div>
         <div><dt>{{ copy().dynamicDensity }}</dt><dd>{{ audioDna!.technical.dynamic_density | number:'1.4-4' }}</dd></div>
         <div><dt>{{ copy().overallEnergy }}</dt><dd>{{ audioDna!.technical.overall_energy | number:'1.4-4' }}</dd></div>
+        <div><dt>{{ copy().energy }} — {{ copy().normalizedValue }}</dt><dd>{{ normalizedPercent(music.energy) }}%</dd></div>
+        <div><dt>{{ copy().danceability }} — {{ copy().normalizedValue }}</dt><dd>{{ normalizedPercent(music.danceability) }}%</dd></div>
       </dl>
     </details>
-
-    @if (audioDna?.release_assistant) {
-      <details class="release-assistant">
-        <summary>{{ copy().releaseAssistant }}</summary>
-        <p>{{ copy().releaseBody }}</p>
-      </details>
-    }
   }
 </section>
