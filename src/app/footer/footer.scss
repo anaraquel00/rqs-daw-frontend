@@ -48,6 +48,9 @@
       gap: 10px;
 
       a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
         color: #8b949e;
         font-size: 13px;
         text-decoration: none;
@@ -149,6 +152,9 @@
       gap: 10px;
 
       a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
         color: #555;
         text-decoration: none;
         transition: color 0.2s ease;
@@ -162,6 +168,7 @@
 }
 
 .cookie-preferences-link {
+  min-height: 44px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -193,6 +200,8 @@
 
     a,
     .cookie-preferences-link {
+      min-width: 44px;
+      min-inline-size: 44px;
       white-space: normal;
     }
   }

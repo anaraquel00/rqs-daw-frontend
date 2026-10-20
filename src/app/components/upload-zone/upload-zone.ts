@@ -6,7 +6,11 @@ import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
-import { MasteringProcessCommand, MasteringV2Request } from '../../services/mastering-types';
+import {
+  AudioDnaPayload,
+  MasteringProcessCommand,
+  MasteringV2Request,
+} from '../../services/mastering-types';
 import { MasteringService } from '../../services/mastering.service';
 import { environment } from '../../../environments/environment';
 import { AnalyticsService } from '../../services/analytics.service';
@@ -39,6 +43,11 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   s3Key: string | null = null;
   isUploadingS3 = false;
   isExtractingStems = false;
+  audioDna: AudioDnaPayload | null = null;
+  isAudioDnaLoading = false;
+  audioDnaUnavailable = false;
+  audioSourceId: string | null = null;
+  private sourceGeneration = 0;
   renderProgressPercent = 0;
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
@@ -93,6 +102,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
             this.isUploadingS3 = false;
             this.s3Key = s3Response.s3Key;
             this.addLog(`Upload concluído! Arquivo persistido em: ${s3Response.s3Key}`);
+            this.analyzeSelectedAudio();
           },
           error: (error: unknown) => {
             this.isUploadingS3 = false;
@@ -207,6 +217,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   }
 
   ejetarFaixa(): void {
+    this.sourceGeneration += 1;
     this.releaseProcessedBlobUrl();
     this.selectedFile = null;
     this.processedAudioUrl = null;
@@ -215,6 +226,11 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isProcessing = false;
     this.systemLogs = [];
     this.isFullMasterCompleted = false;
+    this.audioDna = null;
+    this.isAudioDnaLoading = false;
+    this.audioDnaUnavailable = false;
+    this.audioSourceId = null;
+    this.masteringService.clearAudioDnaSource();
     this.masteringService.resetPreviewStartSeconds();
     this.stopEstimatedRenderProgress();
     this.audioComparison.resetAll();
@@ -275,6 +291,12 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.s3Key = null;
     this.isProcessing = false;
     this.isFullMasterCompleted = false;
+    this.audioDna = null;
+    this.audioDnaUnavailable = false;
+    this.isAudioDnaLoading = false;
+    this.sourceGeneration += 1;
+    this.audioSourceId = `${this.sourceGeneration}:${file.name}:${file.size}:${file.lastModified}`;
+    this.masteringService.beginAudioSource(this.audioSourceId);
     this.systemLogs = [];
     this.masteringService.resetPreviewStartSeconds();
     this.audioComparison.audioProcessed.set(false);
@@ -284,10 +306,49 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     if (this.masteringV2DirectUpload) {
       this.isUploadingS3 = false;
       this.addLog('Modo local Mastering V2: upload direto ao backend, sem S3.');
+      this.analyzeSelectedAudio();
       return;
     }
 
     this.iniciarUploadS3Silencioso(file);
+  }
+
+  private analyzeSelectedAudio(): void {
+    if (!this.selectedFile || !this.audioSourceId || !this.auth.isLoggedIn()) return;
+    if (!this.masteringV2DirectUpload && !this.s3Key) return;
+
+    const requestedSourceId = this.audioSourceId;
+    const formData = new FormData();
+    if (this.masteringV2DirectUpload) {
+      formData.append('audio', this.selectedFile, this.selectedFile.name);
+    } else {
+      formData.append('s3Key', this.s3Key ?? '');
+    }
+
+    this.isAudioDnaLoading = true;
+    this.audioDnaUnavailable = false;
+    this.addLog('RQS Audio DNA: analisando o áudio final...');
+    this.dspService.analyzeMasteringV2(formData).subscribe({
+      next: (response) => {
+        if (this.audioSourceId !== requestedSourceId) return;
+        this.isAudioDnaLoading = false;
+        this.audioDna = response.audio_dna;
+        this.audioDnaUnavailable = response.audio_dna.status !== 'available';
+        if (response.audio_dna.status === 'available' && response.audio_dna.master_profile) {
+          this.masteringService.initializeFromAudioDna(requestedSourceId, response.audio_dna.master_profile);
+          this.addLog(`RQS Audio DNA concluído${response.cache.hit ? ' (cache)' : ''}.`);
+        } else {
+          this.addLog('⚠ RQS Audio DNA indisponível. O analisador técnico e a masterização permanecem ativos.');
+        }
+      },
+      error: (error: unknown) => {
+        if (this.audioSourceId !== requestedSourceId) return;
+        this.isAudioDnaLoading = false;
+        this.audioDna = null;
+        this.audioDnaUnavailable = true;
+        this.addLog(`⚠ RQS Audio DNA indisponível: ${this.errorMessage(error)}`);
+      },
+    });
   }
 
   private buildMasteringV2FormData(

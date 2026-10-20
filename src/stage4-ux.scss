@@ -12,6 +12,7 @@
   }
 
   .guide-button {
+    min-height: 44px;
     border: 1px solid rgba(0, 240, 255, 0.28);
     background: rgba(0, 240, 255, 0.05);
     color: #9eefff;
@@ -21,22 +22,39 @@
   }
 
   .help-dot {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 1px solid rgba(0, 240, 255, 0.35);
-    background: rgba(0, 240, 255, 0.06);
-    color: #9eefff;
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: transparent;
     cursor: pointer;
     font-weight: 700;
-    line-height: 18px;
+    line-height: 1;
     flex: 0 0 auto;
 
+    &::before {
+      content: '?';
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      border-radius: 50%;
+      background: rgba(0, 240, 255, 0.06);
+      color: #9eefff;
+      line-height: 1;
+    }
+
     &.small {
-      width: 18px;
-      height: 18px;
-      line-height: 14px;
       font-size: 10px;
+
+      &::before {
+        width: 18px;
+        height: 18px;
+      }
     }
   }
 

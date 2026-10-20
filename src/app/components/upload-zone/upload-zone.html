@@ -39,6 +39,10 @@
     [isProcessing]="isProcessing || isUploadingS3"
     [masteredAudioUrl]="processedAudioUrl"
     [isFullMaster]="isFullMasterCompleted"
+    [audioDna]="audioDna"
+    [audioDnaLoading]="isAudioDnaLoading"
+    [audioDnaUnavailable]="audioDnaUnavailable"
+    [audioSourceId]="audioSourceId"
     (processMaster)="processarMaster($event)"
     (configChanged)="invalidateMasteringResult()">
   </app-mastering-panel>

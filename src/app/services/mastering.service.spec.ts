@@ -1,5 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { MasteringService } from './mastering.service';
+import { AudioDnaMasterProfile } from './mastering-types';
+
+const recommendedProfile: AudioDnaMasterProfile = {
+  atmosphere: 'aurora',
+  character_intensity: 28,
+  confidence: 0.82,
+  confidence_level: 'high',
+  auto_configure: true,
+  input_domain: 'technical_audio_dna_only',
+  reasons: [{ code: 'WARM_SPECTRAL_BALANCE', weight: 0.82 }],
+  atmosphere_dsp_behavior: 'profile_label_only_v2_compatibility_path',
+};
 
 describe('MasteringService V2 contract', () => {
   let service: MasteringService;
@@ -65,5 +77,58 @@ describe('MasteringService V2 contract', () => {
       'requestedLufs',
       'soundcloudMode',
     ]);
+  });
+
+  it('initializes Atmosphere and Character once from a confident Audio DNA recommendation', () => {
+    service.beginAudioSource('source-a');
+
+    expect(service.initializeFromAudioDna('source-a', recommendedProfile)).toBeTrue();
+    expect(service.atmosphere()).toBe('aurora');
+    expect(service.intensityPercent()).toBe(28);
+    expect(service.masterProfileSource()).toBe('AUDIO_DNA');
+  });
+
+  it('keeps a manual override and does not snap back on unrelated delivery changes', () => {
+    service.beginAudioSource('source-a');
+    service.initializeFromAudioDna('source-a', recommendedProfile);
+    service.setAtmosphere('thunder');
+    service.setIntensityPercent(42);
+
+    service.setPlatform('soundcloud');
+    expect(service.atmosphere()).toBe('thunder');
+    expect(service.intensityPercent()).toBe(42);
+    expect(service.masterProfileSource()).toBe('MANUAL');
+
+    expect(service.initializeFromAudioDna('source-a', recommendedProfile)).toBeFalse();
+    expect(service.atmosphere()).toBe('thunder');
+    expect(service.intensityPercent()).toBe(42);
+  });
+
+  it('does not auto-configure an inconclusive low-confidence recommendation', () => {
+    service.beginAudioSource('source-low');
+    const lowConfidence: AudioDnaMasterProfile = {
+      ...recommendedProfile,
+      atmosphere: 'clear_sky',
+      character_intensity: 25,
+      confidence: 0.48,
+      confidence_level: 'low',
+      auto_configure: false,
+    };
+
+    expect(service.initializeFromAudioDna('source-low', lowConfidence)).toBeFalse();
+    expect(service.atmosphere()).toBe('clear_sky');
+    expect(service.intensityPercent()).toBe(50);
+    expect(service.masterProfileSource()).toBe('MANUAL');
+  });
+
+  it('resets a manual override only when the artist explicitly requests it', () => {
+    service.beginAudioSource('source-a');
+    service.initializeFromAudioDna('source-a', recommendedProfile);
+    service.setIntensityPercent(44);
+
+    expect(service.resetToAudioDnaRecommendation()).toBeTrue();
+    expect(service.atmosphere()).toBe('aurora');
+    expect(service.intensityPercent()).toBe(28);
+    expect(service.masterProfileSource()).toBe('AUDIO_DNA');
   });
 });

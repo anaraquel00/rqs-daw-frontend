@@ -49,23 +49,39 @@
 .cyber-scrubber {
   -webkit-appearance: none;
   width: 100%;
-  height: 4px;
-  background: #111;
+  height: 44px;
+  background: linear-gradient(#111, #111) center / 100% 6px no-repeat;
   border-radius: 2px;
   outline: none;
   border: none;
   cursor: pointer;
+  touch-action: pan-y;
 
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: #00f0ff;
     box-shadow: 0 0 8px #00f0ff;
     cursor: pointer;
     transition: transform 0.1s;
     &:hover { transform: scale(1.25); }
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border: 0;
+    border-radius: 50%;
+    background: #00f0ff;
+    box-shadow: 0 0 8px #00f0ff;
+    cursor: pointer;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 5px;
   }
 }
 
@@ -115,6 +131,7 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 0 8px rgba(0, 240, 255, 0.1);
+  min-height: 44px;
 
   /* 🟢 Estilização específica do botão de Stop */
   &.btn-stop {
@@ -148,6 +165,7 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  min-height: 44px;
 
   &.active {
     color: #fff;
@@ -240,6 +258,347 @@
   margin: 25px 0;
 }
 
+.audio-dna-card {
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(0, 240, 255, 0.035), rgba(0, 0, 0, 0.28));
+  padding: 16px;
+  font-family: monospace;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.audio-dna-header,
+.profile-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.audio-dna-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #6d7b80;
+  font-size: 8px;
+  letter-spacing: 1.1px;
+}
+
+.audio-dna-header h3 {
+  margin: 0;
+  color: #00f0ff;
+  font-size: clamp(14px, 2vw, 17px);
+  letter-spacing: 1.4px;
+}
+
+.audio-dna-header p,
+.master-profile-card p,
+.release-assistant p {
+  margin: 5px 0 0;
+  color: #8b949e;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.source-badge {
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  border-radius: 999px;
+  color: #00ff88;
+  padding: 4px 8px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.source-badge.manual {
+  border-color: rgba(255, 190, 0, 0.35);
+  color: #ffbe00;
+}
+
+.audio-dna-state {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  color: #8b949e;
+  font-size: 11px;
+}
+
+.audio-dna-state.unavailable {
+  align-items: flex-start;
+  flex-direction: column;
+  color: #ffbe00;
+}
+
+.dna-spinner {
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(0, 240, 255, 0.2);
+  border-top-color: #00f0ff;
+  border-radius: 50%;
+  animation: dna-spin 0.8s linear infinite;
+}
+
+@keyframes dna-spin { to { transform: rotate(360deg); } }
+
+.dna-signal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dna-signal,
+.dna-metric {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 7px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  min-width: 0;
+}
+
+.dna-signal.wide { grid-column: 1 / -1; }
+.dna-signal > span,
+.dna-metric > span {
+  display: block;
+  color: #666;
+  font-size: 9px;
+  letter-spacing: 0.7px;
+  margin-bottom: 7px;
+  text-transform: uppercase;
+}
+
+.dna-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.dna-tags span {
+  color: #d7e8eb;
+  background: rgba(0, 240, 255, 0.055);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 10px;
+}
+.dna-tags small { color: #00f0ff; }
+.dna-metric strong {
+  display: block;
+  color: #fff;
+  font-size: clamp(11px, 1.5vw, 13px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.master-profile-card {
+  margin-top: 16px;
+  padding: 14px;
+  border-left: 2px solid #00ff88;
+  background: rgba(0, 255, 136, 0.035);
+}
+
+.master-profile-card.inconclusive { border-left-color: #ffbe00; }
+.profile-title-row h4 {
+  margin: 0;
+  color: #d7e8eb;
+  font-size: 10px;
+  letter-spacing: 0.9px;
+}
+.master-profile-card > small { display: block; margin-top: 8px; color: #667176; line-height: 1.5; }
+
+.profile-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.profile-facts div {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(0, 255, 136, 0.12);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.profile-facts dt,
+.advanced-audio-details dt {
+  color: #68777c;
+  font-size: 8px;
+  letter-spacing: 0.65px;
+  text-transform: uppercase;
+}
+
+.profile-facts dd {
+  margin: 5px 0 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.dna-reset {
+  margin-top: 10px;
+  border: 0;
+  background: transparent;
+  color: #00f0ff;
+  padding: 0;
+  font-family: monospace;
+  font-size: 10px;
+  cursor: pointer;
+  text-decoration: underline;
+  min-height: 44px;
+}
+
+.tempo-key-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tempo-card,
+.key-card {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.tempo-card h4,
+.key-card h4,
+.semantic-notice h4 {
+  margin: 0;
+  color: #77858a;
+  font-size: 9px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.tempo-card strong,
+.key-card strong {
+  display: block;
+  margin-top: 6px;
+  color: #fff;
+  font-size: 15px;
+}
+
+.tempo-card span,
+.tempo-card small,
+.key-card small {
+  display: block;
+  margin-top: 5px;
+  color: #9db0b5;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.tempo-card span { color: #00f0ff; }
+
+.semantic-notice {
+  margin-top: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(142, 124, 255, 0.16);
+  border-radius: 7px;
+  background: rgba(142, 124, 255, 0.035);
+}
+
+.semantic-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.semantic-title-row span {
+  color: #b4a8ff;
+  font-size: 8px;
+  letter-spacing: 0.6px;
+}
+
+.semantic-notice p {
+  margin: 6px 0 0;
+  color: #8b949e;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.advanced-audio-details,
+.release-assistant {
+  margin-top: 12px;
+  color: #8b949e;
+  font-size: 10px;
+}
+
+.advanced-audio-details summary,
+.release-assistant summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: #00f0ff;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.advanced-audio-details summary:focus-visible,
+.release-assistant summary:focus-visible,
+.dna-reset:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.advanced-audio-details dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 10px 0 0;
+}
+
+.advanced-audio-details dl div {
+  min-width: 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.advanced-audio-details dd {
+  margin: 3px 0 0;
+  color: #d7e8eb;
+  overflow-wrap: anywhere;
+}
+
+.release-assistant p { margin-top: 8px; }
+
+.control-state-badge {
+  margin-left: auto;
+  border: 1px solid rgba(255, 190, 0, 0.25);
+  border-radius: 999px;
+  color: #d8a900;
+  padding: 3px 7px;
+  font-family: monospace;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.control-title-row h4 label { cursor: pointer; }
+
+@media (max-width: 520px) {
+  .audio-dna-card { padding: 12px; }
+  .profiles-grid button { min-height: 44px; }
+  .dna-signal-grid,
+  .profile-facts,
+  .tempo-key-grid,
+  .advanced-audio-details dl { grid-template-columns: 1fr; }
+  .dna-signal.wide { grid-column: auto; }
+  .profile-title-row { flex-direction: column; }
+  .source-badge { white-space: normal; }
+  .control-state-badge { margin-left: 0; white-space: normal; }
+}
+
+@media (min-width: 521px) and (max-width: 900px) {
+  .dna-signal-grid,
+  .advanced-audio-details dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 /* SEÇÕES DE CONTROLE ACÚSTICO PRESERVADAS */
 .controls-section {
   display: flex;
@@ -271,6 +630,7 @@
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
+    min-height: 44px;
 
     &:hover {
       color: #fff;

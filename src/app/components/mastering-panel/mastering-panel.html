@@ -130,6 +130,128 @@
 
   <hr class="cyber-divider">
 
+  <section class="audio-dna-card" aria-live="polite" aria-labelledby="audio-dna-title">
+    <div class="audio-dna-header">
+      <div>
+        <span class="audio-dna-eyebrow">{{ audioDnaCopy().technicalEyebrow }}</span>
+        <h3 id="audio-dna-title">{{ audioDnaCopy().title }}</h3>
+        <p>{{ audioDnaCopy().technicalSubtitle }}</p>
+      </div>
+    </div>
+
+    @if (audioDnaLoading) {
+      <div class="audio-dna-state">
+        <span class="dna-spinner"></span>
+        {{ audioDnaCopy().analyzing }}
+      </div>
+    } @else if (audioDnaUnavailable || audioDna?.status === 'unavailable') {
+      <div class="audio-dna-state unavailable">
+        <strong>{{ audioDnaCopy().unavailableTitle }}</strong>
+        <span>{{ audioDnaCopy().unavailableBody }}</span>
+      </div>
+    } @else if (audioDna?.music; as music) {
+      @if (audioDna?.master_profile; as profile) {
+        <section class="master-profile-card" [class.inconclusive]="profile.confidence_level === 'low'" aria-labelledby="master-profile-title">
+          <div class="profile-title-row">
+            <div>
+              <h4 id="master-profile-title">{{ audioDnaCopy().masterSuggested }}</h4>
+            </div>
+            <span class="source-badge" [class.manual]="masterProfileSource() === 'MANUAL'">
+              @if (profile.confidence_level === 'low') {
+                {{ audioDnaCopy().inconclusive }}
+              } @else if (masterProfileSource() === 'AUDIO_DNA') {
+                {{ audioDnaCopy().recommended }}
+              } @else {
+                {{ audioDnaCopy().manualOverride }}
+              }
+            </span>
+          </div>
+          <dl class="profile-facts">
+            <div><dt>{{ audioDnaCopy().atmosphere }}</dt><dd>{{ atmosphereLabel(profile.atmosphere) }}</dd></div>
+            <div><dt>{{ audioDnaCopy().characterIntensity }}</dt><dd>{{ profile.character_intensity }}%</dd></div>
+            <div><dt>{{ audioDnaCopy().confidence }}</dt><dd>{{ confidenceLevelLabel(profile.confidence_level) }}</dd></div>
+          </dl>
+          <p>{{ audioDnaReasonText() }}</p>
+          <small>{{ audioDnaCopy().atmosphereNote }}</small>
+          @if (masterProfileSource() === 'MANUAL' && profile.confidence_level !== 'low') {
+            <button type="button" class="dna-reset" [disabled]="isProcessing" (click)="resetToAudioDna()">
+              {{ audioDnaCopy().resetRecommendation }}:
+              {{ atmosphereLabel(profile.atmosphere) }} · {{ profile.character_intensity }}%
+            </button>
+          }
+        </section>
+      }
+
+      <div class="dna-signal-grid" [attr.aria-label]="audioDnaCopy().technicalEyebrow">
+        <div class="dna-metric"><span>{{ audioDnaCopy().spectralProfile }}</span><strong>{{ spectralProfileLabel() }}</strong></div>
+        <div class="dna-metric"><span>{{ audioDnaCopy().lowEnd }}</span><strong>{{ lowEndLabel() }}</strong></div>
+        <div class="dna-metric"><span>{{ audioDnaCopy().stereoImage }}</span><strong>{{ stereoImageLabel() }}</strong></div>
+        <div class="dna-metric"><span>{{ audioDnaCopy().transients }}</span><strong>{{ transientLabel() }}</strong></div>
+        <div class="dna-metric"><span>{{ audioDnaCopy().harshness }}</span><strong>{{ harshnessLabel() }}</strong></div>
+        <div class="dna-metric"><span>{{ audioDnaCopy().dynamics }}</span><strong>{{ dynamicsLabel() }}</strong></div>
+      </div>
+
+      <div class="tempo-key-grid">
+        <section class="tempo-card" aria-labelledby="audio-dna-tempo-title">
+          <h4 id="audio-dna-tempo-title">{{ audioDnaCopy().tempo }}</h4>
+          <strong>{{ music.bpm.value ?? '—' }}{{ music.bpm.value !== null ? ' BPM' : '' }}</strong>
+          @if (music.bpm.ambiguous) {
+            @if (tempoOctaveAlternative(); as candidate) {
+              <span>{{ tempoAlternativeLabel(candidate.relation) }}: {{ candidate.value }} BPM</span>
+            }
+          }
+          <small>{{ tempoConfidenceLabel(music.bpm.confidence) }} {{ audioDnaCopy().confidence.toLowerCase() }}</small>
+        </section>
+        <section class="key-card" aria-labelledby="audio-dna-key-title">
+          <h4 id="audio-dna-key-title">{{ audioDnaCopy().key }}</h4>
+          <strong>{{ music.key.value ?? '—' }}</strong>
+          <small>{{ experimentalKeyConfidenceLabel(music.key.confidence) }}</small>
+        </section>
+      </div>
+
+      <section class="semantic-notice" aria-labelledby="music-dna-title">
+        <div class="semantic-title-row">
+          <h4 id="music-dna-title">{{ audioDnaCopy().musicDna }}</h4>
+          <span>{{ audioDnaCopy().experimental }}</span>
+        </div>
+        <p>{{ audioDnaCopy().semanticBody }}</p>
+      </section>
+
+      @if (audioDna?.technical; as technical) {
+        <details class="advanced-audio-details">
+          <summary>{{ audioDnaCopy().advancedDetails }}</summary>
+          <dl>
+            <div><dt>LUFS</dt><dd>{{ technical.lufs_integrated | number:'1.2-2' }}</dd></div>
+            <div><dt>True Peak</dt><dd>{{ technical.true_peak_dbtp | number:'1.2-2' }} dBTP</dd></div>
+            <div><dt>LRA</dt><dd>{{ technical.lra_lu | number:'1.2-2' }} LU</dd></div>
+            <div><dt>RMS</dt><dd>{{ technical.rms_dbfs | number:'1.2-2' }} dBFS</dd></div>
+            <div><dt>Crest</dt><dd>{{ technical.crest_factor_db | number:'1.2-2' }} dB</dd></div>
+            <div><dt>{{ audioDnaCopy().duration }}</dt><dd>{{ formatarTempo(technical.duration_seconds) }}</dd></div>
+            <div><dt>{{ audioDnaCopy().brightness }}</dt><dd>{{ technical.brightness | number:'1.4-4' }}</dd></div>
+            <div><dt>{{ audioDnaCopy().warmth }}</dt><dd>{{ technical.warmth | number:'1.4-4' }}</dd></div>
+            <div><dt>{{ audioDnaCopy().transientStrength }}</dt><dd>{{ technical.transient_strength | number:'1.4-4' }}</dd></div>
+            <div><dt>{{ audioDnaCopy().stereoWidth }}</dt><dd>{{ technical.stereo_width | number:'1.4-4' }}</dd></div>
+            <div><dt>{{ audioDnaCopy().lowEndDensity }}</dt><dd>{{ technical.low_end_density | number:'1.4-4' }}</dd></div>
+            <div><dt>{{ audioDnaCopy().harshness }}</dt><dd>{{ technical.harshness | number:'1.4-4' }}</dd></div>
+            <div><dt>{{ audioDnaCopy().dynamicDensity }}</dt><dd>{{ technical.dynamic_density | number:'1.4-4' }}</dd></div>
+            <div><dt>{{ audioDnaCopy().overallEnergy }}</dt><dd>{{ technical.overall_energy | number:'1.4-4' }}</dd></div>
+          </dl>
+        </details>
+      }
+
+      @if (audioDna?.release_assistant) {
+        <details class="release-assistant">
+          <summary>{{ audioDnaCopy().releaseAssistant }}</summary>
+          <p>{{ audioDnaCopy().releaseReview }}</p>
+        </details>
+      }
+    } @else {
+      <div class="audio-dna-state">{{ audioDnaCopy().waiting }}</div>
+    }
+  </section>
+
+  <hr class="cyber-divider">
+
   <div class="controls-section">
     <div class="control-group">
       <div class="control-title-row">
@@ -174,19 +296,23 @@
       </div>
       <p class="control-explainer atmosphere-truth">{{ education().controls.atmosphere.short }}</p>
       <div class="btn-group profiles-grid">
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'clear_sky'" [attr.aria-pressed]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'thunder'" [attr.aria-pressed]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'sunroof'" [attr.aria-pressed]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'aurora'" [attr.aria-pressed]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
       </div>
     </div>
 
     <div class="control-group">
       <div class="control-title-row">
-        <h4>{{ education().controls.intensity.title }} — {{ intensityPercent() }}%</h4>
+        <h4><label for="character-intensity">{{ education().controls.intensity.title }} — {{ intensityPercent() }}%</label></h4>
+        @if (audioDnaRecommendation() && masterProfileSource() === 'MANUAL') {
+          <span class="control-state-badge">{{ audioDnaCopy().manualOverride }}</span>
+        }
         <button class="help-dot" type="button" (click)="toggleHelp('intensity')" [attr.title]="education().controls.intensity.short">?</button>
       </div>
       <input
+        id="character-intensity"
         type="range"
         min="0"
         max="100"
@@ -195,7 +321,8 @@
         [value]="intensityPercent()"
         (input)="updateIntensity($event)"
         class="cyber-scrubber"
-        aria-label="Mastering V2 intensity">
+        [attr.aria-label]="audioDnaCopy().characterSliderLabel"
+        [attr.aria-valuetext]="intensityPercent() + '%'">
       <p class="control-explainer">{{ education().controls.intensity.short }}</p>
     </div>
 

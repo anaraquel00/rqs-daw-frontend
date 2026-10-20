@@ -33,8 +33,11 @@ html, body {
   padding-bottom: 15px;
   margin-bottom: 30px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 
-  @media (min-width: 768px) {
+  @media (min-width: 1024px) {
     flex-direction: row;
     align-items: center;
     gap: 0;
@@ -44,6 +47,8 @@ html, body {
     display: flex;
     align-items: center;
     gap: 12px;
+    max-width: 100%;
+    min-width: 0;
 
     .satellite-icon {
       font-size: 17px;
@@ -59,6 +64,7 @@ html, body {
       letter-spacing: 2px;
       text-transform: uppercase;
       text-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+      overflow-wrap: anywhere;
     }
   }
 
@@ -72,6 +78,8 @@ html, body {
     padding: 4px 10px;
     border-radius: 6px;
     box-shadow: inset 0 0 8px rgba(0, 255, 136, 0.05);
+    max-width: 100%;
+    box-sizing: border-box;
 
     .status-led {
       width: 6px;
@@ -101,21 +109,37 @@ html, body {
 
 .header-controls {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(0, 240, 255, 0.1);
   padding: 6px 16px;
   border-radius: 12px;
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
 
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    width: auto;
+    gap: 20px;
+  }
+
   .lang-selector {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
     gap: 6px;
     font-size: 11px;
     font-weight: bold;
 
     button {
+      min-width: 44px;
+      min-height: 44px;
       background: none;
       border: none;
       cursor: pointer;
@@ -127,12 +151,51 @@ html, body {
   }
 
   .user-session {
-    border-left: 1px solid rgba(255, 255, 255, 0.05);
-    padding-left: 15px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 10px;
+
+    @media (min-width: 1024px) {
+      width: auto;
+      border-top: 0;
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 0;
+      padding-left: 15px;
+    }
+
+    .auth-helper-container {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      width: 100%;
+      min-width: 0;
+
+      > span {
+        text-align: center;
+        overflow-wrap: anywhere;
+      }
+
+      @media (min-width: 1024px) {
+        align-items: flex-end;
+        width: auto;
+        margin-right: 10px;
+
+        > span { text-align: right; }
+      }
+    }
 
     .auth-buttons {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
+
+      @media (min-width: 1024px) {
+        display: flex;
+      }
 
       .btn-auth {
         background: rgba(255, 255, 255, 0.03);
@@ -145,6 +208,11 @@ html, body {
         font-weight: bold;
         cursor: pointer;
         transition: all 0.2s;
+        min-width: 0;
+        min-height: 44px;
+        overflow-wrap: anywhere;
+
+        &.email { grid-column: 1 / -1; }
 
         &:hover {
           color: #fff;
@@ -158,8 +226,14 @@ html, body {
       display: flex;
       align-items: center;
       gap: 10px;
+      width: 100%;
+      min-width: 0;
+
+      @media (min-width: 1024px) { width: auto; }
 
       .profile-info {
+        flex: 1 1 auto;
+        min-width: 0;
         text-align: right;
         font-family: monospace;
 
@@ -181,6 +255,7 @@ html, body {
       }
 
       .avatar {
+        flex: 0 0 auto;
         width: 22px;
         height: 22px;
         border-radius: 50%;
@@ -196,6 +271,8 @@ html, body {
         cursor: pointer;
         opacity: 0.7;
         transition: opacity 0.2s;
+        min-width: 44px;
+        min-height: 44px;
         &:hover { opacity: 1; }
       }
     }

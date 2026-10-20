@@ -46,7 +46,7 @@ import { SeoService } from '../services/seo.service';
           <!-- Sessão de Login (Supabase Auth) [1] -->
           <div class="user-session">
             @if (!auth.session()) {
-              <div class="auth-helper-container" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-right: 10px;">
+              <div class="auth-helper-container">
                 <span style="font-size: 9px; font-family: monospace; color: #8b949e; letter-spacing: 0.5px;">
                   {{ lang.currentLang() === 'pl' ? 'ZAPISZ HISTORIĘ I EKSPORTUJ WAV:' : (lang.currentLang() === 'pt' ? 'SALVAR HISTÓRICO & EXPORTAR WAV:' : 'SAVE HISTORY & EXPORT WAV:') }}
                 </span>
@@ -101,18 +101,20 @@ import { SeoService } from '../services/seo.service';
   styles: [`
     .workspace-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 20px;
       width: 100%;
       max-width: 98%;
+      min-width: 0;
+      box-sizing: border-box;
       margin: 0 auto;
       align-items: start;
     }
 
-    /* 🖥️ Ajuste de Breakpoint para Tablets e Desktops (A partir de 768px a divisão é ativada) */
-    @media (min-width: 768px) {
+    /* 🖥️ Duas colunas somente quando cada módulo conserva largura operacional. */
+    @media (min-width: 1024px) {
       .workspace-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 24px;
       }
 
@@ -125,6 +127,9 @@ import { SeoService } from '../services/seo.service';
 
     .left-workstation-column {
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     /* 🟢 Barramento Vertical da Coluna da Direita */
@@ -133,6 +138,18 @@ import { SeoService } from '../services/seo.service';
       flex-direction: column;
       gap: 24px;
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    app-upload-zone,
+    app-mix-panel,
+    app-rqs-uplink-engine,
+    app-rqs-uplink-dashboard {
+      display: block;
+      max-width: 100%;
+      min-width: 0;
     }
 `]
 })

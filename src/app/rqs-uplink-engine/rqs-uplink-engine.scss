@@ -40,6 +40,7 @@
 
   .platform-indicators {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 16px;
 
@@ -75,6 +76,8 @@
 
     input {
       width: 100%;
+      min-height: 44px;
+      min-block-size: 44px;
       background: #161622;
       border: 1px solid #2f2f45;
       border-radius: 6px;
