@@ -101,6 +101,13 @@
     [target]="activeTarget()">
   </app-analyzer-simple>
 
+  <app-audio-dna-card
+    *ngIf="analysisState !== 'empty' || audioDna"
+    [audioDna]="audioDna"
+    [state]="analysisState"
+    (resetRecommendation)="resetToAudioDna()">
+  </app-audio-dna-card>
+
   <app-delivery-auto
     [state]="autoUiState()"
     [recommendation]="autoRecommendation()"
@@ -216,19 +223,21 @@
       </div>
       <p class="control-explainer atmosphere-truth">{{ education().controls.atmosphere.short }}</p>
       <div class="btn-group profiles-grid">
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'clear_sky'" [attr.aria-pressed]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'thunder'" [attr.aria-pressed]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'sunroof'" [attr.aria-pressed]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'aurora'" [attr.aria-pressed]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
       </div>
     </div>
 
     <div class="control-group">
       <div class="control-title-row">
-        <h4>{{ education().controls.intensity.title }} — {{ intensityPercent() }}%</h4>
+        <h4><label for="character-intensity">{{ education().controls.intensity.title }} — {{ intensityPercent() }}%</label></h4>
+        <span class="control-state-badge" *ngIf="audioDnaRecommendation() && masterProfileSource() === 'MANUAL'">MANUAL OVERRIDE</span>
         <button class="help-dot" type="button" (click)="toggleHelp('intensity')" [attr.title]="education().controls.intensity.short">?</button>
       </div>
       <input
+        id="character-intensity"
         type="range"
         min="0"
         max="100"
@@ -237,7 +246,8 @@
         [value]="intensityPercent()"
         (input)="updateIntensity($event)"
         class="cyber-scrubber"
-        aria-label="Mastering V2 intensity">
+        aria-label="Mastering V2 intensity"
+        [attr.aria-valuetext]="intensityPercent() + '%'">
       <p class="control-explainer">{{ education().controls.intensity.short }}</p>
     </div>
 

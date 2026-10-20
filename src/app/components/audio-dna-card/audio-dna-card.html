@@ -1,0 +1,90 @@
+<section class="audio-dna" aria-live="polite" aria-labelledby="audio-dna-title">
+  @if (state === 'loading') {
+    <div class="dna-state"><span class="dna-spinner" aria-hidden="true"></span>{{ copy().analyzing }}</div>
+  } @else if (state === 'error' || state === 'auth_required' || audioDna?.status === 'unavailable') {
+    <div class="dna-state unavailable"><strong>{{ copy().unavailableTitle }}</strong><span>{{ copy().unavailableBody }}</span></div>
+  } @else if (audioDna?.music; as music) {
+    @if (audioDna?.master_profile; as profile) {
+      <section class="master-profile" [class.inconclusive]="profile.confidence_level === 'low'" aria-labelledby="master-profile-title">
+        <div class="title-row">
+          <h3 id="master-profile-title">{{ copy().masterSuggested }}</h3>
+          <span class="source-badge" [class.manual]="masterProfileSource() === 'MANUAL'">
+            {{ profile.confidence_level === 'low' ? copy().inconclusive : (masterProfileSource() === 'AUDIO_DNA' ? copy().recommended : copy().manualOverride) }}
+          </span>
+        </div>
+        <dl class="profile-facts">
+          <div><dt>{{ copy().atmosphere }}</dt><dd>{{ atmosphereLabel(profile.atmosphere) }}</dd></div>
+          <div><dt>{{ copy().character }}</dt><dd>{{ profile.character_intensity }}%</dd></div>
+          <div><dt>{{ copy().confidence }}</dt><dd>{{ confidenceLabel(profile.confidence_level) }}</dd></div>
+        </dl>
+        @if (masterProfileSource() === 'MANUAL' && profile.confidence_level !== 'low') {
+          <button type="button" class="dna-reset" (click)="resetRecommendation.emit()">
+            {{ copy().reset }}: {{ atmosphereLabel(profile.atmosphere) }} · {{ profile.character_intensity }}%
+          </button>
+        }
+      </section>
+    }
+
+    <div class="dna-heading">
+      <span id="audio-dna-title">{{ copy().technicalEyebrow }}</span>
+      <p>{{ copy().subtitle }}</p>
+    </div>
+
+    <div class="signal-grid" aria-label="Technical Audio DNA qualitative summary">
+      <div><span>{{ copy().spectral }}</span><strong>{{ spectralLabel() }}</strong></div>
+      <div><span>{{ copy().lowEnd }}</span><strong>{{ lowEndLabel() }}</strong></div>
+      <div><span>{{ copy().stereo }}</span><strong>{{ stereoLabel() }}</strong></div>
+      <div><span>{{ copy().transients }}</span><strong>{{ transientLabel() }}</strong></div>
+      <div><span>{{ copy().harshness }}</span><strong>{{ harshnessLabel() }}</strong></div>
+      <div><span>{{ copy().dynamics }}</span><strong>{{ dynamicsLabel() }}</strong></div>
+    </div>
+
+    <div class="tempo-grid">
+      <section aria-labelledby="dna-tempo-title">
+        <h4 id="dna-tempo-title">{{ copy().tempo }}</h4>
+        <strong>{{ music.bpm.value ?? '—' }}{{ music.bpm.value !== null ? ' BPM' : '' }}</strong>
+        @if (music.bpm.ambiguous && tempoAlternative(); as candidate) {
+          <span>{{ tempoAlternativeLabel(candidate.relation) }}: {{ candidate.value }} BPM</span>
+        }
+        <small>{{ confidenceLabel(music.bpm.confidence >= 0.75 ? 'high' : music.bpm.confidence >= 0.45 ? 'medium' : 'low') }} {{ copy().confidence.toLowerCase() }}</small>
+      </section>
+      <section aria-labelledby="dna-key-title">
+        <h4 id="dna-key-title">{{ copy().key }}</h4>
+        <strong>{{ music.key.value ?? '—' }}</strong>
+        <small>{{ copy().experimental }} · {{ confidenceLabel(music.key.confidence >= 0.75 ? 'high' : music.key.confidence >= 0.45 ? 'medium' : 'low') }}</small>
+      </section>
+    </div>
+
+    <section class="semantic" aria-labelledby="music-dna-title">
+      <div class="title-row"><h4 id="music-dna-title">{{ copy().musicDna }}</h4><span>{{ copy().experimental }}</span></div>
+      <p>{{ copy().semanticBody }}</p>
+    </section>
+
+    <details class="advanced-details">
+      <summary>{{ copy().advanced }}</summary>
+      <dl>
+        <div><dt>LUFS</dt><dd>{{ audioDna!.technical.lufs_integrated | number:'1.2-2' }}</dd></div>
+        <div><dt>True Peak</dt><dd>{{ audioDna!.technical.true_peak_dbtp | number:'1.2-2' }} dBTP</dd></div>
+        <div><dt>LRA</dt><dd>{{ audioDna!.technical.lra_lu | number:'1.2-2' }} LU</dd></div>
+        <div><dt>RMS</dt><dd>{{ audioDna!.technical.rms_dbfs | number:'1.2-2' }} dBFS</dd></div>
+        <div><dt>Crest</dt><dd>{{ audioDna!.technical.crest_factor_db | number:'1.2-2' }} dB</dd></div>
+        <div><dt>{{ copy().duration }}</dt><dd>{{ formatDuration(audioDna!.technical.duration_seconds) }}</dd></div>
+        <div><dt>{{ copy().brightness }}</dt><dd>{{ audioDna!.technical.brightness | number:'1.4-4' }}</dd></div>
+        <div><dt>{{ copy().warmth }}</dt><dd>{{ audioDna!.technical.warmth | number:'1.4-4' }}</dd></div>
+        <div><dt>{{ copy().transientStrength }}</dt><dd>{{ audioDna!.technical.transient_strength | number:'1.4-4' }}</dd></div>
+        <div><dt>{{ copy().stereoWidth }}</dt><dd>{{ audioDna!.technical.stereo_width | number:'1.4-4' }}</dd></div>
+        <div><dt>{{ copy().lowEndDensity }}</dt><dd>{{ audioDna!.technical.low_end_density | number:'1.4-4' }}</dd></div>
+        <div><dt>{{ copy().harshness }}</dt><dd>{{ audioDna!.technical.harshness | number:'1.4-4' }}</dd></div>
+        <div><dt>{{ copy().dynamicDensity }}</dt><dd>{{ audioDna!.technical.dynamic_density | number:'1.4-4' }}</dd></div>
+        <div><dt>{{ copy().overallEnergy }}</dt><dd>{{ audioDna!.technical.overall_energy | number:'1.4-4' }}</dd></div>
+      </dl>
+    </details>
+
+    @if (audioDna?.release_assistant) {
+      <details class="release-assistant">
+        <summary>{{ copy().releaseAssistant }}</summary>
+        <p>{{ copy().releaseBody }}</p>
+      </details>
+    }
+  }
+</section>

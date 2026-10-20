@@ -1,5 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { MasteringService } from './mastering.service';
+import { AudioDnaMasterProfile } from './mastering-types';
+
+const recommendedProfile: AudioDnaMasterProfile = {
+  atmosphere: 'aurora', character_intensity: 26, confidence: 0.57, confidence_level: 'medium',
+  auto_configure: true, input_domain: 'technical_audio_dna_only', reasons: [],
+  atmosphere_dsp_behavior: 'profile_label_only_v2_compatibility_path',
+};
 
 describe('MasteringService V2 contract', () => {
   let service: MasteringService;
@@ -65,5 +72,43 @@ describe('MasteringService V2 contract', () => {
       'requestedLufs',
       'soundcloudMode',
     ]);
+  });
+
+  it('initializes an Audio DNA profile only once for the same source', () => {
+    service.beginAudioSource('source-a');
+    expect(service.initializeFromAudioDna('source-a', recommendedProfile)).toBeTrue();
+    expect(service.atmosphere()).toBe('aurora');
+    expect(service.intensityPercent()).toBe(26);
+    expect(service.masterProfileSource()).toBe('AUDIO_DNA');
+
+    expect(service.initializeFromAudioDna('source-a', { ...recommendedProfile, character_intensity: 90 })).toBeFalse();
+    expect(service.intensityPercent()).toBe(26);
+  });
+
+  it('preserves manual override across delivery changes and resets only on explicit request', () => {
+    service.beginAudioSource('source-a');
+    service.initializeFromAudioDna('source-a', recommendedProfile);
+    service.setIntensityPercent(40);
+    service.setPlatform('soundcloud');
+    service.setDestination('club');
+
+    expect(service.intensityPercent()).toBe(40);
+    expect(service.masterProfileSource()).toBe('MANUAL');
+    expect(service.resetToAudioDnaRecommendation()).toBeTrue();
+    expect(service.atmosphere()).toBe('aurora');
+    expect(service.intensityPercent()).toBe(26);
+    expect(service.masterProfileSource()).toBe('AUDIO_DNA');
+  });
+
+  it('starts a fresh recommendation lifecycle for a new audio source', () => {
+    service.beginAudioSource('source-a');
+    service.initializeFromAudioDna('source-a', recommendedProfile);
+    service.setIntensityPercent(40);
+    service.beginAudioSource('source-b');
+
+    expect(service.audioDnaRecommendation()).toBeNull();
+    expect(service.masterProfileSource()).toBe('MANUAL');
+    expect(service.initializeFromAudioDna('source-a', recommendedProfile)).toBeFalse();
+    expect(service.initializeFromAudioDna('source-b', recommendedProfile)).toBeTrue();
   });
 });
