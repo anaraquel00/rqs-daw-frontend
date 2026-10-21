@@ -95,29 +95,13 @@
     <p class="listening-status" aria-live="polite">{{ listeningStatusText() }}</p>
   </div>
 
-  <app-analyzer-simple
-    [state]="analysisState"
-    [metrics]="analysisMetrics"
-    [target]="activeTarget()">
-  </app-analyzer-simple>
-
   <app-audio-dna-card
     *ngIf="analysisState !== 'empty' || audioDna"
     [audioDna]="audioDna"
     [state]="analysisState"
+    [target]="activeTarget()"
     (resetRecommendation)="resetToAudioDna()">
   </app-audio-dna-card>
-
-  <app-delivery-auto
-    [state]="autoUiState()"
-    [recommendation]="autoRecommendation()"
-    [currentRequestedLufs]="requestedLufs()"
-    [policyTargetLufs]="activeTarget()?.target_lufs ?? null"
-    [canRequest]="canRequestAutoRecommendation()"
-    [authenticated]="auth.isLoggedIn()"
-    (requestRecommendation)="requestAutoRecommendation()"
-    (applyRequestedLufs)="applyAutoRequestedLufs()">
-  </app-delivery-auto>
 
   <div class="mastering-help-toolbar">
     <button class="guide-button" type="button" (click)="toggleGuide()">
@@ -179,7 +163,13 @@
 
   <hr class="cyber-divider">
 
-  <div class="controls-section">
+  <section class="controls-section" aria-labelledby="master-controls-title">
+    <h3 id="master-controls-title" class="master-controls-title">
+      <span *ngIf="lang.currentLang() === 'en'">MASTER CONTROLS</span>
+      <span *ngIf="lang.currentLang() === 'pt'">CONTROLES DE MASTER</span>
+      <span *ngIf="lang.currentLang() === 'pl'">STEROWANIE MASTEREM</span>
+      <span *ngIf="lang.currentLang() === 'fr'">CONTRÔLES DU MASTER</span>
+    </h3>
     <div class="control-group">
       <div class="control-title-row">
         <h4>{{ education().controls.destination.title }}</h4>
@@ -300,7 +290,21 @@
         ⚠ {{ error }}
       </p>
     </div>
-  </div>
+
+    <details class="delivery-auto-disclosure">
+      <summary>DELIVERY AUTO</summary>
+      <app-delivery-auto
+        [state]="autoUiState()"
+        [recommendation]="autoRecommendation()"
+        [currentRequestedLufs]="requestedLufs()"
+        [policyTargetLufs]="activeTarget()?.target_lufs ?? null"
+        [canRequest]="canRequestAutoRecommendation()"
+        [authenticated]="auth.isLoggedIn()"
+        (requestRecommendation)="requestAutoRecommendation()"
+        (applyRequestedLufs)="applyAutoRequestedLufs()">
+      </app-delivery-auto>
+    </details>
+  </section>
 
   <div class="config-invalidated" *ngIf="configInvalidatedResult()">
     ⚠
@@ -369,4 +373,12 @@
       {{ isProcessing ? lang.t().PROCESSING_ACUSTICO : lang.t().MASTER_FULL }}
     </button>
   </div>
+
+  <app-audio-dna-card
+    *ngIf="analysisState === 'success' && audioDna"
+    mode="technical"
+    [audioDna]="audioDna"
+    [state]="analysisState"
+    [target]="activeTarget()">
+  </app-audio-dna-card>
 </div>

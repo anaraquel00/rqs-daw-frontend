@@ -8,15 +8,24 @@ import {
   AudioDnaTempoRelation,
   MasteringAnalysisState,
   MasteringAtmosphere,
+  MasteringDeliveryTargetCapabilities,
 } from '../../services/mastering-types';
 
 interface AudioDnaCopy {
   technicalEyebrow: string;
+  technicalAnalysis: string;
+  technicalDetails: string;
   subtitle: string;
   analyzing: string;
   unavailableTitle: string;
   unavailableBody: string;
-  masterSuggested: string;
+  trackSummary: string;
+  masterRecommended: string;
+  recommendationApplied: string;
+  whyThisMaster: string;
+  distributionReadiness: string;
+  withinRange: string;
+  needsAttention: string;
   atmosphere: string;
   character: string;
   confidence: string;
@@ -49,26 +58,13 @@ interface AudioDnaCopy {
   open: string;
   healthy: string;
   compressed: string;
-  tempo: string;
   possibleDouble: string;
   possibleHalf: string;
   possibleAlternative: string;
   key: string;
-  coreMusicalFeatures: string;
-  musicDna: string;
-  experimental: string;
   energy: string;
   danceability: string;
   normalizedValue: string;
-  genre: string;
-  mood: string;
-  instrumentation: string;
-  vocals: string;
-  semanticBody: string;
-  semanticCategories: string;
-  pitchAssistant: string;
-  pitchAssistantBody: string;
-  advanced: string;
   duration: string;
   brightness: string;
   warmth: string;
@@ -87,83 +83,75 @@ interface AudioDnaCopy {
 
 const COPY: Record<UiLanguage, AudioDnaCopy> = {
   en: {
-    technicalEyebrow: 'RQS AUDIO DNA', subtitle: 'A qualitative reading of the technical evidence measured in your final audio.',
+    technicalEyebrow: 'RQS AUDIO DNA', technicalAnalysis: 'Technical analysis: RQS Audio DNA', technicalDetails: 'TECHNICAL DETAILS',
+    subtitle: 'A qualitative reading of the technical evidence measured in your final audio.',
     analyzing: 'Analyzing technical characteristics…', unavailableTitle: 'Audio DNA unavailable',
-    unavailableBody: 'Technical analysis and mastering remain available.', masterSuggested: 'MASTER PROFILE SUGGESTED',
-    atmosphere: 'Atmosphere', character: 'Character Intensity', confidence: 'Confidence', recommended: 'Recommended by Audio DNA',
+    unavailableBody: 'Technical analysis and mastering remain available.', trackSummary: 'TRACK SUMMARY',
+    masterRecommended: 'RECOMMENDED MASTER', recommendationApplied: 'This setup was applied automatically. You can adjust it below.',
+    whyThisMaster: 'WHY THIS MASTER?', distributionReadiness: 'DISTRIBUTION READINESS', withinRange: 'Within range', needsAttention: 'Needs attention',
+    atmosphere: 'Atmosphere', character: 'Character', confidence: 'Confidence', recommended: 'Recommended by Audio DNA',
     manualOverride: 'MANUAL OVERRIDE', inconclusive: 'Inconclusive analysis', reset: 'Reset to recommendation',
     spectral: 'Spectral profile', lowEnd: 'Low-end', stereo: 'Stereo image', transients: 'Transients', harshness: 'Harshness', dynamics: 'Dynamics',
     warmDark: 'Warm / dark-leaning', dark: 'Dark-leaning', bright: 'Bright / open', balanced: 'Balanced', strong: 'Strong', solid: 'Solid',
     restrained: 'Restrained', spacious: 'Spacious', focused: 'Focused', narrow: 'Narrow', pronounced: 'Pronounced', preserved: 'Preserved',
     soft: 'Soft', low: 'Low', controlled: 'Controlled', elevated: 'Elevated', open: 'Open', healthy: 'Healthy', compressed: 'Compressed',
-    tempo: 'Tempo', possibleDouble: 'Possible double-time', possibleHalf: 'Possible half-time', possibleAlternative: 'Possible alternative', key: 'Key',
-    coreMusicalFeatures: 'CORE MUSICAL FEATURES', musicDna: 'MUSIC DNA', experimental: 'EXPERIMENTAL', energy: 'Energy', danceability: 'Danceability', normalizedValue: 'Normalized value',
-    genre: 'Genre', mood: 'Mood', instrumentation: 'Instrumentation', vocals: 'Vocals',
-    semanticBody: 'Semantic analysis pending trained classifiers.',
-    semanticCategories: 'Genre · Subgenre · Mood · Instruments · Vocals · Character',
-    pitchAssistant: 'PITCH ASSISTANT', pitchAssistantBody: 'Pitch Assistant will be activated when semantic analysis is available.',
-    advanced: 'ADVANCED AUDIO DETAILS', duration: 'Duration', brightness: 'Brightness', warmth: 'Warmth', transientStrength: 'Transient strength',
-    stereoWidth: 'Stereo width', lowEndDensity: 'Low-end density', dynamicDensity: 'Dynamic density', overallEnergy: 'Overall energy',
+    possibleDouble: 'Possible double-time', possibleHalf: 'Possible half-time', possibleAlternative: 'Possible alternative', key: 'Key',
+    energy: 'Energy', danceability: 'Danceability', normalizedValue: 'Normalized value', duration: 'Duration', brightness: 'Brightness', warmth: 'Warmth',
+    transientStrength: 'Transient strength', stereoWidth: 'Stereo width', lowEndDensity: 'Low-end density', dynamicDensity: 'Dynamic density', overallEnergy: 'Overall energy',
     confidenceLow: 'Low', confidenceMedium: 'Medium', confidenceHigh: 'High', levelLow: 'Low', levelModerate: 'Moderate', levelHigh: 'High',
   },
   pt: {
-    technicalEyebrow: 'RQS AUDIO DNA', subtitle: 'Uma leitura qualitativa da evidência técnica medida no seu áudio final.',
+    technicalEyebrow: 'RQS AUDIO DNA', technicalAnalysis: 'Análise técnica: RQS Audio DNA', technicalDetails: 'DETALHES TÉCNICOS',
+    subtitle: 'Uma leitura qualitativa da evidência técnica medida no seu áudio final.',
     analyzing: 'Analisando características técnicas…', unavailableTitle: 'Audio DNA indisponível',
-    unavailableBody: 'A análise técnica e a masterização continuam disponíveis.', masterSuggested: 'PERFIL DE MASTER SUGERIDO',
-    atmosphere: 'Atmosphere', character: 'Intensidade de Character', confidence: 'Confiança', recommended: 'Recomendado pelo Audio DNA',
+    unavailableBody: 'A análise técnica e a masterização continuam disponíveis.', trackSummary: 'RESUMO DA FAIXA',
+    masterRecommended: 'MASTER RECOMENDADO', recommendationApplied: 'Esta configuração foi aplicada automaticamente. Você pode ajustá-la abaixo.',
+    whyThisMaster: 'POR QUE ESTE MASTER?', distributionReadiness: 'PRONTIDÃO PARA DISTRIBUIÇÃO', withinRange: 'Dentro da faixa', needsAttention: 'Precisa de atenção',
+    atmosphere: 'Atmosphere', character: 'Character', confidence: 'Confiança', recommended: 'Recomendado pelo Audio DNA',
     manualOverride: 'AJUSTE MANUAL', inconclusive: 'Análise inconclusiva', reset: 'Restaurar recomendação',
     spectral: 'Perfil espectral', lowEnd: 'Graves', stereo: 'Imagem estéreo', transients: 'Transientes', harshness: 'Aspereza', dynamics: 'Dinâmica',
     warmDark: 'Quente / tendendo ao escuro', dark: 'Tendendo ao escuro', bright: 'Brilhante / aberto', balanced: 'Equilibrado', strong: 'Forte', solid: 'Sólido',
     restrained: 'Contido', spacious: 'Espaçosa', focused: 'Focada', narrow: 'Estreita', pronounced: 'Pronunciados', preserved: 'Preservados',
     soft: 'Suaves', low: 'Baixa', controlled: 'Controlada', elevated: 'Elevada', open: 'Aberta', healthy: 'Saudável', compressed: 'Comprimida',
-    tempo: 'Tempo', possibleDouble: 'Possível double-time', possibleHalf: 'Possível half-time', possibleAlternative: 'Alternativa possível', key: 'Tonalidade',
-    coreMusicalFeatures: 'CARACTERÍSTICAS MUSICAIS', musicDna: 'MUSIC DNA', experimental: 'EXPERIMENTAL', energy: 'Energia', danceability: 'Dançabilidade', normalizedValue: 'Valor normalizado',
-    genre: 'Gênero', mood: 'Astral / Mood', instrumentation: 'Instrumentação', vocals: 'Perfil vocal',
-    semanticBody: 'Análise semântica aguardando classificadores treinados.',
-    semanticCategories: 'Gênero · Subgênero · Astral / Mood · Instrumentação · Perfil vocal · Caráter',
-    pitchAssistant: 'PITCH ASSISTANT', pitchAssistantBody: 'O assistente de pitch será ativado quando a análise semântica estiver disponível.',
-    advanced: 'DETALHES AVANÇADOS DO ÁUDIO', duration: 'Duração', brightness: 'Brilho', warmth: 'Calor', transientStrength: 'Força dos transientes',
-    stereoWidth: 'Largura estéreo', lowEndDensity: 'Densidade dos graves', dynamicDensity: 'Densidade dinâmica', overallEnergy: 'Energia geral',
+    possibleDouble: 'Possível double-time', possibleHalf: 'Possível half-time', possibleAlternative: 'Alternativa possível', key: 'Tonalidade',
+    energy: 'Energia', danceability: 'Dançabilidade', normalizedValue: 'Valor normalizado', duration: 'Duração', brightness: 'Brilho', warmth: 'Calor',
+    transientStrength: 'Força dos transientes', stereoWidth: 'Largura estéreo', lowEndDensity: 'Densidade dos graves', dynamicDensity: 'Densidade dinâmica', overallEnergy: 'Energia geral',
     confidenceLow: 'Baixa', confidenceMedium: 'Média', confidenceHigh: 'Alta', levelLow: 'Baixa', levelModerate: 'Moderada', levelHigh: 'Alta',
   },
   pl: {
-    technicalEyebrow: 'RQS AUDIO DNA', subtitle: 'Jakościowy opis danych technicznych zmierzonych w gotowym nagraniu.',
+    technicalEyebrow: 'RQS AUDIO DNA', technicalAnalysis: 'Analiza techniczna: RQS Audio DNA', technicalDetails: 'SZCZEGÓŁY TECHNICZNE',
+    subtitle: 'Jakościowy opis danych technicznych zmierzonych w gotowym nagraniu.',
     analyzing: 'Analizowanie cech technicznych…', unavailableTitle: 'Audio DNA niedostępne',
-    unavailableBody: 'Analiza techniczna i mastering pozostają dostępne.', masterSuggested: 'SUGEROWANY PROFIL MASTERU',
-    atmosphere: 'Atmosphere', character: 'Intensywność Character', confidence: 'Pewność', recommended: 'Rekomendacja Audio DNA',
+    unavailableBody: 'Analiza techniczna i mastering pozostają dostępne.', trackSummary: 'PODSUMOWANIE UTWORU',
+    masterRecommended: 'ZALECANY MASTER', recommendationApplied: 'Ta konfiguracja została zastosowana automatycznie. Możesz ją dostosować poniżej.',
+    whyThisMaster: 'DLACZEGO TEN MASTER?', distributionReadiness: 'GOTOWOŚĆ DO DYSTRYBUCJI', withinRange: 'W zakresie', needsAttention: 'Wymaga uwagi',
+    atmosphere: 'Atmosphere', character: 'Character', confidence: 'Pewność', recommended: 'Rekomendacja Audio DNA',
     manualOverride: 'USTAWIENIE RĘCZNE', inconclusive: 'Analiza niejednoznaczna', reset: 'Przywróć rekomendację',
     spectral: 'Profil widmowy', lowEnd: 'Niskie pasmo', stereo: 'Obraz stereo', transients: 'Transjenty', harshness: 'Ostrość', dynamics: 'Dynamika',
     warmDark: 'Ciepły / ciemniejszy', dark: 'Ciemniejszy', bright: 'Jasny / otwarty', balanced: 'Zrównoważony', strong: 'Mocne', solid: 'Stabilne',
     restrained: 'Powściągliwe', spacious: 'Przestrzenny', focused: 'Skupiony', narrow: 'Wąski', pronounced: 'Wyraźne', preserved: 'Zachowane',
     soft: 'Łagodne', low: 'Niska', controlled: 'Kontrolowana', elevated: 'Podwyższona', open: 'Otwarta', healthy: 'Zdrowa', compressed: 'Skompresowana',
-    tempo: 'Tempo', possibleDouble: 'Możliwe double-time', possibleHalf: 'Możliwe half-time', possibleAlternative: 'Możliwa alternatywa', key: 'Tonacja',
-    coreMusicalFeatures: 'PODSTAWOWE CECHY MUZYCZNE', musicDna: 'MUSIC DNA', experimental: 'EKSPERYMENTALNE', energy: 'Energia', danceability: 'Taneczność', normalizedValue: 'Wartość znormalizowana',
-    genre: 'Gatunek', mood: 'Nastrój', instrumentation: 'Instrumentarium', vocals: 'Profil wokalny',
-    semanticBody: 'Analiza semantyczna oczekuje na wytrenowane klasyfikatory.',
-    semanticCategories: 'Gatunek · Podgatunek · Nastrój · Instrumentarium · Profil wokalny · Charakter',
-    pitchAssistant: 'PITCH ASSISTANT', pitchAssistantBody: 'Asystent pitchu zostanie aktywowany, gdy analiza semantyczna będzie dostępna.',
-    advanced: 'ZAAWANSOWANE DANE AUDIO', duration: 'Czas trwania', brightness: 'Jasność', warmth: 'Ciepło', transientStrength: 'Siła transjentów',
-    stereoWidth: 'Szerokość stereo', lowEndDensity: 'Gęstość dołu', dynamicDensity: 'Gęstość dynamiczna', overallEnergy: 'Ogólna energia',
+    possibleDouble: 'Możliwe double-time', possibleHalf: 'Możliwe half-time', possibleAlternative: 'Możliwa alternatywa', key: 'Tonacja',
+    energy: 'Energia', danceability: 'Taneczność', normalizedValue: 'Wartość znormalizowana', duration: 'Czas trwania', brightness: 'Jasność', warmth: 'Ciepło',
+    transientStrength: 'Siła transjentów', stereoWidth: 'Szerokość stereo', lowEndDensity: 'Gęstość dołu', dynamicDensity: 'Gęstość dynamiczna', overallEnergy: 'Ogólna energia',
     confidenceLow: 'Niska', confidenceMedium: 'Średnia', confidenceHigh: 'Wysoka', levelLow: 'Niska', levelModerate: 'Umiarkowana', levelHigh: 'Wysoka',
   },
   fr: {
-    technicalEyebrow: 'RQS AUDIO DNA', subtitle: 'Une lecture qualitative des données techniques mesurées dans votre audio final.',
+    technicalEyebrow: 'RQS AUDIO DNA', technicalAnalysis: 'Analyse technique : RQS Audio DNA', technicalDetails: 'DÉTAILS TECHNIQUES',
+    subtitle: 'Une lecture qualitative des données techniques mesurées dans votre audio final.',
     analyzing: 'Analyse des caractéristiques techniques…', unavailableTitle: 'Audio DNA indisponible',
-    unavailableBody: 'L’analyse technique et le mastering restent disponibles.', masterSuggested: 'PROFIL DE MASTER SUGGÉRÉ',
-    atmosphere: 'Atmosphere', character: 'Intensité Character', confidence: 'Confiance', recommended: 'Recommandé par Audio DNA',
+    unavailableBody: 'L’analyse technique et le mastering restent disponibles.', trackSummary: 'RÉSUMÉ DU TITRE',
+    masterRecommended: 'MASTER RECOMMANDÉ', recommendationApplied: 'Cette configuration a été appliquée automatiquement. Vous pouvez l’ajuster ci-dessous.',
+    whyThisMaster: 'POURQUOI CE MASTER ?', distributionReadiness: 'PRÊT POUR LA DISTRIBUTION', withinRange: 'Dans la plage', needsAttention: 'À vérifier',
+    atmosphere: 'Atmosphere', character: 'Character', confidence: 'Confiance', recommended: 'Recommandé par Audio DNA',
     manualOverride: 'RÉGLAGE MANUEL', inconclusive: 'Analyse non concluante', reset: 'Restaurer la recommandation',
     spectral: 'Profil spectral', lowEnd: 'Graves', stereo: 'Image stéréo', transients: 'Transitoires', harshness: 'Agressivité', dynamics: 'Dynamique',
     warmDark: 'Chaud / plutôt sombre', dark: 'Plutôt sombre', bright: 'Brillant / ouvert', balanced: 'Équilibré', strong: 'Forts', solid: 'Solides',
     restrained: 'Retenus', spacious: 'Spacieuse', focused: 'Ciblée', narrow: 'Étroite', pronounced: 'Prononcées', preserved: 'Préservées',
     soft: 'Douces', low: 'Faible', controlled: 'Maîtrisée', elevated: 'Élevée', open: 'Ouverte', healthy: 'Saine', compressed: 'Compressée',
-    tempo: 'Tempo', possibleDouble: 'Double-time possible', possibleHalf: 'Half-time possible', possibleAlternative: 'Alternative possible', key: 'Tonalité',
-    coreMusicalFeatures: 'CARACTÉRISTIQUES MUSICALES', musicDna: 'MUSIC DNA', experimental: 'EXPÉRIMENTAL', energy: 'Énergie', danceability: 'Dansabilité', normalizedValue: 'Valeur normalisée',
-    genre: 'Genre', mood: 'Ambiance', instrumentation: 'Instrumentation', vocals: 'Profil vocal',
-    semanticBody: 'Analyse sémantique en attente de classificateurs entraînés.',
-    semanticCategories: 'Genre · Sous-genre · Ambiance · Instrumentation · Profil vocal · Caractère',
-    pitchAssistant: 'PITCH ASSISTANT', pitchAssistantBody: 'L’assistant de pitch sera activé lorsque l’analyse sémantique sera disponible.',
-    advanced: 'DÉTAILS AUDIO AVANCÉS', duration: 'Durée', brightness: 'Brillance', warmth: 'Chaleur', transientStrength: 'Force des transitoires',
-    stereoWidth: 'Largeur stéréo', lowEndDensity: 'Densité des graves', dynamicDensity: 'Densité dynamique', overallEnergy: 'Énergie globale',
+    possibleDouble: 'Double-time possible', possibleHalf: 'Half-time possible', possibleAlternative: 'Alternative possible', key: 'Tonalité',
+    energy: 'Énergie', danceability: 'Dansabilité', normalizedValue: 'Valeur normalisée', duration: 'Durée', brightness: 'Brillance', warmth: 'Chaleur',
+    transientStrength: 'Force des transitoires', stereoWidth: 'Largeur stéréo', lowEndDensity: 'Densité des graves', dynamicDensity: 'Densité dynamique', overallEnergy: 'Énergie globale',
     confidenceLow: 'Faible', confidenceMedium: 'Moyenne', confidenceHigh: 'Élevée', levelLow: 'Faible', levelModerate: 'Modérée', levelHigh: 'Élevée',
   },
 };
@@ -178,6 +166,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
 export class AudioDnaCardComponent {
   @Input() audioDna: AudioDnaPayload | null = null;
   @Input() state: MasteringAnalysisState = 'empty';
+  @Input() mode: 'summary' | 'technical' = 'summary';
+  @Input() target: MasteringDeliveryTargetCapabilities | null = null;
   @Output() resetRecommendation = new EventEmitter<void>();
 
   private readonly lang = inject(LanguageService);
@@ -193,6 +183,15 @@ export class AudioDnaCardComponent {
     if (level === 'high') return this.copy().confidenceHigh;
     if (level === 'medium') return this.copy().confidenceMedium;
     return this.copy().confidenceLow;
+  }
+
+  confidenceText(confidence: number): string {
+    const level = this.confidenceLabel(confidence >= 0.75 ? 'high' : confidence >= 0.45 ? 'medium' : 'low');
+    const language = this.lang.currentLang();
+    if (language === 'pt') return `Confiança ${level.toLowerCase()}`;
+    if (language === 'pl') return `Pewność: ${level.toLowerCase()}`;
+    if (language === 'fr') return `Confiance ${level.toLowerCase()}`;
+    return `${level} confidence`;
   }
 
   spectralLabel(): string {
@@ -236,16 +235,62 @@ export class AudioDnaCardComponent {
     return this.copy().levelLow;
   }
 
+  masterReasonLabels(): string[] {
+    const language = this.lang.currentLang();
+    const labels: Record<string, Record<UiLanguage, string>> = {
+      WIDE_STEREO_IMAGE: { en: 'Wide stereo image', pt: 'Imagem estéreo ampla', pl: 'Szeroki obraz stereo', fr: 'Image stéréo large' },
+      SPACIOUS_IMAGE: { en: 'Spacious stereo image', pt: 'Imagem estéreo espaçosa', pl: 'Przestrzenny obraz stereo', fr: 'Image stéréo spacieuse' },
+      PRESERVED_TRANSIENTS: { en: 'Preserved transients', pt: 'Transientes preservados', pl: 'Zachowane transjenty', fr: 'Transitoires préservées' },
+      LOW_HARSHNESS: { en: 'Low harshness', pt: 'Baixa aspereza', pl: 'Niska ostrość', fr: 'Faible agressivité' },
+      WARM_SPECTRAL_BALANCE: { en: 'Warm tonal balance', pt: 'Balanço tonal quente', pl: 'Ciepła równowaga tonalna', fr: 'Équilibre tonal chaud' },
+      MODERATE_ENERGY: { en: 'Moderate energy', pt: 'Energia moderada', pl: 'Umiarkowana energia', fr: 'Énergie modérée' },
+      DENSE_LOW_END: { en: 'Strong low-end', pt: 'Graves fortes', pl: 'Mocne niskie pasmo', fr: 'Graves puissants' },
+      HIGH_ENERGY: { en: 'High energy', pt: 'Energia alta', pl: 'Wysoka energia', fr: 'Énergie élevée' },
+      HIGH_DYNAMIC_DENSITY: { en: 'Dense dynamics', pt: 'Dinâmica densa', pl: 'Gęsta dynamika', fr: 'Dynamique dense' },
+      BRIGHT_SPECTRAL_BALANCE: { en: 'Bright tonal balance', pt: 'Balanço tonal brilhante', pl: 'Jasna równowaga tonalna', fr: 'Équilibre tonal brillant' },
+      DENSE_SOURCE_RESTRAINT: { en: 'Dense source under control', pt: 'Fonte densa sob controle', pl: 'Gęste źródło pod kontrolą', fr: 'Source dense maîtrisée' },
+      HIGH_LRA_RESTRAINT: { en: 'Wide dynamic range', pt: 'Amplitude dinâmica preservada', pl: 'Szeroki zakres dynamiki', fr: 'Large plage dynamique' },
+      HARSH_SOURCE_RESTRAINT: { en: 'Harshness under control', pt: 'Aspereza sob controle', pl: 'Ostrość pod kontrolą', fr: 'Agressivité maîtrisée' },
+      STRONG_TRANSIENT_RESTRAINT: { en: 'Strong transients protected', pt: 'Transientes fortes protegidos', pl: 'Silne transjenty chronione', fr: 'Transitoires fortes protégées' },
+      INCONCLUSIVE_TECHNICAL_DNA: { en: 'Conservative adjustment', pt: 'Ajuste conservador', pl: 'Ostrożne ustawienie', fr: 'Réglage prudent' },
+    };
+    const reasons = (this.audioDna?.master_profile?.reasons ?? [])
+      .map((reason) => labels[reason.code]?.[language])
+      .filter((label): label is string => Boolean(label))
+      .slice(0, 4);
+
+    if (reasons.length) return reasons;
+    const copy = this.copy();
+    return [
+      `${copy.lowEnd}: ${this.lowEndLabel()}`,
+      `${copy.transients}: ${this.transientLabel()}`,
+      `${copy.harshness}: ${this.harshnessLabel()}`,
+    ];
+  }
+
+  loudnessWithinTarget(): boolean {
+    const value = this.audioDna?.technical.lufs_integrated;
+    if (value === undefined || !Number.isFinite(value)) return false;
+    if (!this.target) return value >= -14.5 && value <= -9;
+    return value >= this.target.min_lufs && value <= this.target.max_lufs;
+  }
+
+  truePeakWithinTarget(): boolean {
+    const value = this.audioDna?.technical.true_peak_dbtp;
+    if (value === undefined || !Number.isFinite(value)) return false;
+    return value <= (this.target?.true_peak_ceiling_dbtp ?? -1);
+  }
+
+  loudnessReadinessLabel(): string {
+    return this.loudnessWithinTarget() ? this.copy().withinRange : this.copy().needsAttention;
+  }
+
+  truePeakReadinessLabel(): string {
+    return this.truePeakWithinTarget() ? this.copy().withinRange : this.copy().needsAttention;
+  }
+
   normalizedPercent(value: number): number {
     return Math.round(Math.max(0, Math.min(1, value)) * 100);
-  }
-
-  semanticLabels(items: Array<{ label: string; confidence: number }>): string {
-    return items.map((item) => item.label).join(' · ');
-  }
-
-  vocalLabel(type: string | null): string {
-    return type ? type.replaceAll('_', ' ') : this.copy().inconclusive;
   }
 
   formatDuration(seconds: number): string {

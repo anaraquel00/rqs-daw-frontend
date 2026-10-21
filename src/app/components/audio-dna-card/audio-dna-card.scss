@@ -1,73 +1,155 @@
 :host { display: block; min-width: 0; margin: 18px 0; }
 
-.audio-dna {
+.audio-dna,
+.technical-details {
   min-width: 0;
   overflow: hidden;
-  padding: clamp(14px, 2vw, 20px);
+  box-sizing: border-box;
   border: 1px solid rgba(0, 240, 255, 0.18);
   border-radius: 12px;
   background: linear-gradient(145deg, rgba(0, 240, 255, 0.035), rgba(0, 0, 0, 0.28));
   font-family: monospace;
-  box-sizing: border-box;
 }
 
+.audio-dna { padding: clamp(14px, 2vw, 20px); }
+.track-summary h3,
+.distribution-readiness h3,
+.master-profile h3 {
+  margin: 0;
+  color: #d7e8eb;
+  font-size: clamp(13px, 2vw, 16px);
+  letter-spacing: 1px;
+}
+
+.track-summary-grid,
+.readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.track-summary-grid > div,
+.readiness-grid > div,
+.profile-facts div,
+.signal-grid > div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.track-summary-grid span,
+.track-summary-grid small,
+.readiness-grid span,
+.readiness-grid small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.track-summary-grid > div > span,
+.readiness-grid span,
+dt,
+.signal-grid span {
+  color: #68777c;
+  font-size: 9px;
+  letter-spacing: 0.65px;
+  text-transform: uppercase;
+}
+
+.track-summary-grid strong,
+.readiness-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: #fff;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.track-summary-grid small,
+.track-tempo > span,
+.readiness-grid small {
+  margin-top: 5px;
+  color: #9db0b5;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.track-tempo > span { color: #00f0ff; }
+.readiness-grid small { color: #00ff88; }
+.readiness-grid small.attention { color: #ffbe00; }
+
 .title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.master-profile { padding: 15px; border-left: 3px solid #00ff88; background: rgba(0, 255, 136, 0.035); }
+.master-profile { margin-top: 16px; padding: 15px; border-left: 3px solid #00ff88; background: rgba(0, 255, 136, 0.035); }
 .master-profile.inconclusive { border-left-color: #ffbe00; }
-.master-profile h3, .core-musical-features h4, .music-dna h4 { margin: 0; color: #d7e8eb; font-size: 11px; letter-spacing: .9px; }
-.source-badge { padding: 5px 9px; border: 1px solid rgba(0,255,136,.35); border-radius: 999px; color: #00ff88; font-size: 9px; white-space: nowrap; }
-.source-badge.manual { border-color: rgba(255,190,0,.35); color: #ffbe00; }
-.profile-facts, .advanced-details dl { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 9px; margin: 14px 0 0; }
-.profile-facts div, .signal-grid > div, .music-feature-grid > section { min-width: 0; padding: 10px; border: 1px solid rgba(255,255,255,.07); border-radius: 7px; background: rgba(0,0,0,.18); }
-dt, .signal-grid span, .music-feature-grid h5 { color: #68777c; font-size: 9px; letter-spacing: .65px; text-transform: uppercase; }
+.master-profile p { margin: 8px 0 0; color: #8b949e; font-size: 10px; line-height: 1.55; }
+.source-badge { padding: 5px 9px; border: 1px solid rgba(0, 255, 136, .35); border-radius: 999px; color: #00ff88; font-size: 9px; white-space: nowrap; }
+.source-badge.manual { border-color: rgba(255, 190, 0, .35); color: #ffbe00; }
+.profile-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 14px 0 0; }
 dd { margin: 5px 0 0; color: #fff; overflow-wrap: anywhere; }
 .profile-facts dd { font-size: 14px; font-weight: 700; text-transform: uppercase; }
 .dna-reset { min-height: 44px; margin-top: 10px; padding: 0; border: 0; background: transparent; color: #00f0ff; font: 10px monospace; text-decoration: underline; cursor: pointer; }
 .dna-reset:focus-visible, summary:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.dna-heading { margin-top: 20px; }
-.dna-heading > span { color: #00f0ff; font-size: clamp(14px,2vw,17px); font-weight: 700; letter-spacing: 1.4px; }
-.dna-heading p, .music-dna p, .pitch-assistant p { margin: 6px 0 0; color: #8b949e; font-size: 10px; line-height: 1.55; }
-.signal-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+
+.why-master {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(0, 255, 136, 0.1);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.12);
+}
+.why-master h4 { margin: 0; color: #d7e8eb; font-size: 10px; letter-spacing: .9px; }
+.why-master ul { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 0; padding: 0; list-style: none; }
+.why-master li { padding: 5px 8px; border-radius: 999px; background: rgba(0, 255, 136, .06); color: #cce6dc; font-size: 10px; }
+
+.distribution-readiness { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(0, 240, 255, .1); }
+
+.technical-details { padding: 0 16px 16px; color: #8b949e; font-size: 10px; }
+.technical-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  cursor: pointer;
+  color: #00f0ff;
+  font-weight: 700;
+  letter-spacing: .8px;
+  overflow-wrap: anywhere;
+}
+.technical-details > summary small { color: #68777c; font-weight: 400; letter-spacing: 0; text-align: right; }
+.dna-heading { margin-top: 8px; }
+.dna-heading > span { color: #00f0ff; font-size: clamp(14px, 2vw, 17px); font-weight: 700; letter-spacing: 1.4px; }
+.dna-heading p { margin: 6px 0 0; color: #8b949e; font-size: 10px; line-height: 1.55; }
+.signal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
 .signal-grid span { display: block; margin-bottom: 7px; }
-.signal-grid strong { display: block; color: #fff; font-size: clamp(11px,1.5vw,13px); line-height: 1.35; overflow-wrap: anywhere; text-transform: uppercase; }
-.core-musical-features { margin-top: 12px; padding: 12px; border: 1px solid rgba(0,240,255,.14); border-radius: 7px; background: rgba(0,240,255,.025); }
-.music-dna { margin-top: 12px; padding: 12px; border: 1px solid rgba(142,124,255,.22); border-radius: 7px; background: rgba(142,124,255,.045); }
-.music-feature-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
-.music-feature-grid h5 { margin: 0; }
-.music-feature-grid strong, .music-feature-grid span, .music-feature-grid small { display: block; margin-top: 6px; }
-.music-feature-grid strong { color: #fff; font-size: 15px; }
-.music-feature-grid span { color: #00f0ff; font-size: 10px; }
-.music-feature-grid small { color: #9db0b5; font-size: 9px; }
-.semantic-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; margin: 10px 0 0; }
-.semantic-grid div { min-width: 0; }
-.semantic-pending { color: #c6c0eb !important; }
-.semantic-categories { color: #736d91 !important; overflow-wrap: anywhere; }
-.advanced-details, .pitch-assistant { margin-top: 12px; color: #8b949e; font-size: 10px; border-top: 1px solid rgba(255,255,255,.05); }
-summary { display: flex; align-items: center; min-height: 44px; color: #00f0ff; cursor: pointer; overflow-wrap: anywhere; }
-.advanced-details dl div { min-width: 0; padding-top: 7px; border-top: 1px solid rgba(255,255,255,.05); }
+.signal-grid strong { display: block; color: #fff; font-size: clamp(11px, 1.5vw, 13px); line-height: 1.35; overflow-wrap: anywhere; text-transform: uppercase; }
+.technical-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin: 14px 0 0; }
+.technical-metrics div { min-width: 0; padding-top: 7px; border-top: 1px solid rgba(255, 255, 255, .05); }
+
 .dna-state { display: flex; align-items: center; gap: 9px; color: #8b949e; font-size: 11px; }
 .dna-state.unavailable { align-items: flex-start; flex-direction: column; color: #ffbe00; }
-.dna-spinner { width: 11px; height: 11px; border: 2px solid rgba(0,240,255,.2); border-top-color: #00f0ff; border-radius: 50%; animation: spin .8s linear infinite; }
+.dna-spinner { width: 11px; height: 11px; border: 2px solid rgba(0, 240, 255, .2); border-top-color: #00f0ff; border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 560px) {
   .title-row { flex-direction: column; }
   .source-badge { white-space: normal; }
-  .signal-grid, .profile-facts, .music-feature-grid, .semantic-grid, .advanced-details dl { grid-template-columns: minmax(0,1fr); }
+  .track-summary-grid, .readiness-grid, .profile-facts, .signal-grid, .technical-metrics { grid-template-columns: minmax(0, 1fr); }
+  .technical-details > summary { align-items: flex-start; flex-direction: column; justify-content: center; }
+  .technical-details > summary small { text-align: left; }
 }
 
 @media (min-width: 561px) and (max-width: 900px) {
-  .signal-grid, .advanced-details dl { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .track-summary-grid, .readiness-grid, .signal-grid, .technical-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 :host-context(app-studio-shell[data-theme='light']) {
-  .audio-dna { border-color: var(--studio-border); background: var(--studio-card); color: var(--studio-text); }
+  .audio-dna, .technical-details { border-color: var(--studio-border); background: var(--studio-card); color: var(--studio-text); }
   .master-profile { background: var(--studio-success-bg); }
-  .master-profile h3, .core-musical-features h4, .music-dna h4, dd, .signal-grid strong, .music-feature-grid strong { color: var(--studio-text); }
-  .profile-facts div, .signal-grid > div, .music-feature-grid > section { border-color: var(--studio-border); background: var(--studio-display); }
-  .dna-heading > span, .dna-reset, summary, .music-feature-grid span { color: var(--studio-cyan-strong); }
-  .dna-heading p, .music-dna p, .pitch-assistant p, .music-feature-grid small { color: var(--studio-text-secondary); }
-  .core-musical-features, .music-dna { border-color: var(--studio-border); }
-  .core-musical-features { background: var(--studio-display); }
-  .music-dna { background: var(--studio-violet-soft, var(--studio-card)); }
+  .track-summary h3, .distribution-readiness h3, .master-profile h3, .why-master h4, dd, .track-summary-grid strong, .readiness-grid strong, .signal-grid strong { color: var(--studio-text); }
+  .track-summary-grid > div, .readiness-grid > div, .profile-facts div, .signal-grid > div { border-color: var(--studio-border); background: var(--studio-display); }
+  .dna-heading > span, .dna-reset, summary, .track-tempo > span { color: var(--studio-cyan-strong); }
+  .master-profile p, .dna-heading p, .track-summary-grid small { color: var(--studio-text-secondary); }
 }

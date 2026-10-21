@@ -40,7 +40,6 @@ import {
 } from '../../services/mastering-auto';
 import { MasteringHelpTopic, masteringEducation } from './mastering-education';
 import { PreviewWaveformComponent } from './preview-waveform';
-import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
 import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
 import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
 
@@ -51,7 +50,6 @@ import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
     CommonModule,
     FormsModule,
     PreviewWaveformComponent,
-    AnalyzerSimpleComponent,
     DeliveryAutoComponent,
     AudioDnaCardComponent,
   ],

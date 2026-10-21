@@ -2,8 +2,19 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
-import { AudioDnaPayload } from '../../services/mastering-types';
+import { AudioDnaPayload, MasteringDeliveryTargetCapabilities } from '../../services/mastering-types';
 import { AudioDnaCardComponent } from './audio-dna-card';
+
+const target: MasteringDeliveryTargetCapabilities = {
+  target_lufs: -14,
+  min_lufs: -14.5,
+  max_lufs: -13.5,
+  true_peak_ceiling_dbtp: -1.2,
+  min_plr_lu: 9,
+  min_lra_retention: 0.85,
+  max_crest_loss_db: 1.5,
+  policy_source: 'test',
+};
 
 const audioDna: AudioDnaPayload = {
   version: 'rqs-audio-dna-v1.2',
@@ -92,40 +103,40 @@ describe('AudioDnaCardComponent', () => {
     fixture = TestBed.createComponent(AudioDnaCardComponent);
     fixture.componentRef.setInput('state', 'success');
     fixture.componentRef.setInput('audioDna', audioDna);
+    fixture.componentRef.setInput('target', target);
     fixture.detectChanges();
   });
 
-  it('renders V1.2 metrics under Core Musical Features, separate from Music DNA', () => {
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('MASTER PROFILE SUGGESTED');
-    expect(text).toContain('Aurora');
-    expect(text).toContain('26%');
-    expect(text).toContain('Medium');
-    expect(text).toContain('RQS AUDIO DNA');
-    expect(text).toContain('Warm / dark-leaning');
-    expect(text).toContain('Strong');
-    expect(text).toContain('Spacious');
-    expect(text).toContain('Preserved');
-    expect(text).toContain('Low');
-    expect(text).toContain('Healthy');
+  it('renders the approved artist-first summary in the required order', () => {
+    const root = fixture.nativeElement as HTMLElement;
+    const text = root.textContent ?? '';
+    const summary = root.querySelector('.track-summary') as HTMLElement;
+    const master = root.querySelector('.master-profile') as HTMLElement;
+    const why = root.querySelector('.why-master') as HTMLElement;
+    const readiness = root.querySelector('.distribution-readiness') as HTMLElement;
+
+    expect(text).toContain('TRACK SUMMARY');
     expect(text).toContain('63 BPM');
     expect(text).toContain('Possible double-time: 126 BPM');
-    const core = fixture.nativeElement.querySelector('.core-musical-features') as HTMLElement;
-    const semantic = fixture.nativeElement.querySelector('.music-dna') as HTMLElement;
-    expect(core.textContent).toContain('CORE MUSICAL FEATURES');
-    expect(core.textContent).toContain('Tempo');
-    expect(core.textContent).toContain('Key');
-    expect(core.textContent).toContain('Energy');
-    expect(core.textContent).toContain('Danceability');
-    expect(core.textContent).not.toContain('Normalized value');
-    expect(semantic.textContent).toContain('MUSIC DNA');
-    expect(semantic.textContent).toContain('Semantic analysis pending trained classifiers.');
-    expect(semantic.textContent).toContain('Genre · Subgenre · Mood · Instruments · Vocals · Character');
-    expect(text).not.toContain('Primary genre');
-    expect(fixture.nativeElement.querySelector('.analyze-music-dna')).toBeNull();
+    expect(text).toContain('D# minor');
+    expect(text).toContain('Energy');
+    expect(text).toContain('Danceability');
+    expect(text).toContain('RECOMMENDED MASTER');
+    expect(text).toContain('Aurora');
+    expect(text).toContain('26%');
+    expect(text).toContain('WHY THIS MASTER?');
+    expect(text).toContain('Moderate energy');
+    expect(text).toContain('DISTRIBUTION READINESS');
+    expect(text).toContain('-14.9 LUFS');
+    expect(text).toContain('Needs attention');
+    expect(text).toContain('-3.1 dBTP');
+    expect(text).toContain('Within range');
+    expect(summary.compareDocumentPosition(master) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(master.compareDocumentPosition(why) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(why.compareDocumentPosition(readiness) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('renders available semantic evidence without changing the Master Profile', () => {
+  it('hides Music DNA and Pitch Assistant even when semantic evidence is available', () => {
     const available = structuredClone(audioDna);
     available.music!.status = 'available';
     available.music!.semantic = {
@@ -141,28 +152,16 @@ describe('AudioDnaCardComponent', () => {
     fixture.componentRef.setInput('audioDna', available);
     fixture.detectChanges();
 
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('electronic');
-    expect(text).toContain('dark');
-    expect(text).toContain('synthesizer');
-    expect(text).not.toContain('electronic 88%');
-    expect(text).toContain('singing voice');
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).not.toContain('MUSIC DNA');
+    expect(text).not.toContain('PITCH ASSISTANT');
+    expect(text).not.toContain('electronic');
     expect(text).toContain('Aurora');
-    expect(text).toContain('26%');
+    expect(mastering.atmosphere()).toBe('aurora');
+    expect(mastering.intensityPercent()).toBe(26);
   });
 
-  it('keeps Pitch Assistant collapsed and inactive without semantic data', () => {
-    const details = fixture.nativeElement.querySelector('.pitch-assistant') as HTMLDetailsElement;
-    expect(details.open).toBeFalse();
-    expect(details.querySelector('summary')?.textContent).toContain('PITCH ASSISTANT');
-    expect(details.textContent).toContain('Pitch Assistant will be activated when semantic analysis is available.');
-    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button'))
-      .map((button) => (button as HTMLButtonElement).textContent ?? '').join(' ');
-    expect(buttons).not.toContain('Apply');
-    expect(buttons).not.toContain('Publish');
-  });
-
-  it('shows manual override and exposes an explicit reset without reapplying automatically', () => {
+  it('shows manual override and preserves the explicit reset lifecycle without Apply', () => {
     mastering.setIntensityPercent(40);
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('MANUAL OVERRIDE');
@@ -172,47 +171,56 @@ describe('AudioDnaCardComponent', () => {
     fixture.componentInstance.resetRecommendation.subscribe(() => resets += 1);
     (fixture.nativeElement.querySelector('.dna-reset') as HTMLButtonElement).click();
     expect(resets).toBe(1);
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button'))
+      .map((button) => (button as HTMLButtonElement).textContent ?? '').join(' ');
+    expect(buttons).not.toContain('Apply');
   });
 
-  it('keeps raw normalized values inside closed advanced details', () => {
-    const details = fixture.nativeElement.querySelector('.advanced-details') as HTMLDetailsElement;
+  it('keeps RQS Audio DNA and raw metrics inside closed Technical Details', () => {
+    fixture.componentRef.setInput('mode', 'technical');
+    fixture.detectChanges();
+
+    const details = fixture.nativeElement.querySelector('.technical-details') as HTMLDetailsElement;
+    expect(details).not.toBeNull();
     expect(details.open).toBeFalse();
+    expect(details.querySelector('summary')?.textContent).toContain('TECHNICAL DETAILS');
+    expect(details.querySelector('summary')?.textContent).toContain('Technical analysis: RQS Audio DNA');
+    expect(details.textContent).toContain('RQS AUDIO DNA');
+    expect(details.textContent).toContain('Warm / dark-leaning');
     expect(details.textContent).toContain('0.2332');
     expect(details.textContent).toContain('Energy — Normalized value');
     expect(details.textContent).toContain('56%');
     expect(details.textContent).toContain('Danceability — Normalized value');
     expect(details.textContent).toContain('63%');
-    expect(fixture.nativeElement.querySelector('.signal-grid')?.textContent).not.toContain('0.2332');
-    expect(fixture.nativeElement.querySelector('.core-musical-features')?.textContent).not.toContain('Normalized value');
-    expect(details.querySelector('summary')).toBeTruthy();
+    expect(details.textContent).toContain('experimental');
+    expect(details.textContent).toContain('deterministic_music_features_v1_2');
   });
 
-  it('uses the approved artist-facing PT-BR copy without fake semantic values', () => {
+  it('uses the approved artist-facing PT-BR copy', () => {
     currentLang.set('pt');
     fixture.detectChanges();
 
-    const core = fixture.nativeElement.querySelector('.core-musical-features') as HTMLElement;
-    const semantic = fixture.nativeElement.querySelector('.music-dna') as HTMLElement;
-    const pitch = fixture.nativeElement.querySelector('.pitch-assistant') as HTMLDetailsElement;
-    expect(core.textContent).toContain('CARACTERÍSTICAS MUSICAIS');
-    expect(core.textContent).toContain('Tonalidade');
-    expect(core.textContent).toContain('Energia');
-    expect(core.textContent).toContain('Dançabilidade');
-    expect(semantic.textContent).toContain('Análise semântica aguardando classificadores treinados.');
-    expect(semantic.textContent).not.toContain('Electronic');
-    expect(semantic.textContent).not.toContain('Progressive House');
-    expect(pitch.open).toBeFalse();
-    expect(pitch.textContent).toContain('O assistente de pitch será ativado quando a análise semântica estiver disponível.');
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).toContain('RESUMO DA FAIXA');
+    expect(text).toContain('MASTER RECOMENDADO');
+    expect(text).toContain('POR QUE ESTE MASTER?');
+    expect(text).toContain('PRONTIDÃO PARA DISTRIBUIÇÃO');
+    expect(text).toContain('Confiança média');
+    expect(text).not.toContain('CARACTERÍSTICAS MUSICAIS');
+    expect(text).not.toContain('Análise semântica aguardando');
   });
 
-  it('contains the card at every required content width', () => {
+  it('contains summary and technical modes at every required content width', () => {
     const host = fixture.nativeElement as HTMLElement;
     host.style.display = 'block';
-    for (const width of [360, 390, 412, 768, 1024, 1440]) {
-      host.style.width = `${width}px`;
-      fixture.detectChanges();
-      const card = host.querySelector('.audio-dna') as HTMLElement;
-      expect(card.scrollWidth).withContext(`${width}px Audio DNA overflow`).toBeLessThanOrEqual(card.clientWidth);
+    for (const mode of ['summary', 'technical'] as const) {
+      fixture.componentRef.setInput('mode', mode);
+      for (const width of [360, 390, 412, 768, 1024, 1440]) {
+        host.style.width = `${width}px`;
+        fixture.detectChanges();
+        const element = host.querySelector(mode === 'summary' ? '.audio-dna' : '.technical-details') as HTMLElement;
+        expect(element.scrollWidth).withContext(`${width}px ${mode} overflow`).toBeLessThanOrEqual(element.clientWidth);
+      }
     }
   });
 });
