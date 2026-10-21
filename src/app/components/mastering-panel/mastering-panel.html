@@ -95,22 +95,13 @@
     <p class="listening-status" aria-live="polite">{{ listeningStatusText() }}</p>
   </div>
 
-  <app-analyzer-simple
+  <app-audio-dna-card
+    *ngIf="analysisState !== 'empty' || audioDna"
+    [audioDna]="audioDna"
     [state]="analysisState"
-    [metrics]="analysisMetrics"
-    [target]="activeTarget()">
-  </app-analyzer-simple>
-
-  <app-delivery-auto
-    [state]="autoUiState()"
-    [recommendation]="autoRecommendation()"
-    [currentRequestedLufs]="requestedLufs()"
-    [policyTargetLufs]="activeTarget()?.target_lufs ?? null"
-    [canRequest]="canRequestAutoRecommendation()"
-    [authenticated]="auth.isLoggedIn()"
-    (requestRecommendation)="requestAutoRecommendation()"
-    (applyRequestedLufs)="applyAutoRequestedLufs()">
-  </app-delivery-auto>
+    [target]="activeTarget()"
+    (resetRecommendation)="resetToAudioDna()">
+  </app-audio-dna-card>
 
   <div class="mastering-help-toolbar">
     <button class="guide-button" type="button" (click)="toggleGuide()">
@@ -172,7 +163,13 @@
 
   <hr class="cyber-divider">
 
-  <div class="controls-section">
+  <section class="controls-section" aria-labelledby="master-controls-title">
+    <h3 id="master-controls-title" class="master-controls-title">
+      <span *ngIf="lang.currentLang() === 'en'">MASTER CONTROLS</span>
+      <span *ngIf="lang.currentLang() === 'pt'">CONTROLES DE MASTER</span>
+      <span *ngIf="lang.currentLang() === 'pl'">STEROWANIE MASTEREM</span>
+      <span *ngIf="lang.currentLang() === 'fr'">CONTRÔLES DU MASTER</span>
+    </h3>
     <div class="control-group">
       <div class="control-title-row">
         <h4>{{ education().controls.destination.title }}</h4>
@@ -216,19 +213,21 @@
       </div>
       <p class="control-explainer atmosphere-truth">{{ education().controls.atmosphere.short }}</p>
       <div class="btn-group profiles-grid">
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
-        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'clear_sky'" [attr.aria-pressed]="atmosphere() === 'clear_sky'" (click)="selectAtmosphere('clear_sky')">Clear Sky</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'thunder'" [attr.aria-pressed]="atmosphere() === 'thunder'" (click)="selectAtmosphere('thunder')">Thunder</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'sunroof'" [attr.aria-pressed]="atmosphere() === 'sunroof'" (click)="selectAtmosphere('sunroof')">Sunroof</button>
+        <button [disabled]="isProcessing" [class.selected]="atmosphere() === 'aurora'" [attr.aria-pressed]="atmosphere() === 'aurora'" (click)="selectAtmosphere('aurora')">Aurora</button>
       </div>
     </div>
 
     <div class="control-group">
       <div class="control-title-row">
-        <h4>{{ education().controls.intensity.title }} — {{ intensityPercent() }}%</h4>
+        <h4><label for="character-intensity">{{ education().controls.intensity.title }} — {{ intensityPercent() }}%</label></h4>
+        <span class="control-state-badge" *ngIf="audioDnaRecommendation() && masterProfileSource() === 'MANUAL'">MANUAL OVERRIDE</span>
         <button class="help-dot" type="button" (click)="toggleHelp('intensity')" [attr.title]="education().controls.intensity.short">?</button>
       </div>
       <input
+        id="character-intensity"
         type="range"
         min="0"
         max="100"
@@ -237,7 +236,8 @@
         [value]="intensityPercent()"
         (input)="updateIntensity($event)"
         class="cyber-scrubber"
-        aria-label="Mastering V2 intensity">
+        aria-label="Mastering V2 intensity"
+        [attr.aria-valuetext]="intensityPercent() + '%'">
       <p class="control-explainer">{{ education().controls.intensity.short }}</p>
     </div>
 
@@ -290,7 +290,21 @@
         ⚠ {{ error }}
       </p>
     </div>
-  </div>
+
+    <details class="delivery-auto-disclosure">
+      <summary>DELIVERY AUTO</summary>
+      <app-delivery-auto
+        [state]="autoUiState()"
+        [recommendation]="autoRecommendation()"
+        [currentRequestedLufs]="requestedLufs()"
+        [policyTargetLufs]="activeTarget()?.target_lufs ?? null"
+        [canRequest]="canRequestAutoRecommendation()"
+        [authenticated]="auth.isLoggedIn()"
+        (requestRecommendation)="requestAutoRecommendation()"
+        (applyRequestedLufs)="applyAutoRequestedLufs()">
+      </app-delivery-auto>
+    </details>
+  </section>
 
   <div class="config-invalidated" *ngIf="configInvalidatedResult()">
     ⚠
@@ -359,4 +373,12 @@
       {{ isProcessing ? lang.t().PROCESSING_ACUSTICO : lang.t().MASTER_FULL }}
     </button>
   </div>
+
+  <app-audio-dna-card
+    *ngIf="analysisState === 'success' && audioDna"
+    mode="technical"
+    [audioDna]="audioDna"
+    [state]="analysisState"
+    [target]="activeTarget()">
+  </app-audio-dna-card>
 </div>

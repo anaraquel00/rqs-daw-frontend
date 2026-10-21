@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import {
+  MasteringAnalysisResponse,
   MasteringAutoRecommendation,
   MasteringAutoRecommendationRequest,
   MasteringV2Analysis,
@@ -71,8 +72,8 @@ export class DspService {
     });
   }
 
-  analyzeMasteringV2(formData: FormData): Observable<MasteringV2Analysis> {
-    return this.http.post<MasteringV2Analysis>(`${this.baseUrl}/mastering/v2/analysis`, formData, {
+  analyzeMasteringV2(formData: FormData): Observable<MasteringAnalysisResponse> {
+    return this.http.post<MasteringAnalysisResponse>(`${this.baseUrl}/mastering/v2/analysis`, formData, {
       headers: this.masteringV2Headers(),
     });
   }

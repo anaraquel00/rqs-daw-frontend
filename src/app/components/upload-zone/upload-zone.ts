@@ -7,6 +7,7 @@ import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
 import {
+  AudioDnaPayload,
   MasteringAnalysisState,
   MasteringProcessCommand,
   MasteringV2Analysis,
@@ -49,6 +50,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   readonly masteringFeedback = signal<MasteringFeedback | null>(null);
   readonly analysisState = signal<MasteringAnalysisState>('empty');
   readonly analysisMetrics = signal<MasteringV2Analysis | null>(null);
+  audioDna: AudioDnaPayload | null = null;
+  audioSourceId: string | null = null;
   renderProgressPercent = 0;
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
@@ -288,6 +291,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
     this.clearAnalysisState();
+    this.audioDna = null;
+    this.audioSourceId = null;
+    this.masteringService.clearAudioDnaSource();
     this.masteringService.resetPreviewStartSeconds();
     this.stopEstimatedRenderProgress();
     this.audioComparison.resetAll('UPLOAD_ZONE_EJECT_TRACK');
@@ -319,6 +325,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
     this.clearAnalysisState();
+    this.audioDna = null;
+    this.audioSourceId = `source-${this.workspaceGeneration}:${file.name}:${file.size}:${file.lastModified}`;
+    this.masteringService.beginAudioSource(this.audioSourceId);
     this.systemLogs = [];
     this.masteringService.resetPreviewStartSeconds();
     this.audioComparison.audioProcessed.set(false);
@@ -359,9 +368,13 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     }
 
     this.dspService.analyzeMasteringV2(formData).subscribe({
-      next: (metrics) => {
+      next: (response) => {
         if (!this.isActiveWorkspace(generation)) return;
-        this.analysisMetrics.set(metrics);
+        this.analysisMetrics.set(response);
+        this.audioDna = response.audio_dna ?? null;
+        if (this.audioSourceId && response.audio_dna?.status === 'available' && response.audio_dna.master_profile) {
+          this.masteringService.initializeFromAudioDna(this.audioSourceId, response.audio_dna.master_profile);
+        }
         this.analysisState.set('success');
       },
       error: (error: unknown) => {
@@ -370,6 +383,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
           ? Number((error as { status?: unknown }).status)
           : 0;
         this.analysisMetrics.set(null);
+        this.audioDna = null;
         this.analysisState.set(status === 401 || status === 403 ? 'auth_required' : 'error');
       },
     });
@@ -378,6 +392,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   private clearAnalysisState(): void {
     this.analysisRequestedGeneration = null;
     this.analysisMetrics.set(null);
+    this.audioDna = null;
     this.analysisState.set('empty');
   }
 

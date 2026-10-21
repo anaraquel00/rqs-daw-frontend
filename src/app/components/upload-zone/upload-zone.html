@@ -45,6 +45,8 @@
     [isFullMaster]="isFullMasterCompleted"
     [analysisState]="analysisState()"
     [analysisMetrics]="analysisMetrics()"
+    [audioDna]="audioDna"
+    [audioSourceId]="audioSourceId"
     (processMaster)="processarMaster($event)"
     (configChanged)="invalidateMasteringResult()">
   </app-mastering-panel>

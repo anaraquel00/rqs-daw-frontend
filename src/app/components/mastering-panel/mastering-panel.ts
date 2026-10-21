@@ -21,6 +21,7 @@ import { AudioComparisonService, AudioVariant } from '../../services/audio-compa
 import { DspService } from '../../services/dsp';
 import { MasteringService } from '../../services/mastering.service';
 import {
+  AudioDnaPayload,
   MasteringAnalysisState,
   MasteringAutoRecommendation,
   MasteringAutoRecommendationRequest,
@@ -39,8 +40,8 @@ import {
 } from '../../services/mastering-auto';
 import { MasteringHelpTopic, masteringEducation } from './mastering-education';
 import { PreviewWaveformComponent } from './preview-waveform';
-import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
 import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
+import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
 
 @Component({
   selector: 'app-mastering-panel',
@@ -49,8 +50,8 @@ import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/del
     CommonModule,
     FormsModule,
     PreviewWaveformComponent,
-    AnalyzerSimpleComponent,
     DeliveryAutoComponent,
+    AudioDnaCardComponent,
   ],
   templateUrl: './mastering-panel.html',
   styleUrls: ['./mastering-panel.scss'],
@@ -76,6 +77,8 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() isFullMaster = false;
   @Input() analysisState: MasteringAnalysisState = 'empty';
   @Input() analysisMetrics: MasteringV2Analysis | null = null;
+  @Input() audioDna: AudioDnaPayload | null = null;
+  @Input() audioSourceId: string | null = null;
 
   @Output() processMaster = new EventEmitter<MasteringProcessCommand>();
   @Output() configChanged = new EventEmitter<void>();
@@ -86,6 +89,8 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   readonly intensityPercent = this.masteringService.intensityPercent;
   readonly requestedLufs = this.masteringService.requestedLufs;
   readonly soundcloudMode = this.masteringService.soundcloudMode;
+  readonly masterProfileSource = this.masteringService.masterProfileSource;
+  readonly audioDnaRecommendation = this.masteringService.audioDnaRecommendation;
 
   readonly capabilities = signal<MasteringV2Capabilities | null>(null);
   readonly capabilitiesError = signal<string | null>(null);
@@ -367,6 +372,11 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
     const patch = confirmedMasteringAutoPatch(recommendation, currentRequest, { confirmed: true });
     if (!patch) return;
     this.masteringService.setRequestedLufs(patch.requestedLufs);
+    this.notifyConfigChanged();
+  }
+
+  resetToAudioDna(): void {
+    if (this.isProcessing || !this.masteringService.resetToAudioDnaRecommendation()) return;
     this.notifyConfigChanged();
   }
 

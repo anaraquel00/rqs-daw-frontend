@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
-import { MasteringProcessCommand, MasteringV2Analysis } from '../../services/mastering-types';
+import { AudioDnaPayload, MasteringAnalysisResponse, MasteringProcessCommand, MasteringV2Analysis } from '../../services/mastering-types';
 import { UploadZoneComponent } from './upload-zone';
 
 describe('UploadZoneComponent protected Mastering V2 guard', () => {
@@ -29,6 +29,36 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     crest_factor_db: 8.1,
     loudness_range_lu: 5.2,
     duration_seconds: 185,
+  };
+  const audioDna: AudioDnaPayload = {
+    version: 'rqs-audio-dna-v1.2', status: 'available', source_sha256: 'a'.repeat(64),
+    technical: {
+      lufs_integrated: -14.2, true_peak_dbtp: -1.3, lra_lu: 5.2, rms_dbfs: -18.4,
+      crest_factor_db: 8.1, duration_seconds: 185, brightness: 0.3, warmth: 0.5,
+      transient_strength: 0.4, stereo_width: 0.5, low_end_density: 0.7,
+      harshness: 0.2, dynamic_density: 0.4, overall_energy: 0.6,
+    },
+    music: {
+      status: 'partial', method: 'deterministic_music_features_v1_2',
+      bpm: { value: 63, confidence: 0.62, alternatives: [{ value: 126, confidence: 0.62, relation: 'double_time' }], ambiguous: true, method: 'test' },
+      key: { value: null, confidence: 0, status: 'experimental' }, genres: [], genre_status: 'inconclusive', moods: [], mood_status: 'inconclusive',
+      instruments: [], instrument_status: 'inconclusive', vocal: { status: 'inconclusive', presence: null, processed: null, method: 'held_back' },
+      energy: 0.6, energy_label: 'moderate', energy_status: 'technical_composite',
+      danceability: 0.5, danceability_label: 'moderate', danceability_status: 'experimental',
+      semantic: {
+        status: 'unavailable', method: 'semantic_classifier_not_configured_v1_2', model: null,
+        genres: [], moods: [], instruments: [],
+        vocal: {
+          status: 'unavailable', presence: null, type: null, processed: null, confidence: null,
+          method: 'semantic_classifier_not_configured_v1_2',
+        },
+      },
+    },
+    master_profile: {
+      atmosphere: 'aurora', character_intensity: 26, confidence: 0.57, confidence_level: 'medium', auto_configure: true,
+      input_domain: 'technical_audio_dna_only', reasons: [], atmosphere_dsp_behavior: 'profile_label_only_v2_compatibility_path',
+    },
+    release_assistant: null,
   };
 
   beforeEach(() => {
@@ -96,6 +126,21 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
 
     TestBed.tick();
     expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
+  });
+
+  it('initializes the Audio DNA master profile from the current source analysis once', () => {
+    const response: MasteringAnalysisResponse = { ...analysis, audio_dna: audioDna, cache: { hit: false } };
+    dsp.analyzeMasteringV2.and.returnValue(of(response));
+    const file = new File(['audio-dna'], 'audio-dna.wav', { type: 'audio/wav' });
+    (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(file);
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    const mastering = TestBed.inject(MasteringService);
+    expect(component.audioDna).toBe(audioDna);
+    expect(mastering.atmosphere()).toBe('aurora');
+    expect(mastering.intensityPercent()).toBe(26);
+    expect(mastering.masterProfileSource()).toBe('AUDIO_DNA');
   });
 
   it('shows loading and ignores a stale analysis after source replacement', () => {

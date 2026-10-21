@@ -2,6 +2,126 @@ export type MasteringDestination = 'streaming' | 'club' | 'festival';
 export type MasteringPlatform = 'spotify' | 'apple_music' | 'youtube' | 'soundcloud' | 'generic';
 export type MasteringAtmosphere = 'clear_sky' | 'thunder' | 'sunroof' | 'aurora';
 export type SoundCloudMode = 'standard' | 'loud';
+export type MasterProfileSource = 'AUDIO_DNA' | 'MANUAL';
+export type AudioDnaStatus = 'available' | 'unavailable';
+export type AudioDnaConfidenceLevel = 'high' | 'medium' | 'low';
+export type AudioDnaTempoRelation = 'half_time' | 'double_time' | 'competing_periodicity';
+
+export interface AudioDnaReason {
+  code: string;
+  weight: number;
+}
+
+export interface AudioDnaMasterProfile {
+  atmosphere: MasteringAtmosphere;
+  character_intensity: number;
+  confidence: number;
+  confidence_level: AudioDnaConfidenceLevel;
+  auto_configure: boolean;
+  input_domain: 'technical_audio_dna_only';
+  reasons: AudioDnaReason[];
+  atmosphere_dsp_behavior: 'profile_label_only_v2_compatibility_path';
+}
+
+export interface AudioDnaTechnical {
+  lufs_integrated: number;
+  true_peak_dbtp: number;
+  lra_lu: number;
+  rms_dbfs: number;
+  crest_factor_db: number;
+  duration_seconds: number;
+  brightness?: number;
+  warmth?: number;
+  spectral_balance?: number;
+  transient_strength?: number;
+  stereo_width?: number;
+  low_end_density?: number;
+  harshness?: number;
+  dynamic_density?: number;
+  overall_energy?: number;
+  analysis_seconds?: number;
+}
+
+export interface AudioDnaMusic {
+  status: 'experimental' | 'partial' | 'available' | 'unavailable';
+  method: string;
+  bpm: {
+    value: number | null;
+    confidence: number;
+    alternatives: Array<{
+      value: number;
+      confidence: number;
+      relation: AudioDnaTempoRelation;
+    }>;
+    ambiguous: boolean;
+    method: string;
+  };
+  key: { value: string | null; confidence: number; status: 'experimental' };
+  genres: Array<{ label: string; confidence: number }>;
+  genre_status: 'inconclusive';
+  moods: Array<{ label: string; confidence: number }>;
+  mood_status: 'inconclusive';
+  instruments: Array<{ label: string; confidence: number }>;
+  instrument_status: 'inconclusive';
+  vocal: {
+    status: 'inconclusive';
+    presence: null;
+    processed: null;
+    method: string;
+  };
+  energy: number;
+  energy_label?: 'low' | 'moderate' | 'high';
+  energy_status: 'technical_composite';
+  danceability: number;
+  danceability_label?: 'low' | 'moderate' | 'high';
+  danceability_status: 'experimental';
+  semantic?: {
+    status: 'available' | 'inconclusive' | 'unavailable';
+    method: string;
+    model: string | null;
+    genres: Array<{ label: string; confidence: number }>;
+    moods: Array<{ label: string; confidence: number }>;
+    instruments: Array<{ label: string; confidence: number }>;
+    vocal: {
+      status: 'available' | 'inconclusive' | 'unavailable';
+      presence: number | null;
+      type: string | null;
+      processed: boolean | null;
+      confidence: number | null;
+      method: string;
+    };
+  };
+}
+
+export interface AudioDnaReleaseAssistant {
+  status: 'experimental';
+  auto_populate: false;
+  review_required: true;
+  primary_genre: string | null;
+  secondary_genres: string[];
+  moods: string[];
+  instruments: string[];
+  bpm: number | null;
+  bpm_ambiguous: boolean;
+  key: string | null;
+  vocal_or_instrumental: string;
+  energy: number;
+  danceability: number;
+  disclaimer: 'experimental_review_manually_not_for_automatic_publication';
+}
+
+export interface AudioDnaPayload {
+  version: 'rqs-audio-dna-v1.1' | 'rqs-audio-dna-v1.2';
+  status: AudioDnaStatus;
+  source_sha256: string;
+  analysis_method?: string;
+  analysis_segments?: number;
+  error_code?: string;
+  technical: AudioDnaTechnical;
+  music: AudioDnaMusic | null;
+  master_profile: AudioDnaMasterProfile | null;
+  release_assistant: AudioDnaReleaseAssistant | null;
+}
 
 export interface MasteringV2Request {
   destination: MasteringDestination;
@@ -79,6 +199,11 @@ export interface MasteringV2Analysis {
   crest_factor_db: number;
   loudness_range_lu: number;
   duration_seconds: number;
+}
+
+export interface MasteringAnalysisResponse extends MasteringV2Analysis {
+  audio_dna?: AudioDnaPayload;
+  cache?: { hit: boolean };
 }
 
 export type MasteringAnalysisState = 'empty' | 'loading' | 'success' | 'error' | 'auth_required';

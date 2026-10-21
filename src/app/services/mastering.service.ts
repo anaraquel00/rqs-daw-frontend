@@ -1,9 +1,11 @@
 import { Injectable, WritableSignal, signal } from '@angular/core';
 import {
+  AudioDnaMasterProfile,
   MasteringAtmosphere,
   MasteringDestination,
   MasteringPlatform,
   MasteringV2Request,
+  MasterProfileSource,
   SoundCloudMode,
 } from './mastering-types';
 
@@ -19,6 +21,9 @@ export class MasteringService {
   readonly requestedLufs: WritableSignal<number | null> = signal(null);
   readonly soundcloudMode: WritableSignal<SoundCloudMode> = signal('standard');
   readonly previewStartSeconds: WritableSignal<number | null> = signal(null);
+  readonly masterProfileSource: WritableSignal<MasterProfileSource> = signal('MANUAL');
+  readonly audioDnaRecommendation: WritableSignal<AudioDnaMasterProfile | null> = signal(null);
+  private audioDnaSourceId: string | null = null;
 
   // Legacy component compatibility only. These signals keep standalone legacy
   // control components compilable, but they are intentionally NOT serialized
@@ -52,11 +57,46 @@ export class MasteringService {
 
   setAtmosphere(value: MasteringAtmosphere): void {
     this.atmosphere.set(value);
+    if (this.audioDnaRecommendation()) this.masterProfileSource.set('MANUAL');
   }
 
   setIntensityPercent(value: number): void {
     const normalized = Math.max(0, Math.min(100, Math.round(value)));
     this.intensityPercent.set(normalized);
+    if (this.audioDnaRecommendation()) this.masterProfileSource.set('MANUAL');
+  }
+
+  beginAudioSource(sourceId: string): void {
+    if (this.audioDnaSourceId === sourceId) return;
+    this.audioDnaSourceId = sourceId;
+    this.audioDnaRecommendation.set(null);
+    this.masterProfileSource.set('MANUAL');
+  }
+
+  initializeFromAudioDna(sourceId: string, recommendation: AudioDnaMasterProfile): boolean {
+    if (this.audioDnaSourceId !== sourceId || this.audioDnaRecommendation()) return false;
+    this.audioDnaRecommendation.set(recommendation);
+    if (!recommendation.auto_configure) return false;
+
+    this.atmosphere.set(recommendation.atmosphere);
+    this.intensityPercent.set(Math.max(0, Math.min(100, Math.round(recommendation.character_intensity))));
+    this.masterProfileSource.set('AUDIO_DNA');
+    return true;
+  }
+
+  resetToAudioDnaRecommendation(): boolean {
+    const recommendation = this.audioDnaRecommendation();
+    if (!recommendation) return false;
+    this.atmosphere.set(recommendation.atmosphere);
+    this.intensityPercent.set(Math.max(0, Math.min(100, Math.round(recommendation.character_intensity))));
+    this.masterProfileSource.set('AUDIO_DNA');
+    return true;
+  }
+
+  clearAudioDnaSource(): void {
+    this.audioDnaSourceId = null;
+    this.audioDnaRecommendation.set(null);
+    this.masterProfileSource.set('MANUAL');
   }
 
   setRequestedLufs(value: number | null): void {
