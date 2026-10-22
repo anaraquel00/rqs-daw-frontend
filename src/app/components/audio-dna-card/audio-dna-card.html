@@ -37,7 +37,9 @@
             <dl class="semantic-grid">
               <div><dt>{{ copy().genre }}</dt><dd>{{ semanticTagLine('genre') }}</dd></div>
               <div><dt>{{ copy().astral }}</dt><dd>{{ semanticTagLine('mood') }}</dd></div>
-              <div><dt>{{ copy().instruments }}</dt><dd>{{ semanticTagLine('instruments') }}</dd></div>
+              @if (semantic.categories.instruments?.length) {
+                <div><dt>{{ copy().instruments }}</dt><dd>{{ semanticTagLine('instruments') }}</dd></div>
+              }
             </dl>
           </section>
         } @else if (semantic.status === 'UNAVAILABLE' || semantic.status === 'FAILED' || semantic.status === 'STALE') {

@@ -161,7 +161,7 @@ describe('AudioDnaCardComponent', () => {
     expect(mastering.intensityPercent()).toBe(26);
   });
 
-  it('renders Genre, Astral from mood, and Instruments only for READY semantic evidence', () => {
+  it('renders Genre and Astral but omits abstained Instruments for READY semantic evidence', () => {
     const ready = structuredClone(audioDna);
     ready.source_generation = 'source-9';
     ready.analyzer_generation = 'source-9';
@@ -179,7 +179,7 @@ describe('AudioDnaCardComponent', () => {
       categories: {
         genre: [{ tag: 'electronic', raw_score: 0.34, rank: 1 }],
         mood: [{ tag: 'dark', raw_score: 0.35, rank: 1 }],
-        instruments: [{ tag: 'synthesizer', raw_score: 0.33, rank: 1 }],
+        instruments: [],
       },
     };
     fixture.componentRef.setInput('audioDna', ready);
@@ -191,8 +191,8 @@ describe('AudioDnaCardComponent', () => {
     expect(text).toContain('Electronic');
     expect(text).toContain('Astral');
     expect(text).toContain('Dark');
-    expect(text).toContain('Instruments');
-    expect(text).toContain('Synthesizer');
+    expect(text).not.toContain('Instruments');
+    expect(text).not.toContain('Synthesizer');
     expect(text).not.toContain('Mood');
     expect(fixture.nativeElement.textContent).toContain('RECOMMENDED MASTER');
     expect(mastering.atmosphere()).toBe('aurora');
