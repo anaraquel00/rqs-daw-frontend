@@ -366,10 +366,31 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     } else {
       formData.append('s3Key', this.s3Key!);
     }
+    const requestedGeneration = `source-${generation}`;
+    formData.append('source_generation', requestedGeneration);
 
     this.dspService.analyzeMasteringV2(formData).subscribe({
       next: (response) => {
         if (!this.isActiveWorkspace(generation)) return;
+        const hasGenerationEnvelope = response.source_generation !== undefined
+          || response.analyzer_generation !== undefined
+          || response.audio_dna?.source_generation !== undefined
+          || response.audio_dna?.analyzer_generation !== undefined
+          || response.audio_dna?.semantic !== undefined;
+        if (hasGenerationEnvelope && (
+          response.source_generation !== requestedGeneration
+          || response.analyzer_generation !== requestedGeneration
+          || response.audio_dna?.source_generation !== requestedGeneration
+          || response.audio_dna?.analyzer_generation !== requestedGeneration
+          || response.audio_dna?.semantic?.source_generation !== requestedGeneration
+          || response.audio_dna?.semantic?.analyzer_generation !== requestedGeneration
+        )) {
+          this.analysisMetrics.set(null);
+          this.audioDna = null;
+          this.analysisState.set('error');
+          this.addLog('⚠ RQS Audio DNA descartado: a faixa mudou durante a análise.');
+          return;
+        }
         this.analysisMetrics.set(response);
         this.audioDna = response.audio_dna ?? null;
         if (this.audioSourceId && response.audio_dna?.status === 'available' && response.audio_dna.master_profile) {

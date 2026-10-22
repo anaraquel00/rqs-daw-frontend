@@ -6,6 +6,52 @@ export type MasterProfileSource = 'AUDIO_DNA' | 'MANUAL';
 export type AudioDnaStatus = 'available' | 'unavailable';
 export type AudioDnaConfidenceLevel = 'high' | 'medium' | 'low';
 export type AudioDnaTempoRelation = 'half_time' | 'double_time' | 'competing_periodicity';
+export type SemanticAudioDnaStatus =
+  | 'NOT_STARTED'
+  | 'ANALYZING'
+  | 'READY'
+  | 'UNAVAILABLE'
+  | 'FAILED'
+  | 'STALE';
+export type SemanticAudioDnaCategory =
+  | 'genre'
+  | 'mood'
+  | 'instruments'
+  | 'vocals'
+  | 'texture'
+  | 'harmonic'
+  | 'tempo'
+  | 'era'
+  | 'production'
+  | 'energy';
+
+export interface SemanticAudioDnaTag {
+  tag: string;
+  /** Cosine similarity in embedding space. It is not a probability. */
+  raw_score: number;
+  rank: number;
+}
+
+export interface SemanticAudioDnaPayload {
+  version: 'rqs-semantic-audio-dna-v1';
+  status: SemanticAudioDnaStatus;
+  source_generation: string;
+  analyzer_generation: string;
+  engine: {
+    name: 'cocotagger';
+    model: 'musiccocoa';
+    revision: string;
+    taxonomy_version: string;
+  };
+  categories: Partial<Record<SemanticAudioDnaCategory, SemanticAudioDnaTag[]>>;
+  metrics?: {
+    model_load_ms: number;
+    audio_dna_analysis_ms: number;
+    segments_processed: number;
+    model_cache_hit: boolean;
+  };
+  error_code?: string;
+}
 
 export interface AudioDnaReason {
   code: string;
@@ -117,6 +163,9 @@ export interface AudioDnaPayload {
   analysis_method?: string;
   analysis_segments?: number;
   error_code?: string;
+  source_generation?: string;
+  analyzer_generation?: string;
+  semantic?: SemanticAudioDnaPayload;
   technical: AudioDnaTechnical;
   music: AudioDnaMusic | null;
   master_profile: AudioDnaMasterProfile | null;
@@ -203,6 +252,17 @@ export interface MasteringV2Analysis {
 
 export interface MasteringAnalysisResponse extends MasteringV2Analysis {
   audio_dna?: AudioDnaPayload;
+  source_generation?: string;
+  analyzer_generation?: string;
+  creative_recommendation?: {
+    policy_version: 'rqs-creative-master-profile-v0-abstain';
+    status: 'ABSTAIN';
+    source_generation: string;
+    semantic_status: SemanticAudioDnaStatus;
+    evidence_digest: string;
+    reason_code: 'SEMANTIC_EVIDENCE_UNAVAILABLE' | 'SEMANTIC_EVIDENCE_STALE' | 'CREATIVE_POLICY_NOT_VALIDATED';
+    proposed_patch: Record<string, never>;
+  };
   cache?: { hit: boolean };
 }
 

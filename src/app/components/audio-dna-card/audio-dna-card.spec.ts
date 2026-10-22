@@ -161,6 +161,77 @@ describe('AudioDnaCardComponent', () => {
     expect(mastering.intensityPercent()).toBe(26);
   });
 
+  it('renders compact CocoTagger Genre, Astral and Instruments without probability language', () => {
+    const semantic = structuredClone(audioDna);
+    semantic.source_generation = 'source-7';
+    semantic.analyzer_generation = 'source-7';
+    semantic.semantic = {
+      version: 'rqs-semantic-audio-dna-v1',
+      status: 'READY',
+      source_generation: 'source-7',
+      analyzer_generation: 'source-7',
+      engine: {
+        name: 'cocotagger', model: 'musiccocoa', revision: 'test-revision', taxonomy_version: 'test-taxonomy',
+      },
+      categories: {
+        genre: [
+          { tag: 'electronic', raw_score: 0.341, rank: 1 },
+          { tag: 'progressive-house', raw_score: 0.312, rank: 2 },
+        ],
+        mood: [{ tag: 'dark', raw_score: 0.358, rank: 1 }],
+        instruments: [{ tag: 'synthesizer', raw_score: 0.372, rank: 1 }],
+      },
+      metrics: {
+        model_load_ms: 1200,
+        audio_dna_analysis_ms: 5900,
+        segments_processed: 5,
+        model_cache_hit: true,
+      },
+    };
+    fixture.componentRef.setInput('audioDna', semantic);
+    fixture.detectChanges();
+
+    const section = fixture.nativeElement.querySelector('.semantic-audio-dna') as HTMLElement;
+    const text = section.textContent ?? '';
+    expect(text).toContain('AUDIO DNA');
+    expect(text).toContain('Genre');
+    expect(text).toContain('Electronic · Progressive House');
+    expect(text).toContain('Astral');
+    expect(text).toContain('Dark');
+    expect(text).toContain('Instruments');
+    expect(text).toContain('Synthesizer');
+    expect(text).not.toContain('34%');
+    expect(text).not.toContain('probability');
+    expect(text).not.toContain('confidence');
+    expect(mastering.atmosphere()).toBe('aurora');
+    expect(mastering.intensityPercent()).toBe(26);
+  });
+
+  it('keeps technical mastering active when semantic Audio DNA is unavailable', () => {
+    const unavailable = structuredClone(audioDna);
+    unavailable.source_generation = 'source-8';
+    unavailable.analyzer_generation = 'source-8';
+    unavailable.semantic = {
+      version: 'rqs-semantic-audio-dna-v1',
+      status: 'UNAVAILABLE',
+      source_generation: 'source-8',
+      analyzer_generation: 'source-8',
+      engine: {
+        name: 'cocotagger', model: 'musiccocoa', revision: 'test-revision', taxonomy_version: 'test-taxonomy',
+      },
+      categories: {},
+      error_code: 'FEATURE_DISABLED',
+    };
+    fixture.componentRef.setInput('audioDna', unavailable);
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).toContain('Semantic Audio DNA is unavailable');
+    expect(text).toContain('RECOMMENDED MASTER');
+    expect(mastering.atmosphere()).toBe('aurora');
+    expect(mastering.intensityPercent()).toBe(26);
+  });
+
   it('shows manual override and preserves the explicit reset lifecycle without Apply', () => {
     mastering.setIntensityPercent(40);
     fixture.detectChanges();

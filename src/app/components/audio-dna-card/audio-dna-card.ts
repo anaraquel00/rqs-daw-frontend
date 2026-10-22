@@ -9,6 +9,7 @@ import {
   MasteringAnalysisState,
   MasteringAtmosphere,
   MasteringDeliveryTargetCapabilities,
+  SemanticAudioDnaCategory,
 } from '../../services/mastering-types';
 
 interface AudioDnaCopy {
@@ -24,6 +25,14 @@ interface AudioDnaCopy {
   recommendationApplied: string;
   whyThisMaster: string;
   distributionReadiness: string;
+  semanticTitle: string;
+  genre: string;
+  astral: string;
+  instruments: string;
+  semanticAnalyzing: string;
+  semanticUnavailable: string;
+  semanticFailed: string;
+  semanticStale: string;
   withinRange: string;
   needsAttention: string;
   atmosphere: string;
@@ -89,6 +98,9 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     unavailableBody: 'Technical analysis and mastering remain available.', trackSummary: 'TRACK SUMMARY',
     masterRecommended: 'RECOMMENDED MASTER', recommendationApplied: 'This setup was applied automatically. You can adjust it below.',
     whyThisMaster: 'WHY THIS MASTER?', distributionReadiness: 'DISTRIBUTION READINESS', withinRange: 'Within range', needsAttention: 'Needs attention',
+    semanticTitle: 'AUDIO DNA', genre: 'Genre', astral: 'Astral', instruments: 'Instruments',
+    semanticAnalyzing: 'Analyzing semantic Audio DNA…', semanticUnavailable: 'Semantic Audio DNA is unavailable. Technical mastering remains active.',
+    semanticFailed: 'Semantic Audio DNA could not be completed. Technical mastering remains active.', semanticStale: 'Semantic Audio DNA was discarded because the track changed.',
     atmosphere: 'Atmosphere', character: 'Character', confidence: 'Confidence', recommended: 'Recommended by Audio DNA',
     manualOverride: 'MANUAL OVERRIDE', inconclusive: 'Inconclusive analysis', reset: 'Reset to recommendation',
     spectral: 'Spectral profile', lowEnd: 'Low-end', stereo: 'Stereo image', transients: 'Transients', harshness: 'Harshness', dynamics: 'Dynamics',
@@ -107,6 +119,9 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     unavailableBody: 'A análise técnica e a masterização continuam disponíveis.', trackSummary: 'RESUMO DA FAIXA',
     masterRecommended: 'MASTER RECOMENDADO', recommendationApplied: 'Esta configuração foi aplicada automaticamente. Você pode ajustá-la abaixo.',
     whyThisMaster: 'POR QUE ESTE MASTER?', distributionReadiness: 'PRONTIDÃO PARA DISTRIBUIÇÃO', withinRange: 'Dentro da faixa', needsAttention: 'Precisa de atenção',
+    semanticTitle: 'AUDIO DNA', genre: 'Gênero', astral: 'Astral', instruments: 'Instrumentos',
+    semanticAnalyzing: 'Analisando o Audio DNA semântico…', semanticUnavailable: 'O Audio DNA semântico está indisponível. O MASTER técnico continua ativo.',
+    semanticFailed: 'O Audio DNA semântico não pôde ser concluído. O MASTER técnico continua ativo.', semanticStale: 'O Audio DNA semântico foi descartado porque a faixa mudou.',
     atmosphere: 'Atmosphere', character: 'Character', confidence: 'Confiança', recommended: 'Recomendado pelo Audio DNA',
     manualOverride: 'AJUSTE MANUAL', inconclusive: 'Análise inconclusiva', reset: 'Restaurar recomendação',
     spectral: 'Perfil espectral', lowEnd: 'Graves', stereo: 'Imagem estéreo', transients: 'Transientes', harshness: 'Aspereza', dynamics: 'Dinâmica',
@@ -125,6 +140,9 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     unavailableBody: 'Analiza techniczna i mastering pozostają dostępne.', trackSummary: 'PODSUMOWANIE UTWORU',
     masterRecommended: 'ZALECANY MASTER', recommendationApplied: 'Ta konfiguracja została zastosowana automatycznie. Możesz ją dostosować poniżej.',
     whyThisMaster: 'DLACZEGO TEN MASTER?', distributionReadiness: 'GOTOWOŚĆ DO DYSTRYBUCJI', withinRange: 'W zakresie', needsAttention: 'Wymaga uwagi',
+    semanticTitle: 'AUDIO DNA', genre: 'Gatunek', astral: 'Nastrój', instruments: 'Instrumenty',
+    semanticAnalyzing: 'Analizowanie semantycznego Audio DNA…', semanticUnavailable: 'Semantyczne Audio DNA jest niedostępne. Mastering techniczny pozostaje aktywny.',
+    semanticFailed: 'Nie udało się ukończyć semantycznego Audio DNA. Mastering techniczny pozostaje aktywny.', semanticStale: 'Semantyczne Audio DNA odrzucono, ponieważ utwór się zmienił.',
     atmosphere: 'Atmosphere', character: 'Character', confidence: 'Pewność', recommended: 'Rekomendacja Audio DNA',
     manualOverride: 'USTAWIENIE RĘCZNE', inconclusive: 'Analiza niejednoznaczna', reset: 'Przywróć rekomendację',
     spectral: 'Profil widmowy', lowEnd: 'Niskie pasmo', stereo: 'Obraz stereo', transients: 'Transjenty', harshness: 'Ostrość', dynamics: 'Dynamika',
@@ -143,6 +161,9 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     unavailableBody: 'L’analyse technique et le mastering restent disponibles.', trackSummary: 'RÉSUMÉ DU TITRE',
     masterRecommended: 'MASTER RECOMMANDÉ', recommendationApplied: 'Cette configuration a été appliquée automatiquement. Vous pouvez l’ajuster ci-dessous.',
     whyThisMaster: 'POURQUOI CE MASTER ?', distributionReadiness: 'PRÊT POUR LA DISTRIBUTION', withinRange: 'Dans la plage', needsAttention: 'À vérifier',
+    semanticTitle: 'AUDIO DNA', genre: 'Genre', astral: 'Ambiance', instruments: 'Instruments',
+    semanticAnalyzing: 'Analyse de l’Audio DNA sémantique…', semanticUnavailable: 'L’Audio DNA sémantique est indisponible. Le mastering technique reste actif.',
+    semanticFailed: 'L’Audio DNA sémantique n’a pas pu être terminé. Le mastering technique reste actif.', semanticStale: 'L’Audio DNA sémantique a été écarté car le titre a changé.',
     atmosphere: 'Atmosphere', character: 'Character', confidence: 'Confiance', recommended: 'Recommandé par Audio DNA',
     manualOverride: 'RÉGLAGE MANUEL', inconclusive: 'Analyse non concluante', reset: 'Restaurer la recommandation',
     spectral: 'Profil spectral', lowEnd: 'Graves', stereo: 'Image stéréo', transients: 'Transitoires', harshness: 'Agressivité', dynamics: 'Dynamique',
@@ -233,6 +254,25 @@ export class AudioDnaCardComponent {
     if (level === 'high') return this.copy().levelHigh;
     if (level === 'moderate') return this.copy().levelModerate;
     return this.copy().levelLow;
+  }
+
+  semanticTagLine(category: SemanticAudioDnaCategory, limit = 3): string {
+    const tags = this.audioDna?.semantic?.categories[category] ?? [];
+    return tags
+      .slice(0, limit)
+      .map(({ tag }) => tag
+        .split('-')
+        .map((part) => part ? `${part[0].toUpperCase()}${part.slice(1)}` : part)
+        .join(' '))
+      .join(' · ') || '—';
+  }
+
+  semanticStatusMessage(): string {
+    const status = this.audioDna?.semantic?.status;
+    if (status === 'ANALYZING' || status === 'NOT_STARTED') return this.copy().semanticAnalyzing;
+    if (status === 'FAILED') return this.copy().semanticFailed;
+    if (status === 'STALE') return this.copy().semanticStale;
+    return this.copy().semanticUnavailable;
   }
 
   masterReasonLabels(): string[] {

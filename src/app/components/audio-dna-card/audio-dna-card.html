@@ -72,6 +72,21 @@
           <div class="secondary"><span>{{ copy().duration }}</span><strong>{{ formatDuration(audioDna!.technical.duration_seconds) }}</strong></div>
         </div>
       </section>
+
+      @if (audioDna?.semantic; as semantic) {
+        <section class="semantic-audio-dna" aria-labelledby="semantic-audio-dna-title">
+          <h3 id="semantic-audio-dna-title">{{ copy().semanticTitle }}</h3>
+          @if (semantic.status === 'READY') {
+            <dl class="semantic-grid">
+              <div><dt>{{ copy().genre }}</dt><dd>{{ semanticTagLine('genre') }}</dd></div>
+              <div><dt>{{ copy().astral }}</dt><dd>{{ semanticTagLine('mood') }}</dd></div>
+              <div><dt>{{ copy().instruments }}</dt><dd>{{ semanticTagLine('instruments') }}</dd></div>
+            </dl>
+          } @else {
+            <p class="semantic-status" [attr.data-status]="semantic.status">{{ semanticStatusMessage() }}</p>
+          }
+        </section>
+      }
     }
   </section>
 } @else if (state === 'success' && audioDna?.music; as music) {

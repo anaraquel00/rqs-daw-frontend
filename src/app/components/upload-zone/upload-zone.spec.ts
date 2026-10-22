@@ -61,6 +61,40 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     release_assistant: null,
   };
 
+  function analysisResponse(generation: string, overrides: Partial<MasteringV2Analysis> = {}): MasteringAnalysisResponse {
+    const payload = structuredClone(audioDna);
+    payload.source_generation = generation;
+    payload.analyzer_generation = generation;
+    payload.semantic = {
+      version: 'rqs-semantic-audio-dna-v1',
+      status: 'UNAVAILABLE',
+      source_generation: generation,
+      analyzer_generation: generation,
+      engine: {
+        name: 'cocotagger', model: 'musiccocoa', revision: 'test-revision', taxonomy_version: 'test-taxonomy',
+      },
+      categories: {},
+      error_code: 'FEATURE_DISABLED',
+    };
+    return {
+      ...analysis,
+      ...overrides,
+      audio_dna: payload,
+      source_generation: generation,
+      analyzer_generation: generation,
+      creative_recommendation: {
+        policy_version: 'rqs-creative-master-profile-v0-abstain',
+        status: 'ABSTAIN',
+        source_generation: generation,
+        semantic_status: 'UNAVAILABLE',
+        evidence_digest: 'test',
+        reason_code: 'SEMANTIC_EVIDENCE_UNAVAILABLE',
+        proposed_patch: {},
+      },
+      cache: { hit: false },
+    };
+  }
+
   beforeEach(() => {
     isLoggedIn.set(false);
     requestSignIn = jasmine.createSpy('requestSignIn');
@@ -76,7 +110,10 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       'masterizeV2Preview',
       'masterizeV2Final',
     ]);
-    dsp.analyzeMasteringV2.and.returnValue(of(analysis));
+    dsp.analyzeMasteringV2.and.callFake((formData) => {
+      const generation = String(formData.get('source_generation'));
+      return of(analysisResponse(generation));
+    });
     analytics = jasmine.createSpyObj<AnalyticsService>('AnalyticsService', ['trackEvent']);
 
     TestBed.configureTestingModule({
@@ -121,15 +158,16 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     const body = dsp.analyzeMasteringV2.calls.mostRecent().args[0];
     expect((body.get('audio') as File).name).toBe(component.selectedFile!.name);
     expect(body.has('s3Key')).toBeFalse();
+    expect(body.get('source_generation')).toBe('source-0');
     expect(component.analysisState()).toBe('success');
-    expect(component.analysisMetrics()).toEqual(analysis);
+    expect(component.analysisMetrics()).toEqual(jasmine.objectContaining(analysis));
 
     TestBed.tick();
     expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
   });
 
   it('initializes the Audio DNA master profile from the current source analysis once', () => {
-    const response: MasteringAnalysisResponse = { ...analysis, audio_dna: audioDna, cache: { hit: false } };
+    const response = analysisResponse('source-1');
     dsp.analyzeMasteringV2.and.returnValue(of(response));
     const file = new File(['audio-dna'], 'audio-dna.wav', { type: 'audio/wav' });
     (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(file);
@@ -137,15 +175,15 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     TestBed.tick();
 
     const mastering = TestBed.inject(MasteringService);
-    expect(component.audioDna).toBe(audioDna);
+    expect(component.audioDna).toEqual(jasmine.objectContaining({ status: 'available' }));
     expect(mastering.atmosphere()).toBe('aurora');
     expect(mastering.intensityPercent()).toBe(26);
     expect(mastering.masterProfileSource()).toBe('AUDIO_DNA');
   });
 
   it('shows loading and ignores a stale analysis after source replacement', () => {
-    const first = new Subject<MasteringV2Analysis>();
-    dsp.analyzeMasteringV2.and.returnValues(first, of({ ...analysis, duration_seconds: 42 }));
+    const first = new Subject<MasteringAnalysisResponse>();
+    dsp.analyzeMasteringV2.and.returnValues(first, of(analysisResponse('source-1', { duration_seconds: 42 })));
     isLoggedIn.set(true);
     TestBed.tick();
     expect(component.analysisState()).toBe('loading');
@@ -155,23 +193,34 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(component.analysisState()).toBe('success');
     expect(component.analysisMetrics()?.duration_seconds).toBe(42);
 
-    first.next({ ...analysis, duration_seconds: 999 });
+    first.next(analysisResponse('source-0', { duration_seconds: 999 }));
     first.complete();
     expect(component.analysisMetrics()?.duration_seconds).toBe(42);
     expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(2);
   });
 
   it('maps analysis failure without invoking Preview or Full Master', () => {
-    dsp.analyzeMasteringV2.and.returnValue(new Subject<MasteringV2Analysis>());
+    dsp.analyzeMasteringV2.and.returnValue(new Subject<MasteringAnalysisResponse>());
     isLoggedIn.set(true);
     TestBed.tick();
-    const request = dsp.analyzeMasteringV2.calls.mostRecent().returnValue as Subject<MasteringV2Analysis>;
+    const request = dsp.analyzeMasteringV2.calls.mostRecent().returnValue as Subject<MasteringAnalysisResponse>;
     request.error({ status: 503 });
 
     expect(component.analysisState()).toBe('error');
     expect(component.analysisMetrics()).toBeNull();
     expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
     expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
+  });
+
+  it('rejects a mismatched semantic generation without applying stale Audio DNA', () => {
+    dsp.analyzeMasteringV2.and.returnValue(of(analysisResponse('source-stale')));
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(component.analysisState()).toBe('error');
+    expect(component.analysisMetrics()).toBeNull();
+    expect(component.audioDna).toBeNull();
+    expect(component.systemLogs.join(' ')).toContain('faixa mudou durante a análise');
   });
 
   it('clears analysis on logout and user switch', () => {
