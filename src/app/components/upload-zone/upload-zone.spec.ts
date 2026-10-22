@@ -120,6 +120,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
     const body = dsp.analyzeMasteringV2.calls.mostRecent().args[0];
     expect((body.get('audio') as File).name).toBe(component.selectedFile!.name);
+    expect(body.get('source_generation')).toBe('source-0');
     expect(body.has('s3Key')).toBeFalse();
     expect(component.analysisState()).toBe('success');
     expect(component.analysisMetrics()).toEqual(analysis);
@@ -141,6 +142,42 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(mastering.atmosphere()).toBe('aurora');
     expect(mastering.intensityPercent()).toBe(26);
     expect(mastering.masterProfileSource()).toBe('AUDIO_DNA');
+  });
+
+  it('rejects semantic evidence whose backend generation does not match the active source', () => {
+    const stale = structuredClone(audioDna);
+    stale.source_generation = 'source-stale';
+    stale.analyzer_generation = 'source-stale';
+    stale.semantic = {
+      version: 'rqs-semantic-audio-dna-v1',
+      status: 'READY',
+      source_generation: 'source-stale',
+      analyzer_generation: 'source-stale',
+      engine: {
+        name: 'cocotagger',
+        model: 'musiccocoa',
+        revision: 'pinned-revision',
+        taxonomy_version: 'pinned-taxonomy',
+      },
+      categories: {
+        genre: [{ tag: 'electronic', raw_score: 0.34, rank: 1 }],
+      },
+    };
+    dsp.analyzeMasteringV2.and.returnValue(of({
+      ...analysis,
+      source_generation: 'source-stale',
+      analyzer_generation: 'source-stale',
+      audio_dna: stale,
+    }));
+
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(component.analysisState()).toBe('error');
+    expect(component.analysisMetrics()).toBeNull();
+    expect(component.audioDna).toBeNull();
+    expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
+    expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
   });
 
   it('shows loading and ignores a stale analysis after source replacement', () => {

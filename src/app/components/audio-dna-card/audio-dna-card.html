@@ -24,6 +24,27 @@
         </div>
       </section>
 
+      @if (audioDna?.semantic; as semantic) {
+        @if (semantic.status === 'READY') {
+          <section class="semantic-audio-dna" aria-labelledby="semantic-audio-dna-title" data-testid="semantic-audio-dna">
+            <div class="semantic-title-row">
+              <div>
+                <h3 id="semantic-audio-dna-title">{{ copy().musicDna }}</h3>
+                <p>{{ copy().semanticEvidence }}</p>
+              </div>
+              <span>CocoTagger · MusicCoCa</span>
+            </div>
+            <dl class="semantic-grid">
+              <div><dt>{{ copy().genre }}</dt><dd>{{ semanticTagLine('genre') }}</dd></div>
+              <div><dt>{{ copy().astral }}</dt><dd>{{ semanticTagLine('mood') }}</dd></div>
+              <div><dt>{{ copy().instruments }}</dt><dd>{{ semanticTagLine('instruments') }}</dd></div>
+            </dl>
+          </section>
+        } @else if (semantic.status === 'UNAVAILABLE' || semantic.status === 'FAILED' || semantic.status === 'STALE') {
+          <p class="semantic-unavailable" data-testid="semantic-audio-dna-fallback">{{ copy().semanticUnavailable }}</p>
+        }
+      }
+
       @if (audioDna?.master_profile; as profile) {
         <section class="master-profile" [class.inconclusive]="profile.confidence_level === 'low'" aria-labelledby="master-profile-title">
           <div class="title-row">

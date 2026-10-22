@@ -161,6 +161,72 @@ describe('AudioDnaCardComponent', () => {
     expect(mastering.intensityPercent()).toBe(26);
   });
 
+  it('renders Genre, Astral from mood, and Instruments only for READY semantic evidence', () => {
+    const ready = structuredClone(audioDna);
+    ready.source_generation = 'source-9';
+    ready.analyzer_generation = 'source-9';
+    ready.semantic = {
+      version: 'rqs-semantic-audio-dna-v1',
+      status: 'READY',
+      source_generation: 'source-9',
+      analyzer_generation: 'source-9',
+      engine: {
+        name: 'cocotagger',
+        model: 'musiccocoa',
+        revision: 'pinned-revision',
+        taxonomy_version: 'pinned-taxonomy',
+      },
+      categories: {
+        genre: [{ tag: 'electronic', raw_score: 0.34, rank: 1 }],
+        mood: [{ tag: 'dark', raw_score: 0.35, rank: 1 }],
+        instruments: [{ tag: 'synthesizer', raw_score: 0.33, rank: 1 }],
+      },
+    };
+    fixture.componentRef.setInput('audioDna', ready);
+    fixture.detectChanges();
+
+    const semantic = fixture.nativeElement.querySelector('[data-testid="semantic-audio-dna"]') as HTMLElement;
+    const text = semantic.textContent ?? '';
+    expect(text).toContain('Genre');
+    expect(text).toContain('Electronic');
+    expect(text).toContain('Astral');
+    expect(text).toContain('Dark');
+    expect(text).toContain('Instruments');
+    expect(text).toContain('Synthesizer');
+    expect(text).not.toContain('Mood');
+    expect(fixture.nativeElement.textContent).toContain('RECOMMENDED MASTER');
+    expect(mastering.atmosphere()).toBe('aurora');
+  });
+
+  for (const status of ['UNAVAILABLE', 'FAILED', 'STALE'] as const) {
+    it(`keeps technical mastering usable when semantic status is ${status}`, () => {
+      const unavailable = structuredClone(audioDna);
+      unavailable.semantic = {
+        version: 'rqs-semantic-audio-dna-v1',
+        status,
+        source_generation: 'source-9',
+        analyzer_generation: 'source-9',
+        engine: {
+          name: 'cocotagger',
+          model: 'musiccocoa',
+          revision: 'pinned-revision',
+          taxonomy_version: 'pinned-taxonomy',
+        },
+        categories: {},
+        error_code: status,
+      };
+      fixture.componentRef.setInput('audioDna', unavailable);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="semantic-audio-dna"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="semantic-audio-dna-fallback"]')).not.toBeNull();
+      expect(fixture.nativeElement.textContent).toContain('RECOMMENDED MASTER');
+      expect(fixture.nativeElement.textContent).toContain('DISTRIBUTION READINESS');
+      expect(mastering.atmosphere()).toBe('aurora');
+      expect(mastering.intensityPercent()).toBe(26);
+    });
+  }
+
   it('shows manual override and preserves the explicit reset lifecycle without Apply', () => {
     mastering.setIntensityPercent(40);
     fixture.detectChanges();

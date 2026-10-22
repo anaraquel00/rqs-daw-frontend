@@ -9,6 +9,7 @@ import {
   MasteringAnalysisState,
   MasteringAtmosphere,
   MasteringDeliveryTargetCapabilities,
+  SemanticAudioDnaCategory,
 } from '../../services/mastering-types';
 
 interface AudioDnaCopy {
@@ -79,6 +80,12 @@ interface AudioDnaCopy {
   levelLow: string;
   levelModerate: string;
   levelHigh: string;
+  musicDna: string;
+  genre: string;
+  astral: string;
+  instruments: string;
+  semanticEvidence: string;
+  semanticUnavailable: string;
 }
 
 const COPY: Record<UiLanguage, AudioDnaCopy> = {
@@ -99,6 +106,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     energy: 'Energy', danceability: 'Danceability', normalizedValue: 'Normalized value', duration: 'Duration', brightness: 'Brightness', warmth: 'Warmth',
     transientStrength: 'Transient strength', stereoWidth: 'Stereo width', lowEndDensity: 'Low-end density', dynamicDensity: 'Dynamic density', overallEnergy: 'Overall energy',
     confidenceLow: 'Low', confidenceMedium: 'Medium', confidenceHigh: 'High', levelLow: 'Low', levelModerate: 'Moderate', levelHigh: 'High',
+    musicDna: 'MUSIC DNA', genre: 'Genre', astral: 'Astral', instruments: 'Instruments',
+    semanticEvidence: 'Semantic evidence from the audio.', semanticUnavailable: 'Semantic analysis is unavailable. Technical mastering remains active.',
   },
   pt: {
     technicalEyebrow: 'RQS AUDIO DNA', technicalAnalysis: 'Análise técnica: RQS Audio DNA', technicalDetails: 'DETALHES TÉCNICOS',
@@ -117,6 +126,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     energy: 'Energia', danceability: 'Dançabilidade', normalizedValue: 'Valor normalizado', duration: 'Duração', brightness: 'Brilho', warmth: 'Calor',
     transientStrength: 'Força dos transientes', stereoWidth: 'Largura estéreo', lowEndDensity: 'Densidade dos graves', dynamicDensity: 'Densidade dinâmica', overallEnergy: 'Energia geral',
     confidenceLow: 'Baixa', confidenceMedium: 'Média', confidenceHigh: 'Alta', levelLow: 'Baixa', levelModerate: 'Moderada', levelHigh: 'Alta',
+    musicDna: 'MUSIC DNA', genre: 'Gênero', astral: 'Astral', instruments: 'Instrumentos',
+    semanticEvidence: 'Evidência semântica extraída do áudio.', semanticUnavailable: 'A análise semântica está indisponível. A masterização técnica permanece ativa.',
   },
   pl: {
     technicalEyebrow: 'RQS AUDIO DNA', technicalAnalysis: 'Analiza techniczna: RQS Audio DNA', technicalDetails: 'SZCZEGÓŁY TECHNICZNE',
@@ -135,6 +146,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     energy: 'Energia', danceability: 'Taneczność', normalizedValue: 'Wartość znormalizowana', duration: 'Czas trwania', brightness: 'Jasność', warmth: 'Ciepło',
     transientStrength: 'Siła transjentów', stereoWidth: 'Szerokość stereo', lowEndDensity: 'Gęstość dołu', dynamicDensity: 'Gęstość dynamiczna', overallEnergy: 'Ogólna energia',
     confidenceLow: 'Niska', confidenceMedium: 'Średnia', confidenceHigh: 'Wysoka', levelLow: 'Niska', levelModerate: 'Umiarkowana', levelHigh: 'Wysoka',
+    musicDna: 'MUSIC DNA', genre: 'Gatunek', astral: 'Astral', instruments: 'Instrumenty',
+    semanticEvidence: 'Dane semantyczne wyodrębnione z audio.', semanticUnavailable: 'Analiza semantyczna jest niedostępna. Mastering techniczny pozostaje aktywny.',
   },
   fr: {
     technicalEyebrow: 'RQS AUDIO DNA', technicalAnalysis: 'Analyse technique : RQS Audio DNA', technicalDetails: 'DÉTAILS TECHNIQUES',
@@ -153,6 +166,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     energy: 'Énergie', danceability: 'Dansabilité', normalizedValue: 'Valeur normalisée', duration: 'Durée', brightness: 'Brillance', warmth: 'Chaleur',
     transientStrength: 'Force des transitoires', stereoWidth: 'Largeur stéréo', lowEndDensity: 'Densité des graves', dynamicDensity: 'Densité dynamique', overallEnergy: 'Énergie globale',
     confidenceLow: 'Faible', confidenceMedium: 'Moyenne', confidenceHigh: 'Élevée', levelLow: 'Faible', levelModerate: 'Modérée', levelHigh: 'Élevée',
+    musicDna: 'MUSIC DNA', genre: 'Genre', astral: 'Astral', instruments: 'Instruments',
+    semanticEvidence: 'Données sémantiques extraites de l’audio.', semanticUnavailable: 'L’analyse sémantique est indisponible. Le mastering technique reste actif.',
   },
 };
 
@@ -233,6 +248,17 @@ export class AudioDnaCardComponent {
     if (level === 'high') return this.copy().levelHigh;
     if (level === 'moderate') return this.copy().levelModerate;
     return this.copy().levelLow;
+  }
+
+  semanticTagLine(category: SemanticAudioDnaCategory, limit = 3): string {
+    const tags = this.audioDna?.semantic?.categories[category] ?? [];
+    return tags
+      .slice(0, limit)
+      .map(({ tag }) => tag
+        .split('-')
+        .map((part) => part ? `${part[0].toUpperCase()}${part.slice(1)}` : part)
+        .join(' '))
+      .join(' · ') || '—';
   }
 
   masterReasonLabels(): string[] {
