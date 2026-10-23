@@ -53,6 +53,24 @@ export interface SemanticAudioDnaPayload {
   error_code?: string;
 }
 
+export type OpenAiMusicAnalystConfidence = 'high' | 'medium';
+
+export interface OpenAiMusicAnalystPayload {
+  status: 'READY' | 'UNAVAILABLE';
+  provider: 'openai';
+  model: 'gpt-audio-1.5';
+  instruments: Array<{
+    name: string;
+    confidence: OpenAiMusicAnalystConfidence;
+  }>;
+  vocals: {
+    present: boolean;
+    confidence: OpenAiMusicAnalystConfidence | null;
+  };
+  production_elements: string[];
+  error_code?: string;
+}
+
 export interface AudioDnaReason {
   code: string;
   weight: number;
@@ -252,6 +270,7 @@ export interface MasteringV2Analysis {
 
 export interface MasteringAnalysisResponse extends MasteringV2Analysis {
   audio_dna?: AudioDnaPayload;
+  openai_music_analyst?: OpenAiMusicAnalystPayload;
   source_generation?: string;
   analyzer_generation?: string;
   cache?: { hit: boolean };

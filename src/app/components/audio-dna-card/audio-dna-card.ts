@@ -9,6 +9,7 @@ import {
   MasteringAnalysisState,
   MasteringAtmosphere,
   MasteringDeliveryTargetCapabilities,
+  OpenAiMusicAnalystPayload,
   SemanticAudioDnaCategory,
 } from '../../services/mastering-types';
 
@@ -180,6 +181,7 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
 })
 export class AudioDnaCardComponent {
   @Input() audioDna: AudioDnaPayload | null = null;
+  @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() state: MasteringAnalysisState = 'empty';
   @Input() mode: 'summary' | 'technical' = 'summary';
   @Input() target: MasteringDeliveryTargetCapabilities | null = null;
@@ -259,6 +261,13 @@ export class AudioDnaCardComponent {
         .map((part) => part ? `${part[0].toUpperCase()}${part.slice(1)}` : part)
         .join(' '))
       .join(' · ') || '—';
+  }
+
+  openAiInstrumentLine(limit = 3): string {
+    return (this.openAiMusicAnalyst?.instruments ?? [])
+      .slice(0, limit)
+      .map(({ name }) => name)
+      .join(' · ');
   }
 
   masterReasonLabels(): string[] {

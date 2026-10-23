@@ -7,7 +7,13 @@ import { AuthService } from '../../services/auth.service';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
-import { AudioDnaPayload, MasteringAnalysisResponse, MasteringProcessCommand, MasteringV2Analysis } from '../../services/mastering-types';
+import {
+  AudioDnaPayload,
+  MasteringAnalysisResponse,
+  MasteringProcessCommand,
+  MasteringV2Analysis,
+  OpenAiMusicAnalystPayload,
+} from '../../services/mastering-types';
 import { UploadZoneComponent } from './upload-zone';
 
 describe('UploadZoneComponent protected Mastering V2 guard', () => {
@@ -59,6 +65,14 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       input_domain: 'technical_audio_dna_only', reasons: [], atmosphere_dsp_behavior: 'profile_label_only_v2_compatibility_path',
     },
     release_assistant: null,
+  };
+  const openAiMusicAnalyst: OpenAiMusicAnalystPayload = {
+    status: 'READY',
+    provider: 'openai',
+    model: 'gpt-audio-1.5',
+    instruments: [{ name: 'Synthesizer', confidence: 'high' }],
+    vocals: { present: true, confidence: 'medium' },
+    production_elements: ['Layered synth texture'],
   };
 
   beforeEach(() => {
@@ -144,6 +158,29 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(mastering.masterProfileSource()).toBe('AUDIO_DNA');
   });
 
+  it('keeps one generation-bound OpenAI Music Analyst result for the active analysis', () => {
+    const currentAudioDna = structuredClone(audioDna);
+    currentAudioDna.source_generation = 'source-1';
+    currentAudioDna.analyzer_generation = 'source-1';
+    const response: MasteringAnalysisResponse = {
+      ...analysis,
+      source_generation: 'source-1',
+      analyzer_generation: 'source-1',
+      audio_dna: currentAudioDna,
+      openai_music_analyst: openAiMusicAnalyst,
+    };
+    dsp.analyzeMasteringV2.and.returnValue(of(response));
+    (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(
+      new File(['music-analyst'], 'music-analyst.wav', { type: 'audio/wav' }),
+    );
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(component.analysisState()).toBe('success');
+    expect(component.openAiMusicAnalyst).toEqual(openAiMusicAnalyst);
+    expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects semantic evidence whose backend generation does not match the active source', () => {
     const stale = structuredClone(audioDna);
     stale.source_generation = 'source-stale';
@@ -168,6 +205,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       source_generation: 'source-stale',
       analyzer_generation: 'source-stale',
       audio_dna: stale,
+      openai_music_analyst: openAiMusicAnalyst,
     }));
 
     isLoggedIn.set(true);
@@ -176,6 +214,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(component.analysisState()).toBe('error');
     expect(component.analysisMetrics()).toBeNull();
     expect(component.audioDna).toBeNull();
+    expect(component.openAiMusicAnalyst).toBeNull();
     expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
     expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
   });

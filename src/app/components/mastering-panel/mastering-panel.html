@@ -98,6 +98,7 @@
   <app-audio-dna-card
     *ngIf="analysisState !== 'empty' || audioDna"
     [audioDna]="audioDna"
+    [openAiMusicAnalyst]="openAiMusicAnalyst"
     [state]="analysisState"
     [target]="activeTarget()"
     (resetRecommendation)="resetToAudioDna()">

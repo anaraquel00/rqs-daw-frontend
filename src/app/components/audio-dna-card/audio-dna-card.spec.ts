@@ -2,7 +2,11 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
-import { AudioDnaPayload, MasteringDeliveryTargetCapabilities } from '../../services/mastering-types';
+import {
+  AudioDnaPayload,
+  MasteringDeliveryTargetCapabilities,
+  OpenAiMusicAnalystPayload,
+} from '../../services/mastering-types';
 import { AudioDnaCardComponent } from './audio-dna-card';
 
 const target: MasteringDeliveryTargetCapabilities = {
@@ -179,7 +183,7 @@ describe('AudioDnaCardComponent', () => {
       categories: {
         genre: [{ tag: 'electronic', raw_score: 0.34, rank: 1 }],
         mood: [{ tag: 'dark', raw_score: 0.35, rank: 1 }],
-        instruments: [],
+        instruments: [{ tag: 'sitar', raw_score: 0.19, rank: 1 }],
       },
     };
     fixture.componentRef.setInput('audioDna', ready);
@@ -193,9 +197,95 @@ describe('AudioDnaCardComponent', () => {
     expect(text).toContain('Dark');
     expect(text).not.toContain('Instruments');
     expect(text).not.toContain('Synthesizer');
+    expect(text).not.toContain('Sitar');
     expect(text).not.toContain('Mood');
     expect(fixture.nativeElement.textContent).toContain('RECOMMENDED MASTER');
     expect(mastering.atmosphere()).toBe('aurora');
+  });
+
+  it('renders Instruments only from a READY OpenAI Music Analyst result', () => {
+    const ready = structuredClone(audioDna);
+    ready.semantic = {
+      version: 'rqs-semantic-audio-dna-v1',
+      status: 'READY',
+      source_generation: 'source-9',
+      analyzer_generation: 'source-9',
+      engine: {
+        name: 'cocotagger',
+        model: 'musiccocoa',
+        revision: 'pinned-revision',
+        taxonomy_version: 'pinned-taxonomy',
+      },
+      categories: {
+        genre: [{ tag: 'electronic', raw_score: 0.34, rank: 1 }],
+        mood: [{ tag: 'dark', raw_score: 0.35, rank: 1 }],
+        instruments: [{ tag: 'sitar', raw_score: 0.19, rank: 1 }],
+      },
+    };
+    const analyst: OpenAiMusicAnalystPayload = {
+      status: 'READY',
+      provider: 'openai',
+      model: 'gpt-audio-1.5',
+      instruments: [
+        { name: 'Synthesizer', confidence: 'high' },
+        { name: 'Electronic Drums', confidence: 'medium' },
+      ],
+      vocals: { present: true, confidence: 'high' },
+      production_elements: ['Layered synth texture'],
+    };
+    fixture.componentRef.setInput('audioDna', ready);
+    fixture.componentRef.setInput('openAiMusicAnalyst', analyst);
+    fixture.detectChanges();
+
+    const semantic = fixture.nativeElement.querySelector('[data-testid="semantic-audio-dna"]') as HTMLElement;
+    const text = semantic.textContent ?? '';
+    expect(text).toContain('AI Music Analysis');
+    expect(text).toContain('Genre');
+    expect(text).toContain('Astral');
+    expect(text).toContain('Instruments');
+    expect(text).toContain('Synthesizer · Electronic Drums');
+    expect(text).not.toContain('Sitar');
+    expect(text).not.toContain('Vocals');
+    expect(text).not.toContain('Layered synth texture');
+    expect(text).not.toContain('gpt-audio-1.5');
+    expect(text).not.toContain('OpenAI');
+  });
+
+  it('keeps Genre and Astral while hiding empty or unavailable OpenAI Instruments', () => {
+    const ready = structuredClone(audioDna);
+    ready.semantic = {
+      version: 'rqs-semantic-audio-dna-v1',
+      status: 'READY',
+      source_generation: 'source-9',
+      analyzer_generation: 'source-9',
+      engine: {
+        name: 'cocotagger', model: 'musiccocoa', revision: 'pinned-revision', taxonomy_version: 'pinned-taxonomy',
+      },
+      categories: {
+        genre: [{ tag: 'electronic', raw_score: 0.34, rank: 1 }],
+        mood: [{ tag: 'dark', raw_score: 0.35, rank: 1 }],
+        instruments: [{ tag: 'sitar', raw_score: 0.19, rank: 1 }],
+      },
+    };
+    fixture.componentRef.setInput('audioDna', ready);
+    fixture.componentRef.setInput('openAiMusicAnalyst', {
+      status: 'UNAVAILABLE',
+      provider: 'openai',
+      model: 'gpt-audio-1.5',
+      instruments: [],
+      vocals: { present: false, confidence: null },
+      production_elements: [],
+      error_code: 'OPENAI_TIMEOUT',
+    } satisfies OpenAiMusicAnalystPayload);
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).toContain('Electronic');
+    expect(text).toContain('Dark');
+    expect(text).not.toContain('Instruments');
+    expect(text).not.toContain('Sitar');
+    expect(text).toContain('RECOMMENDED MASTER');
+    expect(text).toContain('DISTRIBUTION READINESS');
   });
 
   for (const status of ['UNAVAILABLE', 'FAILED', 'STALE'] as const) {

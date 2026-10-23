@@ -32,6 +32,7 @@ import {
   MasteringProcessCommand,
   MasteringV2Capabilities,
   MasteringV2Analysis,
+  OpenAiMusicAnalystPayload,
   SoundCloudMode,
 } from '../../services/mastering-types';
 import {
@@ -78,6 +79,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() analysisState: MasteringAnalysisState = 'empty';
   @Input() analysisMetrics: MasteringV2Analysis | null = null;
   @Input() audioDna: AudioDnaPayload | null = null;
+  @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() audioSourceId: string | null = null;
 
   @Output() processMaster = new EventEmitter<MasteringProcessCommand>();

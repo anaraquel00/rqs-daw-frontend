@@ -32,13 +32,15 @@
                 <h3 id="semantic-audio-dna-title">{{ copy().musicDna }}</h3>
                 <p>{{ copy().semanticEvidence }}</p>
               </div>
-              <span>CocoTagger · MusicCoCa</span>
+              <span>AI Music Analysis</span>
             </div>
             <dl class="semantic-grid">
               <div><dt>{{ copy().genre }}</dt><dd>{{ semanticTagLine('genre') }}</dd></div>
               <div><dt>{{ copy().astral }}</dt><dd>{{ semanticTagLine('mood') }}</dd></div>
-              @if (semantic.categories.instruments?.length) {
-                <div><dt>{{ copy().instruments }}</dt><dd>{{ semanticTagLine('instruments') }}</dd></div>
+              @if (openAiMusicAnalyst; as analyst) {
+                @if (analyst.status === 'READY' && analyst.instruments.length > 0) {
+                  <div data-testid="openai-instruments"><dt>{{ copy().instruments }}</dt><dd>{{ openAiInstrumentLine() }}</dd></div>
+                }
               }
             </dl>
           </section>
