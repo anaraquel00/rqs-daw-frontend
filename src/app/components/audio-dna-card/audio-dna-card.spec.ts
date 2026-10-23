@@ -251,6 +251,50 @@ describe('AudioDnaCardComponent', () => {
     expect(text).not.toContain('OpenAI');
   });
 
+  for (const instrumentCount of [1, 3, 4, 5]) {
+    it(`renders all ${instrumentCount} normalized OpenAI instrument${instrumentCount === 1 ? '' : 's'} without truncation`, () => {
+      const ready = structuredClone(audioDna);
+      ready.semantic = {
+        version: 'rqs-semantic-audio-dna-v1',
+        status: 'READY',
+        source_generation: 'source-9',
+        analyzer_generation: 'source-9',
+        engine: {
+          name: 'cocotagger', model: 'musiccocoa', revision: 'pinned-revision', taxonomy_version: 'pinned-taxonomy',
+        },
+        categories: {
+          genre: [{ tag: 'electronic', raw_score: 0.34, rank: 1 }],
+          mood: [{ tag: 'dark', raw_score: 0.35, rank: 1 }],
+          instruments: [],
+        },
+      };
+      const allInstruments: OpenAiMusicAnalystPayload['instruments'] = [
+        { name: 'Synthesizer', confidence: 'high' },
+        { name: 'Bass Synth', confidence: 'high' },
+        { name: 'Electronic Drums', confidence: 'medium' },
+        { name: 'Percussion', confidence: 'medium' },
+        { name: 'Piano', confidence: 'high' },
+      ];
+      const instruments = allInstruments.slice(0, instrumentCount);
+
+      fixture.componentRef.setInput('audioDna', ready);
+      fixture.componentRef.setInput('openAiMusicAnalyst', {
+        status: 'READY',
+        provider: 'openai',
+        model: 'gpt-audio-1.5',
+        instruments,
+        vocals: { present: true, confidence: 'high' },
+        production_elements: ['Layered synth texture'],
+      } satisfies OpenAiMusicAnalystPayload);
+      fixture.detectChanges();
+
+      const rendered = fixture.nativeElement.querySelector('[data-testid="openai-instruments"] dd') as HTMLElement;
+      expect(rendered.textContent?.trim()).toBe(instruments.map(({ name }) => name).join(' · '));
+      expect(rendered.textContent).not.toContain('Vocals');
+      expect(rendered.textContent).not.toContain('Layered synth texture');
+    });
+  }
+
   it('keeps Genre and Astral while hiding empty or unavailable OpenAI Instruments', () => {
     const ready = structuredClone(audioDna);
     ready.semantic = {

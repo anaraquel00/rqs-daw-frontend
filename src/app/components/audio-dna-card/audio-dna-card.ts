@@ -263,9 +263,8 @@ export class AudioDnaCardComponent {
       .join(' · ') || '—';
   }
 
-  openAiInstrumentLine(limit = 3): string {
+  openAiInstrumentLine(): string {
     return (this.openAiMusicAnalyst?.instruments ?? [])
-      .slice(0, limit)
       .map(({ name }) => name)
       .join(' · ');
   }
