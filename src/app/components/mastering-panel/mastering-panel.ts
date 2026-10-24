@@ -43,6 +43,7 @@ import { MasteringHelpTopic, masteringEducation } from './mastering-education';
 import { PreviewWaveformComponent } from './preview-waveform';
 import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
 import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
+import { SpotifyPitchPanelComponent } from '../spotify-pitch-panel/spotify-pitch-panel';
 
 @Component({
   selector: 'app-mastering-panel',
@@ -53,6 +54,7 @@ import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
     PreviewWaveformComponent,
     DeliveryAutoComponent,
     AudioDnaCardComponent,
+    SpotifyPitchPanelComponent,
   ],
   templateUrl: './mastering-panel.html',
   styleUrls: ['./mastering-panel.scss'],

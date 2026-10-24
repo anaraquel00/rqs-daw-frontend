@@ -71,6 +71,62 @@ export interface OpenAiMusicAnalystPayload {
   error_code?: string;
 }
 
+export type SpotifyPitchEvidenceType =
+  | 'genre'
+  | 'astral'
+  | 'instrument'
+  | 'vocals'
+  | 'production_element'
+  | 'bpm'
+  | 'energy'
+  | 'danceability'
+  | 'sonic_characteristic'
+  | 'collaborator'
+  | 'release_story'
+  | 'promotion_plan';
+
+export type SpotifyPitchEvidenceSource =
+  | 'cocotagger'
+  | 'openai_music_analyst'
+  | 'rqs_audio_dna'
+  | 'artist';
+
+export interface SpotifyPitchEvidence {
+  type: SpotifyPitchEvidenceType;
+  value: string;
+  source: SpotifyPitchEvidenceSource;
+}
+
+export interface SpotifyPitchResponse {
+  status: 'READY' | 'UNAVAILABLE';
+  spotify_pitch: string;
+  evidence_used: SpotifyPitchEvidence[];
+  warnings: string[];
+}
+
+export interface SpotifyPitchRequest {
+  release_intelligence: {
+    audio_intelligence: {
+      genre: string[];
+      astral: string[];
+      instruments: OpenAiMusicAnalystPayload['instruments'];
+      vocals: OpenAiMusicAnalystPayload['vocals'] | null;
+      production_elements: string[];
+      bpm: number | null;
+      energy: number | null;
+      danceability: number | null;
+      sonic_characteristics: string[];
+    };
+    artist_context: {
+      song_about: string;
+      is_collaboration: boolean;
+      collaborators: string[];
+      release_importance: string;
+      promotion_plans: string;
+    };
+  };
+}
+
 export interface AudioDnaReason {
   code: string;
   weight: number;
@@ -227,6 +283,9 @@ export interface MasteringV2Capabilities {
   release: string;
   auto: {
     delivery_recommendation_policy_version: string;
+  };
+  features?: {
+    spotify_pitch_enabled?: boolean;
   };
   preview_seconds: number;
   intensity: {

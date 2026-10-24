@@ -10,6 +10,8 @@ import {
   MasteringV2Analysis,
   MasteringV2Capabilities,
   MasteringV2FinalResponse,
+  SpotifyPitchRequest,
+  SpotifyPitchResponse,
 } from './mastering-types';
 
 export type SetlistCurve = 'linear' | 'equal-power' | 'fast-cut';
@@ -83,6 +85,14 @@ export class DspService {
   ): Observable<MasteringAutoRecommendation> {
     return this.http.post<MasteringAutoRecommendation>(
       `${this.baseUrl}/mastering/v2/auto/recommend`,
+      request,
+      { headers: this.masteringV2Headers() },
+    );
+  }
+
+  generateSpotifyPitch(request: SpotifyPitchRequest): Observable<SpotifyPitchResponse> {
+    return this.http.post<SpotifyPitchResponse>(
+      `${this.baseUrl}/mastering/v2/spotify-pitch`,
       request,
       { headers: this.masteringV2Headers() },
     );

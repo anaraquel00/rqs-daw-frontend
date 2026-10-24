@@ -104,6 +104,14 @@
     (resetRecommendation)="resetToAudioDna()">
   </app-audio-dna-card>
 
+  <app-spotify-pitch-panel
+    *ngIf="capabilities()?.features?.spotify_pitch_enabled === true && analysisState === 'success'"
+    [analysisMetrics]="analysisMetrics"
+    [audioDna]="audioDna"
+    [openAiMusicAnalyst]="openAiMusicAnalyst"
+    [sourceGeneration]="audioDna?.source_generation ?? null">
+  </app-spotify-pitch-panel>
+
   <div class="mastering-help-toolbar">
     <button class="guide-button" type="button" (click)="toggleGuide()">
       ⓘ {{ education().help }} · {{ education().guideTitle }}

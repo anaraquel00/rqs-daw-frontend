@@ -1,0 +1,84 @@
+<section class="spotify-pitch" data-testid="spotify-pitch-panel">
+  <header class="pitch-header">
+    <div>
+      <span class="eyebrow">{{ copy().eyebrow }}</span>
+      <h3>{{ copy().title }}</h3>
+      <p>{{ copy().subtitle }}</p>
+    </div>
+    <span class="ai-badge">AI Release Intelligence</span>
+  </header>
+
+  <div class="evidence-status">
+    <strong>{{ copy().evidenceReady }}</strong>
+    <div class="evidence-grid" data-testid="evidence-checklist">
+      <span [class.ready]="hasAudioDna()"><b>{{ hasAudioDna() ? '✓' : '—' }}</b>{{ copy().audioDna }}</span>
+      <span [class.ready]="genreValues().length > 0"><b>{{ genreValues().length > 0 ? '✓' : '—' }}</b>{{ copy().genre }}</span>
+      <span [class.ready]="astralValues().length > 0"><b>{{ astralValues().length > 0 ? '✓' : '—' }}</b>{{ copy().astral }}</span>
+      <span [class.ready]="instrumentValues().length > 0"><b>{{ instrumentValues().length > 0 ? '✓' : '—' }}</b>{{ copy().instruments }}</span>
+      <span [class.ready]="hasTechnicalData()"><b>{{ hasTechnicalData() ? '✓' : '—' }}</b>{{ copy().technical }}</span>
+    </div>
+  </div>
+
+  <form class="pitch-form" (ngSubmit)="generatePitch()">
+    <h4>{{ copy().contextTitle }}</h4>
+    <label>
+      <span>{{ copy().songAbout }}</span>
+      <textarea name="songAbout" [(ngModel)]="songAbout" maxlength="1200" rows="3"></textarea>
+    </label>
+
+    <label class="collaboration-toggle">
+      <input type="checkbox" name="isCollaboration" [(ngModel)]="isCollaboration">
+      <span>{{ copy().collaboration }}</span>
+    </label>
+
+    @if (isCollaboration) {
+      <label>
+        <span>{{ copy().collaborators }}</span>
+        <input name="collaborators" [(ngModel)]="collaborators" maxlength="500">
+      </label>
+    }
+
+    <label>
+      <span>{{ copy().importance }}</span>
+      <textarea name="releaseImportance" [(ngModel)]="releaseImportance" maxlength="1200" rows="2"></textarea>
+    </label>
+
+    <label>
+      <span>{{ copy().promotion }}</span>
+      <textarea name="promotionPlans" [(ngModel)]="promotionPlans" maxlength="1200" rows="2"></textarea>
+    </label>
+
+    <button type="submit" [disabled]="requestState() === 'loading' || !hasAnyEvidence()">
+      {{ requestState() === 'loading' ? copy().generating : copy().generate }}
+    </button>
+  </form>
+
+  @if (requestState() === 'unavailable') {
+    <p class="pitch-unavailable" role="status">{{ copy().unavailable }}</p>
+  }
+
+  @if (requestState() === 'ready' && result(); as pitchResult) {
+    <section class="pitch-result" data-testid="spotify-pitch-result">
+      <h4>{{ copy().resultTitle }}</h4>
+      <p>{{ pitchResult.spotify_pitch }}</p>
+      <div class="pitch-actions">
+        <button type="button" (click)="copyPitch()">{{ copied() ? copy().copied : copy().copyPitch }}</button>
+        <button type="button" (click)="generatePitch()">{{ copy().regenerate }}</button>
+      </div>
+
+      @if (pitchResult.evidence_used.length > 0) {
+        <div class="evidence-used">
+          <h5>{{ copy().evidenceUsed }}</h5>
+          <ul>
+            @for (evidence of pitchResult.evidence_used; track evidence.type + ':' + evidence.value) {
+              <li>
+                <strong>{{ evidence.value }}</strong>
+                <span>{{ evidenceTypeLabel(evidence) }} / {{ sourceLabel(evidence) }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </section>
+  }
+</section>
