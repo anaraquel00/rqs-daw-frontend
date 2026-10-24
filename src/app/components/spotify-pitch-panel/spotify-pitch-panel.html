@@ -1,4 +1,9 @@
 <section class="spotify-pitch" data-testid="spotify-pitch-panel">
+  <div class="workflow-separation" aria-label="Master and pitch workflow">
+    <div><strong>{{ copy().masterLabel }}</strong><span>{{ copy().masterDescription }}</span></div>
+    <div class="active"><strong>{{ copy().pitchLabel }}</strong><span>{{ copy().pitchDescription }}</span></div>
+  </div>
+
   <header class="pitch-header">
     <div>
       <span class="eyebrow">{{ copy().eyebrow }}</span>
@@ -9,7 +14,10 @@
   </header>
 
   <div class="evidence-status">
-    <strong>{{ copy().evidenceReady }}</strong>
+    <div class="section-heading">
+      <strong>{{ copy().evidenceReady }}</strong>
+      @if (hasAnyEvidence()) { <span class="pitch-ready" data-testid="pitch-ready">{{ copy().pitchReady }}</span> }
+    </div>
     <div class="evidence-grid" data-testid="evidence-checklist">
       <span [class.ready]="hasAudioDna()"><b>{{ hasAudioDna() ? '✓' : '—' }}</b>{{ copy().audioDna }}</span>
       <span [class.ready]="genreValues().length > 0"><b>{{ genreValues().length > 0 ? '✓' : '—' }}</b>{{ copy().genre }}</span>
@@ -19,34 +27,92 @@
     </div>
   </div>
 
+  <section class="confirm-sound" data-testid="confirm-sound">
+    <h4>{{ copy().confirmTitle }}</h4>
+    <p>{{ copy().confirmSubtitle }}</p>
+    <div class="sound-groups">
+      <div>
+        <strong>{{ copy().detectedGenres }}</strong>
+        <div class="chip-list">
+          @for (value of genreValues(); track value) {
+            <button type="button" class="chip" [class.selected]="isSoundLabelSelected('genre', value)"
+              [disabled]="!adjustingSound" (click)="toggleSoundLabel('genre', value)">{{ value }}</button>
+          }
+        </div>
+      </div>
+      <div>
+        <strong>{{ copy().atmosphere }}</strong>
+        <div class="chip-list">
+          @for (value of astralValues(); track value) {
+            <button type="button" class="chip" [class.selected]="isSoundLabelSelected('astral', value)"
+              [disabled]="!adjustingSound" (click)="toggleSoundLabel('astral', value)">{{ value }}</button>
+          }
+        </div>
+      </div>
+      <div>
+        <strong>{{ copy().instrumentation }}</strong>
+        <div class="chip-list">
+          @for (value of rawInstrumentNames(); track value) {
+            <button type="button" class="chip" [class.selected]="isSoundLabelSelected('instruments', value)"
+              [disabled]="!adjustingSound" (click)="toggleSoundLabel('instruments', value)">{{ value }}</button>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="confirm-actions">
+      @if (!adjustingSound) {
+        <button type="button" (click)="confirmSound()">{{ copy().allCorrect }}</button>
+        <button type="button" class="secondary" (click)="beginAdjustSound()">{{ copy().adjust }}</button>
+      } @else {
+        <button type="button" (click)="confirmSound()">{{ copy().finishAdjusting }}</button>
+      }
+    </div>
+  </section>
+
   <form class="pitch-form" (ngSubmit)="generatePitch()">
-    <h4>{{ copy().contextTitle }}</h4>
-    <label>
-      <span>{{ copy().songAbout }}</span>
-      <textarea name="songAbout" [(ngModel)]="songAbout" maxlength="1200" rows="3"></textarea>
-    </label>
+    <div class="context-heading">
+      <h4>{{ copy().contextTitle }}</h4>
+      <p>{{ copy().contextSubtitle }}</p>
+    </div>
+    <label><span>{{ copy().songStory }}</span><textarea name="songStory" [(ngModel)]="songStory" maxlength="1200" rows="2"></textarea></label>
+    <label><span>{{ copy().releaseDifference }}</span><textarea name="releaseDifference" [(ngModel)]="releaseDifference" maxlength="1200" rows="2"></textarea></label>
+    <label><span>{{ copy().realContext }}</span><textarea name="realContext" [(ngModel)]="realContext" maxlength="1200" rows="2"></textarea></label>
 
     <label class="collaboration-toggle">
       <input type="checkbox" name="isCollaboration" [(ngModel)]="isCollaboration">
       <span>{{ copy().collaboration }}</span>
     </label>
-
     @if (isCollaboration) {
-      <label>
-        <span>{{ copy().collaborators }}</span>
-        <input name="collaborators" [(ngModel)]="collaborators" maxlength="500">
-      </label>
+      <div class="collaborator-fields">
+        <label><span>{{ copy().collaborators }}</span><input name="collaborators" [(ngModel)]="collaborators" maxlength="500"></label>
+        <label>
+          <span>{{ copy().collaboratorRole }}</span>
+          <select name="collaboratorRole" [(ngModel)]="collaboratorRole">
+            <option value="">{{ copy().noRole }}</option>
+            @for (role of collaboratorRoles; track role) { <option [value]="role">{{ copy().roleLabels[role] }}</option> }
+          </select>
+        </label>
+      </div>
     }
 
-    <label>
-      <span>{{ copy().importance }}</span>
-      <textarea name="releaseImportance" [(ngModel)]="releaseImportance" maxlength="1200" rows="2"></textarea>
-    </label>
+    <label><span>{{ copy().culturalContext }}</span><textarea name="culturalContext" [(ngModel)]="culturalGeographicContext" maxlength="1200" rows="2"></textarea></label>
 
-    <label>
-      <span>{{ copy().promotion }}</span>
-      <textarea name="promotionPlans" [(ngModel)]="promotionPlans" maxlength="1200" rows="2"></textarea>
-    </label>
+    <fieldset class="promotion-options">
+      <legend>{{ copy().promotion }}</legend>
+      <div class="chip-list">
+        @for (channel of promotionOptions; track channel) {
+          <button type="button" class="chip" [class.selected]="isPromotionSelected(channel)" (click)="togglePromotion(channel)">
+            {{ copy().promotionLabels[channel] }}
+          </button>
+        }
+      </div>
+    </fieldset>
+    <label><span>{{ copy().promotionDetails }}</span><textarea name="promotionDetails" [(ngModel)]="promotionDetails" maxlength="1200" rows="2"></textarea></label>
+
+    <div class="timing-helper">
+      <span>{{ copy().timingRecommended }}</span>
+      <span>{{ copy().timingReleaseRadar }}</span>
+    </div>
 
     <button type="submit" [disabled]="requestState() === 'loading' || !hasAnyEvidence()">
       {{ requestState() === 'loading' ? copy().generating : copy().generate }}
@@ -59,25 +125,49 @@
 
   @if (requestState() === 'ready' && result(); as pitchResult) {
     <section class="pitch-result" data-testid="spotify-pitch-result">
-      <h4>{{ copy().resultTitle }}</h4>
-      <p>{{ pitchResult.spotify_pitch }}</p>
-      <div class="pitch-actions">
-        <button type="button" (click)="copyPitch()">{{ copied() ? copy().copied : copy().copyPitch }}</button>
-        <button type="button" (click)="generatePitch()">{{ copy().regenerate }}</button>
-      </div>
+      <section class="result-block metadata-suggestions" data-testid="metadata-suggestions">
+        <h4>{{ copy().metadataTitle }}</h4>
+        <p class="disclaimer">{{ copy().metadataDisclaimer }}</p>
+        <div class="metadata-grid">
+          <div><strong>{{ copy().genre }}</strong><span>{{ pitchResult.metadata_suggestions.genres.join(' · ') || '—' }}</span></div>
+          <div><strong>{{ copy().atmosphere }}</strong><span>{{ pitchResult.metadata_suggestions.moods.join(' · ') || '—' }}</span></div>
+          <div><strong>{{ copy().instruments }}</strong><span>{{ pitchResult.metadata_suggestions.instruments.join(' · ') || '—' }}</span></div>
+        </div>
+      </section>
+
+      <section class="result-block" data-testid="editorial-pitch">
+        <h4>{{ copy().editorialPitchTitle }}</h4>
+        <p class="editorial-copy">{{ pitchResult.editorial_pitch }}</p>
+        <div class="pitch-actions">
+          <button type="button" (click)="copyPitch()">{{ copied() ? copy().copied : copy().copyPitch }}</button>
+          <button type="button" (click)="generatePitch()">{{ copy().regenerate }}</button>
+        </div>
+      </section>
+
+      <section class="result-block" data-testid="editorial-positioning">
+        <h4>{{ copy().positioningTitle }}</h4>
+        <p class="disclaimer">{{ copy().positioningDisclaimer }}</p>
+        <div class="chip-list static-chips">
+          @for (position of pitchResult.editorial_positioning; track position) { <span class="chip selected">{{ position }}</span> }
+        </div>
+      </section>
+
+      <section class="result-block" data-testid="why-pitch-works">
+        <h4>{{ copy().whyTitle }}</h4>
+        <ul class="why-list">
+          @for (reason of pitchResult.why_this_pitch_works; track reason) { <li><b>✓</b>{{ reason }}</li> }
+        </ul>
+      </section>
 
       @if (pitchResult.evidence_used.length > 0) {
-        <div class="evidence-used">
-          <h5>{{ copy().evidenceUsed }}</h5>
+        <section class="result-block evidence-used" data-testid="evidence-trace">
+          <h4>{{ copy().evidenceUsed }}</h4>
           <ul>
-            @for (evidence of pitchResult.evidence_used; track evidence.type + ':' + evidence.value) {
-              <li>
-                <strong>{{ evidence.value }}</strong>
-                <span>{{ evidenceTypeLabel(evidence) }} / {{ sourceLabel(evidence) }}</span>
-              </li>
+            @for (evidence of pitchResult.evidence_used; track evidence.type + ':' + evidence.value + ':' + evidence.source) {
+              <li><strong>{{ evidence.value }}</strong><span>{{ evidenceTypeLabel(evidence) }} · {{ sourceLabel(evidence) }}</span></li>
             }
           </ul>
-        </div>
+        </section>
       }
     </section>
   }

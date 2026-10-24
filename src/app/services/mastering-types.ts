@@ -83,13 +83,17 @@ export type SpotifyPitchEvidenceType =
   | 'sonic_characteristic'
   | 'collaborator'
   | 'release_story'
+  | 'release_difference'
+  | 'real_context'
+  | 'cultural_context'
   | 'promotion_plan';
 
 export type SpotifyPitchEvidenceSource =
   | 'cocotagger'
   | 'openai_music_analyst'
   | 'rqs_audio_dna'
-  | 'artist';
+  | 'artist_confirmed'
+  | 'artist_supplied';
 
 export interface SpotifyPitchEvidence {
   type: SpotifyPitchEvidenceType;
@@ -99,14 +103,41 @@ export interface SpotifyPitchEvidence {
 
 export interface SpotifyPitchResponse {
   status: 'READY' | 'UNAVAILABLE';
-  spotify_pitch: string;
+  metadata_suggestions: {
+    genres: string[];
+    moods: string[];
+    instruments: string[];
+  };
+  editorial_pitch: string;
+  editorial_positioning: string[];
+  why_this_pitch_works: string[];
   evidence_used: SpotifyPitchEvidence[];
   warnings: string[];
 }
 
+export type SpotifyPitchCollaboratorRole =
+  | 'artist'
+  | 'producer'
+  | 'vocalist'
+  | 'songwriter'
+  | 'instrumentalist'
+  | 'other';
+
+export type SpotifyPitchPromotionChannel =
+  | 'Social media'
+  | 'YouTube'
+  | 'Music video'
+  | 'Live performance'
+  | 'Press / blogs'
+  | 'Ads'
+  | 'Mailing list'
+  | 'Website'
+  | 'Pre-save'
+  | 'No campaign planned';
+
 export interface SpotifyPitchRequest {
   release_intelligence: {
-    audio_intelligence: {
+    raw_audio_evidence: {
       genre: string[];
       astral: string[];
       instruments: OpenAiMusicAnalystPayload['instruments'];
@@ -117,12 +148,26 @@ export interface SpotifyPitchRequest {
       danceability: number | null;
       sonic_characteristics: string[];
     };
+    artist_confirmed_sound: {
+      confirmed: boolean;
+      genre: string[];
+      astral: string[];
+      instruments: string[];
+    };
     artist_context: {
-      song_about: string;
+      song_story: string;
+      release_difference: string;
+      real_context: string;
       is_collaboration: boolean;
-      collaborators: string[];
-      release_importance: string;
-      promotion_plans: string;
+      collaborators: Array<{
+        name: string;
+        role: SpotifyPitchCollaboratorRole | null;
+      }>;
+      cultural_geographic_context: string;
+    };
+    promotion_context: {
+      channels: SpotifyPitchPromotionChannel[];
+      confirmed_details: string;
     };
   };
 }

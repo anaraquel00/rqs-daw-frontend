@@ -69,10 +69,19 @@ describe('SpotifyPitchPanelComponent', () => {
   };
   const ready: SpotifyPitchResponse = {
     status: 'READY',
-    spotify_pitch: 'A grounded release pitch.',
+    metadata_suggestions: {
+      genres: ['Trip Hop'], moods: ['Bittersweet'], instruments: ['Synthesizer'],
+    },
+    editorial_pitch: 'A grounded release pitch.',
+    editorial_positioning: ['Alternative Electronic'],
+    why_this_pitch_works: [
+      'The genre is supported by analysis.',
+      'The instrumentation is confirmed.',
+      'The pitch remains grounded in evidence.',
+    ],
     evidence_used: [
       { type: 'genre', value: 'Trip Hop', source: 'cocotagger' },
-      { type: 'instrument', value: 'Synthesizer', source: 'openai_music_analyst' },
+      { type: 'instrument', value: 'Synthesizer', source: 'artist_confirmed' },
     ],
     warnings: [],
   };
@@ -113,22 +122,70 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(instrumentRow.textContent).not.toContain('✓');
   });
 
+  it('keeps Generate enabled with completely empty optional Artist Context', () => {
+    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    expect(component.songStory).toBe('');
+    expect(component.releaseDifference).toBe('');
+    expect(component.realContext).toBe('');
+    expect(component.selectedPromotionChannels).toEqual([]);
+    expect(button.disabled).toBeFalse();
+    expect(fixture.nativeElement.querySelector('[data-testid="pitch-ready"]')).not.toBeNull();
+  });
+
+  it('shows Confirm Sound and confirms unchanged detector suggestions', () => {
+    expect(fixture.nativeElement.querySelector('[data-testid="confirm-sound"]')).not.toBeNull();
+    component.confirmSound();
+    expect(component.soundConfirmed).toBeTrue();
+    expect(component.confirmedGenres).toEqual(['Trip Hop']);
+    expect(component.confirmedAstral).toEqual(['Bittersweet']);
+    expect(component.confirmedInstruments).toEqual(['Synthesizer']);
+  });
+
+  it('allows removing a suggestion without mutating raw detector evidence', () => {
+    component.beginAdjustSound();
+    component.toggleSoundLabel('genre', 'Trip Hop');
+    component.confirmSound();
+    expect(component.confirmedGenres).toEqual([]);
+    expect(component.genreValues()).toEqual(['Trip Hop']);
+    component.generatePitch();
+    const request = dsp.generateSpotifyPitch.calls.mostRecent().args[0] as SpotifyPitchRequest;
+    expect(request.release_intelligence.raw_audio_evidence.genre).toEqual(['Trip Hop']);
+    expect(request.release_intelligence.artist_confirmed_sound.confirmed).toBeTrue();
+    expect(request.release_intelligence.artist_confirmed_sound.genre).toEqual([]);
+  });
+
   it('shows collaboration fields only when collaboration is enabled', () => {
     expect(fixture.nativeElement.querySelector('input[name="collaborators"]')).toBeNull();
     component.isCollaboration = true;
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('input[name="collaborators"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('select[name="collaboratorRole"]')).not.toBeNull();
   });
 
-  it('sends only approved Release Intelligence inputs and no audio or DSP loudness metrics', () => {
-    component.songAbout = 'Finding clarity.';
+  it('supports promotion chips and treats no campaign planned as an exclusive valid choice', () => {
+    component.togglePromotion('Social media');
+    component.togglePromotion('YouTube');
+    expect(component.selectedPromotionChannels).toEqual(['Social media', 'YouTube']);
+    component.togglePromotion('No campaign planned');
+    expect(component.selectedPromotionChannels).toEqual(['No campaign planned']);
+    component.togglePromotion('Website');
+    expect(component.selectedPromotionChannels).toEqual(['Website']);
+  });
+
+  it('sends raw and artist-confirmed evidence separately with no audio or loudness metrics', () => {
+    component.confirmSound();
+    component.songStory = 'Finding clarity.';
     component.isCollaboration = true;
     component.collaborators = 'Ana, RQS';
+    component.collaboratorRole = 'producer';
     component.generatePitch();
     const request = dsp.generateSpotifyPitch.calls.mostRecent().args[0] as SpotifyPitchRequest;
-    expect(request.release_intelligence.audio_intelligence.genre).toEqual(['Trip Hop']);
-    expect(request.release_intelligence.audio_intelligence.astral).toEqual(['Bittersweet']);
-    expect(request.release_intelligence.artist_context.collaborators).toEqual(['Ana', 'RQS']);
+    expect(request.release_intelligence.raw_audio_evidence.genre).toEqual(['Trip Hop']);
+    expect(request.release_intelligence.artist_confirmed_sound.confirmed).toBeTrue();
+    expect(request.release_intelligence.artist_confirmed_sound.genre).toEqual(['Trip Hop']);
+    expect(request.release_intelligence.artist_context.collaborators).toEqual([
+      { name: 'Ana', role: 'producer' }, { name: 'RQS', role: 'producer' },
+    ]);
     expect(JSON.stringify(request)).not.toMatch(/integrated_lufs|true_peak|base64|audio_url/);
   });
 
@@ -142,13 +199,25 @@ describe('SpotifyPitchPanelComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-testid="spotify-pitch-result"]')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('A grounded release pitch.');
-    expect(fixture.nativeElement.textContent).toContain('Genre / Audio Analysis');
-    expect(fixture.nativeElement.textContent).toContain('Instrument / Music Analyst');
+    expect(fixture.nativeElement.textContent).toContain('Genre · Audio Analysis');
+    expect(fixture.nativeElement.textContent).toContain('Instrument · Artist confirmed');
+  });
+
+  it('renders all four output blocks and evidence provenance', () => {
+    component.generatePitch();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="metadata-suggestions"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="editorial-pitch"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="editorial-positioning"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="why-pitch-works"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="evidence-trace"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Alternative Electronic');
   });
 
   it('renders a graceful UNAVAILABLE state without affecting analysis evidence', () => {
     dsp.generateSpotifyPitch.and.returnValue(of({
-      status: 'UNAVAILABLE', spotify_pitch: '', evidence_used: [], warnings: ['OPENAI_TIMEOUT'],
+      status: 'UNAVAILABLE', metadata_suggestions: { genres: [], moods: [], instruments: [] },
+      editorial_pitch: '', editorial_positioning: [], why_this_pitch_works: [], evidence_used: [], warnings: ['OPENAI_TIMEOUT'],
     }));
     component.generatePitch();
     fixture.detectChanges();
@@ -188,7 +257,7 @@ describe('SpotifyPitchPanelComponent', () => {
     fixture.detectChanges();
     pending.next(ready);
     expect(component.result()).toBeNull();
-    expect(component.songAbout).toBe('');
+    expect(component.songStory).toBe('');
   });
 
   it('renders PT-BR copy', () => {
@@ -196,6 +265,8 @@ describe('SpotifyPitchPanelComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Inteligência de Lançamento com IA');
     expect(fixture.nativeElement.textContent).toContain('GERAR PITCH');
+    expect(fixture.nativeElement.textContent).toContain('Contexto do lançamento — opcional');
+    expect(fixture.nativeElement.textContent).toContain('14+ dias');
   });
 
   it('renders EN copy and falls back to EN for other supported languages', () => {
@@ -204,6 +275,7 @@ describe('SpotifyPitchPanelComponent', () => {
       fixture.detectChanges();
       expect(fixture.nativeElement.textContent).toContain('AI Release Intelligence');
       expect(fixture.nativeElement.textContent).toContain('GENERATE PITCH');
+      expect(fixture.nativeElement.textContent).toContain('Release context — optional');
     }
   });
 
