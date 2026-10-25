@@ -30,22 +30,27 @@
   <section class="confirm-sound" data-testid="confirm-sound">
     <h4>{{ copy().confirmTitle }}</h4>
     <p>{{ copy().confirmSubtitle }}</p>
+    <div class="curation-legend" data-testid="metadata-curation-legend">
+      <span>{{ copy().aiDetected }}</span>
+      <span [class.final]="soundConfirmed">{{ copy().artistFinal }}</span>
+    </div>
     <div class="sound-groups">
       <div>
         <strong>{{ copy().detectedGenres }}</strong>
         <div class="chip-list">
           @for (value of genreValues(); track value) {
             <button type="button" class="chip" [class.selected]="isSoundLabelSelected('genre', value)"
-              [disabled]="!adjustingSound" (click)="toggleSoundLabel('genre', value)">{{ value }}</button>
+              [disabled]="isSoundLabelDisabled('genre', value)" (click)="toggleSoundLabel('genre', value)">{{ value }}</button>
           }
         </div>
+        <small class="field-help">{{ copy().genreLimit }}</small>
       </div>
       <div>
         <strong>{{ copy().atmosphere }}</strong>
         <div class="chip-list">
           @for (value of astralValues(); track value) {
             <button type="button" class="chip" [class.selected]="isSoundLabelSelected('astral', value)"
-              [disabled]="!adjustingSound" (click)="toggleSoundLabel('astral', value)">{{ value }}</button>
+              [disabled]="isSoundLabelDisabled('astral', value)" (click)="toggleSoundLabel('astral', value)">{{ value }}</button>
           }
         </div>
       </div>
@@ -54,7 +59,7 @@
         <div class="chip-list">
           @for (value of rawInstrumentNames(); track value) {
             <button type="button" class="chip" [class.selected]="isSoundLabelSelected('instruments', value)"
-              [disabled]="!adjustingSound" (click)="toggleSoundLabel('instruments', value)">{{ value }}</button>
+              [disabled]="isSoundLabelDisabled('instruments', value)" (click)="toggleSoundLabel('instruments', value)">{{ value }}</button>
           }
         </div>
       </div>
@@ -76,6 +81,11 @@
     </div>
     <label><span>{{ copy().songStory }}</span><textarea name="songStory" [(ngModel)]="songStory" maxlength="1200" rows="2"></textarea></label>
     <label><span>{{ copy().releaseDifference }}</span><textarea name="releaseDifference" [(ngModel)]="releaseDifference" maxlength="1200" rows="2"></textarea></label>
+    <label data-testid="why-now-field">
+      <span>{{ copy().whyNow }}</span>
+      <textarea name="whyNow" [(ngModel)]="whyNow" maxlength="1200" rows="2"></textarea>
+      <small class="field-help">{{ copy().whyNowHelp }}</small>
+    </label>
     <label><span>{{ copy().realContext }}</span><textarea name="realContext" [(ngModel)]="realContext" maxlength="1200" rows="2"></textarea></label>
 
     <label class="collaboration-toggle">
@@ -126,7 +136,7 @@
   @if (requestState() === 'ready' && result(); as pitchResult) {
     <section class="pitch-result" data-testid="spotify-pitch-result">
       <section class="result-block metadata-suggestions" data-testid="metadata-suggestions">
-        <h4>{{ copy().metadataTitle }}</h4>
+        <div class="result-heading"><h4>{{ copy().metadataTitle }}</h4><span>{{ soundConfirmed ? copy().artistFinal : copy().aiDetected }}</span></div>
         <p class="disclaimer">{{ copy().metadataDisclaimer }}</p>
         <div class="metadata-grid">
           <div><strong>{{ copy().genre }}</strong><span>{{ pitchResult.metadata_suggestions.genres.join(' · ') || '—' }}</span></div>
@@ -136,8 +146,9 @@
       </section>
 
       <section class="result-block" data-testid="editorial-pitch">
-        <h4>{{ copy().editorialPitchTitle }}</h4>
+        <div class="result-heading"><h4>{{ copy().editorialPitchTitle }}</h4><span data-testid="editorial-draft-status">{{ copy().draftStatus }}</span></div>
         <p class="editorial-copy">{{ pitchResult.editorial_pitch }}</p>
+        <p class="review-microcopy" data-testid="editorial-review-microcopy">{{ copy().reviewMicrocopy }}</p>
         <div class="pitch-actions">
           <button type="button" (click)="copyPitch()">{{ copied() ? copy().copied : copy().copyPitch }}</button>
           <button type="button" (click)="generatePitch()">{{ copy().regenerate }}</button>

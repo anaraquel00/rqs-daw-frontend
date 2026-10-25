@@ -127,13 +127,27 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(component.songStory).toBe('');
     expect(component.releaseDifference).toBe('');
     expect(component.realContext).toBe('');
+    expect(component.whyNow).toBe('');
     expect(component.selectedPromotionChannels).toEqual([]);
     expect(button.disabled).toBeFalse();
     expect(fixture.nativeElement.querySelector('[data-testid="pitch-ready"]')).not.toBeNull();
   });
 
+  it('renders optional why-now copy in EN and sends only artist-supplied text', () => {
+    const field = fixture.nativeElement.querySelector('[data-testid="why-now-field"]') as HTMLElement;
+    expect(field.textContent).toContain('Why release this track now? (optional)');
+    expect(field.textContent).toContain('a continuation of a story');
+    component.whyNow = 'This release marks a new phase.';
+    component.generatePitch();
+    const request = dsp.generateSpotifyPitch.calls.mostRecent().args[0] as SpotifyPitchRequest;
+    expect(request.release_intelligence.artist_context.why_now).toBe('This release marks a new phase.');
+  });
+
   it('shows Confirm Sound and confirms unchanged detector suggestions', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="confirm-sound"]')).not.toBeNull();
+    const legend = fixture.nativeElement.querySelector('[data-testid="metadata-curation-legend"]') as HTMLElement;
+    expect(legend.textContent).toContain('AI DETECTED');
+    expect(legend.textContent).toContain('ARTIST CONFIRMED / FINAL');
     component.confirmSound();
     expect(component.soundConfirmed).toBeTrue();
     expect(component.confirmedGenres).toEqual(['Trip Hop']);
@@ -152,6 +166,27 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(request.release_intelligence.raw_audio_evidence.genre).toEqual(['Trip Hop']);
     expect(request.release_intelligence.artist_confirmed_sound.confirmed).toBeTrue();
     expect(request.release_intelligence.artist_confirmed_sound.genre).toEqual([]);
+  });
+
+  it('keeps raw genre signals while curating at most three final genres and excluding epic by default', () => {
+    const richerAudioDna = {
+      ...audioDna,
+      semantic: {
+        ...audioDna.semantic,
+        categories: {
+          ...audioDna.semantic!.categories,
+          genre: ['Trip Hop', 'Epic', 'Dream Pop', 'Industrial Rock', 'Electronica']
+            .map((tag, index) => ({ tag, raw_score: .5 - index * .02, rank: index + 1 })),
+        },
+      },
+    } as AudioDnaPayload;
+    fixture.componentRef.setInput('audioDna', richerAudioDna);
+    fixture.detectChanges();
+    expect(component.genreValues()).toEqual(['Trip Hop', 'Epic', 'Dream Pop', 'Industrial Rock', 'Electronica']);
+    expect(component.confirmedGenres).toEqual(['Trip Hop', 'Dream Pop', 'Industrial Rock']);
+    component.beginAdjustSound();
+    component.toggleSoundLabel('genre', 'Electronica');
+    expect(component.confirmedGenres).toEqual(['Trip Hop', 'Dream Pop', 'Industrial Rock']);
   });
 
   it('shows collaboration fields only when collaboration is enabled', () => {
@@ -214,6 +249,15 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Alternative Electronic');
   });
 
+  it('marks READY output as an editorial draft for human review', () => {
+    component.generatePitch();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="editorial-draft-status"]').textContent)
+      .toContain('EDITORIAL DRAFT GENERATED');
+    expect(fixture.nativeElement.querySelector('[data-testid="editorial-review-microcopy"]').textContent)
+      .toContain('make the final adjustment in your own artistic voice');
+  });
+
   it('renders a graceful UNAVAILABLE state without affecting analysis evidence', () => {
     dsp.generateSpotifyPitch.and.returnValue(of({
       status: 'UNAVAILABLE', metadata_suggestions: { genres: [], moods: [], instruments: [] },
@@ -233,10 +277,19 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(component.genreValues()).toEqual(['Trip Hop']);
   });
 
-  it('regenerate issues one new request and does not re-run audio analysis', () => {
+  it('regenerate reuses Artist Context and current evidence without audio or another analysis', () => {
+    component.songStory = 'A verified story.';
+    component.releaseDifference = 'A mature reconstruction.';
+    component.whyNow = 'A new phase begins now.';
+    component.confirmSound();
     component.generatePitch();
     component.generatePitch();
     expect(dsp.generateSpotifyPitch).toHaveBeenCalledTimes(2);
+    const first = dsp.generateSpotifyPitch.calls.argsFor(0)[0];
+    const second = dsp.generateSpotifyPitch.calls.argsFor(1)[0];
+    expect(second.release_intelligence.artist_context).toEqual(first.release_intelligence.artist_context);
+    expect(second.release_intelligence.artist_confirmed_sound).toEqual(first.release_intelligence.artist_confirmed_sound);
+    expect(JSON.stringify(second)).not.toMatch(/input_audio|base64|audio_url/);
   });
 
   it('wires COPY PITCH to the clipboard action', () => {
@@ -266,6 +319,8 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Inteligência de Lançamento com IA');
     expect(fixture.nativeElement.textContent).toContain('GERAR PITCH');
     expect(fixture.nativeElement.textContent).toContain('Contexto do lançamento — opcional');
+    expect(fixture.nativeElement.textContent).toContain('Por que lançar esta faixa agora? (opcional)');
+    expect(fixture.nativeElement.textContent).toContain('Pode ser uma nova fase, retorno, aniversário');
     expect(fixture.nativeElement.textContent).toContain('14+ dias');
   });
 

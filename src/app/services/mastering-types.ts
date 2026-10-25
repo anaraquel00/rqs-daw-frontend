@@ -84,6 +84,7 @@ export type SpotifyPitchEvidenceType =
   | 'collaborator'
   | 'release_story'
   | 'release_difference'
+  | 'release_timing_context'
   | 'real_context'
   | 'cultural_context'
   | 'promotion_plan';
@@ -157,6 +158,7 @@ export interface SpotifyPitchRequest {
     artist_context: {
       song_story: string;
       release_difference: string;
+      why_now: string;
       real_context: string;
       is_collaboration: boolean;
       collaborators: Array<{

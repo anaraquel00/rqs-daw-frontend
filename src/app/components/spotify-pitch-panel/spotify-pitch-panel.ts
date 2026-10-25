@@ -20,11 +20,13 @@ interface PitchCopy {
   detectedGenres: string; atmosphere: string; instrumentation: string; allCorrect: string;
   adjust: string; finishAdjusting: string; contextTitle: string; contextSubtitle: string;
   songStory: string; releaseDifference: string; realContext: string; collaboration: string;
+  whyNow: string; whyNowHelp: string;
   collaborators: string; collaboratorRole: string; noRole: string; culturalContext: string;
   promotion: string; promotionDetails: string; generate: string; generating: string;
   metadataTitle: string; metadataDisclaimer: string; editorialPitchTitle: string;
   positioningTitle: string; positioningDisclaimer: string; whyTitle: string;
   copyPitch: string; copied: string; regenerate: string; evidenceUsed: string; unavailable: string;
+  aiDetected: string; artistFinal: string; genreLimit: string; draftStatus: string; reviewMicrocopy: string;
   timingRecommended: string; timingReleaseRadar: string;
   promotionLabels: Record<SpotifyPitchPromotionChannel, string>;
   roleLabels: Record<SpotifyPitchCollaboratorRole, string>;
@@ -60,6 +62,8 @@ const COPY: Record<'en' | 'pt', PitchCopy> = {
     contextSubtitle: 'Your music already has enough evidence to generate a pitch. Add context only if you want to make it more personal.',
     songStory: 'Tell the story of the song in one sentence. (optional)',
     releaseDifference: 'What is different about this track? (optional)',
+    whyNow: 'Why release this track now? (optional)',
+    whyNowHelp: 'It can be a new phase, a return, an anniversary, a rebuilding, a continuation of a story, or another real reason.',
     realContext: 'Is there a real story or context behind it? (optional)',
     collaboration: 'Is this track a collaboration?', collaborators: 'Who took part?',
     collaboratorRole: 'Optional role', noRole: 'No role selected',
@@ -72,6 +76,9 @@ const COPY: Record<'en' | 'pt', PitchCopy> = {
     positioningDisclaimer: 'Positioning suggestions. They do not predict or guarantee playlist inclusion.',
     whyTitle: 'WHY THIS PITCH WORKS', copyPitch: 'COPY PITCH', copied: 'COPIED', regenerate: 'REGENERATE',
     evidenceUsed: 'EVIDENCE TRACE',
+    aiDetected: 'AI DETECTED', artistFinal: 'ARTIST CONFIRMED / FINAL',
+    genreLimit: 'Choose up to 3 final genres.', draftStatus: 'EDITORIAL DRAFT GENERATED',
+    reviewMicrocopy: 'Use this as an editorial draft and make the final adjustment in your own artistic voice before submitting.',
     unavailable: 'Pitch generation is temporarily unavailable. Your analysis and mastering remain active.',
     timingRecommended: 'Recommended: submit your pitch around 14+ days in advance.',
     timingReleaseRadar: 'For Release Radar eligibility, Spotify states at least 7 days before release.',
@@ -94,6 +101,8 @@ const COPY: Record<'en' | 'pt', PitchCopy> = {
     contextSubtitle: 'Sua música já tem evidências suficientes para gerar um pitch. Conte mais apenas se quiser torná-lo mais pessoal.',
     songStory: 'Conte a história da música em uma frase. (opcional)',
     releaseDifference: 'O que existe de diferente nesta faixa? (opcional)',
+    whyNow: 'Por que lançar esta faixa agora? (opcional)',
+    whyNowHelp: 'Pode ser uma nova fase, retorno, aniversário, reconstrução, continuação de uma história ou outro motivo real.',
     realContext: 'Existe alguma história real ou contexto por trás dela? (opcional)',
     collaboration: 'Esta faixa é uma colaboração?', collaborators: 'Quem participou?',
     collaboratorRole: 'Função opcional', noRole: 'Sem função selecionada',
@@ -106,6 +115,9 @@ const COPY: Record<'en' | 'pt', PitchCopy> = {
     positioningDisclaimer: 'Sugestões de posicionamento. Não representam previsão ou garantia de inclusão em playlists.',
     whyTitle: 'POR QUE ESTE PITCH FUNCIONA', copyPitch: 'COPIAR PITCH', copied: 'COPIADO', regenerate: 'GERAR NOVAMENTE',
     evidenceUsed: 'RASTRO DE EVIDÊNCIAS',
+    aiDetected: 'DETECTADO POR IA', artistFinal: 'CONFIRMADO PELO ARTISTA / FINAL',
+    genreLimit: 'Escolha até 3 gêneros finais.', draftStatus: 'RASCUNHO EDITORIAL GERADO',
+    reviewMicrocopy: 'Use esta versão como base editorial e faça o ajuste final com sua voz artística antes do envio.',
     unavailable: 'A geração do pitch está indisponível. Sua análise e masterização continuam ativas.',
     timingRecommended: 'Recomendado: envie seu pitch com cerca de 14+ dias de antecedência.',
     timingReleaseRadar: 'Para benefício do Release Radar, o Spotify informa pelo menos 7 dias antes do lançamento.',
@@ -127,7 +139,7 @@ export class SpotifyPitchPanelComponent implements OnChanges {
   @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() sourceGeneration: string | null = null;
 
-  songStory = ''; releaseDifference = ''; realContext = ''; isCollaboration = false;
+  songStory = ''; releaseDifference = ''; whyNow = ''; realContext = ''; isCollaboration = false;
   collaborators = ''; collaboratorRole: SpotifyPitchCollaboratorRole | '' = '';
   culturalGeographicContext = ''; promotionDetails = '';
   selectedPromotionChannels: SpotifyPitchPromotionChannel[] = [];
@@ -164,11 +176,16 @@ export class SpotifyPitchPanelComponent implements OnChanges {
   isSoundLabelSelected(category: 'genre' | 'astral' | 'instruments', value: string): boolean { return this.confirmedList(category).includes(value); }
   toggleSoundLabel(category: 'genre' | 'astral' | 'instruments', value: string): void {
     const current = this.confirmedList(category);
+    if (category === 'genre' && !current.includes(value) && current.length >= 3) return;
     const next = current.includes(value) ? current.filter(item => item !== value) : [...current, value];
     if (category === 'genre') this.confirmedGenres = next;
     if (category === 'astral') this.confirmedAstral = next;
     if (category === 'instruments') this.confirmedInstruments = next;
     this.soundConfirmed = false;
+  }
+  isSoundLabelDisabled(category: 'genre' | 'astral' | 'instruments', value: string): boolean {
+    return !this.adjustingSound
+      || (category === 'genre' && !this.confirmedGenres.includes(value) && this.confirmedGenres.length >= 3);
   }
 
   isPromotionSelected(channel: SpotifyPitchPromotionChannel): boolean { return this.selectedPromotionChannels.includes(channel); }
@@ -209,6 +226,7 @@ export class SpotifyPitchPanelComponent implements OnChanges {
       genre: 'Genre', astral: 'Astral', instrument: 'Instrument', vocals: 'Vocals', production_element: 'Production',
       bpm: 'BPM', energy: 'Energy', danceability: 'Danceability', sonic_characteristic: 'Sonic profile',
       collaborator: 'Collaboration', release_story: 'Release story', release_difference: 'Release difference',
+      release_timing_context: 'Why now',
       real_context: 'Real context', cultural_context: 'Cultural context', promotion_plan: 'Promotion',
     };
     return labels[evidence.type] ?? evidence.type;
@@ -222,11 +240,12 @@ export class SpotifyPitchPanelComponent implements OnChanges {
     const fingerprint = JSON.stringify([this.sourceGeneration, genres, astral, instruments]);
     if (fingerprint === this.soundFingerprint) return;
     this.soundFingerprint = fingerprint;
-    this.confirmedGenres = [...genres]; this.confirmedAstral = [...astral]; this.confirmedInstruments = [...instruments];
+    this.confirmedGenres = genres.filter(value => value.trim().toLocaleLowerCase('en-US') !== 'epic').slice(0, 3);
+    this.confirmedAstral = [...astral]; this.confirmedInstruments = [...instruments];
     this.adjustingSound = false; this.soundConfirmed = false;
   }
   private resetArtistContext(): void {
-    this.songStory = ''; this.releaseDifference = ''; this.realContext = ''; this.isCollaboration = false;
+    this.songStory = ''; this.releaseDifference = ''; this.whyNow = ''; this.realContext = ''; this.isCollaboration = false;
     this.collaborators = ''; this.collaboratorRole = ''; this.culturalGeographicContext = '';
     this.promotionDetails = ''; this.selectedPromotionChannels = [];
   }
@@ -261,6 +280,7 @@ export class SpotifyPitchPanelComponent implements OnChanges {
       artist_confirmed_sound: { confirmed: this.soundConfirmed, genre: [...this.confirmedGenres], astral: [...this.confirmedAstral], instruments: [...this.confirmedInstruments] },
       artist_context: {
         song_story: this.songStory.trim(), release_difference: this.releaseDifference.trim(), real_context: this.realContext.trim(),
+        why_now: this.whyNow.trim(),
         is_collaboration: this.isCollaboration,
         collaborators: collaboratorNames.map(name => ({ name, role: this.collaboratorRole || null })),
         cultural_geographic_context: this.culturalGeographicContext.trim(),
