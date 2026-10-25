@@ -1185,3 +1185,15 @@
 }
 
 /* RQS_LIGHT_PLAY_CONTROL_HOTFIX_20261025 END */
+
+/* RQS_PREVIEW_NOTE_OFFSET_20261025 START */
+.scrubber-container > .preview-relative-note {
+  position: relative;
+  z-index: 4;
+  display: block;
+  margin: 10px 0 4px;
+  padding-top: 2px;
+  text-align: center;
+  line-height: 1.45;
+}
+/* RQS_PREVIEW_NOTE_OFFSET_20261025 END */

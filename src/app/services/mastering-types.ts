@@ -138,6 +138,7 @@ export type SpotifyPitchPromotionChannel =
 
 export interface SpotifyPitchRequest {
   release_intelligence: {
+    output_language: 'en' | 'pt' | 'pl' | 'fr';
     raw_audio_evidence: {
       genre: string[];
       astral: string[];

@@ -324,14 +324,29 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('14+ dias');
   });
 
-  it('renders EN copy and falls back to EN for other supported languages', () => {
-    for (const language of ['en', 'pl', 'fr'] as const) {
-      currentLang.set(language);
-      fixture.detectChanges();
-      expect(fixture.nativeElement.textContent).toContain('AI Release Intelligence');
-      expect(fixture.nativeElement.textContent).toContain('GENERATE PITCH');
-      expect(fixture.nativeElement.textContent).toContain('Release context — optional');
-    }
+  it('renders EN copy', () => {
+    currentLang.set('en');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('AI Release Intelligence');
+    expect(fixture.nativeElement.textContent).toContain('GENERATE PITCH');
+  });
+
+  it('renders PL copy and sends PL as output language', () => {
+    currentLang.set('pl');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Inteligencja wydawnicza AI');
+    expect(fixture.nativeElement.textContent).toContain('GENERUJ PITCH');
+    const request = (component as unknown as { buildRequest(): SpotifyPitchRequest }).buildRequest();
+    expect(request.release_intelligence.output_language).toBe('pl');
+  });
+
+  it('renders FR copy and sends FR as output language', () => {
+    currentLang.set('fr');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Intelligence de sortie par IA');
+    expect(fixture.nativeElement.textContent).toContain('GÉNÉRER LE PITCH');
+    const request = (component as unknown as { buildRequest(): SpotifyPitchRequest }).buildRequest();
+    expect(request.release_intelligence.output_language).toBe('fr');
   });
 
   it('retains theme-aware classes for light and dark studio shells', () => {

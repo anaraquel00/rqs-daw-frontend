@@ -46,7 +46,22 @@ const PT_PROMOTION_LABELS: Record<SpotifyPitchPromotionChannel, string> = {
   'No campaign planned': 'Nenhuma campanha planejada',
 };
 
-const COPY: Record<'en' | 'pt', PitchCopy> = {
+
+const PL_PROMOTION_LABELS: Record<SpotifyPitchPromotionChannel, string> = {
+  'Social media': 'Media społecznościowe', YouTube: 'YouTube', 'Music video': 'Teledysk',
+  'Live performance': 'Występ na żywo', 'Press / blogs': 'Prasa / blogi', Ads: 'Reklamy',
+  'Mailing list': 'Lista mailingowa', Website: 'Strona internetowa', 'Pre-save': 'Pre-save',
+  'No campaign planned': 'Brak planowanej kampanii',
+};
+
+const FR_PROMOTION_LABELS: Record<SpotifyPitchPromotionChannel, string> = {
+  'Social media': 'Réseaux sociaux', YouTube: 'YouTube', 'Music video': 'Clip vidéo',
+  'Live performance': 'Performance en direct', 'Press / blogs': 'Presse / blogs', Ads: 'Publicités',
+  'Mailing list': 'Liste e-mail', Website: 'Site web', 'Pre-save': 'Pré-save',
+  'No campaign planned': 'Aucune campagne prévue',
+};
+
+const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
   en: {
     eyebrow: 'SPOTIFY PITCH ENGINE', title: 'AI Release Intelligence',
     subtitle: 'I have already heard your music. Now tell me what only you can know — if you want to.',
@@ -125,6 +140,123 @@ const COPY: Record<'en' | 'pt', PitchCopy> = {
     roleLabels: { artist: 'Artista', producer: 'Produtor', vocalist: 'Vocalista', songwriter: 'Compositor', instrumentalist: 'Instrumentista', other: 'Outro' },
     sourceLabels: { cocotagger: 'Análise de áudio', openai_music_analyst: 'Music Analyst', rqs_audio_dna: 'Audio DNA', artist_confirmed: 'Confirmado pelo artista', artist_supplied: 'Informado pelo artista' },
   },
+
+  pl: {
+    eyebrow: 'SPOTIFY PITCH ENGINE', title: 'Inteligencja wydawnicza AI',
+    subtitle: 'Już znam brzmienie Twojej muzyki. Teraz opowiedz mi to, czego tylko Ty możesz wiedzieć — jeśli chcesz.',
+    masterLabel: 'MASTER', masterDescription: 'Przygotuj audio do dystrybucji.',
+    pitchLabel: 'PITCH', pitchDescription: 'Przygotuj wydanie do prezentacji redakcyjnej.',
+    evidenceReady: 'DOWODY MUZYCZNE', pitchReady: '✓ Pitch gotowy do wygenerowania',
+    audioDna: 'Audio DNA', genre: 'Gatunek', astral: 'Nastrój', instruments: 'Instrumenty', technical: 'Dane techniczne',
+    confirmTitle: 'JAK BRZMI TWOJA MUZYKA',
+    confirmSubtitle: 'Analiza wykryła te cechy. Potwierdź je lub dostosuj przed wygenerowaniem pitchu.',
+    detectedGenres: 'Wykryte gatunki', atmosphere: 'Atmosfera', instrumentation: 'Instrumentarium',
+    allCorrect: 'WSZYSTKO SIĘ ZGADZA', adjust: 'DOSTOSUJ', finishAdjusting: 'ZAKOŃCZ ZMIANY',
+    contextTitle: 'Kontekst wydania — opcjonalnie',
+    contextSubtitle: 'Muzyka ma już wystarczające dane do stworzenia pitchu. Dodaj kontekst tylko wtedy, gdy chcesz nadać mu bardziej osobisty charakter.',
+    songStory: 'Opowiedz historię utworu jednym zdaniem. (opcjonalnie)',
+    releaseDifference: 'Co wyróżnia ten utwór? (opcjonalnie)',
+    whyNow: 'Dlaczego wydajesz ten utwór właśnie teraz? (opcjonalnie)',
+    whyNowHelp: 'Może to być nowy etap, powrót, rocznica, rekonstrukcja, kontynuacja historii lub inny prawdziwy powód.',
+    realContext: 'Czy za utworem stoi prawdziwa historia lub kontekst? (opcjonalnie)',
+    collaboration: 'Czy ten utwór jest współpracą?', collaborators: 'Kto wziął udział?',
+    collaboratorRole: 'Opcjonalna rola', noRole: 'Nie wybrano roli',
+    culturalContext: 'Czy istnieje istotny kontekst kulturowy lub geograficzny? (opcjonalnie)',
+    promotion: 'Jak planujesz promować wydanie? (opcjonalnie)', promotionDetails: 'Potwierdzone szczegóły (opcjonalnie)',
+    generate: 'GENERUJ PITCH', generating: 'GENEROWANIE…',
+    metadataTitle: 'SUGESTIE METADANYCH SPOTIFY',
+    metadataDisclaimer: 'To tylko sugestie. Spotify może zastosować inne metadane.',
+    editorialPitchTitle: 'PITCH REDAKCYJNY', positioningTitle: 'MOŻLIWE KIERUNKI REDAKCYJNE',
+    positioningDisclaimer: 'Sugestie pozycjonowania. Nie przewidują ani nie gwarantują umieszczenia na playlistach.',
+    whyTitle: 'DLACZEGO TEN PITCH DZIAŁA', copyPitch: 'KOPIUJ PITCH', copied: 'SKOPIOWANO', regenerate: 'GENERUJ PONOWNIE',
+    evidenceUsed: 'ŚLAD DOWODÓW',
+    aiDetected: 'WYKRYTE PRZEZ AI', artistFinal: 'POTWIERDZONE PRZEZ ARTYSTĘ / FINALNE',
+    genreLimit: 'Wybierz maksymalnie 3 finalne gatunki.', draftStatus: 'WYGENEROWANO SZKIC REDAKCYJNY',
+    reviewMicrocopy: 'Potraktuj tę wersję jako szkic redakcyjny i przed wysłaniem nadaj jej ostatecznie swój artystyczny głos.',
+    unavailable: 'Generowanie pitchu jest chwilowo niedostępne. Analiza i mastering pozostają aktywne.',
+    timingRecommended: 'Zalecenie: wyślij pitch około 14+ dni przed premierą.',
+    timingReleaseRadar: 'Aby skorzystać z Release Radar, Spotify wskazuje co najmniej 7 dni przed premierą.',
+    promotionLabels: PL_PROMOTION_LABELS,
+    roleLabels: { artist: 'Artysta', producer: 'Producent', vocalist: 'Wokalista', songwriter: 'Autor utworu', instrumentalist: 'Instrumentalista', other: 'Inne' },
+    sourceLabels: { cocotagger: 'Analiza audio', openai_music_analyst: 'Music Analyst', rqs_audio_dna: 'Audio DNA', artist_confirmed: 'Potwierdzone przez artystę', artist_supplied: 'Podane przez artystę' },
+  },
+
+  fr: {
+    eyebrow: 'SPOTIFY PITCH ENGINE', title: 'Intelligence de sortie par IA',
+    subtitle: 'J’ai déjà écouté votre musique. Maintenant, dites-moi ce que vous seul pouvez savoir — si vous le souhaitez.',
+    masterLabel: 'MASTER', masterDescription: 'Préparez l’audio pour la distribution.',
+    pitchLabel: 'PITCH', pitchDescription: 'Préparez la sortie pour une présentation éditoriale.',
+    evidenceReady: 'ÉLÉMENTS MUSICAUX', pitchReady: '✓ Pitch prêt à être généré',
+    audioDna: 'Audio DNA', genre: 'Genre', astral: 'Atmosphère', instruments: 'Instruments', technical: 'Données techniques',
+    confirmTitle: 'COMMENT SONNE VOTRE MUSIQUE',
+    confirmSubtitle: 'L’analyse a détecté ces caractéristiques. Confirmez-les ou ajustez-les avant de générer le pitch.',
+    detectedGenres: 'Genres détectés', atmosphere: 'Atmosphère', instrumentation: 'Instrumentation',
+    allCorrect: 'TOUT EST CORRECT', adjust: 'AJUSTER', finishAdjusting: 'TERMINER LES AJUSTEMENTS',
+    contextTitle: 'Contexte de la sortie — facultatif',
+    contextSubtitle: 'Votre musique contient déjà assez d’éléments pour générer un pitch. Ajoutez du contexte uniquement si vous souhaitez le rendre plus personnel.',
+    songStory: 'Racontez l’histoire du titre en une phrase. (facultatif)',
+    releaseDifference: 'Qu’est-ce qui distingue ce titre ? (facultatif)',
+    whyNow: 'Pourquoi sortir ce titre maintenant ? (facultatif)',
+    whyNowHelp: 'Il peut s’agir d’une nouvelle phase, d’un retour, d’un anniversaire, d’une reconstruction, de la suite d’une histoire ou d’une autre raison réelle.',
+    realContext: 'Y a-t-il une histoire réelle ou un contexte derrière ce titre ? (facultatif)',
+    collaboration: 'Ce titre est-il une collaboration ?', collaborators: 'Qui a participé ?',
+    collaboratorRole: 'Rôle facultatif', noRole: 'Aucun rôle sélectionné',
+    culturalContext: 'Existe-t-il un lien culturel ou géographique pertinent ? (facultatif)',
+    promotion: 'Comment comptez-vous promouvoir cette sortie ? (facultatif)', promotionDetails: 'Détails confirmés (facultatif)',
+    generate: 'GÉNÉRER LE PITCH', generating: 'GÉNÉRATION…',
+    metadataTitle: 'SUGGESTIONS DE MÉTADONNÉES SPOTIFY',
+    metadataDisclaimer: 'Ce sont des suggestions. Spotify peut utiliser d’autres choix de métadonnées.',
+    editorialPitchTitle: 'PITCH ÉDITORIAL', positioningTitle: 'ORIENTATIONS ÉDITORIALES POSSIBLES',
+    positioningDisclaimer: 'Suggestions de positionnement. Elles ne prédisent ni ne garantissent une inclusion dans des playlists.',
+    whyTitle: 'POURQUOI CE PITCH FONCTIONNE', copyPitch: 'COPIER LE PITCH', copied: 'COPIÉ', regenerate: 'GÉNÉRER À NOUVEAU',
+    evidenceUsed: 'TRACE DES ÉLÉMENTS',
+    aiDetected: 'DÉTECTÉ PAR IA', artistFinal: 'CONFIRMÉ PAR L’ARTISTE / FINAL',
+    genreLimit: 'Choisissez jusqu’à 3 genres finaux.', draftStatus: 'BROUILLON ÉDITORIAL GÉNÉRÉ',
+    reviewMicrocopy: 'Utilisez cette version comme base éditoriale et apportez la touche finale avec votre propre voix artistique avant l’envoi.',
+    unavailable: 'La génération du pitch est momentanément indisponible. L’analyse et le mastering restent actifs.',
+    timingRecommended: 'Recommandé : envoyez votre pitch environ 14+ jours à l’avance.',
+    timingReleaseRadar: 'Pour bénéficier de Release Radar, Spotify indique au moins 7 jours avant la sortie.',
+    promotionLabels: FR_PROMOTION_LABELS,
+    roleLabels: { artist: 'Artiste', producer: 'Producteur', vocalist: 'Chanteur', songwriter: 'Auteur-compositeur', instrumentalist: 'Instrumentiste', other: 'Autre' },
+    sourceLabels: { cocotagger: 'Analyse audio', openai_music_analyst: 'Music Analyst', rqs_audio_dna: 'Audio DNA', artist_confirmed: 'Confirmé par l’artiste', artist_supplied: 'Fourni par l’artiste' },
+  },
+
+};
+
+
+const EVIDENCE_TYPE_LABELS: Record<'en' | 'pt' | 'pl' | 'fr', Record<string, string>> = {
+  en: {
+    genre: 'Genre', astral: 'Astral', instrument: 'Instrument', vocals: 'Vocals',
+    production_element: 'Production', bpm: 'BPM', energy: 'Energy', danceability: 'Danceability',
+    sonic_characteristic: 'Sonic profile', collaborator: 'Collaboration',
+    release_story: 'Release story', release_difference: 'Release difference',
+    release_timing_context: 'Why now', real_context: 'Real context',
+    cultural_context: 'Cultural context', promotion_plan: 'Promotion',
+  },
+  pt: {
+    genre: 'Gênero', astral: 'Astral', instrument: 'Instrumento', vocals: 'Vocais',
+    production_element: 'Produção', bpm: 'BPM', energy: 'Energia', danceability: 'Dançabilidade',
+    sonic_characteristic: 'Perfil sonoro', collaborator: 'Colaboração',
+    release_story: 'História do lançamento', release_difference: 'Diferencial do lançamento',
+    release_timing_context: 'Por que agora', real_context: 'Contexto real',
+    cultural_context: 'Contexto cultural', promotion_plan: 'Divulgação',
+  },
+  pl: {
+    genre: 'Gatunek', astral: 'Nastrój', instrument: 'Instrument', vocals: 'Wokal',
+    production_element: 'Produkcja', bpm: 'BPM', energy: 'Energia', danceability: 'Taneczność',
+    sonic_characteristic: 'Profil brzmienia', collaborator: 'Współpraca',
+    release_story: 'Historia wydania', release_difference: 'Wyróżnik wydania',
+    release_timing_context: 'Dlaczego teraz', real_context: 'Kontekst rzeczywisty',
+    cultural_context: 'Kontekst kulturowy', promotion_plan: 'Promocja',
+  },
+  fr: {
+    genre: 'Genre', astral: 'Atmosphère', instrument: 'Instrument', vocals: 'Voix',
+    production_element: 'Production', bpm: 'BPM', energy: 'Énergie', danceability: 'Dansabilité',
+    sonic_characteristic: 'Profil sonore', collaborator: 'Collaboration',
+    release_story: 'Histoire de la sortie', release_difference: 'Différence de la sortie',
+    release_timing_context: 'Pourquoi maintenant', real_context: 'Contexte réel',
+    cultural_context: 'Contexte culturel', promotion_plan: 'Promotion',
+  },
 };
 
 @Component({ selector: 'app-spotify-pitch-panel', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './spotify-pitch-panel.html', styleUrls: ['./spotify-pitch-panel.scss'] })
@@ -151,7 +283,7 @@ export class SpotifyPitchPanelComponent implements OnChanges {
   readonly requestState = signal<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
   readonly result = signal<SpotifyPitchResponse | null>(null);
   readonly copied = signal(false);
-  readonly copy = computed(() => COPY[this.lang.currentLang() === 'pt' ? 'pt' : 'en']);
+  readonly copy = computed(() => COPY[this.lang.currentLang()]);
   private requestIndex = 0;
   private soundFingerprint = '';
 
@@ -222,14 +354,7 @@ export class SpotifyPitchPanelComponent implements OnChanges {
   }
   sourceLabel(evidence: SpotifyPitchEvidence): string { return this.copy().sourceLabels[evidence.source]; }
   evidenceTypeLabel(evidence: SpotifyPitchEvidence): string {
-    const labels: Record<string, string> = {
-      genre: 'Genre', astral: 'Astral', instrument: 'Instrument', vocals: 'Vocals', production_element: 'Production',
-      bpm: 'BPM', energy: 'Energy', danceability: 'Danceability', sonic_characteristic: 'Sonic profile',
-      collaborator: 'Collaboration', release_story: 'Release story', release_difference: 'Release difference',
-      release_timing_context: 'Why now',
-      real_context: 'Real context', cultural_context: 'Cultural context', promotion_plan: 'Promotion',
-    };
-    return labels[evidence.type] ?? evidence.type;
+    return EVIDENCE_TYPE_LABELS[this.lang.currentLang()][evidence.type] ?? evidence.type;
   }
 
   private confirmedList(category: 'genre' | 'astral' | 'instruments'): string[] {
@@ -270,6 +395,7 @@ export class SpotifyPitchPanelComponent implements OnChanges {
     const music = this.audioDna?.music;
     const collaboratorNames = this.isCollaboration ? this.collaborators.split(',').map(value => value.trim()).filter(Boolean) : [];
     return { release_intelligence: {
+      output_language: this.lang.currentLang(),
       raw_audio_evidence: {
         genre: this.genreValues(), astral: this.astralValues(), instruments: this.instrumentValues(),
         vocals: this.openAiMusicAnalyst?.status === 'READY' ? this.openAiMusicAnalyst.vocals : null,
