@@ -111,7 +111,12 @@
       <legend>{{ copy().promotion }}</legend>
       <div class="chip-list">
         @for (channel of promotionOptions; track channel) {
-          <button type="button" class="chip" [class.selected]="isPromotionSelected(channel)" (click)="togglePromotion(channel)">
+          <button
+            type="button"
+            class="chip promotion-chip"
+            [class.selected]="isPromotionSelected(channel)"
+            [attr.aria-pressed]="isPromotionSelected(channel)"
+            (click)="togglePromotion(channel)">
             {{ copy().promotionLabels[channel] }}
           </button>
         }

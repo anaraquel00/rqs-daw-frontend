@@ -514,3 +514,59 @@ button:disabled { cursor: not-allowed; opacity: .5; }
   }
 }
 /* RQS_DARK_TYPOGRAPHY_HOTFIX_20261025 END */
+
+/* RQS_PROMOTION_SELECTION_UX_20261025 START */
+
+/*
+ * Promotion chips are user-controlled multi-select context.
+ * Selected state must be unmistakable.
+ */
+.promotion-options .promotion-chip {
+  position: relative;
+}
+
+.promotion-options .promotion-chip.selected::before {
+  content: '✓';
+  margin-right: 7px;
+  font-weight: 900;
+}
+
+/* LIGHT */
+:host-context(app-studio-shell[data-theme='light']) {
+  .promotion-options .promotion-chip {
+    border-color: var(--pitch-light-border-strong);
+    background: var(--pitch-light-surface);
+    color: var(--pitch-light-text-secondary);
+  }
+
+  .promotion-options .promotion-chip:hover:not(:disabled) {
+    border-color: var(--pitch-light-cyan);
+    background: var(--pitch-light-surface-accent);
+    color: var(--pitch-light-cyan-strong);
+  }
+
+  .promotion-options .promotion-chip.selected {
+    border-color: var(--pitch-light-cyan-strong);
+    background: var(--pitch-light-cyan-strong);
+    color: #fff;
+    box-shadow: none;
+  }
+
+  .promotion-options .promotion-chip.selected:hover {
+    background: #003f4b;
+    border-color: #003f4b;
+    color: #fff;
+  }
+}
+
+/* DARK */
+:host-context(app-studio-shell[data-theme='dark']) {
+  .promotion-options .promotion-chip.selected {
+    border-color: var(--studio-cyan);
+    background: rgba(53, 220, 236, .18);
+    color: var(--studio-text);
+    box-shadow: inset 0 0 0 1px rgba(53, 220, 236, .12);
+  }
+}
+
+/* RQS_PROMOTION_SELECTION_UX_20261025 END */

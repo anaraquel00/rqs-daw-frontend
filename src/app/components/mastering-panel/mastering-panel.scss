@@ -1147,3 +1147,41 @@
 }
 
 /* RQS_CHARACTER_INTENSITY_VISUAL_PARITY_20261025 END */
+
+/* RQS_LIGHT_PLAY_CONTROL_HOTFIX_20261025 START */
+
+:host-context(app-studio-shell[data-theme='light'] .studio-master) {
+
+  /*
+   * PLAY keeps the same dark teal language as the
+   * unselected controls in light mode.
+   */
+  .btn-transport:not(.btn-stop) {
+    color: var(--studio-cyan-strong) !important;
+    border-color: var(--studio-cyan-strong) !important;
+    background: var(--studio-card) !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  .btn-transport:not(.btn-stop):hover:not(:disabled),
+  .btn-transport:not(.btn-stop):focus-visible:not(:disabled) {
+    color: var(--studio-cyan-strong) !important;
+    border-color: var(--studio-cyan-strong) !important;
+    background: var(--studio-cyan-soft) !important;
+    box-shadow: none !important;
+  }
+
+  /*
+   * Disabled PLAY remains visibly disabled,
+   * but never becomes white-on-light.
+   */
+  .btn-transport:not(.btn-stop):disabled {
+    color: var(--studio-disabled) !important;
+    border-color: var(--studio-border-strong) !important;
+    background: var(--studio-card) !important;
+    opacity: .68;
+  }
+}
+
+/* RQS_LIGHT_PLAY_CONTROL_HOTFIX_20261025 END */
