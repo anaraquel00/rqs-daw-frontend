@@ -787,3 +787,177 @@
   .full-master-block-reason { border-color: var(--studio-warning-border); color: var(--studio-warning-text); background: var(--studio-warning-bg); }
   .listening-status { border-color: var(--studio-border); color: var(--studio-text-secondary); background: var(--studio-card); }
 }
+
+/* RQS_READABILITY_HOTFIX_20261025 START */
+/* LIGHT MODE: accessibility/readability takes priority over neon styling. */
+:host-context(app-studio-shell[data-theme='light'] .studio-master) {
+  .master-controls-title {
+    color: var(--studio-heading) !important;
+    font-size: clamp(18px, 2vw, 22px);
+    font-weight: 800;
+  }
+
+  .controls-section h4 {
+    color: var(--studio-text-secondary) !important;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .delivery-auto-disclosure {
+    color: var(--studio-text-secondary) !important;
+    font-size: 14px;
+  }
+
+  .delivery-auto-disclosure > summary {
+    color: var(--studio-cyan-strong) !important;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .btn-group button {
+    color: var(--studio-text-secondary) !important;
+    font-size: 14px;
+  }
+
+  .btn-group button.selected {
+    color: var(--studio-cyan-strong) !important;
+  }
+
+  .control-state-badge {
+    color: #7a4b00;
+    border-color: #c79b52;
+    background: #fff4df;
+    font-size: 12px;
+  }
+
+  .control-explainer,
+  .volume-match,
+  .policy-card,
+  .policy-card label,
+  .policy-card p {
+    color: var(--studio-text-secondary) !important;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .policy-card strong,
+  .policy-card b {
+    color: var(--studio-text) !important;
+  }
+
+  .eng-section h5,
+  .slider-header {
+    color: var(--studio-text-secondary) !important;
+    font-size: 13px;
+  }
+
+  .slider-header .slider-value {
+    color: var(--studio-cyan-strong) !important;
+  }
+
+  .plan-usage-badge {
+    color: var(--studio-text-secondary) !important;
+    font-size: 14px;
+  }
+
+  .progress-step {
+    color: var(--studio-text-secondary) !important;
+    font-size: 13px;
+  }
+
+  .mastering-live-status,
+  .mastering-feedback,
+  .auth-flow-help,
+  .full-master-block-reason,
+  .listening-status {
+    font-size: 14px;
+  }
+
+  .console-telemetry {
+    font-size: 13px;
+  }
+
+  .console-telemetry .status-mode {
+    color: var(--studio-text-secondary) !important;
+    font-size: 12px;
+  }
+
+  .console-telemetry .totalDuration {
+    color: var(--studio-text-secondary) !important;
+  }
+
+  .btn-transport,
+  .ab-btn {
+    font-size: 13px;
+  }
+}
+
+/* DARK MODE: keep visual identity, increase reading comfort. */
+:host-context(app-studio-shell[data-theme='dark'] .studio-master) {
+  .master-controls-title {
+    font-size: clamp(18px, 2vw, 22px);
+  }
+
+  .controls-section h4 {
+    font-size: 13px;
+  }
+
+  .delivery-auto-disclosure {
+    font-size: 12px;
+  }
+
+  .delivery-auto-disclosure > summary {
+    font-size: 12px;
+  }
+
+  .btn-group button {
+    font-size: 13px;
+  }
+
+  .control-state-badge {
+    font-size: 11px;
+  }
+
+  .control-explainer,
+  .policy-card,
+  .policy-card label,
+  .policy-card p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .eng-section h5,
+  .slider-header {
+    font-size: 12px;
+  }
+
+  .plan-usage-badge {
+    font-size: 13px;
+  }
+
+  .progress-step {
+    font-size: 12px;
+  }
+
+  .mastering-live-status,
+  .mastering-feedback,
+  .auth-flow-help,
+  .full-master-block-reason,
+  .listening-status {
+    font-size: 13px;
+  }
+
+  .console-telemetry {
+    font-size: 13px;
+  }
+
+  .console-telemetry .status-mode {
+    font-size: 11px;
+  }
+
+  .btn-transport,
+  .ab-btn {
+    font-size: 13px;
+  }
+}
+/* RQS_READABILITY_HOTFIX_20261025 END */

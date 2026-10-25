@@ -389,3 +389,128 @@ button:disabled { cursor: not-allowed; opacity: .5; }
     .pitch-actions button { flex: 1 1 100%; }
   }
 }
+
+/* RQS_DARK_TYPOGRAPHY_HOTFIX_20261025 START */
+:host-context(app-studio-shell[data-theme='dark']) {
+  .workflow-separation strong {
+    font-size: 12px;
+  }
+
+  .workflow-separation span {
+    font-size: 13px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+  }
+
+  h3 {
+    font-size: clamp(24px, 3vw, 32px);
+  }
+
+  .pitch-header p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .ai-badge {
+    font-size: 11px;
+  }
+
+  .section-heading > strong {
+    font-size: 13px;
+  }
+
+  .pitch-ready {
+    font-size: 12px;
+  }
+
+  .evidence-grid span {
+    font-size: 12px;
+  }
+
+  .confirm-sound h4 {
+    font-size: 16px;
+  }
+
+  .confirm-sound > p,
+  .context-heading p,
+  .disclaimer {
+    font-size: 13px;
+  }
+
+  .curation-legend span,
+  .result-heading span {
+    font-size: 10px;
+  }
+
+  .sound-groups strong,
+  .metadata-grid strong {
+    font-size: 11px;
+  }
+
+  .chip {
+    min-height: 36px;
+    font-size: 12px;
+  }
+
+  .confirm-actions button {
+    font-size: 11px;
+  }
+
+  .pitch-form h4,
+  .pitch-result h4 {
+    font-size: 17px;
+  }
+
+  .pitch-form label > span,
+  .promotion-options legend {
+    font-size: 12px;
+  }
+
+  .field-help,
+  .timing-helper {
+    font-size: 11.5px;
+  }
+
+  textarea,
+  input:not([type='checkbox']),
+  select {
+    font-size: 14px;
+  }
+
+  .pitch-form button,
+  .pitch-actions button {
+    font-size: 12px;
+  }
+
+  .pitch-unavailable {
+    font-size: 12px;
+  }
+
+  .editorial-copy {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .review-microcopy {
+    font-size: 12px;
+  }
+
+  .metadata-grid span {
+    font-size: 13px;
+  }
+
+  .why-list li {
+    font-size: 13px;
+  }
+
+  .evidence-used strong {
+    font-size: 13px;
+  }
+
+  .evidence-used span {
+    font-size: 11px;
+  }
+}
+/* RQS_DARK_TYPOGRAPHY_HOTFIX_20261025 END */

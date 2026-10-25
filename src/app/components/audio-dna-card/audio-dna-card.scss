@@ -170,3 +170,134 @@ dd { margin: 5px 0 0; color: #fff; overflow-wrap: anywhere; }
   .dna-heading > span, .dna-reset, summary, .track-tempo > span { color: var(--studio-cyan-strong); }
   .master-profile p, .dna-heading p, .track-summary-grid small { color: var(--studio-text-secondary); }
 }
+
+/* RQS_READABILITY_HOTFIX_20261025 START */
+:host-context(app-studio-shell[data-theme='light']) {
+  .track-summary h3,
+  .semantic-title-row h3,
+  .distribution-readiness h3,
+  .master-profile h3,
+  .why-master h4,
+  .dna-heading > span {
+    color: var(--studio-heading) !important;
+  }
+
+  .track-summary-grid small,
+  .semantic-title-row p,
+  .semantic-unavailable,
+  .master-profile p,
+  .dna-heading p,
+  .dna-state,
+  .technical-details,
+  .technical-details > summary small {
+    color: var(--studio-text-secondary) !important;
+  }
+
+  .track-summary-grid small,
+  .semantic-title-row p,
+  .semantic-unavailable,
+  .master-profile p,
+  .dna-heading p,
+  .dna-state {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .semantic-title-row > span {
+    color: var(--studio-cyan-strong) !important;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .semantic-grid dd {
+    color: var(--studio-text) !important;
+    font-size: 15px;
+  }
+
+  .track-summary-grid strong,
+  .readiness-grid strong,
+  .signal-grid strong,
+  .profile-facts dd {
+    color: var(--studio-text) !important;
+    font-size: 16px;
+  }
+
+  .master-profile {
+    background: #edf8f1 !important;
+    border-left-color: #16834d !important;
+  }
+
+  .source-badge {
+    color: #11663c !important;
+    border-color: #63ad82 !important;
+    background: #eff9f3;
+    font-size: 12px;
+  }
+
+  .why-master {
+    background: #eef7f1 !important;
+    border-color: #b5d8c2 !important;
+  }
+
+  .why-master h4 {
+    color: var(--studio-heading) !important;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .why-master li {
+    background: #dcefe4 !important;
+    color: #163d2a !important;
+    border: 1px solid #9cc8ad;
+    font-size: 14px;
+    font-weight: 650;
+  }
+
+  .dna-reset,
+  .technical-details > summary {
+    color: var(--studio-cyan-strong) !important;
+  }
+}
+
+:host-context(app-studio-shell[data-theme='dark']) {
+  .track-summary h3,
+  .semantic-title-row h3,
+  .distribution-readiness h3,
+  .master-profile h3,
+  .dna-heading > span {
+    font-size: clamp(17px, 2vw, 20px);
+  }
+
+  .semantic-title-row p,
+  .semantic-unavailable,
+  .master-profile p,
+  .dna-heading p,
+  .dna-state,
+  .technical-details {
+    font-size: 12px;
+  }
+
+  .semantic-title-row > span,
+  .source-badge {
+    font-size: 11px;
+  }
+
+  .semantic-grid dd,
+  .signal-grid strong {
+    font-size: 14px;
+  }
+
+  .profile-facts dd {
+    font-size: 15px;
+  }
+
+  .why-master h4 {
+    font-size: 13px;
+  }
+
+  .why-master li {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+}
+/* RQS_READABILITY_HOTFIX_20261025 END */
