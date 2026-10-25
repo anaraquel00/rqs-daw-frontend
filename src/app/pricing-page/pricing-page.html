@@ -49,7 +49,8 @@
       <div class="price-row"><strong>{{ formatPrice('free') }}</strong></div>
       <p class="price-status">{{ copy().freeCurrentAccess }}</p>
       <ul>
-        <li>{{ copy().freeItem1 }}</li>
+        <li>{{ entitlementLine('free', 'fullMasters') }}</li>
+        <li>{{ entitlementLine('free', 'spotifyPitches') }}</li>
         <li>{{ copy().freeItem2 }}</li>
         <li>{{ copy().freeItem3 }}</li>
       </ul>
@@ -66,7 +67,8 @@
         <li>{{ copy().masterItem1 }}</li>
         <li>{{ copy().masterItem2 }}</li>
         <li>{{ copy().masterItem3 }}</li>
-        <li>{{ copy().proposedQuota }}: 20 Full Masters/month</li>
+        <li>{{ copy().proposedQuota }}: {{ entitlementLine('master', 'fullMasters') }}</li>
+        <li>{{ copy().proposedQuota }}: {{ entitlementLine('master', 'spotifyPitches') }}</li>
       </ul>
       <button type="button" class="plan-cta" (click)="scrollToWaitlist('master')">{{ copy().joinWaitlist }}</button>
     </article>
@@ -81,7 +83,8 @@
         <li>{{ copy().plusItem1 }}</li>
         <li>{{ copy().plusItem2 }}</li>
         <li>{{ copy().plusItem3 }}</li>
-        <li>{{ copy().proposedQuota }}: 40 Full Masters/month</li>
+        <li>{{ copy().proposedQuota }}: {{ entitlementLine('plus', 'fullMasters') }}</li>
+        <li>{{ copy().proposedQuota }}: {{ entitlementLine('plus', 'spotifyPitches') }}</li>
       </ul>
       <button type="button" class="plan-cta" (click)="scrollToWaitlist('plus')">{{ copy().joinWaitlist }}</button>
     </article>
@@ -94,7 +97,8 @@
       <p class="feature-heading">{{ copy().features }}</p>
       <ul>
         <li>{{ copy().proItem1 }}</li>
-        <li>{{ copy().proposedQuota }}: 80 Full Masters/month</li>
+        <li>{{ copy().proposedQuota }}: {{ entitlementLine('pro', 'fullMasters') }}</li>
+        <li>{{ copy().proposedQuota }}: {{ entitlementLine('pro', 'spotifyPitches') }}</li>
       </ul>
       <button type="button" class="plan-cta" (click)="scrollToWaitlist('pro')">{{ copy().joinWaitlist }}</button>
     </article>
@@ -114,7 +118,8 @@
         <thead><tr><th>{{ copy().feature }}</th><th>FREE</th><th>MASTER</th><th>PLUS</th><th>PRO</th></tr></thead>
         <tbody>
           <tr><th>{{ copy().price }}</th><td>{{ formatPrice('free') }}</td><td>{{ formatPrice('master') }}</td><td>{{ formatPrice('plus') }}</td><td>{{ formatPrice('pro') }}</td></tr>
-          <tr><th>{{ copy().fullMasters }}</th><td>3 total</td><td>20/mo {{ copy().planned }}</td><td>40/mo {{ copy().planned }}</td><td>80/mo {{ copy().planned }}</td></tr>
+          <tr><th>{{ copy().fullMasters }}</th><td>{{ entitlementLine('free', 'fullMasters') }}</td><td>{{ entitlementLine('master', 'fullMasters') }} · {{ copy().planned }}</td><td>{{ entitlementLine('plus', 'fullMasters') }} · {{ copy().planned }}</td><td>{{ entitlementLine('pro', 'fullMasters') }} · {{ copy().planned }}</td></tr>
+          <tr><th>AI Spotify Pitch</th><td>{{ entitlementLine('free', 'spotifyPitches') }}</td><td>{{ entitlementLine('master', 'spotifyPitches') }} · {{ copy().planned }}</td><td>{{ entitlementLine('plus', 'spotifyPitches') }} · {{ copy().planned }}</td><td>{{ entitlementLine('pro', 'spotifyPitches') }} · {{ copy().planned }}</td></tr>
           <tr><th>{{ copy().preview }}</th><td>{{ copy().currentBetaAccess }}</td><td>✓</td><td>✓</td><td>✓</td></tr>
           <tr><th>{{ copy().ab }}</th><td>{{ copy().currentBetaAccess }}</td><td>✓</td><td>✓</td><td>✓</td></tr>
           <tr><th>{{ copy().setlist }}</th><td>{{ copy().availableBeta }}</td><td>{{ copy().availableBeta }} · planned —</td><td>{{ copy().availableBeta }} · planned ✓</td><td>{{ copy().availableBeta }} · planned ✓</td></tr>

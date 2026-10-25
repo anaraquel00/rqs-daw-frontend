@@ -74,6 +74,16 @@
     </div>
   </section>
 
+  <aside class="pitch-quota" data-testid="spotify-pitch-quota" [class.exhausted]="quota()?.spotify_pitch?.can_generate === false">
+    <div>
+      <strong>AI Spotify Pitch</strong>
+      <span>{{ quotaMessage() }}</span>
+    </div>
+    @if (quota()?.spotify_pitch?.can_generate === false) {
+      <a href="/pricing#waitlist">{{ copy().joinWaitlist }}</a>
+    }
+  </aside>
+
   <form class="pitch-form" (ngSubmit)="generatePitch()">
     <div class="context-heading">
       <h4>{{ copy().contextTitle }}</h4>
@@ -129,7 +139,7 @@
       <span>{{ copy().timingReleaseRadar }}</span>
     </div>
 
-    <button type="submit" [disabled]="requestState() === 'loading' || !hasAnyEvidence()">
+    <button type="submit" [disabled]="requestState() === 'loading' || !hasAnyEvidence() || !canGeneratePitch()">
       {{ requestState() === 'loading' ? copy().generating : copy().generate }}
     </button>
   </form>
@@ -156,7 +166,7 @@
         <p class="review-microcopy" data-testid="editorial-review-microcopy">{{ copy().reviewMicrocopy }}</p>
         <div class="pitch-actions">
           <button type="button" (click)="copyPitch()">{{ copied() ? copy().copied : copy().copyPitch }}</button>
-          <button type="button" (click)="generatePitch()">{{ copy().regenerate }}</button>
+          <button type="button" (click)="generatePitch()" [disabled]="!canGeneratePitch()">{{ copy().regenerate }}</button>
         </div>
       </section>
 

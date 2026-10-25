@@ -102,6 +102,24 @@ export interface SpotifyPitchEvidence {
   source: SpotifyPitchEvidenceSource;
 }
 
+export type RqsPlan = 'free' | 'master' | 'plus' | 'pro';
+
+export interface SpotifyPitchQuota {
+  used: number;
+  limit: number;
+  remaining: number;
+  period: 'lifetime' | 'monthly';
+  period_key: string;
+  can_generate: boolean;
+  active_reservations: number;
+  updated_at?: string | null;
+}
+
+export interface SpotifyPitchQuotaResponse {
+  plan: RqsPlan;
+  spotify_pitch: SpotifyPitchQuota;
+}
+
 export interface SpotifyPitchResponse {
   status: 'READY' | 'UNAVAILABLE';
   metadata_suggestions: {
@@ -114,6 +132,7 @@ export interface SpotifyPitchResponse {
   why_this_pitch_works: string[];
   evidence_used: SpotifyPitchEvidence[];
   warnings: string[];
+  quota?: SpotifyPitchQuotaResponse;
 }
 
 export type SpotifyPitchCollaboratorRole =

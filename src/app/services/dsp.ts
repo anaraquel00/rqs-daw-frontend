@@ -11,6 +11,7 @@ import {
   MasteringV2Capabilities,
   MasteringV2FinalResponse,
   SpotifyPitchRequest,
+  SpotifyPitchQuotaResponse,
   SpotifyPitchResponse,
 } from './mastering-types';
 
@@ -90,11 +91,18 @@ export class DspService {
     );
   }
 
-  generateSpotifyPitch(request: SpotifyPitchRequest): Observable<SpotifyPitchResponse> {
+  getSpotifyPitchQuota(): Observable<SpotifyPitchQuotaResponse> {
+    return this.http.get<SpotifyPitchQuotaResponse>(
+      `${this.baseUrl}/mastering/v2/spotify-pitch/quota`,
+      { headers: this.masteringV2Headers() },
+    );
+  }
+
+  generateSpotifyPitch(request: SpotifyPitchRequest, requestId: string): Observable<SpotifyPitchResponse> {
     return this.http.post<SpotifyPitchResponse>(
       `${this.baseUrl}/mastering/v2/spotify-pitch`,
       request,
-      { headers: this.masteringV2Headers() },
+      { headers: this.masteringV2Headers().set('Idempotency-Key', requestId) },
     );
   }
 

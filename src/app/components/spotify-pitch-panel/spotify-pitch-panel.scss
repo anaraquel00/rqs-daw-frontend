@@ -28,6 +28,12 @@ h3 { margin-top: 6px; font-size: clamp(18px, 2.4vw, 25px); }
 .section-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .section-heading > strong { font-size: 11px; letter-spacing: .6px; }
 .pitch-ready { color: var(--studio-status-text, #00f79a); font-size: 10px; font-weight: 700; }
+.pitch-quota { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; padding: 12px 14px; border: 1px solid rgba(53, 220, 236, .28); border-radius: 8px; background: rgba(53, 220, 236, .06); }
+.pitch-quota > div { display: grid; gap: 4px; }
+.pitch-quota strong { color: var(--studio-heading, #fff); font-size: 11px; letter-spacing: .5px; }
+.pitch-quota span { color: var(--studio-muted, #9aa2af); font: 10px/1.45 var(--studio-font, sans-serif); }
+.pitch-quota a { color: var(--studio-cyan, #35dcec); font-size: 10px; font-weight: 800; letter-spacing: .5px; }
+.pitch-quota.exhausted { border-color: var(--studio-warning-border, #dfbd7d); background: rgba(223, 189, 125, .08); }
 .evidence-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .evidence-grid span { display: flex; align-items: center; gap: 7px; min-width: 0; color: var(--studio-muted, #9aa2af); font-size: 10px; }
 .evidence-grid b { color: var(--studio-muted, #9aa2af); }
@@ -179,6 +185,10 @@ button:disabled { cursor: not-allowed; opacity: .5; }
     box-shadow: 0 4px 14px rgba(16, 24, 40, .055);
   }
   .evidence-status { margin-top: 28px; padding: 20px; }
+  .pitch-quota { margin-top: 20px; padding: 16px 18px; border-color: #78aeb7; background: var(--pitch-light-surface-accent); }
+  .pitch-quota strong { color: var(--pitch-light-text); font-size: 14px; }
+  .pitch-quota span { color: var(--pitch-light-text-secondary); font-size: 14px; }
+  .pitch-quota a { color: var(--pitch-light-cyan-strong); font-size: 12px; }
   .section-heading > strong { color: var(--pitch-light-text); font-size: 15px; }
   .pitch-ready { color: #087443; font-size: 14px; }
   .evidence-grid { gap: 12px; margin-top: 16px; }

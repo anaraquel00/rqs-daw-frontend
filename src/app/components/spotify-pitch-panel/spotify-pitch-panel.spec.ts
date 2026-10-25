@@ -8,6 +8,7 @@ import {
   MasteringV2Analysis,
   OpenAiMusicAnalystPayload,
   SpotifyPitchRequest,
+  SpotifyPitchQuotaResponse,
   SpotifyPitchResponse,
 } from '../../services/mastering-types';
 import { SpotifyPitchPanelComponent } from './spotify-pitch-panel';
@@ -67,6 +68,13 @@ describe('SpotifyPitchPanelComponent', () => {
     vocals: { present: true, confidence: 'high' },
     production_elements: ['Glitch effects'],
   };
+  const availableQuota: SpotifyPitchQuotaResponse = {
+    plan: 'free',
+    spotify_pitch: {
+      used: 1, limit: 3, remaining: 2, period: 'lifetime', period_key: 'lifetime',
+      can_generate: true, active_reservations: 0,
+    },
+  };
   const ready: SpotifyPitchResponse = {
     status: 'READY',
     metadata_suggestions: {
@@ -88,7 +96,8 @@ describe('SpotifyPitchPanelComponent', () => {
 
   beforeEach(async () => {
     currentLang.set('en');
-    dsp = jasmine.createSpyObj<DspService>('DspService', ['generateSpotifyPitch']);
+    dsp = jasmine.createSpyObj<DspService>('DspService', ['generateSpotifyPitch', 'getSpotifyPitchQuota']);
+    dsp.getSpotifyPitchQuota.and.returnValue(of(availableQuota));
     dsp.generateSpotifyPitch.and.returnValue(of(ready));
     await TestBed.configureTestingModule({
       imports: [SpotifyPitchPanelComponent],
@@ -131,6 +140,59 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(component.selectedPromotionChannels).toEqual([]);
     expect(button.disabled).toBeFalse();
     expect(fixture.nativeElement.querySelector('[data-testid="pitch-ready"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"]').textContent)
+      .toContain('You have 2 of 3 AI Spotify Pitches remaining.');
+  });
+
+  it('blocks Generate and Regenerate when the authoritative quota is exhausted', () => {
+    component.quota.set({
+      plan: 'free',
+      spotify_pitch: {
+        used: 3, limit: 3, remaining: 0, period: 'lifetime', period_key: 'lifetime',
+        can_generate: false, active_reservations: 0,
+      },
+    });
+    fixture.detectChanges();
+    const generate = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    expect(generate.disabled).toBeTrue();
+    expect(fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"]').textContent)
+      .toContain('You have reached your AI Spotify Pitch limit.');
+    component.generatePitch();
+    expect(dsp.generateSpotifyPitch).not.toHaveBeenCalled();
+  });
+
+  it('updates the counter from a READY response and sends a unique idempotency key', () => {
+    dsp.generateSpotifyPitch.and.returnValue(of({
+      ...ready,
+      quota: {
+        plan: 'free',
+        spotify_pitch: {
+          used: 2, limit: 3, remaining: 1, period: 'lifetime', period_key: 'lifetime',
+          can_generate: true, active_reservations: 0,
+        },
+      },
+    }));
+    component.generatePitch();
+    fixture.detectChanges();
+    expect(dsp.generateSpotifyPitch.calls.mostRecent().args[1]).toMatch(/^[0-9a-f-]{36}$/);
+    expect(component.quota()?.spotify_pitch.used).toBe(2);
+    expect(fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"]').textContent)
+      .toContain('You have 1 of 3 AI Spotify Pitches remaining.');
+  });
+
+  it('applies authoritative quota returned by a 429 without another generation', () => {
+    const exhausted: SpotifyPitchQuotaResponse = {
+      plan: 'free',
+      spotify_pitch: {
+        used: 3, limit: 3, remaining: 0, period: 'lifetime', period_key: 'lifetime',
+        can_generate: false, active_reservations: 0,
+      },
+    };
+    dsp.generateSpotifyPitch.and.returnValue(throwError(() => ({ status: 429, error: { code: 'SPOTIFY_PITCH_QUOTA_EXCEEDED', quota: exhausted } })));
+    component.generatePitch();
+    fixture.detectChanges();
+    expect(component.quota()).toEqual(exhausted);
+    expect((fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBeTrue();
   });
 
   it('renders optional why-now copy in EN and sends only artist-supplied text', () => {
@@ -322,6 +384,7 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Por que lançar esta faixa agora? (opcional)');
     expect(fixture.nativeElement.textContent).toContain('Pode ser uma nova fase, retorno, aniversário');
     expect(fixture.nativeElement.textContent).toContain('14+ dias');
+    expect(fixture.nativeElement.textContent).toContain('Você tem 2 de 3 AI Spotify Pitches restantes.');
   });
 
   it('renders EN copy', () => {
@@ -329,6 +392,7 @@ describe('SpotifyPitchPanelComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('AI Release Intelligence');
     expect(fixture.nativeElement.textContent).toContain('GENERATE PITCH');
+    expect(fixture.nativeElement.textContent).toContain('You have 2 of 3 AI Spotify Pitches remaining.');
   });
 
   it('renders PL copy and sends PL as output language', () => {
@@ -336,6 +400,7 @@ describe('SpotifyPitchPanelComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Inteligencja wydawnicza AI');
     expect(fixture.nativeElement.textContent).toContain('GENERUJ PITCH');
+    expect(fixture.nativeElement.textContent).toContain('Pozostało 2 z 3 AI Spotify Pitches.');
     const request = (component as unknown as { buildRequest(): SpotifyPitchRequest }).buildRequest();
     expect(request.release_intelligence.output_language).toBe('pl');
   });
@@ -345,6 +410,7 @@ describe('SpotifyPitchPanelComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Intelligence de sortie par IA');
     expect(fixture.nativeElement.textContent).toContain('GÉNÉRER LE PITCH');
+    expect(fixture.nativeElement.textContent).toContain('Il vous reste 2 AI Spotify Pitches sur 3.');
     const request = (component as unknown as { buildRequest(): SpotifyPitchRequest }).buildRequest();
     expect(request.release_intelligence.output_language).toBe('fr');
   });

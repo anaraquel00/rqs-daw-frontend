@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { DspService } from './dsp';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
+import { SpotifyPitchRequest } from './mastering-types';
 
 describe('DspService Mastering V2 transport', () => {
   let service: DspService;
@@ -127,6 +128,35 @@ describe('DspService Mastering V2 transport', () => {
     expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
     request.flush({ status: 'NO_CHANGE_RECOMMENDED' });
     http.expectNone(`${environment.baseUrl}/mastering/v2/process`);
+  });
+
+  it('loads the authenticated authoritative AI Spotify Pitch quota', () => {
+    service.getSpotifyPitchQuota().subscribe(result => {
+      expect(result.spotify_pitch.remaining).toBe(2);
+    });
+
+    const request = http.expectOne(`${environment.baseUrl}/mastering/v2/spotify-pitch/quota`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      plan: 'free',
+      spotify_pitch: {
+        used: 1, limit: 3, remaining: 2, period: 'lifetime', period_key: 'lifetime',
+        can_generate: true, active_reservations: 0,
+      },
+    });
+  });
+
+  it('sends the server-authenticated pitch request with an idempotency key', () => {
+    const payload = { release_intelligence: {} } as unknown as SpotifyPitchRequest;
+    service.generateSpotifyPitch(payload, '00000000-0000-4000-8000-000000000001').subscribe();
+
+    const request = http.expectOne(`${environment.baseUrl}/mastering/v2/spotify-pitch`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBe(payload);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    expect(request.request.headers.get('Idempotency-Key')).toBe('00000000-0000-4000-8000-000000000001');
+    request.flush({ status: 'UNAVAILABLE' });
   });
 
   it('requests a user-owned V2 presigned URL with authentication', () => {

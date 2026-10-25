@@ -1,15 +1,16 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
-  Component, DestroyRef, Input, OnChanges, PLATFORM_ID, SimpleChanges, computed, inject, signal,
+  Component, DestroyRef, Input, OnChanges, OnInit, PLATFORM_ID, SimpleChanges, computed, inject, signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import {
   AudioDnaPayload, MasteringV2Analysis, OpenAiMusicAnalystPayload,
   SpotifyPitchCollaboratorRole, SpotifyPitchEvidence, SpotifyPitchEvidenceSource,
-  SpotifyPitchPromotionChannel, SpotifyPitchRequest, SpotifyPitchResponse,
+  SpotifyPitchPromotionChannel, SpotifyPitchQuotaResponse, SpotifyPitchRequest, SpotifyPitchResponse,
 } from '../../services/mastering-types';
 
 interface PitchCopy {
@@ -28,6 +29,7 @@ interface PitchCopy {
   copyPitch: string; copied: string; regenerate: string; evidenceUsed: string; unavailable: string;
   aiDetected: string; artistFinal: string; genreLimit: string; draftStatus: string; reviewMicrocopy: string;
   timingRecommended: string; timingReleaseRadar: string;
+  quotaRemaining: string; quotaReached: string; quotaUnavailable: string; joinWaitlist: string;
   promotionLabels: Record<SpotifyPitchPromotionChannel, string>;
   roleLabels: Record<SpotifyPitchCollaboratorRole, string>;
   sourceLabels: Record<SpotifyPitchEvidenceSource, string>;
@@ -63,7 +65,7 @@ const FR_PROMOTION_LABELS: Record<SpotifyPitchPromotionChannel, string> = {
 
 const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
   en: {
-    eyebrow: 'SPOTIFY PITCH ENGINE', title: 'AI Release Intelligence',
+    eyebrow: 'AI SPOTIFY PITCH', title: 'Spotify Pitch Generator — AI Release Intelligence',
     subtitle: 'I have already heard your music. Now tell me what only you can know — if you want to.',
     masterLabel: 'MASTER', masterDescription: 'Prepare the audio for distribution.',
     pitchLabel: 'PITCH', pitchDescription: 'Prepare the release for editorial presentation.',
@@ -95,6 +97,8 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     genreLimit: 'Choose up to 3 final genres.', draftStatus: 'EDITORIAL DRAFT GENERATED',
     reviewMicrocopy: 'Use this as an editorial draft and make the final adjustment in your own artistic voice before submitting.',
     unavailable: 'Pitch generation is temporarily unavailable. Your analysis and mastering remain active.',
+    quotaRemaining: 'You have {remaining} of {limit} AI Spotify Pitches remaining.',
+    quotaReached: 'You have reached your AI Spotify Pitch limit.', quotaUnavailable: 'Pitch quota is temporarily unavailable.', joinWaitlist: 'JOIN WAITLIST',
     timingRecommended: 'Recommended: submit your pitch around 14+ days in advance.',
     timingReleaseRadar: 'For Release Radar eligibility, Spotify states at least 7 days before release.',
     promotionLabels: EN_PROMOTION_LABELS,
@@ -102,7 +106,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     sourceLabels: { cocotagger: 'Audio Analysis', openai_music_analyst: 'Music Analyst', rqs_audio_dna: 'Audio DNA', artist_confirmed: 'Artist confirmed', artist_supplied: 'Artist supplied' },
   },
   pt: {
-    eyebrow: 'SPOTIFY PITCH ENGINE', title: 'Inteligência de Lançamento com IA',
+    eyebrow: 'AI SPOTIFY PITCH', title: 'Spotify Pitch Generator — Inteligência de Lançamento com IA',
     subtitle: 'Eu já ouvi sua música. Agora me conte o que só você pode saber — se quiser.',
     masterLabel: 'MASTER', masterDescription: 'Prepare o áudio para distribuição.',
     pitchLabel: 'PITCH', pitchDescription: 'Prepare o lançamento para apresentação editorial.',
@@ -134,6 +138,8 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     genreLimit: 'Escolha até 3 gêneros finais.', draftStatus: 'RASCUNHO EDITORIAL GERADO',
     reviewMicrocopy: 'Use esta versão como base editorial e faça o ajuste final com sua voz artística antes do envio.',
     unavailable: 'A geração do pitch está indisponível. Sua análise e masterização continuam ativas.',
+    quotaRemaining: 'Você tem {remaining} de {limit} AI Spotify Pitches restantes.',
+    quotaReached: 'Você atingiu o limite de AI Spotify Pitches.', quotaUnavailable: 'A cota de pitches está temporariamente indisponível.', joinWaitlist: 'ENTRAR NA WAITLIST',
     timingRecommended: 'Recomendado: envie seu pitch com cerca de 14+ dias de antecedência.',
     timingReleaseRadar: 'Para benefício do Release Radar, o Spotify informa pelo menos 7 dias antes do lançamento.',
     promotionLabels: PT_PROMOTION_LABELS,
@@ -142,7 +148,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
   },
 
   pl: {
-    eyebrow: 'SPOTIFY PITCH ENGINE', title: 'Inteligencja wydawnicza AI',
+    eyebrow: 'AI SPOTIFY PITCH', title: 'Spotify Pitch Generator — Inteligencja wydawnicza AI',
     subtitle: 'Już znam brzmienie Twojej muzyki. Teraz opowiedz mi to, czego tylko Ty możesz wiedzieć — jeśli chcesz.',
     masterLabel: 'MASTER', masterDescription: 'Przygotuj audio do dystrybucji.',
     pitchLabel: 'PITCH', pitchDescription: 'Przygotuj wydanie do prezentacji redakcyjnej.',
@@ -174,6 +180,8 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     genreLimit: 'Wybierz maksymalnie 3 finalne gatunki.', draftStatus: 'WYGENEROWANO SZKIC REDAKCYJNY',
     reviewMicrocopy: 'Potraktuj tę wersję jako szkic redakcyjny i przed wysłaniem nadaj jej ostatecznie swój artystyczny głos.',
     unavailable: 'Generowanie pitchu jest chwilowo niedostępne. Analiza i mastering pozostają aktywne.',
+    quotaRemaining: 'Pozostało {remaining} z {limit} AI Spotify Pitches.',
+    quotaReached: 'Osiągnięto limit AI Spotify Pitch.', quotaUnavailable: 'Limit pitchy jest chwilowo niedostępny.', joinWaitlist: 'DOŁĄCZ DO LISTY',
     timingRecommended: 'Zalecenie: wyślij pitch około 14+ dni przed premierą.',
     timingReleaseRadar: 'Aby skorzystać z Release Radar, Spotify wskazuje co najmniej 7 dni przed premierą.',
     promotionLabels: PL_PROMOTION_LABELS,
@@ -182,7 +190,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
   },
 
   fr: {
-    eyebrow: 'SPOTIFY PITCH ENGINE', title: 'Intelligence de sortie par IA',
+    eyebrow: 'AI SPOTIFY PITCH', title: 'Spotify Pitch Generator — Intelligence de sortie par IA',
     subtitle: 'J’ai déjà écouté votre musique. Maintenant, dites-moi ce que vous seul pouvez savoir — si vous le souhaitez.',
     masterLabel: 'MASTER', masterDescription: 'Préparez l’audio pour la distribution.',
     pitchLabel: 'PITCH', pitchDescription: 'Préparez la sortie pour une présentation éditoriale.',
@@ -214,6 +222,8 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     genreLimit: 'Choisissez jusqu’à 3 genres finaux.', draftStatus: 'BROUILLON ÉDITORIAL GÉNÉRÉ',
     reviewMicrocopy: 'Utilisez cette version comme base éditoriale et apportez la touche finale avec votre propre voix artistique avant l’envoi.',
     unavailable: 'La génération du pitch est momentanément indisponible. L’analyse et le mastering restent actifs.',
+    quotaRemaining: 'Il vous reste {remaining} AI Spotify Pitches sur {limit}.',
+    quotaReached: 'Vous avez atteint votre limite d’AI Spotify Pitches.', quotaUnavailable: 'Le quota de pitches est momentanément indisponible.', joinWaitlist: 'REJOINDRE LA LISTE D’ATTENTE',
     timingRecommended: 'Recommandé : envoyez votre pitch environ 14+ jours à l’avance.',
     timingReleaseRadar: 'Pour bénéficier de Release Radar, Spotify indique au moins 7 jours avant la sortie.',
     promotionLabels: FR_PROMOTION_LABELS,
@@ -260,7 +270,7 @@ const EVIDENCE_TYPE_LABELS: Record<'en' | 'pt' | 'pl' | 'fr', Record<string, str
 };
 
 @Component({ selector: 'app-spotify-pitch-panel', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './spotify-pitch-panel.html', styleUrls: ['./spotify-pitch-panel.scss'] })
-export class SpotifyPitchPanelComponent implements OnChanges {
+export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   private readonly dsp = inject(DspService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly platformId = inject(PLATFORM_ID);
@@ -282,10 +292,16 @@ export class SpotifyPitchPanelComponent implements OnChanges {
   readonly collaboratorRoles: SpotifyPitchCollaboratorRole[] = ['artist', 'producer', 'vocalist', 'songwriter', 'instrumentalist', 'other'];
   readonly requestState = signal<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
   readonly result = signal<SpotifyPitchResponse | null>(null);
+  readonly quota = signal<SpotifyPitchQuotaResponse | null>(null);
+  readonly quotaState = signal<'loading' | 'ready' | 'unavailable'>('loading');
   readonly copied = signal(false);
   readonly copy = computed(() => COPY[this.lang.currentLang()]);
   private requestIndex = 0;
   private soundFingerprint = '';
+
+  ngOnInit(): void {
+    this.loadQuota();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['sourceGeneration'] && !changes['sourceGeneration'].firstChange) {
@@ -302,6 +318,15 @@ export class SpotifyPitchPanelComponent implements OnChanges {
   rawInstrumentNames(): string[] { return this.instrumentValues().map(item => item.name); }
   hasTechnicalData(): boolean { return Boolean(this.analysisMetrics && this.audioDna?.technical); }
   hasAnyEvidence(): boolean { return this.hasAudioDna() || this.genreValues().length > 0 || this.astralValues().length > 0 || this.instrumentValues().length > 0 || this.hasTechnicalData(); }
+  canGeneratePitch(): boolean { return this.quotaState() === 'ready' && this.quota()?.spotify_pitch.can_generate === true; }
+  quotaMessage(): string {
+    const quota = this.quota()?.spotify_pitch;
+    if (!quota) return this.copy().quotaUnavailable;
+    if (!quota.can_generate) return this.copy().quotaReached;
+    return this.copy().quotaRemaining
+      .replace('{remaining}', String(quota.remaining))
+      .replace('{limit}', String(quota.limit));
+  }
 
   confirmSound(): void { this.soundConfirmed = true; this.adjustingSound = false; }
   beginAdjustSound(): void { this.adjustingSound = true; this.soundConfirmed = false; }
@@ -331,17 +356,20 @@ export class SpotifyPitchPanelComponent implements OnChanges {
   }
 
   generatePitch(): void {
-    if (this.requestState() === 'loading' || !this.hasAnyEvidence()) return;
+    if (this.requestState() === 'loading' || !this.hasAnyEvidence() || !this.canGeneratePitch()) return;
     const requestIndex = ++this.requestIndex;
     const sourceGeneration = this.sourceGeneration;
     this.requestState.set('loading'); this.copied.set(false);
-    this.dsp.generateSpotifyPitch(this.buildRequest()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.dsp.generateSpotifyPitch(this.buildRequest(), crypto.randomUUID()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: response => {
         if (requestIndex !== this.requestIndex || sourceGeneration !== this.sourceGeneration) return;
+        if (response.quota) this.applyQuota(response.quota);
         this.result.set(response); this.requestState.set(response.status === 'READY' ? 'ready' : 'unavailable');
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         if (requestIndex !== this.requestIndex || sourceGeneration !== this.sourceGeneration) return;
+        const quota = error.error?.quota as SpotifyPitchQuotaResponse | undefined;
+        if (quota) this.applyQuota(quota);
         this.result.set(null); this.requestState.set('unavailable');
       },
     });
@@ -359,6 +387,17 @@ export class SpotifyPitchPanelComponent implements OnChanges {
 
   private confirmedList(category: 'genre' | 'astral' | 'instruments'): string[] {
     return category === 'genre' ? this.confirmedGenres : category === 'astral' ? this.confirmedAstral : this.confirmedInstruments;
+  }
+  private loadQuota(): void {
+    this.quotaState.set('loading');
+    this.dsp.getSpotifyPitchQuota().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: quota => this.applyQuota(quota),
+      error: () => { this.quota.set(null); this.quotaState.set('unavailable'); },
+    });
+  }
+  private applyQuota(quota: SpotifyPitchQuotaResponse): void {
+    this.quota.set(quota);
+    this.quotaState.set('ready');
   }
   private syncConfirmedSound(): void {
     const genres = this.genreValues(); const astral = this.astralValues(); const instruments = this.rawInstrumentNames();

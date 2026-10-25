@@ -8,6 +8,8 @@ import { LanguageService, UiLanguage } from '../services/language.service';
 import { SeoConfig, SeoService } from '../services/seo.service';
 import { AnalyticsService } from '../services/analytics.service';
 import { StudioThemePreference, ThemeService } from '../services/theme.service';
+import { RqsPlan } from '../services/mastering-types';
+import { plannedEntitlementLine } from '../services/plan-entitlements';
 
 type PricingCurrency = 'BRL' | 'USD' | 'PLN';
 
@@ -115,6 +117,10 @@ export class PricingPageComponent implements AfterViewInit {
       minimumFractionDigits: value === 0 ? 0 : 2,
       maximumFractionDigits: value === 0 ? 0 : 2
     }).format(value);
+  }
+
+  entitlementLine(plan: RqsPlan, resource: 'fullMasters' | 'spotifyPitches'): string {
+    return plannedEntitlementLine(this.lang.currentLang(), plan, resource);
   }
 
   async joinWaitlist(): Promise<void> {
