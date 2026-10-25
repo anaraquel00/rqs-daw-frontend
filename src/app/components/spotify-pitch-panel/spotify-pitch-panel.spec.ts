@@ -338,7 +338,22 @@ describe('SpotifyPitchPanelComponent', () => {
     const styles = (SpotifyPitchPanelComponent as unknown as { ɵcmp: { styles: string[] } })
       .ɵcmp.styles.join(' ');
     expect(styles).toMatch(/app-studio-shell.*data-theme.*light/);
-    expect(styles).toContain('--studio-card');
+    expect(styles).toContain('--pitch-light-canvas');
     expect(styles).toContain('--studio-text');
+  });
+
+  it('defines an editorial light-mode system without changing the dark-mode base', () => {
+    const styles = (SpotifyPitchPanelComponent as unknown as { ɵcmp: { styles: string[] } })
+      .ɵcmp.styles.join(' ');
+
+    expect(styles).toContain('--pitch-light-canvas');
+    expect(styles).toContain('--pitch-light-surface');
+    expect(styles).toContain('--pitch-light-text');
+    expect(styles).toContain('--pitch-light-text-secondary');
+    expect(styles).toContain('--pitch-light-border-strong');
+    expect(styles).toContain('clamp(36px, 4.5vw, 44px)');
+    expect(styles).toContain('clamp(18px, 2vw, 20px)');
+    expect(styles).toContain('button[type=submit]');
+    expect(styles).toContain('background: var(--pitch-light-surface);');
   });
 });
