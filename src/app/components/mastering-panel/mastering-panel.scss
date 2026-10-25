@@ -961,3 +961,83 @@
   }
 }
 /* RQS_READABILITY_HOTFIX_20261025 END */
+
+/* RQS_LIGHT_SUPPORT_CONTROLS_HOTFIX_20261025 START */
+
+/*
+ * LIGHT MODE
+ * Secondary/support controls must read like unselected controls:
+ * dark text + light surface + visible border.
+ */
+:host-context(app-studio-shell[data-theme='light'] .studio-master) {
+
+  /* (?) contextual help buttons */
+  .help-dot {
+    color: var(--studio-text-secondary) !important;
+    background: var(--studio-card) !important;
+    border-color: var(--studio-border-strong) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+    font-weight: 800;
+  }
+
+  .help-dot:hover,
+  .help-dot:focus-visible {
+    color: var(--studio-cyan-strong) !important;
+    background: var(--studio-cyan-soft) !important;
+    border-color: var(--studio-cyan-strong) !important;
+  }
+
+  /* ⓘ Ajuda · Guia de Masterização */
+  .mastering-help-toolbar .guide-button {
+    color: var(--studio-text-secondary) !important;
+    background: var(--studio-card) !important;
+    border-color: var(--studio-border-strong) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+    font-weight: 700;
+  }
+
+  .mastering-help-toolbar .guide-button:hover,
+  .mastering-help-toolbar .guide-button:focus-visible {
+    color: var(--studio-cyan-strong) !important;
+    background: var(--studio-cyan-soft) !important;
+    border-color: var(--studio-cyan-strong) !important;
+  }
+
+  /*
+   * ✓ As configurações estão válidas...
+   * Same neutral-readable treatment as unselected controls.
+   */
+  .render-status,
+  .render-status strong,
+  .render-status span {
+    color: var(--studio-text-secondary) !important;
+    text-shadow: none !important;
+  }
+
+  .render-status {
+    background: var(--studio-card) !important;
+    border-color: var(--studio-border-strong) !important;
+    box-shadow: none !important;
+  }
+
+  /*
+   * If blocked, preserve semantic warning/error state rather
+   * than forcing the neutral colour.
+   */
+  .render-status.blocked,
+  .render-status.blocked strong,
+  .render-status.blocked span {
+    color: var(--studio-warning-text) !important;
+  }
+
+  .render-status.blocked {
+    background: var(--studio-warning-bg) !important;
+    border-color: var(--studio-warning-border) !important;
+  }
+}
+
+/* RQS_LIGHT_SUPPORT_CONTROLS_HOTFIX_20261025 END */
