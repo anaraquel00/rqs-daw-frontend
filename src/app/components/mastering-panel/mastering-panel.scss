@@ -1041,3 +1041,109 @@
 }
 
 /* RQS_LIGHT_SUPPORT_CONTROLS_HOTFIX_20261025 END */
+
+/* RQS_CHARACTER_INTENSITY_VISUAL_PARITY_20261025 START */
+
+/*
+ * Character Intensity:
+ * same typography in DARK and LIGHT.
+ */
+:host-context(.studio-master) {
+  .control-title-row h4,
+  .control-title-row h4 label {
+    font-size: 14px !important;
+    line-height: 1.45;
+    font-weight: 700;
+  }
+
+  .control-explainer {
+    font-size: 14px !important;
+    line-height: 1.6;
+  }
+
+  .control-state-badge {
+    font-size: 12px !important;
+    line-height: 1.25;
+    padding: 5px 10px;
+  }
+
+  .control-title-row .help-dot {
+    font-size: 14px !important;
+  }
+}
+
+/*
+ * LIGHT MODE:
+ * keep the dark-mode hardware aesthetic for Character Intensity.
+ * No full-width gray slab.
+ */
+:host-context(app-studio-shell[data-theme='light'] .studio-master) {
+  #character-intensity.cyber-scrubber {
+    background:
+      linear-gradient(#16191d, #16191d)
+      center / 100% 6px no-repeat !important;
+
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  #character-intensity.cyber-scrubber::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 50%;
+    background: #00e6f6;
+    box-shadow: 0 0 10px rgba(0, 230, 246, .65);
+  }
+
+  #character-intensity.cyber-scrubber::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 50%;
+    background: #00e6f6;
+    box-shadow: 0 0 10px rgba(0, 230, 246, .65);
+  }
+
+  #character-intensity.cyber-scrubber::-moz-range-track {
+    height: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: #16191d;
+  }
+
+  .control-title-row h4,
+  .control-title-row h4 label {
+    color: var(--studio-text) !important;
+  }
+
+  .control-explainer {
+    color: var(--studio-text-secondary) !important;
+  }
+}
+
+/*
+ * DARK MODE:
+ * explicitly use the same typography scale as LIGHT.
+ */
+:host-context(app-studio-shell[data-theme='dark'] .studio-master) {
+  .control-title-row h4,
+  .control-title-row h4 label {
+    font-size: 14px !important;
+  }
+
+  .control-explainer {
+    font-size: 14px !important;
+  }
+
+  .control-state-badge {
+    font-size: 12px !important;
+  }
+
+  .control-title-row .help-dot {
+    font-size: 14px !important;
+  }
+}
+
+/* RQS_CHARACTER_INTENSITY_VISUAL_PARITY_20261025 END */
