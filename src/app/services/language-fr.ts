@@ -179,7 +179,6 @@ export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
     openStudio: 'OUVRIR RQS STUDIO',
     joinWaitlist: 'REJOINDRE LA LISTE D’ATTENTE',
     features: 'ORIENTATION DES FONCTIONNALITÉS',
-    proposedQuota: 'Quota proposé',
     publicBeta: 'BÊTA PUBLIQUE',
     plannedAccess: 'ACCÈS PRÉVU DES OFFRES PAYANTES',
     currentBetaAccess: 'ACCÈS ACTUEL DE LA BÊTA',

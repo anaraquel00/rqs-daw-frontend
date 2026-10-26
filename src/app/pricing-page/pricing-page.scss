@@ -78,24 +78,28 @@ app-footer { display: block; width: 100%; padding: 0 30px 30px; padding-inline: 
   }
 
   .brand,
-  .plan-card h2,
-  tbody th,
   summary { color: var(--studio-text); }
 
-  .language-switcher,
-  .theme-switcher,
-  .currency-selector,
-  .currency-control > span,
-  .hero-subtitle,
+  .plan-card ul,
+  .plan-card li,
+  td,
   .section-heading p,
   .waitlist p,
-  .plan-card ul,
+  details p { color: #111827; }
+
+  tbody th,
+  .plan-card h2 { color: #0b1220; }
+
   .price-row span,
   .feature-heading,
   .tax-note,
-  details p,
-  .waitlist-form label,
-  td { color: var(--studio-text-secondary); }
+  .currency-control > span,
+  .language-switcher,
+  .theme-switcher,
+  .currency-selector { color: #334155; }
+
+  .hero-subtitle,
+  .waitlist-form label { color: var(--studio-text-secondary); }
 
   .language-switcher button,
   .theme-switcher button,
