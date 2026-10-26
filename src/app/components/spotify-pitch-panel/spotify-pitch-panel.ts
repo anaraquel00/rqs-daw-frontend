@@ -8,16 +8,19 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import {
-  AudioDnaPayload, MasteringV2Analysis, OpenAiMusicAnalystPayload,
+  AudioDnaPayload, AudioIntelligenceV2Payload, MasteringV2Analysis, OpenAiMusicAnalystPayload,
   SpotifyPitchCollaboratorRole, SpotifyPitchEvidence, SpotifyPitchEvidenceSource,
   SpotifyPitchPromotionChannel, SpotifyPitchQuotaResponse, SpotifyPitchRequest, SpotifyPitchResponse,
 } from '../../services/mastering-types';
+
+type V2SoundCategory = 'genre_family' | 'subgenres' | 'moods' | 'instruments' | 'vocals' | 'production_elements';
 
 interface PitchCopy {
   eyebrow: string; title: string; subtitle: string;
   masterLabel: string; masterDescription: string; pitchLabel: string; pitchDescription: string;
   evidenceReady: string; pitchReady: string; audioDna: string; genre: string; astral: string;
   instruments: string; technical: string; confirmTitle: string; confirmSubtitle: string;
+  genreFamily: string; subgenres: string; vocals: string; productionElements: string; addLabel: string;
   detectedGenres: string; atmosphere: string; instrumentation: string; allCorrect: string;
   adjust: string; finishAdjusting: string; contextTitle: string; contextSubtitle: string;
   songStory: string; releaseDifference: string; realContext: string; collaboration: string;
@@ -71,6 +74,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     pitchLabel: 'PITCH', pitchDescription: 'Prepare the release for editorial presentation.',
     evidenceReady: 'MUSIC EVIDENCE', pitchReady: '✓ Pitch ready to generate',
     audioDna: 'Audio DNA', genre: 'Genre', astral: 'Astral', instruments: 'Instruments', technical: 'Technical data',
+    genreFamily: 'Genre family', subgenres: 'Subgenres', vocals: 'Vocals', productionElements: 'Production elements', addLabel: 'Add',
     confirmTitle: 'HOW YOUR MUSIC SOUNDS',
     confirmSubtitle: 'The analysis found these characteristics. Confirm or adjust them before generating the pitch.',
     detectedGenres: 'Detected genres', atmosphere: 'Atmosphere', instrumentation: 'Instrumentation',
@@ -112,6 +116,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     pitchLabel: 'PITCH', pitchDescription: 'Prepare o lançamento para apresentação editorial.',
     evidenceReady: 'EVIDÊNCIAS MUSICAIS', pitchReady: '✓ Pitch pronto para gerar',
     audioDna: 'Audio DNA', genre: 'Genre', astral: 'Astral', instruments: 'Instruments', technical: 'Dados técnicos',
+    genreFamily: 'Família de gênero', subgenres: 'Subgêneros', vocals: 'Vocais', productionElements: 'Elementos de produção', addLabel: 'Adicionar',
     confirmTitle: 'COMO SUA MÚSICA SOA',
     confirmSubtitle: 'A análise encontrou estas características. Confirme ou ajuste antes de gerar o pitch.',
     detectedGenres: 'Gêneros detectados', atmosphere: 'Atmosfera', instrumentation: 'Instrumentação',
@@ -154,6 +159,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     pitchLabel: 'PITCH', pitchDescription: 'Przygotuj wydanie do prezentacji redakcyjnej.',
     evidenceReady: 'DOWODY MUZYCZNE', pitchReady: '✓ Pitch gotowy do wygenerowania',
     audioDna: 'Audio DNA', genre: 'Gatunek', astral: 'Nastrój', instruments: 'Instrumenty', technical: 'Dane techniczne',
+    genreFamily: 'Rodzina gatunków', subgenres: 'Podgatunki', vocals: 'Wokal', productionElements: 'Elementy produkcji', addLabel: 'Dodaj',
     confirmTitle: 'JAK BRZMI TWOJA MUZYKA',
     confirmSubtitle: 'Analiza wykryła te cechy. Potwierdź je lub dostosuj przed wygenerowaniem pitchu.',
     detectedGenres: 'Wykryte gatunki', atmosphere: 'Atmosfera', instrumentation: 'Instrumentarium',
@@ -196,6 +202,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     pitchLabel: 'PITCH', pitchDescription: 'Préparez la sortie pour une présentation éditoriale.',
     evidenceReady: 'ÉLÉMENTS MUSICAUX', pitchReady: '✓ Pitch prêt à être généré',
     audioDna: 'Audio DNA', genre: 'Genre', astral: 'Atmosphère', instruments: 'Instruments', technical: 'Données techniques',
+    genreFamily: 'Famille de genre', subgenres: 'Sous-genres', vocals: 'Voix', productionElements: 'Éléments de production', addLabel: 'Ajouter',
     confirmTitle: 'COMMENT SONNE VOTRE MUSIQUE',
     confirmSubtitle: 'L’analyse a détecté ces caractéristiques. Confirmez-les ou ajustez-les avant de générer le pitch.',
     detectedGenres: 'Genres détectés', atmosphere: 'Atmosphère', instrumentation: 'Instrumentation',
@@ -278,6 +285,7 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
 
   @Input() analysisMetrics: MasteringV2Analysis | null = null;
   @Input() audioDna: AudioDnaPayload | null = null;
+  @Input() audioIntelligence: AudioIntelligenceV2Payload | null = null;
   @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() sourceGeneration: string | null = null;
 
@@ -286,6 +294,11 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   culturalGeographicContext = ''; promotionDetails = '';
   selectedPromotionChannels: SpotifyPitchPromotionChannel[] = [];
   confirmedGenres: string[] = []; confirmedAstral: string[] = []; confirmedInstruments: string[] = [];
+  confirmedGenreFamily: string[] = []; confirmedSubgenres: string[] = []; confirmedMoods: string[] = [];
+  confirmedVocals: string[] = []; confirmedProductionElements: string[] = [];
+  readonly manualValues: Record<V2SoundCategory, string> = {
+    genre_family: '', subgenres: '', moods: '', instruments: '', vocals: '', production_elements: '',
+  };
   adjustingSound = false; soundConfirmed = false;
 
   readonly promotionOptions: SpotifyPitchPromotionChannel[] = ['Social media', 'YouTube', 'Music video', 'Live performance', 'Press / blogs', 'Ads', 'Mailing list', 'Website', 'Pre-save', 'No campaign planned'];
@@ -308,17 +321,22 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
       this.requestIndex += 1; this.requestState.set('idle'); this.result.set(null); this.copied.set(false);
       this.resetArtistContext();
     }
-    if (changes['sourceGeneration'] || changes['audioDna'] || changes['openAiMusicAnalyst']) this.syncConfirmedSound();
+    if (changes['sourceGeneration'] || changes['audioDna'] || changes['openAiMusicAnalyst'] || changes['audioIntelligence']) this.syncConfirmedSound();
   }
 
   hasAudioDna(): boolean { return this.audioDna?.status === 'available'; }
-  genreValues(): string[] { return this.semanticValues('genre'); }
-  astralValues(): string[] { return this.semanticValues('mood'); }
+  isAudioIntelligenceV2(): boolean { return this.audioIntelligence?.analysisVersion === 'audio-intelligence-v2'; }
+  genreValues(): string[] { return this.isAudioIntelligenceV2() ? [...(this.audioIntelligence?.genre_family ?? []), ...(this.audioIntelligence?.subgenres ?? [])] : this.semanticValues('genre'); }
+  astralValues(): string[] { return this.isAudioIntelligenceV2() ? this.audioIntelligence?.moods ?? [] : this.semanticValues('mood'); }
   instrumentValues(): OpenAiMusicAnalystPayload['instruments'] { return this.openAiMusicAnalyst?.status === 'READY' ? this.openAiMusicAnalyst.instruments : []; }
-  rawInstrumentNames(): string[] { return this.instrumentValues().map(item => item.name); }
+  rawInstrumentNames(): string[] { return this.isAudioIntelligenceV2() ? this.audioIntelligence?.instruments ?? [] : this.instrumentValues().map(item => item.name); }
   hasTechnicalData(): boolean { return Boolean(this.analysisMetrics && this.audioDna?.technical); }
-  hasAnyEvidence(): boolean { return this.hasAudioDna() || this.genreValues().length > 0 || this.astralValues().length > 0 || this.instrumentValues().length > 0 || this.hasTechnicalData(); }
-  canGeneratePitch(): boolean { return this.quotaState() === 'ready' && this.quota()?.spotify_pitch.can_generate === true; }
+  hasAnyEvidence(): boolean { return this.hasAudioDna() || this.genreValues().length > 0 || this.astralValues().length > 0 || this.rawInstrumentNames().length > 0 || this.hasTechnicalData(); }
+  canGeneratePitch(): boolean {
+    return this.quotaState() === 'ready'
+      && this.quota()?.spotify_pitch.can_generate === true
+      && (!this.isAudioIntelligenceV2() || this.soundConfirmed);
+  }
   quotaMessage(): string {
     const quota = this.quota()?.spotify_pitch;
     if (!quota) return this.copy().quotaUnavailable;
@@ -343,6 +361,57 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   isSoundLabelDisabled(category: 'genre' | 'astral' | 'instruments', value: string): boolean {
     return !this.adjustingSound
       || (category === 'genre' && !this.confirmedGenres.includes(value) && this.confirmedGenres.length >= 3);
+  }
+
+  v2SuggestedValues(category: V2SoundCategory): string[] {
+    if (this.audioIntelligence?.status !== 'READY') return [];
+    return this.audioIntelligence[category];
+  }
+
+  v2DisplayValues(category: V2SoundCategory): string[] {
+    return [...new Set([...this.v2SuggestedValues(category), ...this.v2ConfirmedValues(category)])];
+  }
+
+  v2ConfirmedValues(category: V2SoundCategory): string[] {
+    if (category === 'genre_family') return this.confirmedGenreFamily;
+    if (category === 'subgenres') return this.confirmedSubgenres;
+    if (category === 'moods') return this.confirmedMoods;
+    if (category === 'instruments') return this.confirmedInstruments;
+    if (category === 'vocals') return this.confirmedVocals;
+    return this.confirmedProductionElements;
+  }
+
+  isV2LabelSelected(category: V2SoundCategory, value: string): boolean {
+    return this.v2ConfirmedValues(category).includes(value);
+  }
+
+  manualValue(category: V2SoundCategory): string {
+    return this.manualValues[category];
+  }
+
+  setManualValue(category: V2SoundCategory, value: string): void {
+    this.manualValues[category] = value;
+  }
+
+  toggleV2Label(category: V2SoundCategory, value: string): void {
+    if (!this.adjustingSound) return;
+    const current = this.v2ConfirmedValues(category);
+    this.setV2ConfirmedValues(category, current.includes(value)
+      ? current.filter(item => item !== value)
+      : [...current, value]);
+    this.soundConfirmed = false;
+  }
+
+  addV2Label(category: V2SoundCategory): void {
+    if (!this.adjustingSound) return;
+    const value = this.manualValues[category].replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (!value) return;
+    const current = this.v2ConfirmedValues(category);
+    if (!current.some(item => item.toLocaleLowerCase('en-US') === value.toLocaleLowerCase('en-US'))) {
+      this.setV2ConfirmedValues(category, [...current, value]);
+    }
+    this.manualValues[category] = '';
+    this.soundConfirmed = false;
   }
 
   isPromotionSelected(channel: SpotifyPitchPromotionChannel): boolean { return this.selectedPromotionChannels.includes(channel); }
@@ -388,6 +457,14 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   private confirmedList(category: 'genre' | 'astral' | 'instruments'): string[] {
     return category === 'genre' ? this.confirmedGenres : category === 'astral' ? this.confirmedAstral : this.confirmedInstruments;
   }
+  private setV2ConfirmedValues(category: V2SoundCategory, values: string[]): void {
+    if (category === 'genre_family') this.confirmedGenreFamily = values.slice(0, 2);
+    if (category === 'subgenres') this.confirmedSubgenres = values.slice(0, 3);
+    if (category === 'moods') this.confirmedMoods = values.slice(0, 3);
+    if (category === 'instruments') this.confirmedInstruments = values.slice(0, 6);
+    if (category === 'vocals') this.confirmedVocals = values.slice(0, 4);
+    if (category === 'production_elements') this.confirmedProductionElements = values.slice(0, 6);
+  }
   private loadQuota(): void {
     this.quotaState.set('loading');
     this.dsp.getSpotifyPitchQuota().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -401,11 +478,17 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   }
   private syncConfirmedSound(): void {
     const genres = this.genreValues(); const astral = this.astralValues(); const instruments = this.rawInstrumentNames();
-    const fingerprint = JSON.stringify([this.sourceGeneration, genres, astral, instruments]);
+    const v2 = this.audioIntelligence;
+    const fingerprint = JSON.stringify([this.sourceGeneration, genres, astral, instruments, v2]);
     if (fingerprint === this.soundFingerprint) return;
     this.soundFingerprint = fingerprint;
     this.confirmedGenres = genres.filter(value => value.trim().toLocaleLowerCase('en-US') !== 'epic').slice(0, 3);
     this.confirmedAstral = [...astral]; this.confirmedInstruments = [...instruments];
+    this.confirmedGenreFamily = v2?.status === 'READY' ? [...v2.genre_family] : [];
+    this.confirmedSubgenres = v2?.status === 'READY' ? [...v2.subgenres] : [];
+    this.confirmedMoods = v2?.status === 'READY' ? [...v2.moods] : [];
+    this.confirmedVocals = v2?.status === 'READY' ? [...v2.vocals] : [];
+    this.confirmedProductionElements = v2?.status === 'READY' ? [...v2.production_elements] : [];
     this.adjustingSound = false; this.soundConfirmed = false;
   }
   private resetArtistContext(): void {
@@ -433,16 +516,8 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   private buildRequest(): SpotifyPitchRequest {
     const music = this.audioDna?.music;
     const collaboratorNames = this.isCollaboration ? this.collaborators.split(',').map(value => value.trim()).filter(Boolean) : [];
-    return { release_intelligence: {
+    const shared = {
       output_language: this.lang.currentLang(),
-      raw_audio_evidence: {
-        genre: this.genreValues(), astral: this.astralValues(), instruments: this.instrumentValues(),
-        vocals: this.openAiMusicAnalyst?.status === 'READY' ? this.openAiMusicAnalyst.vocals : null,
-        production_elements: this.openAiMusicAnalyst?.status === 'READY' ? this.openAiMusicAnalyst.production_elements : [],
-        bpm: music?.bpm?.value ?? null, energy: music?.energy ?? null, danceability: music?.danceability ?? null,
-        sonic_characteristics: this.sonicCharacteristics(),
-      },
-      artist_confirmed_sound: { confirmed: this.soundConfirmed, genre: [...this.confirmedGenres], astral: [...this.confirmedAstral], instruments: [...this.confirmedInstruments] },
       artist_context: {
         song_story: this.songStory.trim(), release_difference: this.releaseDifference.trim(), real_context: this.realContext.trim(),
         why_now: this.whyNow.trim(),
@@ -451,6 +526,38 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
         cultural_geographic_context: this.culturalGeographicContext.trim(),
       },
       promotion_context: { channels: [...this.selectedPromotionChannels], confirmed_details: this.promotionDetails.trim() },
+    };
+    if (this.isAudioIntelligenceV2()) {
+      return { release_intelligence: {
+        ...shared,
+        analysis_version: 'audio-intelligence-v2',
+        dsp: {
+          bpm: music?.bpm?.value ?? null,
+          energy: music?.energy ?? null,
+          danceability: music?.danceability ?? null,
+          sonic_characteristics: this.sonicCharacteristics(),
+        },
+        artist_confirmed_sound: {
+          confirmed: true,
+          genre_family: [...this.confirmedGenreFamily],
+          subgenres: [...this.confirmedSubgenres],
+          moods: [...this.confirmedMoods],
+          instruments: [...this.confirmedInstruments],
+          vocals: [...this.confirmedVocals],
+          production_elements: [...this.confirmedProductionElements],
+        },
+      } };
+    }
+    return { release_intelligence: {
+      ...shared,
+      raw_audio_evidence: {
+        genre: this.genreValues(), astral: this.astralValues(), instruments: this.instrumentValues(),
+        vocals: this.openAiMusicAnalyst?.status === 'READY' ? this.openAiMusicAnalyst.vocals : null,
+        production_elements: this.openAiMusicAnalyst?.status === 'READY' ? this.openAiMusicAnalyst.production_elements : [],
+        bpm: music?.bpm?.value ?? null, energy: music?.energy ?? null, danceability: music?.danceability ?? null,
+        sonic_characteristics: this.sonicCharacteristics(),
+      },
+      artist_confirmed_sound: { confirmed: this.soundConfirmed, genre: [...this.confirmedGenres], astral: [...this.confirmedAstral], instruments: [...this.confirmedInstruments] },
     } };
   }
 }

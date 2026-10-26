@@ -5,11 +5,14 @@ import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import {
   AudioDnaPayload,
+  AudioIntelligenceV2Payload,
   MasteringV2Analysis,
   OpenAiMusicAnalystPayload,
+  SpotifyPitchLegacyReleaseIntelligence,
   SpotifyPitchRequest,
   SpotifyPitchQuotaResponse,
   SpotifyPitchResponse,
+  SpotifyPitchV2ReleaseIntelligence,
 } from '../../services/mastering-types';
 import { SpotifyPitchPanelComponent } from './spotify-pitch-panel';
 
@@ -67,6 +70,14 @@ describe('SpotifyPitchPanelComponent', () => {
     instruments: [{ name: 'Synthesizer', confidence: 'high' }],
     vocals: { present: true, confidence: 'high' },
     production_elements: ['Glitch effects'],
+  };
+  const audioIntelligenceV2: AudioIntelligenceV2Payload = {
+    analysisVersion: 'audio-intelligence-v2',
+    status: 'READY', provider: 'openai', model: 'gpt-audio-1.5',
+    source_generation: 'source-1', analyzer_generation: 'source-1',
+    genre_family: ['electronic'], subgenres: ['Trance'], moods: ['energetic'],
+    instruments: ['Synthesizer'], vocals: ['Processed vocals'],
+    production_elements: ['Layered synth texture'], uncertainty: 'low',
   };
   const availableQuota: SpotifyPitchQuotaResponse = {
     plan: 'free',
@@ -217,6 +228,66 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(component.confirmedInstruments).toEqual(['Synthesizer']);
   });
 
+  it('renders all six V2 suggestion groups and requires Artist Confirmation', () => {
+    fixture.componentRef.setInput('audioIntelligence', audioIntelligenceV2);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('[data-testid^="v2-sound-group-"]').length).toBe(6);
+    expect(fixture.nativeElement.textContent).toContain('electronic');
+    expect(fixture.nativeElement.textContent).toContain('Trance');
+    expect(fixture.nativeElement.textContent).toContain('Processed vocals');
+    expect(component.canGeneratePitch()).toBeFalse();
+
+    component.confirmSound();
+    expect(component.canGeneratePitch()).toBeTrue();
+  });
+
+  it('sends only artist-confirmed V2 values after edits, never raw detector output or audio', () => {
+    fixture.componentRef.setInput('audioIntelligence', audioIntelligenceV2);
+    fixture.detectChanges();
+    component.beginAdjustSound();
+    component.toggleV2Label('subgenres', 'Trance');
+    component.setManualValue('subgenres', 'Progressive House');
+    component.addV2Label('subgenres');
+    component.toggleV2Label('instruments', 'Synthesizer');
+    component.setManualValue('instruments', 'Drum machine');
+    component.addV2Label('instruments');
+    component.confirmSound();
+    component.generatePitch();
+
+    const request = dsp.generateSpotifyPitch.calls.mostRecent().args[0];
+    const release = request.release_intelligence as SpotifyPitchV2ReleaseIntelligence;
+    expect(release.analysis_version).toBe('audio-intelligence-v2');
+    expect(release.artist_confirmed_sound.subgenres).toEqual(['Progressive House']);
+    expect(release.artist_confirmed_sound.instruments).toEqual(['Drum machine']);
+    expect(release.artist_confirmed_sound.vocals).toEqual(['Processed vocals']);
+    expect(JSON.stringify(release)).not.toContain('Trance');
+    expect(JSON.stringify(release)).not.toContain('Synthesizer');
+    expect(JSON.stringify(release)).not.toMatch(/raw_audio_evidence|input_audio|base64|audio_url|filename/);
+  });
+
+  it('keeps the V2 manual confirmation path available when analysis is UNAVAILABLE', () => {
+    fixture.componentRef.setInput('audioIntelligence', {
+      ...audioIntelligenceV2,
+      status: 'UNAVAILABLE', genre_family: [], subgenres: [], moods: [], instruments: [], vocals: [],
+      production_elements: [], uncertainty: null, error_code: 'OPENAI_TIMEOUT',
+    } satisfies AudioIntelligenceV2Payload);
+    fixture.detectChanges();
+
+    component.beginAdjustSound();
+    component.setManualValue('genre_family', 'electronic');
+    component.addV2Label('genre_family');
+    component.setManualValue('subgenres', 'Synthwave');
+    component.addV2Label('subgenres');
+    component.confirmSound();
+    component.generatePitch();
+
+    const release = dsp.generateSpotifyPitch.calls.mostRecent().args[0].release_intelligence as SpotifyPitchV2ReleaseIntelligence;
+    expect(release.artist_confirmed_sound.genre_family).toEqual(['electronic']);
+    expect(release.artist_confirmed_sound.subgenres).toEqual(['Synthwave']);
+    expect(JSON.stringify(release)).not.toContain('cocotagger');
+  });
+
   it('allows removing a suggestion without mutating raw detector evidence', () => {
     component.beginAdjustSound();
     component.toggleSoundLabel('genre', 'Trip Hop');
@@ -225,9 +296,10 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(component.genreValues()).toEqual(['Trip Hop']);
     component.generatePitch();
     const request = dsp.generateSpotifyPitch.calls.mostRecent().args[0] as SpotifyPitchRequest;
-    expect(request.release_intelligence.raw_audio_evidence.genre).toEqual(['Trip Hop']);
-    expect(request.release_intelligence.artist_confirmed_sound.confirmed).toBeTrue();
-    expect(request.release_intelligence.artist_confirmed_sound.genre).toEqual([]);
+    const release = request.release_intelligence as SpotifyPitchLegacyReleaseIntelligence;
+    expect(release.raw_audio_evidence.genre).toEqual(['Trip Hop']);
+    expect(release.artist_confirmed_sound.confirmed).toBeTrue();
+    expect(release.artist_confirmed_sound.genre).toEqual([]);
   });
 
   it('keeps raw genre signals while curating at most three final genres and excluding epic by default', () => {
@@ -277,10 +349,11 @@ describe('SpotifyPitchPanelComponent', () => {
     component.collaboratorRole = 'producer';
     component.generatePitch();
     const request = dsp.generateSpotifyPitch.calls.mostRecent().args[0] as SpotifyPitchRequest;
-    expect(request.release_intelligence.raw_audio_evidence.genre).toEqual(['Trip Hop']);
-    expect(request.release_intelligence.artist_confirmed_sound.confirmed).toBeTrue();
-    expect(request.release_intelligence.artist_confirmed_sound.genre).toEqual(['Trip Hop']);
-    expect(request.release_intelligence.artist_context.collaborators).toEqual([
+    const release = request.release_intelligence as SpotifyPitchLegacyReleaseIntelligence;
+    expect(release.raw_audio_evidence.genre).toEqual(['Trip Hop']);
+    expect(release.artist_confirmed_sound.confirmed).toBeTrue();
+    expect(release.artist_confirmed_sound.genre).toEqual(['Trip Hop']);
+    expect(release.artist_context.collaborators).toEqual([
       { name: 'Ana', role: 'producer' }, { name: 'RQS', role: 'producer' },
     ]);
     expect(JSON.stringify(request)).not.toMatch(/integrated_lufs|true_peak|base64|audio_url/);

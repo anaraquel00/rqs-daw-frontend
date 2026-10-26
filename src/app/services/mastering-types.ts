@@ -71,6 +71,23 @@ export interface OpenAiMusicAnalystPayload {
   error_code?: string;
 }
 
+export interface AudioIntelligenceV2Payload {
+  analysisVersion: 'audio-intelligence-v2';
+  status: 'READY' | 'UNAVAILABLE';
+  provider: 'openai';
+  model: 'gpt-audio-1.5';
+  source_generation: string;
+  analyzer_generation: string;
+  genre_family: string[];
+  subgenres: string[];
+  moods: string[];
+  instruments: string[];
+  vocals: string[];
+  production_elements: string[];
+  uncertainty: 'low' | 'medium' | 'high' | null;
+  error_code?: string;
+}
+
 export type SpotifyPitchEvidenceType =
   | 'genre'
   | 'astral'
@@ -155,43 +172,67 @@ export type SpotifyPitchPromotionChannel =
   | 'Pre-save'
   | 'No campaign planned';
 
-export interface SpotifyPitchRequest {
-  release_intelligence: {
-    output_language: 'en' | 'pt' | 'pl' | 'fr';
-    raw_audio_evidence: {
-      genre: string[];
-      astral: string[];
-      instruments: OpenAiMusicAnalystPayload['instruments'];
-      vocals: OpenAiMusicAnalystPayload['vocals'] | null;
-      production_elements: string[];
-      bpm: number | null;
-      energy: number | null;
-      danceability: number | null;
-      sonic_characteristics: string[];
-    };
-    artist_confirmed_sound: {
-      confirmed: boolean;
-      genre: string[];
-      astral: string[];
-      instruments: string[];
-    };
-    artist_context: {
-      song_story: string;
-      release_difference: string;
-      why_now: string;
-      real_context: string;
-      is_collaboration: boolean;
-      collaborators: Array<{
-        name: string;
-        role: SpotifyPitchCollaboratorRole | null;
-      }>;
-      cultural_geographic_context: string;
-    };
-    promotion_context: {
-      channels: SpotifyPitchPromotionChannel[];
-      confirmed_details: string;
-    };
+export interface SpotifyPitchLegacyReleaseIntelligence {
+  output_language: 'en' | 'pt' | 'pl' | 'fr';
+  raw_audio_evidence: {
+    genre: string[];
+    astral: string[];
+    instruments: OpenAiMusicAnalystPayload['instruments'];
+    vocals: OpenAiMusicAnalystPayload['vocals'] | null;
+    production_elements: string[];
+    bpm: number | null;
+    energy: number | null;
+    danceability: number | null;
+    sonic_characteristics: string[];
   };
+  artist_confirmed_sound: {
+    confirmed: boolean;
+    genre: string[];
+    astral: string[];
+    instruments: string[];
+  };
+  artist_context: {
+    song_story: string;
+    release_difference: string;
+    why_now: string;
+    real_context: string;
+    is_collaboration: boolean;
+    collaborators: Array<{
+      name: string;
+      role: SpotifyPitchCollaboratorRole | null;
+    }>;
+    cultural_geographic_context: string;
+  };
+  promotion_context: {
+    channels: SpotifyPitchPromotionChannel[];
+    confirmed_details: string;
+  };
+}
+
+export interface SpotifyPitchV2ReleaseIntelligence {
+  analysis_version: 'audio-intelligence-v2';
+  output_language: 'en' | 'pt' | 'pl' | 'fr';
+  dsp: {
+    bpm: number | null;
+    energy: number | null;
+    danceability: number | null;
+    sonic_characteristics: string[];
+  };
+  artist_confirmed_sound: {
+    confirmed: true;
+    genre_family: string[];
+    subgenres: string[];
+    moods: string[];
+    instruments: string[];
+    vocals: string[];
+    production_elements: string[];
+  };
+  artist_context: SpotifyPitchLegacyReleaseIntelligence['artist_context'];
+  promotion_context: SpotifyPitchLegacyReleaseIntelligence['promotion_context'];
+}
+
+export interface SpotifyPitchRequest {
+  release_intelligence: SpotifyPitchLegacyReleaseIntelligence | SpotifyPitchV2ReleaseIntelligence;
 }
 
 export interface AudioDnaReason {
@@ -353,6 +394,7 @@ export interface MasteringV2Capabilities {
   };
   features?: {
     spotify_pitch_enabled?: boolean;
+    audio_intelligence_v2_enabled?: boolean;
   };
   preview_seconds: number;
   intensity: {
@@ -396,6 +438,7 @@ export interface MasteringV2Analysis {
 
 export interface MasteringAnalysisResponse extends MasteringV2Analysis {
   audio_dna?: AudioDnaPayload;
+  audio_intelligence?: AudioIntelligenceV2Payload;
   openai_music_analyst?: OpenAiMusicAnalystPayload;
   source_generation?: string;
   analyzer_generation?: string;

@@ -9,6 +9,7 @@ import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
 import {
   AudioDnaPayload,
+  AudioIntelligenceV2Payload,
   MasteringAnalysisResponse,
   MasteringProcessCommand,
   MasteringV2Analysis,
@@ -73,6 +74,12 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     instruments: [{ name: 'Synthesizer', confidence: 'high' }],
     vocals: { present: true, confidence: 'medium' },
     production_elements: ['Layered synth texture'],
+  };
+  const audioIntelligenceV2: AudioIntelligenceV2Payload = {
+    analysisVersion: 'audio-intelligence-v2', status: 'READY', provider: 'openai', model: 'gpt-audio-1.5',
+    source_generation: 'source-1', analyzer_generation: 'source-1', genre_family: ['electronic'],
+    subgenres: ['Trance'], moods: ['energetic'], instruments: ['Synthesizer'], vocals: ['Processed vocals'],
+    production_elements: ['Layered synth texture'], uncertainty: 'low',
   };
 
   beforeEach(() => {
@@ -179,6 +186,44 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(component.analysisState()).toBe('success');
     expect(component.openAiMusicAnalyst).toEqual(openAiMusicAnalyst);
     expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps one generation-bound Audio Intelligence V2 result for the active analysis', () => {
+    const currentAudioDna = structuredClone(audioDna);
+    currentAudioDna.source_generation = 'source-1';
+    currentAudioDna.analyzer_generation = 'source-1';
+    dsp.analyzeMasteringV2.and.returnValue(of({
+      ...analysis, source_generation: 'source-1', analyzer_generation: 'source-1',
+      audio_dna: currentAudioDna, audio_intelligence: audioIntelligenceV2,
+    }));
+    (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(
+      new File(['audio-intelligence-v2'], 'audio-intelligence-v2.wav', { type: 'audio/wav' }),
+    );
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(component.analysisState()).toBe('success');
+    expect(component.audioIntelligence).toEqual(audioIntelligenceV2);
+    expect(component.openAiMusicAnalyst).toBeNull();
+  });
+
+  it('rejects stale Audio Intelligence V2 evidence and clears the complete analysis state', () => {
+    dsp.analyzeMasteringV2.and.returnValue(of({
+      ...analysis, source_generation: 'source-1', analyzer_generation: 'source-1',
+      audio_dna: { ...audioDna, source_generation: 'source-1', analyzer_generation: 'source-1' },
+      audio_intelligence: { ...audioIntelligenceV2, source_generation: 'source-stale', analyzer_generation: 'source-stale' },
+    }));
+    (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(
+      new File(['stale-v2'], 'stale-v2.wav', { type: 'audio/wav' }),
+    );
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(component.analysisState()).toBe('error');
+    expect(component.audioIntelligence).toBeNull();
+    expect(component.audioDna).toBeNull();
+    expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
+    expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
   });
 
   it('rejects semantic evidence whose backend generation does not match the active source', () => {

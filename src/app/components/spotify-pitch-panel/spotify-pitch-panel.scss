@@ -52,6 +52,9 @@ h3 { margin-top: 6px; font-size: clamp(18px, 2.4vw, 25px); }
 .chip { min-height: 32px; padding: 6px 10px; border: 1px solid var(--studio-control-border, #35353b); border-radius: 999px; background: var(--studio-control-bg, #0b0b0c); color: var(--studio-muted, #9aa2af); font: 600 10px var(--studio-font, sans-serif); cursor: pointer; }
 .chip.selected { border-color: rgba(53, 220, 236, .5); background: rgba(53, 220, 236, .1); color: var(--studio-text, #fff); }
 .chip:disabled { cursor: default; opacity: 1; }
+.manual-sound-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.manual-sound-entry input { min-width: 0; }
+.manual-sound-entry button { min-height: 36px; padding: 0 12px; border: 1px solid var(--studio-border, rgba(255,255,255,.15)); border-radius: 7px; background: transparent; color: var(--studio-text, #fff); cursor: pointer; }
 .confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
 .confirm-actions button { min-height: 36px; padding: 0 13px; border: 1px solid var(--studio-cyan, #35dcec); border-radius: 7px; background: rgba(53, 220, 236, .1); color: var(--studio-text, #fff); font: 700 9px var(--studio-mono, monospace); cursor: pointer; }
 .confirm-actions button.secondary { border-color: var(--studio-border, rgba(255,255,255,.15)); background: transparent; }

@@ -22,7 +22,7 @@
       <span [class.ready]="hasAudioDna()"><b>{{ hasAudioDna() ? '✓' : '—' }}</b>{{ copy().audioDna }}</span>
       <span [class.ready]="genreValues().length > 0"><b>{{ genreValues().length > 0 ? '✓' : '—' }}</b>{{ copy().genre }}</span>
       <span [class.ready]="astralValues().length > 0"><b>{{ astralValues().length > 0 ? '✓' : '—' }}</b>{{ copy().astral }}</span>
-      <span [class.ready]="instrumentValues().length > 0"><b>{{ instrumentValues().length > 0 ? '✓' : '—' }}</b>{{ copy().instruments }}</span>
+      <span [class.ready]="rawInstrumentNames().length > 0"><b>{{ rawInstrumentNames().length > 0 ? '✓' : '—' }}</b>{{ copy().instruments }}</span>
       <span [class.ready]="hasTechnicalData()"><b>{{ hasTechnicalData() ? '✓' : '—' }}</b>{{ copy().technical }}</span>
     </div>
   </div>
@@ -35,34 +35,63 @@
       <span [class.final]="soundConfirmed">{{ copy().artistFinal }}</span>
     </div>
     <div class="sound-groups">
-      <div>
-        <strong>{{ copy().detectedGenres }}</strong>
-        <div class="chip-list">
-          @for (value of genreValues(); track value) {
-            <button type="button" class="chip" [class.selected]="isSoundLabelSelected('genre', value)"
-              [disabled]="isSoundLabelDisabled('genre', value)" (click)="toggleSoundLabel('genre', value)">{{ value }}</button>
-          }
+      @if (isAudioIntelligenceV2()) {
+        @for (group of [
+          { key: 'genre_family', label: copy().genreFamily },
+          { key: 'subgenres', label: copy().subgenres },
+          { key: 'moods', label: copy().atmosphere },
+          { key: 'instruments', label: copy().instrumentation },
+          { key: 'vocals', label: copy().vocals },
+          { key: 'production_elements', label: copy().productionElements }
+        ]; track group.key) {
+          <div [attr.data-testid]="'v2-sound-group-' + group.key">
+            <strong>{{ group.label }}</strong>
+            <div class="chip-list">
+              @for (value of v2DisplayValues($any(group.key)); track value) {
+                <button type="button" class="chip" [class.selected]="isV2LabelSelected($any(group.key), value)"
+                  [disabled]="!adjustingSound" (click)="toggleV2Label($any(group.key), value)">{{ value }}</button>
+              }
+            </div>
+            @if (adjustingSound) {
+              <div class="manual-sound-entry">
+                <input [name]="'manual-' + group.key" [ngModel]="manualValue($any(group.key))"
+                  (ngModelChange)="setManualValue($any(group.key), $event)" maxlength="120"
+                  (keydown.enter)="$event.preventDefault(); addV2Label($any(group.key))">
+                <button type="button" class="secondary" (click)="addV2Label($any(group.key))">{{ copy().addLabel }}</button>
+              </div>
+            }
+          </div>
+        }
+      } @else {
+        <div>
+          <strong>{{ copy().detectedGenres }}</strong>
+          <div class="chip-list">
+            @for (value of genreValues(); track value) {
+              <button type="button" class="chip" [class.selected]="isSoundLabelSelected('genre', value)"
+                [disabled]="isSoundLabelDisabled('genre', value)" (click)="toggleSoundLabel('genre', value)">{{ value }}</button>
+            }
+          </div>
+          <small class="field-help">{{ copy().genreLimit }}</small>
         </div>
-        <small class="field-help">{{ copy().genreLimit }}</small>
-      </div>
-      <div>
-        <strong>{{ copy().atmosphere }}</strong>
-        <div class="chip-list">
-          @for (value of astralValues(); track value) {
-            <button type="button" class="chip" [class.selected]="isSoundLabelSelected('astral', value)"
-              [disabled]="isSoundLabelDisabled('astral', value)" (click)="toggleSoundLabel('astral', value)">{{ value }}</button>
-          }
+        <div>
+          <strong>{{ copy().atmosphere }}</strong>
+          <div class="chip-list">
+            @for (value of astralValues(); track value) {
+              <button type="button" class="chip" [class.selected]="isSoundLabelSelected('astral', value)"
+                [disabled]="isSoundLabelDisabled('astral', value)" (click)="toggleSoundLabel('astral', value)">{{ value }}</button>
+            }
+          </div>
         </div>
-      </div>
-      <div>
-        <strong>{{ copy().instrumentation }}</strong>
-        <div class="chip-list">
-          @for (value of rawInstrumentNames(); track value) {
-            <button type="button" class="chip" [class.selected]="isSoundLabelSelected('instruments', value)"
-              [disabled]="isSoundLabelDisabled('instruments', value)" (click)="toggleSoundLabel('instruments', value)">{{ value }}</button>
-          }
+        <div>
+          <strong>{{ copy().instrumentation }}</strong>
+          <div class="chip-list">
+            @for (value of rawInstrumentNames(); track value) {
+              <button type="button" class="chip" [class.selected]="isSoundLabelSelected('instruments', value)"
+                [disabled]="isSoundLabelDisabled('instruments', value)" (click)="toggleSoundLabel('instruments', value)">{{ value }}</button>
+            }
+          </div>
         </div>
-      </div>
+      }
     </div>
     <div class="confirm-actions">
       @if (!adjustingSound) {

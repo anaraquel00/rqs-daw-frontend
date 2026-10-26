@@ -22,6 +22,7 @@ import { DspService } from '../../services/dsp';
 import { MasteringService } from '../../services/mastering.service';
 import {
   AudioDnaPayload,
+  AudioIntelligenceV2Payload,
   MasteringAnalysisState,
   MasteringAutoRecommendation,
   MasteringAutoRecommendationRequest,
@@ -81,6 +82,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() analysisState: MasteringAnalysisState = 'empty';
   @Input() analysisMetrics: MasteringV2Analysis | null = null;
   @Input() audioDna: AudioDnaPayload | null = null;
+  @Input() audioIntelligence: AudioIntelligenceV2Payload | null = null;
   @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() audioSourceId: string | null = null;
 

@@ -24,7 +24,28 @@
         </div>
       </section>
 
-      @if (audioDna?.semantic; as semantic) {
+      @if (audioIntelligence; as intelligence) {
+        @if (intelligence.status === 'READY') {
+          <section class="semantic-audio-dna" aria-labelledby="audio-intelligence-v2-title" data-testid="audio-intelligence-v2">
+            <div class="semantic-title-row">
+              <div>
+                <h3 id="audio-intelligence-v2-title">{{ copy().musicDna }}</h3>
+                <p>{{ copy().semanticEvidence }}</p>
+              </div>
+              <span>AI Music Analysis</span>
+            </div>
+            <dl class="semantic-grid">
+              <div><dt>{{ copy().genre }}</dt><dd>{{ audioIntelligenceGenreLine() }}</dd></div>
+              <div><dt>{{ copy().astral }}</dt><dd>{{ audioIntelligenceMoodLine() }}</dd></div>
+              @if (intelligence.instruments.length > 0) {
+                <div data-testid="audio-intelligence-v2-instruments"><dt>{{ copy().instruments }}</dt><dd>{{ audioIntelligenceInstrumentLine() }}</dd></div>
+              }
+            </dl>
+          </section>
+        } @else {
+          <p class="semantic-unavailable" data-testid="audio-intelligence-v2-fallback">{{ copy().semanticUnavailable }}</p>
+        }
+      } @else if (audioDna?.semantic; as semantic) {
         @if (semantic.status === 'READY') {
           <section class="semantic-audio-dna" aria-labelledby="semantic-audio-dna-title" data-testid="semantic-audio-dna">
             <div class="semantic-title-row">

@@ -6,6 +6,7 @@ import {
   AudioDnaConfidenceLevel,
   AudioDnaPayload,
   AudioDnaTempoRelation,
+  AudioIntelligenceV2Payload,
   MasteringAnalysisState,
   MasteringAtmosphere,
   MasteringDeliveryTargetCapabilities,
@@ -181,6 +182,7 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
 })
 export class AudioDnaCardComponent {
   @Input() audioDna: AudioDnaPayload | null = null;
+  @Input() audioIntelligence: AudioIntelligenceV2Payload | null = null;
   @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() state: MasteringAnalysisState = 'empty';
   @Input() mode: 'summary' | 'technical' = 'summary';
@@ -267,6 +269,23 @@ export class AudioDnaCardComponent {
     return (this.openAiMusicAnalyst?.instruments ?? [])
       .map(({ name }) => name)
       .join(' · ');
+  }
+
+  audioIntelligenceGenreLine(): string {
+    if (this.audioIntelligence?.status !== 'READY') return '—';
+    return [...this.audioIntelligence.genre_family, ...this.audioIntelligence.subgenres].join(' · ') || '—';
+  }
+
+  audioIntelligenceMoodLine(): string {
+    return this.audioIntelligence?.status === 'READY'
+      ? this.audioIntelligence.moods.join(' · ') || '—'
+      : '—';
+  }
+
+  audioIntelligenceInstrumentLine(): string {
+    return this.audioIntelligence?.status === 'READY'
+      ? this.audioIntelligence.instruments.join(' · ')
+      : '';
   }
 
   masterReasonLabels(): string[] {

@@ -4,6 +4,7 @@ import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
 import {
   AudioDnaPayload,
+  AudioIntelligenceV2Payload,
   MasteringDeliveryTargetCapabilities,
   OpenAiMusicAnalystPayload,
 } from '../../services/mastering-types';
@@ -201,6 +202,45 @@ describe('AudioDnaCardComponent', () => {
     expect(text).not.toContain('Mood');
     expect(fixture.nativeElement.textContent).toContain('RECOMMENDED MASTER');
     expect(mastering.atmosphere()).toBe('aurora');
+  });
+
+  it('renders Audio Intelligence V2 while preserving the technical and Master sections', () => {
+    const intelligence: AudioIntelligenceV2Payload = {
+      analysisVersion: 'audio-intelligence-v2', status: 'READY', provider: 'openai', model: 'gpt-audio-1.5',
+      source_generation: 'source-v2', analyzer_generation: 'source-v2',
+      genre_family: ['electronic'], subgenres: ['Progressive House'], moods: ['uplifting'],
+      instruments: ['Synthesizer', 'Drum machine'], vocals: ['Processed vocals'],
+      production_elements: ['Layered synth texture'], uncertainty: 'medium',
+    };
+    fixture.componentRef.setInput('audioIntelligence', intelligence);
+    fixture.detectChanges();
+
+    const v2 = fixture.nativeElement.querySelector('[data-testid="audio-intelligence-v2"]') as HTMLElement;
+    expect(v2.textContent).toContain('electronic · Progressive House');
+    expect(v2.textContent).toContain('uplifting');
+    expect(v2.textContent).toContain('Synthesizer · Drum machine');
+    expect(fixture.nativeElement.textContent).toContain('RECOMMENDED MASTER');
+    expect(fixture.nativeElement.textContent).toContain('DISTRIBUTION READINESS');
+  });
+
+  it('isolates an unavailable V2 analysis without falling back to legacy CocoTagger labels', () => {
+    const legacy = structuredClone(audioDna);
+    legacy.semantic = {
+      version: 'rqs-semantic-audio-dna-v1', status: 'READY', source_generation: 'legacy', analyzer_generation: 'legacy',
+      engine: { name: 'cocotagger', model: 'musiccocoa', revision: 'rev', taxonomy_version: 'tax' },
+      categories: { genre: [{ tag: 'country', raw_score: .2, rank: 1 }] },
+    };
+    fixture.componentRef.setInput('audioDna', legacy);
+    fixture.componentRef.setInput('audioIntelligence', {
+      analysisVersion: 'audio-intelligence-v2', status: 'UNAVAILABLE', provider: 'openai', model: 'gpt-audio-1.5',
+      source_generation: 'source-v2', analyzer_generation: 'source-v2', genre_family: [], subgenres: [], moods: [],
+      instruments: [], vocals: [], production_elements: [], uncertainty: null, error_code: 'OPENAI_TIMEOUT',
+    } satisfies AudioIntelligenceV2Payload);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="audio-intelligence-v2-fallback"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Country');
+    expect(fixture.nativeElement.textContent).toContain('RECOMMENDED MASTER');
   });
 
   it('renders Instruments only from a READY OpenAI Music Analyst result', () => {

@@ -99,6 +99,7 @@
   <app-audio-dna-card
     *ngIf="analysisState !== 'empty' || audioDna"
     [audioDna]="audioDna"
+    [audioIntelligence]="audioIntelligence"
     [openAiMusicAnalyst]="openAiMusicAnalyst"
     [state]="analysisState"
     [target]="activeTarget()"
@@ -109,6 +110,7 @@
     *ngIf="capabilities()?.features?.spotify_pitch_enabled === true && analysisState === 'success'"
     [analysisMetrics]="analysisMetrics"
     [audioDna]="audioDna"
+    [audioIntelligence]="audioIntelligence"
     [openAiMusicAnalyst]="openAiMusicAnalyst"
     [sourceGeneration]="audioDna?.source_generation ?? null">
   </app-spotify-pitch-panel>

@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
 import {
   AudioDnaPayload,
+  AudioIntelligenceV2Payload,
   MasteringAnalysisState,
   MasteringProcessCommand,
   MasteringV2Analysis,
@@ -52,6 +53,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   readonly analysisState = signal<MasteringAnalysisState>('empty');
   readonly analysisMetrics = signal<MasteringV2Analysis | null>(null);
   audioDna: AudioDnaPayload | null = null;
+  audioIntelligence: AudioIntelligenceV2Payload | null = null;
   openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   audioSourceId: string | null = null;
   renderProgressPercent = 0;
@@ -362,6 +364,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.analysisRequestedGeneration = generation;
     this.analysisMetrics.set(null);
     this.openAiMusicAnalyst = null;
+    this.audioIntelligence = null;
     this.analysisState.set('loading');
     const formData = new FormData();
     if (this.masteringV2DirectUpload) {
@@ -376,7 +379,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       next: (response) => {
         if (!this.isActiveWorkspace(generation)) return;
         const semantic = response.audio_dna?.semantic;
-        const hasGenerationBoundAnalysis = Boolean(semantic || response.openai_music_analyst);
+        const hasGenerationBoundAnalysis = Boolean(semantic || response.openai_music_analyst || response.audio_intelligence);
         const generationMismatch = response.source_generation !== requestedGeneration
           || response.analyzer_generation !== requestedGeneration
           || (response.audio_dna !== undefined && (
@@ -386,17 +389,23 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
           || (semantic !== undefined && (
             semantic.source_generation !== requestedGeneration
             || semantic.analyzer_generation !== requestedGeneration
+          ))
+          || (response.audio_intelligence !== undefined && (
+            response.audio_intelligence.source_generation !== requestedGeneration
+            || response.audio_intelligence.analyzer_generation !== requestedGeneration
           ));
         if (hasGenerationBoundAnalysis && generationMismatch) {
           this.analysisMetrics.set(null);
           this.audioDna = null;
           this.openAiMusicAnalyst = null;
+          this.audioIntelligence = null;
           this.analysisState.set('error');
           return;
         }
         this.analysisMetrics.set(response);
         this.audioDna = response.audio_dna ?? null;
         this.openAiMusicAnalyst = response.openai_music_analyst ?? null;
+        this.audioIntelligence = response.audio_intelligence ?? null;
         if (this.audioSourceId && response.audio_dna?.status === 'available' && response.audio_dna.master_profile) {
           this.masteringService.initializeFromAudioDna(this.audioSourceId, response.audio_dna.master_profile);
         }
@@ -410,6 +419,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         this.analysisMetrics.set(null);
         this.audioDna = null;
         this.openAiMusicAnalyst = null;
+        this.audioIntelligence = null;
         this.analysisState.set(status === 401 || status === 403 ? 'auth_required' : 'error');
       },
     });
@@ -420,6 +430,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.analysisMetrics.set(null);
     this.audioDna = null;
     this.openAiMusicAnalyst = null;
+    this.audioIntelligence = null;
     this.analysisState.set('empty');
   }
 
