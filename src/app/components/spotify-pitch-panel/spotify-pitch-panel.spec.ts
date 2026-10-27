@@ -74,6 +74,7 @@ describe('SpotifyPitchPanelComponent', () => {
   const audioIntelligenceV2: AudioIntelligenceV2Payload = {
     analysisVersion: 'audio-intelligence-v2',
     status: 'READY', provider: 'openai', model: 'gpt-audio-1.5',
+    genre_family_taxonomy: ['electronic', 'rock', 'metal'],
     source_generation: 'source-1', analyzer_generation: 'source-1',
     genre_family: ['electronic'], subgenres: ['Trance'], moods: ['energetic'],
     instruments: ['Synthesizer'], vocals: ['Processed vocals'],
@@ -269,12 +270,15 @@ describe('SpotifyPitchPanelComponent', () => {
   it('keeps the V2 manual confirmation path available when analysis is UNAVAILABLE', () => {
     fixture.componentRef.setInput('audioIntelligence', {
       ...audioIntelligenceV2,
-      status: 'UNAVAILABLE', genre_family: [], subgenres: [], moods: [], instruments: [], vocals: [],
+      status: 'UNAVAILABLE', genre_family_taxonomy: ['electronic', 'rock'], genre_family: [], subgenres: [], moods: [], instruments: [], vocals: [],
       production_elements: [], uncertainty: null, error_code: 'OPENAI_TIMEOUT',
     } satisfies AudioIntelligenceV2Payload);
     fixture.detectChanges();
 
     component.beginAdjustSound();
+    component.setManualValue('genre_family', 'other');
+    component.addV2Label('genre_family');
+    expect(component.confirmedGenreFamily).toEqual([]);
     component.setManualValue('genre_family', 'electronic');
     component.addV2Label('genre_family');
     component.setManualValue('subgenres', 'Synthwave');

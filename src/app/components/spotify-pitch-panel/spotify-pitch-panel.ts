@@ -368,6 +368,10 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
     return this.audioIntelligence[category];
   }
 
+  genreFamilyOptions(): string[] {
+    return this.audioIntelligence?.genre_family_taxonomy ?? [];
+  }
+
   v2DisplayValues(category: V2SoundCategory): string[] {
     return [...new Set([...this.v2SuggestedValues(category), ...this.v2ConfirmedValues(category)])];
   }
@@ -406,6 +410,7 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
     if (!this.adjustingSound) return;
     const value = this.manualValues[category].replace(/\s+/g, ' ').trim().slice(0, 120);
     if (!value) return;
+    if (category === 'genre_family' && !this.genreFamilyOptions().includes(value)) return;
     const current = this.v2ConfirmedValues(category);
     if (!current.some(item => item.toLocaleLowerCase('en-US') === value.toLocaleLowerCase('en-US'))) {
       this.setV2ConfirmedValues(category, [...current, value]);

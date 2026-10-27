@@ -77,6 +77,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
   };
   const audioIntelligenceV2: AudioIntelligenceV2Payload = {
     analysisVersion: 'audio-intelligence-v2', status: 'READY', provider: 'openai', model: 'gpt-audio-1.5',
+    genre_family_taxonomy: ['electronic', 'rock'],
     source_generation: 'source-1', analyzer_generation: 'source-1', genre_family: ['electronic'],
     subgenres: ['Trance'], moods: ['energetic'], instruments: ['Synthesizer'], vocals: ['Processed vocals'],
     production_elements: ['Layered synth texture'], uncertainty: 'low',

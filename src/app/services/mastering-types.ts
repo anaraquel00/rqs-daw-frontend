@@ -78,6 +78,7 @@ export interface AudioIntelligenceV2Payload {
   model: 'gpt-audio-1.5';
   source_generation: string;
   analyzer_generation: string;
+  genre_family_taxonomy: string[];
   genre_family: string[];
   subgenres: string[];
   moods: string[];

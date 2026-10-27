@@ -54,9 +54,19 @@
             </div>
             @if (adjustingSound) {
               <div class="manual-sound-entry">
-                <input [name]="'manual-' + group.key" [ngModel]="manualValue($any(group.key))"
-                  (ngModelChange)="setManualValue($any(group.key), $event)" maxlength="120"
-                  (keydown.enter)="$event.preventDefault(); addV2Label($any(group.key))">
+                @if (group.key === 'genre_family') {
+                  <select [name]="'manual-' + group.key" [ngModel]="manualValue($any(group.key))"
+                    (ngModelChange)="setManualValue($any(group.key), $event)">
+                    <option value="">—</option>
+                    @for (family of genreFamilyOptions(); track family) {
+                      <option [value]="family">{{ family }}</option>
+                    }
+                  </select>
+                } @else {
+                  <input [name]="'manual-' + group.key" [ngModel]="manualValue($any(group.key))"
+                    (ngModelChange)="setManualValue($any(group.key), $event)" maxlength="120"
+                    (keydown.enter)="$event.preventDefault(); addV2Label($any(group.key))">
+                }
                 <button type="button" class="secondary" (click)="addV2Label($any(group.key))">{{ copy().addLabel }}</button>
               </div>
             }

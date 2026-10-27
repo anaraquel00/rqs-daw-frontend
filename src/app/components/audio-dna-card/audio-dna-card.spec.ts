@@ -207,6 +207,7 @@ describe('AudioDnaCardComponent', () => {
   it('renders Audio Intelligence V2 while preserving the technical and Master sections', () => {
     const intelligence: AudioIntelligenceV2Payload = {
       analysisVersion: 'audio-intelligence-v2', status: 'READY', provider: 'openai', model: 'gpt-audio-1.5',
+      genre_family_taxonomy: ['electronic', 'rock'],
       source_generation: 'source-v2', analyzer_generation: 'source-v2',
       genre_family: ['electronic'], subgenres: ['Progressive House'], moods: ['uplifting'],
       instruments: ['Synthesizer', 'Drum machine'], vocals: ['Processed vocals'],
@@ -233,6 +234,7 @@ describe('AudioDnaCardComponent', () => {
     fixture.componentRef.setInput('audioDna', legacy);
     fixture.componentRef.setInput('audioIntelligence', {
       analysisVersion: 'audio-intelligence-v2', status: 'UNAVAILABLE', provider: 'openai', model: 'gpt-audio-1.5',
+      genre_family_taxonomy: ['electronic', 'rock'],
       source_generation: 'source-v2', analyzer_generation: 'source-v2', genre_family: [], subgenres: [], moods: [],
       instruments: [], vocals: [], production_elements: [], uncertainty: null, error_code: 'OPENAI_TIMEOUT',
     } satisfies AudioIntelligenceV2Payload);
