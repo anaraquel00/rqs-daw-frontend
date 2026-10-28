@@ -192,6 +192,19 @@ describe('SpotifyPitchPanelComponent', () => {
       .toContain('You have 1 of 3 AI Spotify Pitches remaining.');
   });
 
+  it('places the quota directly after the editorial pitch and before editorial directions when READY', () => {
+    component.generatePitch();
+    fixture.detectChanges();
+
+    const editorialPitch = fixture.nativeElement.querySelector('[data-testid="editorial-pitch"]') as HTMLElement;
+    const quota = fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"]') as HTMLElement;
+    const positioning = fixture.nativeElement.querySelector('[data-testid="editorial-positioning"]') as HTMLElement;
+
+    expect(fixture.nativeElement.querySelectorAll('[data-testid="spotify-pitch-quota"]').length).toBe(1);
+    expect(editorialPitch.compareDocumentPosition(quota) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(quota.compareDocumentPosition(positioning) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('applies authoritative quota returned by a 429 without another generation', () => {
     const exhausted: SpotifyPitchQuotaResponse = {
       plan: 'free',
