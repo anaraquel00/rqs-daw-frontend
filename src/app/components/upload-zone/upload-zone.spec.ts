@@ -491,6 +491,33 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(dsp.uploadToS3).not.toHaveBeenCalled();
   });
 
+  it('never exposes a presigned URL or AWS credential material in upload error logs', () => {
+    const uploadResult = new Subject<void>();
+    const signedUrl = 'https://bucket.example/track.wav?X-Amz-Credential=AKIA_TEST%2Fscope&X-Amz-Signature=secret-signature&X-Amz-SignedHeaders=host';
+    dsp.getMasteringV2PresignedUrl.and.returnValue(of({
+      uploadUrl: signedUrl,
+      s3Key: 'staging/track.wav',
+    }));
+    dsp.uploadToS3.and.returnValue(uploadResult);
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    component.iniciarUploadS3Silencioso(component.selectedFile!);
+    uploadResult.error({
+      status: 0,
+      statusText: 'Unknown Error',
+      message: `Http failure response for ${signedUrl}: 0 Unknown Error`,
+    });
+
+    const logs = component.systemLogs.join('\n');
+    expect(logs).toContain('operation=presigned-upload status=0 statusText=Unknown Error');
+    expect(logs).not.toContain('https://bucket.example');
+    expect(logs).not.toContain('X-Amz-');
+    expect(logs).not.toContain('Credential');
+    expect(logs).not.toContain('Signature');
+    expect(logs).not.toContain('secret-signature');
+  });
+
   it('does not emit a protected Preview request before authentication', () => {
     component.processarMaster(command(true));
 

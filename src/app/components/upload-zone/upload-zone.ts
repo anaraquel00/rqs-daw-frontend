@@ -179,7 +179,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
             this.isUploadingS3 = false;
             this.masteringFeedback.set('upload_failed');
             this.analysisState.set('error');
-            this.addLog(`❌ ERRO CRÍTICO S3: ${this.errorMessage(error)}`);
+            this.addLog(`❌ ERRO CRÍTICO S3: ${this.sanitizedUploadError(error, 'presigned-upload')}`);
           },
         });
       },
@@ -188,7 +188,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
         this.isUploadingS3 = false;
         this.masteringFeedback.set('upload_failed');
         this.analysisState.set('error');
-        this.addLog(`❌ ERRO DE PROTOCOLO S3: ${this.errorMessage(error)}`);
+        this.addLog(`❌ ERRO DE PROTOCOLO S3: ${this.sanitizedUploadError(error, 'presign-request')}`);
       },
     });
   }
@@ -712,5 +712,23 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     }
 
     return 'unknown error';
+  }
+
+  private sanitizedUploadError(error: unknown, operation: 'presign-request' | 'presigned-upload'): string {
+    if (typeof error !== 'object' || error === null) {
+      return `operation=${operation} status=unknown statusText=unknown`;
+    }
+
+    const candidate = error as { status?: unknown; statusText?: unknown };
+    const status = typeof candidate.status === 'number' ? String(candidate.status) : 'unknown';
+    const allowedStatusText = new Set([
+      'OK', 'Unknown Error', 'Bad Request', 'Unauthorized', 'Forbidden', 'Not Found',
+      'Request Timeout', 'Conflict', 'Payload Too Large', 'Too Many Requests',
+      'Internal Server Error', 'Bad Gateway', 'Service Unavailable', 'Gateway Timeout',
+    ]);
+    const rawStatusText = typeof candidate.statusText === 'string' ? candidate.statusText.trim() : '';
+    const statusText = allowedStatusText.has(rawStatusText) ? rawStatusText : 'unknown';
+
+    return `operation=${operation} status=${status} statusText=${statusText}`;
   }
 }
