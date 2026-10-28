@@ -169,6 +169,9 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(generate.disabled).toBeTrue();
     expect(fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"]').textContent)
       .toContain('You have reached your AI Spotify Pitch limit.');
+    const waitlistLink = fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"] a') as HTMLAnchorElement;
+    expect(waitlistLink.textContent).toContain('GO TO WAITLIST');
+    expect(waitlistLink.getAttribute('href')).toBe('/pricing#waitlist');
     component.generatePitch();
     expect(dsp.generateSpotifyPitch).not.toHaveBeenCalled();
   });
