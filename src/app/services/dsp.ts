@@ -10,6 +10,8 @@ import {
   MasteringV2Analysis,
   MasteringV2Capabilities,
   MasteringV2FinalResponse,
+  ArtistConfirmationRequest,
+  PersistedAudioIntelligenceAnalysis,
   SpotifyPitchRequest,
   SpotifyPitchQuotaResponse,
   SpotifyPitchResponse,
@@ -75,10 +77,28 @@ export class DspService {
     });
   }
 
-  analyzeMasteringV2(formData: FormData): Observable<MasteringAnalysisResponse> {
+  analyzeMasteringV2(formData: FormData, requestId: string = crypto.randomUUID()): Observable<MasteringAnalysisResponse> {
     return this.http.post<MasteringAnalysisResponse>(`${this.baseUrl}/mastering/v2/analysis`, formData, {
-      headers: this.masteringV2Headers(),
+      headers: this.masteringV2Headers().set('Idempotency-Key', requestId),
     });
+  }
+
+  getMasteringV2Analysis(analysisId: string): Observable<PersistedAudioIntelligenceAnalysis> {
+    return this.http.get<PersistedAudioIntelligenceAnalysis>(
+      `${this.baseUrl}/mastering/v2/analyses/${encodeURIComponent(analysisId)}`,
+      { headers: this.masteringV2Headers() },
+    );
+  }
+
+  saveArtistConfirmation(
+    analysisId: string,
+    request: ArtistConfirmationRequest,
+  ): Observable<PersistedAudioIntelligenceAnalysis> {
+    return this.http.patch<PersistedAudioIntelligenceAnalysis>(
+      `${this.baseUrl}/mastering/v2/analyses/${encodeURIComponent(analysisId)}/artist-confirmation`,
+      request,
+      { headers: this.masteringV2Headers() },
+    );
   }
 
   recommendMasteringV2Auto(

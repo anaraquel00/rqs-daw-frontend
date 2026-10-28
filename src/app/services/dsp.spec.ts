@@ -77,7 +77,7 @@ describe('DspService Mastering V2 transport', () => {
     const formData = new FormData();
     formData.append('s3Key', 'uploads/user-id/track.wav');
 
-    service.analyzeMasteringV2(formData).subscribe(result => {
+    service.analyzeMasteringV2(formData, '00000000-0000-4000-8000-000000000010').subscribe(result => {
       expect(result.duration_seconds).toBe(5);
     });
 
@@ -85,6 +85,7 @@ describe('DspService Mastering V2 transport', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toBe(formData);
     expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    expect(request.request.headers.get('Idempotency-Key')).toBe('00000000-0000-4000-8000-000000000010');
     request.flush({
       integrated_lufs: -14.2,
       true_peak_dbtp: -1.1,
@@ -93,6 +94,39 @@ describe('DspService Mastering V2 transport', () => {
       loudness_range_lu: 4.3,
       duration_seconds: 5,
     });
+  });
+
+  it('rehydrates an owner-scoped persisted analysis without invoking analysis', () => {
+    const analysisId = '00000000-0000-4000-8000-000000000011';
+    service.getMasteringV2Analysis(analysisId).subscribe(result => {
+      expect(result.analysis_id).toBe(analysisId);
+      expect(result.flow_stage).toBe('artist_confirmation');
+    });
+
+    const request = http.expectOne(`${environment.baseUrl}/mastering/v2/analyses/${analysisId}`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({ analysis_id: analysisId, status: 'READY', flow_stage: 'artist_confirmation' });
+    http.expectNone(`${environment.baseUrl}/mastering/v2/analysis`);
+  });
+
+  it('persists Artist Confirmation explicitly as draft or confirmed state', () => {
+    const analysisId = '00000000-0000-4000-8000-000000000012';
+    const body = {
+      mode: 'confirm' as const,
+      artist_confirmed_sound: {
+        genre_family: ['electronic'], subgenres: ['melodic trance'], moods: ['uplifting'],
+        instruments: ['synthesizer'], vocals: [], production_elements: ['arpeggiated synths'],
+      },
+    };
+    service.saveArtistConfirmation(analysisId, body).subscribe();
+    const request = http.expectOne(
+      `${environment.baseUrl}/mastering/v2/analyses/${analysisId}/artist-confirmation`,
+    );
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual(body);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({ analysis_id: analysisId, status: 'READY', flow_stage: 'artist_confirmed' });
   });
 
   it('requests a typed delivery AUTO proposal without invoking a render contract', () => {

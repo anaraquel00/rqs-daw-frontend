@@ -108,9 +108,28 @@ describe('SpotifyPitchPanelComponent', () => {
 
   beforeEach(async () => {
     currentLang.set('en');
-    dsp = jasmine.createSpyObj<DspService>('DspService', ['generateSpotifyPitch', 'getSpotifyPitchQuota']);
+    dsp = jasmine.createSpyObj<DspService>('DspService', [
+      'generateSpotifyPitch',
+      'getSpotifyPitchQuota',
+      'saveArtistConfirmation',
+    ]);
     dsp.getSpotifyPitchQuota.and.returnValue(of(availableQuota));
     dsp.generateSpotifyPitch.and.returnValue(of(ready));
+    dsp.saveArtistConfirmation.and.callFake((analysisId, request) => of({
+      analysis_id: analysisId,
+      status: 'READY',
+      flow_stage: request.mode === 'confirm' ? 'artist_confirmed' : 'artist_confirmation',
+      analysis_version: 'audio-intelligence-v2',
+      provider: 'openai',
+      model: 'gpt-audio-1.5',
+      native_result: null,
+      semantic_result: null,
+      artist_confirmed_sound: request.artist_confirmed_sound,
+      confirmed_at: request.mode === 'confirm' ? '2026-10-28T12:00:00.000Z' : null,
+      analysis: {} as any,
+      pitch_result: null,
+      pitch_model: null,
+    }));
     await TestBed.configureTestingModule({
       imports: [SpotifyPitchPanelComponent],
       providers: [
@@ -124,6 +143,7 @@ describe('SpotifyPitchPanelComponent', () => {
     fixture.componentRef.setInput('audioDna', audioDna);
     fixture.componentRef.setInput('openAiMusicAnalyst', analyst);
     fixture.componentRef.setInput('sourceGeneration', 'source-1');
+    fixture.componentRef.setInput('analysisId', '00000000-0000-4000-8000-000000000020');
     fixture.detectChanges();
   });
 
@@ -275,12 +295,40 @@ describe('SpotifyPitchPanelComponent', () => {
     const request = dsp.generateSpotifyPitch.calls.mostRecent().args[0];
     const release = request.release_intelligence as SpotifyPitchV2ReleaseIntelligence;
     expect(release.analysis_version).toBe('audio-intelligence-v2');
+    expect(request.analysis_id).toBe('00000000-0000-4000-8000-000000000020');
     expect(release.artist_confirmed_sound.subgenres).toEqual(['Progressive House']);
     expect(release.artist_confirmed_sound.instruments).toEqual(['Drum machine']);
     expect(release.artist_confirmed_sound.vocals).toEqual(['Processed vocals']);
     expect(JSON.stringify(release)).not.toContain('Trance');
     expect(JSON.stringify(release)).not.toContain('Synthesizer');
     expect(JSON.stringify(release)).not.toMatch(/raw_audio_evidence|input_audio|base64|audio_url|filename/);
+  });
+
+  it('restores persisted artist edits and an exact READY pitch without a new API call', () => {
+    fixture.componentRef.setInput('audioIntelligence', audioIntelligenceV2);
+    fixture.componentRef.setInput('persistedArtistConfirmation', {
+      genre_family: ['electronic'],
+      subgenres: ['Melodic Trance'],
+      moods: ['uplifting'],
+      instruments: ['Drum machine'],
+      vocals: [],
+      production_elements: ['Arpeggiated synths'],
+    });
+    fixture.componentRef.setInput('persistedFlowStage', 'pitch_ready');
+    fixture.componentRef.setInput('persistedConfirmedAt', '2026-10-28T12:00:00.000Z');
+    fixture.componentRef.setInput('persistedPitchResult', {
+      ...ready,
+      editorial_pitch: 'Exact persisted editorial pitch.',
+    });
+    fixture.detectChanges();
+
+    expect(component.confirmedSubgenres).toEqual(['Melodic Trance']);
+    expect(component.confirmedInstruments).toEqual(['Drum machine']);
+    expect(component.confirmedVocals).toEqual([]);
+    expect(component.soundConfirmed).toBeTrue();
+    expect(component.requestState()).toBe('ready');
+    expect(component.result()?.editorial_pitch).toBe('Exact persisted editorial pitch.');
+    expect(dsp.generateSpotifyPitch).not.toHaveBeenCalled();
   });
 
   it('keeps the V2 manual confirmation path available when analysis is UNAVAILABLE', () => {

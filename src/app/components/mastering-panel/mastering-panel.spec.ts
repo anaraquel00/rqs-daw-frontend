@@ -463,6 +463,23 @@ it('sends the selected source start with the Preview command', () => {
     expect(panel.autoUiState()).toBe('loading');
   });
 
+  it('does not create a new source generation while rehydrating without an uploaded file', () => {
+    panel.originalFile = null;
+    panel.analysisState = 'success';
+    panel.analysisMetrics = metrics;
+    panel.ngOnChanges({
+      originalFile: new SimpleChange(undefined, null, true),
+      analysisState: new SimpleChange('empty', 'success', false),
+      analysisMetrics: new SimpleChange(null, metrics, false),
+    });
+
+    panel.requestAutoRecommendation();
+
+    const request = recommendAuto.calls.mostRecent().args[0] as MasteringAutoRecommendationRequest;
+    expect(request.source_generation).toBe('source-0');
+    expect(request.analyzer_generation).toBe('source-0');
+  });
+
   it('does not render Preview or Full Master while requesting a recommendation', () => {
     prepareAnalyzedSource();
     const processMaster = jasmine.createSpy('processMaster');

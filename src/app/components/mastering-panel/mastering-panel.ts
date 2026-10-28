@@ -23,6 +23,8 @@ import { MasteringService } from '../../services/mastering.service';
 import {
   AudioDnaPayload,
   AudioIntelligenceV2Payload,
+  ArtistConfirmedSound,
+  AudioIntelligenceFlowStage,
   MasteringAnalysisState,
   MasteringAutoRecommendation,
   MasteringAutoRecommendationRequest,
@@ -34,6 +36,7 @@ import {
   MasteringV2Capabilities,
   MasteringV2Analysis,
   OpenAiMusicAnalystPayload,
+  SpotifyPitchResponse,
   SoundCloudMode,
 } from '../../services/mastering-types';
 import {
@@ -42,6 +45,7 @@ import {
 } from '../../services/mastering-auto';
 import { MasteringHelpTopic, masteringEducation } from './mastering-education';
 import { PreviewWaveformComponent } from './preview-waveform';
+import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
 import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
 import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
 import { SpotifyPitchPanelComponent } from '../spotify-pitch-panel/spotify-pitch-panel';
@@ -53,6 +57,7 @@ import { SpotifyPitchPanelComponent } from '../spotify-pitch-panel/spotify-pitch
     CommonModule,
     FormsModule,
     PreviewWaveformComponent,
+    AnalyzerSimpleComponent,
     DeliveryAutoComponent,
     AudioDnaCardComponent,
     SpotifyPitchPanelComponent,
@@ -85,6 +90,11 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() audioIntelligence: AudioIntelligenceV2Payload | null = null;
   @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() audioSourceId: string | null = null;
+  @Input() analysisId: string | null = null;
+  @Input() persistedArtistConfirmation: ArtistConfirmedSound | null = null;
+  @Input() persistedFlowStage: AudioIntelligenceFlowStage | null = null;
+  @Input() persistedConfirmedAt: string | null = null;
+  @Input() persistedPitchResult: SpotifyPitchResponse | null = null;
 
   @Output() processMaster = new EventEmitter<MasteringProcessCommand>();
   @Output() configChanged = new EventEmitter<void>();
@@ -232,18 +242,20 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['originalFile']) {
-      this.sourceGenerationIndex += 1;
-      this.sourceGeneration.set(`source-${this.sourceGenerationIndex}`);
-      this.analyzerGeneration.set(`analysis-pending-${this.sourceGenerationIndex}`);
       this.releaseOriginalObjectUrl();
       this.configInvalidatedResult.set(false);
-      if (this.originalFile && isPlatformBrowser(this.platformId)) {
-        this.originalObjectUrl = window.URL.createObjectURL(this.originalFile);
-        this.audioComparison.setOriginalSrc(
-          this.originalObjectUrl,
-          this.masteringService.previewStartSeconds(),
-          'MASTERING_PANEL_NG_ON_CHANGES_ORIGINAL',
-        );
+      if (this.originalFile) {
+        this.sourceGenerationIndex += 1;
+        this.sourceGeneration.set(`source-${this.sourceGenerationIndex}`);
+        this.analyzerGeneration.set(`analysis-pending-${this.sourceGenerationIndex}`);
+        if (isPlatformBrowser(this.platformId)) {
+          this.originalObjectUrl = window.URL.createObjectURL(this.originalFile);
+          this.audioComparison.setOriginalSrc(
+            this.originalObjectUrl,
+            this.masteringService.previewStartSeconds(),
+            'MASTERING_PANEL_NG_ON_CHANGES_ORIGINAL',
+          );
+        }
       }
     }
 

@@ -95,6 +95,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       'getMasteringV2PresignedUrl',
       'uploadToS3',
       'analyzeMasteringV2',
+      'getMasteringV2Analysis',
       'masterizeV2Preview',
       'masterizeV2Final',
     ]);
@@ -133,6 +134,47 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     component = TestBed.runInInjectionContext(() => new UploadZoneComponent());
     TestBed.tick();
     component.selectedFile = new File(['audio'], 'track.wav', { type: 'audio/wav' });
+  });
+
+  it('rehydrates a persisted analysis after reload without invoking GPT Audio analysis', () => {
+    const analysisId = '00000000-0000-4000-8000-000000000030';
+    component.selectedFile = null;
+    isLoggedIn.set(true);
+    dsp.getMasteringV2Analysis.and.returnValue(of({
+      analysis_id: analysisId,
+      status: 'READY',
+      flow_stage: 'artist_confirmation',
+      analysis_version: 'audio-intelligence-v2',
+      provider: 'openai',
+      model: 'gpt-audio-1.5',
+      native_result: {},
+      semantic_result: null,
+      artist_confirmed_sound: {
+        genre_family: ['electronic'], subgenres: ['Melodic Trance'], moods: ['uplifting'],
+        instruments: ['Synthesizer'], vocals: [], production_elements: ['Arpeggiated synths'],
+      },
+      confirmed_at: null,
+      analysis: {
+        ...analysis,
+        analysis_id: analysisId,
+        audio_dna: audioDna,
+        audio_intelligence: audioIntelligenceV2,
+      },
+      pitch_result: null,
+      pitch_model: null,
+    }));
+    (component as any).route = {
+      snapshot: { queryParamMap: { get: (key: string) => key === 'analysis' ? analysisId : null } },
+    };
+    (component as any).router = { navigate: jasmine.createSpy('navigate').and.resolveTo(true) };
+
+    (component as any).restorePersistedAnalysisIfPresent();
+
+    expect(dsp.getMasteringV2Analysis).toHaveBeenCalledOnceWith(analysisId);
+    expect(dsp.analyzeMasteringV2).not.toHaveBeenCalled();
+    expect(component.analysisState()).toBe('success');
+    expect(component.analysisRestored()).toBeTrue();
+    expect(component.persistedArtistConfirmation?.subgenres).toEqual(['Melodic Trance']);
   });
 
   it('analyzes one authenticated source exactly once without a second upload', () => {

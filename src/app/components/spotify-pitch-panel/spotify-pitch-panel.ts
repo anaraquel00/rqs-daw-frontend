@@ -8,7 +8,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import {
-  AudioDnaPayload, AudioIntelligenceV2Payload, MasteringV2Analysis, OpenAiMusicAnalystPayload,
+  AudioDnaPayload, AudioIntelligenceFlowStage, AudioIntelligenceV2Payload, ArtistConfirmedSound,
+  MasteringV2Analysis, OpenAiMusicAnalystPayload,
   SpotifyPitchCollaboratorRole, SpotifyPitchEvidence, SpotifyPitchEvidenceSource,
   SpotifyPitchPromotionChannel, SpotifyPitchQuotaResponse, SpotifyPitchRequest, SpotifyPitchResponse,
 } from '../../services/mastering-types';
@@ -288,6 +289,11 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   @Input() audioIntelligence: AudioIntelligenceV2Payload | null = null;
   @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() sourceGeneration: string | null = null;
+  @Input() analysisId: string | null = null;
+  @Input() persistedArtistConfirmation: ArtistConfirmedSound | null = null;
+  @Input() persistedFlowStage: AudioIntelligenceFlowStage | null = null;
+  @Input() persistedConfirmedAt: string | null = null;
+  @Input() persistedPitchResult: SpotifyPitchResponse | null = null;
 
   songStory = ''; releaseDifference = ''; whyNow = ''; realContext = ''; isCollaboration = false;
   collaborators = ''; collaboratorRole: SpotifyPitchCollaboratorRole | '' = '';
@@ -308,9 +314,11 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   readonly quota = signal<SpotifyPitchQuotaResponse | null>(null);
   readonly quotaState = signal<'loading' | 'ready' | 'unavailable'>('loading');
   readonly copied = signal(false);
+  readonly confirmationSaving = signal(false);
   readonly copy = computed(() => COPY[this.lang.currentLang()]);
   private requestIndex = 0;
   private soundFingerprint = '';
+  private pendingConfirmationMode: 'draft' | 'confirm' | null = null;
 
   ngOnInit(): void {
     this.loadQuota();
@@ -322,6 +330,10 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
       this.resetArtistContext();
     }
     if (changes['sourceGeneration'] || changes['audioDna'] || changes['openAiMusicAnalyst'] || changes['audioIntelligence']) this.syncConfirmedSound();
+    if (changes['persistedArtistConfirmation'] || changes['persistedConfirmedAt']
+      || changes['persistedFlowStage'] || changes['persistedPitchResult'] || changes['audioIntelligence']) {
+      this.applyPersistedState();
+    }
   }
 
   hasAudioDna(): boolean { return this.audioDna?.status === 'available'; }
@@ -335,7 +347,7 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   canGeneratePitch(): boolean {
     return this.quotaState() === 'ready'
       && this.quota()?.spotify_pitch.can_generate === true
-      && (!this.isAudioIntelligenceV2() || this.soundConfirmed);
+      && (!this.isAudioIntelligenceV2() || (this.soundConfirmed && Boolean(this.analysisId)));
   }
   quotaMessage(): string {
     const quota = this.quota()?.spotify_pitch;
@@ -346,8 +358,19 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
       .replace('{limit}', String(quota.limit));
   }
 
-  confirmSound(): void { this.soundConfirmed = true; this.adjustingSound = false; }
-  beginAdjustSound(): void { this.adjustingSound = true; this.soundConfirmed = false; }
+  confirmSound(): void {
+    if (this.isAudioIntelligenceV2() && this.analysisId) {
+      this.persistConfirmation('confirm');
+      return;
+    }
+    this.soundConfirmed = true;
+    this.adjustingSound = false;
+  }
+  beginAdjustSound(): void {
+    this.adjustingSound = true;
+    this.soundConfirmed = false;
+    this.persistDraft();
+  }
   isSoundLabelSelected(category: 'genre' | 'astral' | 'instruments', value: string): boolean { return this.confirmedList(category).includes(value); }
   toggleSoundLabel(category: 'genre' | 'astral' | 'instruments', value: string): void {
     const current = this.confirmedList(category);
@@ -357,6 +380,7 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
     if (category === 'astral') this.confirmedAstral = next;
     if (category === 'instruments') this.confirmedInstruments = next;
     this.soundConfirmed = false;
+    this.persistDraft();
   }
   isSoundLabelDisabled(category: 'genre' | 'astral' | 'instruments', value: string): boolean {
     return !this.adjustingSound
@@ -404,6 +428,7 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
       ? current.filter(item => item !== value)
       : [...current, value]);
     this.soundConfirmed = false;
+    this.persistDraft();
   }
 
   addV2Label(category: V2SoundCategory): void {
@@ -417,6 +442,7 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
     }
     this.manualValues[category] = '';
     this.soundConfirmed = false;
+    this.persistDraft();
   }
 
   isPromotionSelected(channel: SpotifyPitchPromotionChannel): boolean { return this.selectedPromotionChannels.includes(channel); }
@@ -533,7 +559,7 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
       promotion_context: { channels: [...this.selectedPromotionChannels], confirmed_details: this.promotionDetails.trim() },
     };
     if (this.isAudioIntelligenceV2()) {
-      return { release_intelligence: {
+      return { analysis_id: this.analysisId ?? undefined, release_intelligence: {
         ...shared,
         analysis_version: 'audio-intelligence-v2',
         dsp: {
@@ -564,5 +590,77 @@ export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
       },
       artist_confirmed_sound: { confirmed: this.soundConfirmed, genre: [...this.confirmedGenres], astral: [...this.confirmedAstral], instruments: [...this.confirmedInstruments] },
     } };
+  }
+
+  private currentConfirmedSound(): ArtistConfirmedSound {
+    return {
+      genre_family: [...this.confirmedGenreFamily],
+      subgenres: [...this.confirmedSubgenres],
+      moods: [...this.confirmedMoods],
+      instruments: [...this.confirmedInstruments],
+      vocals: [...this.confirmedVocals],
+      production_elements: [...this.confirmedProductionElements],
+    };
+  }
+
+  private persistDraft(): void {
+    if (!this.isAudioIntelligenceV2() || !this.analysisId) return;
+    this.persistConfirmation('draft');
+  }
+
+  private persistConfirmation(mode: 'draft' | 'confirm'): void {
+    const analysisId = this.analysisId;
+    if (!analysisId) return;
+    if (this.confirmationSaving()) {
+      this.pendingConfirmationMode = mode === 'confirm' ? 'confirm' : (this.pendingConfirmationMode ?? 'draft');
+      return;
+    }
+    this.confirmationSaving.set(true);
+    this.dsp.saveArtistConfirmation(analysisId, {
+      mode,
+      artist_confirmed_sound: this.currentConfirmedSound(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: restored => {
+        this.confirmationSaving.set(false);
+        this.persistedArtistConfirmation = restored.artist_confirmed_sound;
+        this.persistedFlowStage = restored.flow_stage;
+        this.persistedConfirmedAt = restored.confirmed_at;
+        this.soundConfirmed = mode === 'confirm' && Boolean(restored.confirmed_at);
+        if (this.soundConfirmed) this.adjustingSound = false;
+        this.flushPendingConfirmation();
+      },
+      error: () => {
+        this.confirmationSaving.set(false);
+        this.soundConfirmed = false;
+        this.flushPendingConfirmation();
+      },
+    });
+  }
+
+  private flushPendingConfirmation(): void {
+    const pending = this.pendingConfirmationMode;
+    this.pendingConfirmationMode = null;
+    if (pending) this.persistConfirmation(pending);
+  }
+
+  private applyPersistedState(): void {
+    const persisted = this.persistedArtistConfirmation;
+    if (persisted) {
+      this.confirmedGenreFamily = [...persisted.genre_family];
+      this.confirmedSubgenres = [...persisted.subgenres];
+      this.confirmedMoods = [...persisted.moods];
+      this.confirmedInstruments = [...persisted.instruments];
+      this.confirmedVocals = [...persisted.vocals];
+      this.confirmedProductionElements = [...persisted.production_elements];
+      this.soundConfirmed = Boolean(this.persistedConfirmedAt)
+        && (this.persistedFlowStage === 'artist_confirmed' || this.persistedFlowStage === 'pitch_ready');
+      this.adjustingSound = !this.soundConfirmed;
+    }
+    if (this.persistedPitchResult?.status === 'READY') {
+      this.result.set(this.persistedPitchResult);
+      this.requestState.set('ready');
+      this.soundConfirmed = true;
+      this.adjustingSound = false;
+    }
   }
 }

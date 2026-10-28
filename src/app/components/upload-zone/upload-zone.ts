@@ -1,5 +1,7 @@
-import { AfterViewChecked, Component, ElementRef, OnDestroy, ViewChild, effect, inject, signal } from '@angular/core';
+import { AfterViewChecked, Component, DestroyRef, ElementRef, OnDestroy, OnInit, ViewChild, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DspService } from '../../services/dsp';
 import { EkgMonitorComponent } from '../ekg-monitor/ekg-monitor';
 import { MasteringPanelComponent } from '../mastering-panel/mastering-panel';
@@ -9,11 +11,14 @@ import { AudioComparisonService } from '../../services/audio-comparison.service'
 import {
   AudioDnaPayload,
   AudioIntelligenceV2Payload,
+  ArtistConfirmedSound,
+  AudioIntelligenceFlowStage,
   MasteringAnalysisState,
   MasteringProcessCommand,
   MasteringV2Analysis,
   MasteringV2Request,
   OpenAiMusicAnalystPayload,
+  SpotifyPitchResponse,
 } from '../../services/mastering-types';
 import { MasteringService } from '../../services/mastering.service';
 import { environment } from '../../../environments/environment';
@@ -28,7 +33,7 @@ type MasteringFeedback = 'invalid_format' | 'upload_failed' | 'source_preparing'
   templateUrl: './upload-zone.html',
   styleUrls: ['./upload-zone.scss'],
 })
-export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
+export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked {
   @ViewChild('terminalBody') private terminalScrollContainer?: ElementRef<HTMLElement>;
 
   isFullMasterCompleted = false;
@@ -39,6 +44,9 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   private readonly dspService = inject(DspService);
   private readonly masteringService = inject(MasteringService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly router = inject(Router, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
 
   isDragging = false;
   selectedFile: File | null = null;
@@ -56,6 +64,12 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   audioIntelligence: AudioIntelligenceV2Payload | null = null;
   openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   audioSourceId: string | null = null;
+  analysisId: string | null = null;
+  persistedArtistConfirmation: ArtistConfirmedSound | null = null;
+  persistedFlowStage: AudioIntelligenceFlowStage | null = null;
+  persistedConfirmedAt: string | null = null;
+  persistedPitchResult: SpotifyPitchResponse | null = null;
+  readonly analysisRestored = signal(false);
   renderProgressPercent = 0;
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
@@ -63,6 +77,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
   private previousUserId = this.auth.session()?.user.id ?? null;
   private workspaceGeneration = 0;
   private analysisRequestedGeneration: number | null = null;
+  private analysisRequestId: string | null = null;
+  private rehydratingAnalysisId: string | null = null;
   private readonly authenticatedUploadEffect = effect(() => {
     const isAuthenticated = this.auth.isLoggedIn();
     const userId = this.auth.session()?.user.id ?? null;
@@ -73,6 +89,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.previousUserId = userId;
 
     if (!isAuthenticated) return;
+
+    this.restorePersistedAnalysisIfPresent();
 
     if (this.selectedFile && this.masteringV2DirectUpload) {
       this.requestSourceAnalysis(this.selectedFile, this.workspaceGeneration);
@@ -88,6 +106,12 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
       this.iniciarUploadS3Silencioso(this.selectedFile);
     }
   });
+
+  ngOnInit(): void {
+    this.route?.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.restorePersistedAnalysisIfPresent());
+  }
 
   ngAfterViewChecked(): void {
     const element = this.terminalScrollContainer?.nativeElement;
@@ -295,6 +319,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
     this.clearAnalysisState();
+    this.clearPersistedAnalysisPointer();
     this.audioDna = null;
     this.audioSourceId = null;
     this.masteringService.clearAudioDnaSource();
@@ -329,6 +354,7 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
     this.clearAnalysisState();
+    this.clearPersistedAnalysisPointer();
     this.audioDna = null;
     this.audioSourceId = `source-${this.workspaceGeneration}:${file.name}:${file.size}:${file.lastModified}`;
     this.masteringService.beginAudioSource(this.audioSourceId);
@@ -375,7 +401,8 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     const requestedGeneration = `source-${generation}`;
     formData.append('source_generation', requestedGeneration);
 
-    this.dspService.analyzeMasteringV2(formData).subscribe({
+    this.analysisRequestId ??= crypto.randomUUID();
+    this.dspService.analyzeMasteringV2(formData, this.analysisRequestId).subscribe({
       next: (response) => {
         if (!this.isActiveWorkspace(generation)) return;
         const semantic = response.audio_dna?.semantic;
@@ -406,6 +433,13 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
         this.audioDna = response.audio_dna ?? null;
         this.openAiMusicAnalyst = response.openai_music_analyst ?? null;
         this.audioIntelligence = response.audio_intelligence ?? null;
+        this.analysisId = response.analysis_id ?? null;
+        this.persistedFlowStage = response.flow_stage ?? null;
+        this.persistedArtistConfirmation = null;
+        this.persistedConfirmedAt = null;
+        this.persistedPitchResult = null;
+        this.analysisRestored.set(false);
+        if (this.analysisId) this.rememberAnalysis(this.analysisId);
         if (this.audioSourceId && response.audio_dna?.status === 'available' && response.audio_dna.master_profile) {
           this.masteringService.initializeFromAudioDna(this.audioSourceId, response.audio_dna.master_profile);
         }
@@ -431,7 +465,106 @@ export class UploadZoneComponent implements OnDestroy, AfterViewChecked {
     this.audioDna = null;
     this.openAiMusicAnalyst = null;
     this.audioIntelligence = null;
+    this.analysisId = null;
+    this.persistedArtistConfirmation = null;
+    this.persistedFlowStage = null;
+    this.persistedConfirmedAt = null;
+    this.persistedPitchResult = null;
+    this.analysisRequestId = null;
+    this.analysisRestored.set(false);
     this.analysisState.set('empty');
+  }
+
+  restoredAnalysisMessage(): string {
+    const language = this.lang.currentLang();
+    if (language === 'pt') return 'Análise restaurada';
+    if (language === 'fr') return 'Analyse restaurée';
+    if (language === 'pl') return 'Analiza przywrócona';
+    return 'Analysis restored';
+  }
+
+  private restorePersistedAnalysisIfPresent(): void {
+    if (!this.auth.isLoggedIn() || this.selectedFile) return;
+    const userId = this.auth.session()?.user.id;
+    if (!userId) return;
+    const queryId = this.route?.snapshot.queryParamMap.get('analysis') ?? null;
+    const pointer = typeof localStorage !== 'undefined'
+      ? localStorage.getItem(this.analysisPointerKey(userId))
+      : null;
+    const id = queryId || pointer;
+    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return;
+    if (this.analysisId === id || this.rehydratingAnalysisId === id) return;
+
+    this.rehydratingAnalysisId = id;
+    this.analysisState.set('loading');
+    this.dspService.getMasteringV2Analysis(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: restored => {
+          this.rehydratingAnalysisId = null;
+          if (restored.status !== 'READY') {
+            this.analysisState.set(restored.status === 'ANALYZING' ? 'loading' : 'error');
+            return;
+          }
+          const analysis = restored.analysis;
+          this.analysisId = restored.analysis_id;
+          this.analysisMetrics.set(analysis);
+          this.audioDna = analysis.audio_dna ?? null;
+          this.audioIntelligence = analysis.audio_intelligence ?? null;
+          this.openAiMusicAnalyst = analysis.openai_music_analyst ?? null;
+          this.persistedArtistConfirmation = restored.artist_confirmed_sound;
+          this.persistedFlowStage = restored.flow_stage;
+          this.persistedConfirmedAt = restored.confirmed_at;
+          this.persistedPitchResult = restored.pitch_result;
+          this.audioSourceId = `analysis:${restored.analysis_id}`;
+          if (this.audioDna?.status === 'available' && this.audioDna.master_profile) {
+            this.masteringService.initializeFromAudioDna(this.audioSourceId, this.audioDna.master_profile);
+          }
+          this.analysisState.set('success');
+          this.analysisRestored.set(true);
+          this.rememberAnalysis(restored.analysis_id);
+        },
+        error: error => {
+          this.rehydratingAnalysisId = null;
+          const status = Number(error?.status || 0);
+          if (status === 404) this.clearPersistedAnalysisPointer();
+          this.analysisState.set(status === 401 || status === 403 ? 'auth_required' : 'error');
+        },
+      });
+  }
+
+  private rememberAnalysis(id: string): void {
+    const userId = this.auth.session()?.user.id;
+    if (userId && typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.analysisPointerKey(userId), id);
+    }
+    if (!this.router || !this.route) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { analysis: id },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private clearPersistedAnalysisPointer(): void {
+    const userId = this.auth.session()?.user.id;
+    if (userId && typeof localStorage !== 'undefined') {
+      localStorage.removeItem(this.analysisPointerKey(userId));
+    }
+    this.analysisId = null;
+    this.rehydratingAnalysisId = null;
+    if (!this.router || !this.route) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { analysis: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private analysisPointerKey(userId: string): string {
+    return `rqs:lastAnalysisId:${userId}`;
   }
 
   private buildMasteringV2FormData(

@@ -33,8 +33,12 @@
     <span>{{ feedback }}</span>
   </div>
 
+  <div class="auth-resume-notice" role="status" *ngIf="analysisRestored()">
+    <span>{{ restoredAnalysisMessage() }}</span>
+  </div>
+
   <app-mastering-panel
-    *ngIf="selectedFile"
+    *ngIf="selectedFile || analysisState() === 'success'"
     [originalFile]="selectedFile"
     [isProcessing]="isProcessing || isUploadingS3"
     [isUploading]="isUploadingS3"
@@ -49,6 +53,11 @@
     [audioIntelligence]="audioIntelligence"
     [openAiMusicAnalyst]="openAiMusicAnalyst"
     [audioSourceId]="audioSourceId"
+    [analysisId]="analysisId"
+    [persistedArtistConfirmation]="persistedArtistConfirmation"
+    [persistedFlowStage]="persistedFlowStage"
+    [persistedConfirmedAt]="persistedConfirmedAt"
+    [persistedPitchResult]="persistedPitchResult"
     (processMaster)="processarMaster($event)"
     (configChanged)="invalidateMasteringResult()">
   </app-mastering-panel>

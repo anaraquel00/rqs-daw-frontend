@@ -233,7 +233,44 @@ export interface SpotifyPitchV2ReleaseIntelligence {
 }
 
 export interface SpotifyPitchRequest {
+  analysis_id?: string;
   release_intelligence: SpotifyPitchLegacyReleaseIntelligence | SpotifyPitchV2ReleaseIntelligence;
+}
+
+export interface ArtistConfirmedSound {
+  genre_family: string[];
+  subgenres: string[];
+  moods: string[];
+  instruments: string[];
+  vocals: string[];
+  production_elements: string[];
+}
+
+export interface ArtistConfirmationRequest {
+  mode: 'draft' | 'confirm';
+  artist_confirmed_sound: ArtistConfirmedSound;
+}
+
+export type AudioIntelligenceFlowStage =
+  | 'analysis_ready'
+  | 'artist_confirmation'
+  | 'artist_confirmed'
+  | 'pitch_ready';
+
+export interface PersistedAudioIntelligenceAnalysis {
+  analysis_id: string;
+  status: 'ANALYZING' | 'READY' | 'UNAVAILABLE' | 'FAILED';
+  flow_stage: AudioIntelligenceFlowStage;
+  analysis_version: string;
+  provider: string;
+  model: string;
+  native_result: Record<string, unknown> | null;
+  semantic_result: SemanticAudioDnaPayload | null;
+  artist_confirmed_sound: ArtistConfirmedSound | null;
+  confirmed_at: string | null;
+  analysis: MasteringAnalysisResponse;
+  pitch_result: SpotifyPitchResponse | null;
+  pitch_model: string | null;
 }
 
 export interface AudioDnaReason {
@@ -438,12 +475,15 @@ export interface MasteringV2Analysis {
 }
 
 export interface MasteringAnalysisResponse extends MasteringV2Analysis {
+  analysis_id?: string;
+  analysis_status?: 'ANALYZING' | 'READY' | 'UNAVAILABLE' | 'FAILED';
+  flow_stage?: AudioIntelligenceFlowStage;
   audio_dna?: AudioDnaPayload;
   audio_intelligence?: AudioIntelligenceV2Payload;
   openai_music_analyst?: OpenAiMusicAnalystPayload;
   source_generation?: string;
   analyzer_generation?: string;
-  cache?: { hit: boolean };
+  cache?: { hit: boolean; persisted?: boolean };
 }
 
 export type MasteringAnalysisState = 'empty' | 'loading' | 'success' | 'error' | 'auth_required';

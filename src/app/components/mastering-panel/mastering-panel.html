@@ -1,4 +1,5 @@
-<div class="mastering-board" *ngIf="originalFile">
+<div class="mastering-board" *ngIf="originalFile || analysisState === 'success'">
+  <ng-container *ngIf="originalFile">
   <nav class="mastering-progress" [attr.aria-label]="lang.t().MASTERING_PROGRESS_ARIA">
     <div class="progress-step done">
       <span>1</span><strong>{{ lang.t().MASTERING_STEP_UPLOAD }}</strong>
@@ -96,6 +97,13 @@
     <p class="listening-status" aria-live="polite">{{ listeningStatusText() }}</p>
   </div>
 
+  <app-analyzer-simple
+    [state]="analysisState"
+    [metrics]="analysisMetrics"
+    [target]="activeTarget()">
+  </app-analyzer-simple>
+  </ng-container>
+
   <app-audio-dna-card
     *ngIf="analysisState !== 'empty' || audioDna"
     [audioDna]="audioDna"
@@ -112,9 +120,15 @@
     [audioDna]="audioDna"
     [audioIntelligence]="audioIntelligence"
     [openAiMusicAnalyst]="openAiMusicAnalyst"
-    [sourceGeneration]="audioDna?.source_generation ?? null">
+    [sourceGeneration]="audioDna?.source_generation ?? null"
+    [analysisId]="analysisId"
+    [persistedArtistConfirmation]="persistedArtistConfirmation"
+    [persistedFlowStage]="persistedFlowStage"
+    [persistedConfirmedAt]="persistedConfirmedAt"
+    [persistedPitchResult]="persistedPitchResult">
   </app-spotify-pitch-panel>
 
+  <ng-container *ngIf="originalFile">
   <div class="mastering-help-toolbar">
     <button class="guide-button" type="button" (click)="toggleGuide()">
       ⓘ {{ education().help }} · {{ education().guideTitle }}
@@ -393,4 +407,5 @@
     [state]="analysisState"
     [target]="activeTarget()">
   </app-audio-dna-card>
+  </ng-container>
 </div>
