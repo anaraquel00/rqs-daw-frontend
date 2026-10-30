@@ -84,8 +84,12 @@ interface AudioDnaCopy {
   levelHigh: string;
   musicDna: string;
   genre: string;
+  genreFamily: string;
+  subgenres: string;
   astral: string;
   instruments: string;
+  vocals: string;
+  productionElements: string;
   semanticEvidence: string;
   semanticUnavailable: string;
 }
@@ -108,7 +112,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     energy: 'Energy', danceability: 'Danceability', normalizedValue: 'Normalized value', duration: 'Duration', brightness: 'Brightness', warmth: 'Warmth',
     transientStrength: 'Transient strength', stereoWidth: 'Stereo width', lowEndDensity: 'Low-end density', dynamicDensity: 'Dynamic density', overallEnergy: 'Overall energy',
     confidenceLow: 'Low', confidenceMedium: 'Medium', confidenceHigh: 'High', levelLow: 'Low', levelModerate: 'Moderate', levelHigh: 'High',
-    musicDna: 'MUSIC DNA', genre: 'Genre', astral: 'Astral', instruments: 'Instruments',
+    musicDna: 'MUSIC DNA', genre: 'Genre', genreFamily: 'Genre family', subgenres: 'Subgenres', astral: 'Astral', instruments: 'Instruments',
+    vocals: 'Vocals', productionElements: 'Production elements',
     semanticEvidence: 'Semantic evidence from the audio.', semanticUnavailable: 'Semantic analysis is unavailable. Technical mastering remains active.',
   },
   pt: {
@@ -128,7 +133,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     energy: 'Energia', danceability: 'Dançabilidade', normalizedValue: 'Valor normalizado', duration: 'Duração', brightness: 'Brilho', warmth: 'Calor',
     transientStrength: 'Força dos transientes', stereoWidth: 'Largura estéreo', lowEndDensity: 'Densidade dos graves', dynamicDensity: 'Densidade dinâmica', overallEnergy: 'Energia geral',
     confidenceLow: 'Baixa', confidenceMedium: 'Média', confidenceHigh: 'Alta', levelLow: 'Baixa', levelModerate: 'Moderada', levelHigh: 'Alta',
-    musicDna: 'MUSIC DNA', genre: 'Gênero', astral: 'Astral', instruments: 'Instrumentos',
+    musicDna: 'MUSIC DNA', genre: 'Gênero', genreFamily: 'Família de gênero', subgenres: 'Subgêneros', astral: 'Astral', instruments: 'Instrumentos',
+    vocals: 'Vocais', productionElements: 'Elementos de produção',
     semanticEvidence: 'Evidência semântica extraída do áudio.', semanticUnavailable: 'A análise semântica está indisponível. A masterização técnica permanece ativa.',
   },
   pl: {
@@ -148,7 +154,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     energy: 'Energia', danceability: 'Taneczność', normalizedValue: 'Wartość znormalizowana', duration: 'Czas trwania', brightness: 'Jasność', warmth: 'Ciepło',
     transientStrength: 'Siła transjentów', stereoWidth: 'Szerokość stereo', lowEndDensity: 'Gęstość dołu', dynamicDensity: 'Gęstość dynamiczna', overallEnergy: 'Ogólna energia',
     confidenceLow: 'Niska', confidenceMedium: 'Średnia', confidenceHigh: 'Wysoka', levelLow: 'Niska', levelModerate: 'Umiarkowana', levelHigh: 'Wysoka',
-    musicDna: 'MUSIC DNA', genre: 'Gatunek', astral: 'Astral', instruments: 'Instrumenty',
+    musicDna: 'MUSIC DNA', genre: 'Gatunek', genreFamily: 'Rodzina gatunków', subgenres: 'Podgatunki', astral: 'Astral', instruments: 'Instrumenty',
+    vocals: 'Wokal', productionElements: 'Elementy produkcji',
     semanticEvidence: 'Dane semantyczne wyodrębnione z audio.', semanticUnavailable: 'Analiza semantyczna jest niedostępna. Mastering techniczny pozostaje aktywny.',
   },
   fr: {
@@ -168,7 +175,8 @@ const COPY: Record<UiLanguage, AudioDnaCopy> = {
     energy: 'Énergie', danceability: 'Dansabilité', normalizedValue: 'Valeur normalisée', duration: 'Durée', brightness: 'Brillance', warmth: 'Chaleur',
     transientStrength: 'Force des transitoires', stereoWidth: 'Largeur stéréo', lowEndDensity: 'Densité des graves', dynamicDensity: 'Densité dynamique', overallEnergy: 'Énergie globale',
     confidenceLow: 'Faible', confidenceMedium: 'Moyenne', confidenceHigh: 'Élevée', levelLow: 'Faible', levelModerate: 'Modérée', levelHigh: 'Élevée',
-    musicDna: 'MUSIC DNA', genre: 'Genre', astral: 'Astral', instruments: 'Instruments',
+    musicDna: 'MUSIC DNA', genre: 'Genre', genreFamily: 'Famille de genre', subgenres: 'Sous-genres', astral: 'Astral', instruments: 'Instruments',
+    vocals: 'Voix', productionElements: 'Éléments de production',
     semanticEvidence: 'Données sémantiques extraites de l’audio.', semanticUnavailable: 'L’analyse sémantique est indisponible. Le mastering technique reste actif.',
   },
 };
@@ -186,6 +194,7 @@ export class AudioDnaCardComponent {
   @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() state: MasteringAnalysisState = 'empty';
   @Input() mode: 'summary' | 'technical' = 'summary';
+  @Input() workspaceMode: 'master' | 'pitch' = 'master';
   @Input() target: MasteringDeliveryTargetCapabilities | null = null;
   @Output() resetRecommendation = new EventEmitter<void>();
 
@@ -286,6 +295,10 @@ export class AudioDnaCardComponent {
     return this.audioIntelligence?.status === 'READY'
       ? this.audioIntelligence.instruments.join(' · ')
       : '';
+  }
+
+  audioIntelligenceValueLine(values: readonly string[]): string {
+    return values.join(' · ') || '—';
   }
 
   masterReasonLabels(): string[] {

@@ -21,6 +21,9 @@
           </div>
           <div><span>{{ copy().energy }}</span><strong>{{ musicFeatureLabel(music.energy, music.energy_label) }}</strong></div>
           <div><span>{{ copy().danceability }}</span><strong>{{ musicFeatureLabel(music.danceability, music.danceability_label) }}</strong></div>
+          @if (workspaceMode === 'pitch') {
+            <div data-testid="pitch-track-duration"><span>{{ copy().duration }}</span><strong>{{ formatDuration(audioDna!.technical.duration_seconds) }}</strong></div>
+          }
         </div>
       </section>
 
@@ -35,10 +38,19 @@
               <span>AI Music Analysis</span>
             </div>
             <dl class="semantic-grid">
-              <div><dt>{{ copy().genre }}</dt><dd>{{ audioIntelligenceGenreLine() }}</dd></div>
-              <div><dt>{{ copy().astral }}</dt><dd>{{ audioIntelligenceMoodLine() }}</dd></div>
-              @if (intelligence.instruments.length > 0) {
-                <div data-testid="audio-intelligence-v2-instruments"><dt>{{ copy().instruments }}</dt><dd>{{ audioIntelligenceInstrumentLine() }}</dd></div>
+              @if (workspaceMode === 'pitch') {
+                <div data-testid="pitch-music-dna-genre-family"><dt>{{ copy().genreFamily }}</dt><dd>{{ audioIntelligenceValueLine(intelligence.genre_family) }}</dd></div>
+                <div data-testid="pitch-music-dna-subgenres"><dt>{{ copy().subgenres }}</dt><dd>{{ audioIntelligenceValueLine(intelligence.subgenres) }}</dd></div>
+                <div data-testid="pitch-music-dna-moods"><dt>{{ copy().astral }}</dt><dd>{{ audioIntelligenceValueLine(intelligence.moods) }}</dd></div>
+                <div data-testid="pitch-music-dna-instruments"><dt>{{ copy().instruments }}</dt><dd>{{ audioIntelligenceValueLine(intelligence.instruments) }}</dd></div>
+                <div data-testid="pitch-music-dna-vocals"><dt>{{ copy().vocals }}</dt><dd>{{ audioIntelligenceValueLine(intelligence.vocals) }}</dd></div>
+                <div data-testid="pitch-music-dna-production-elements"><dt>{{ copy().productionElements }}</dt><dd>{{ audioIntelligenceValueLine(intelligence.production_elements) }}</dd></div>
+              } @else {
+                <div><dt>{{ copy().genre }}</dt><dd>{{ audioIntelligenceGenreLine() }}</dd></div>
+                <div><dt>{{ copy().astral }}</dt><dd>{{ audioIntelligenceMoodLine() }}</dd></div>
+                @if (intelligence.instruments.length > 0) {
+                  <div data-testid="audio-intelligence-v2-instruments"><dt>{{ copy().instruments }}</dt><dd>{{ audioIntelligenceInstrumentLine() }}</dd></div>
+                }
               }
             </dl>
           </section>
@@ -70,54 +82,56 @@
         }
       }
 
-      @if (audioDna?.master_profile; as profile) {
-        <section class="master-profile" [class.inconclusive]="profile.confidence_level === 'low'" aria-labelledby="master-profile-title">
-          <div class="title-row">
-            <h3 id="master-profile-title">{{ copy().masterRecommended }}</h3>
-            <span class="source-badge" [class.manual]="masterProfileSource() === 'MANUAL'">
-              {{ profile.confidence_level === 'low' ? copy().inconclusive : (masterProfileSource() === 'AUDIO_DNA' ? copy().recommended : copy().manualOverride) }}
-            </span>
-          </div>
-          <dl class="profile-facts">
-            <div><dt>{{ copy().atmosphere }}</dt><dd>{{ atmosphereLabel(profile.atmosphere) }}</dd></div>
-            <div><dt>{{ copy().character }}</dt><dd>{{ profile.character_intensity }}%</dd></div>
-            <div><dt>{{ copy().confidence }}</dt><dd>{{ confidenceLabel(profile.confidence_level) }}</dd></div>
-          </dl>
-          <p>{{ copy().recommendationApplied }}</p>
-          @if (masterProfileSource() === 'MANUAL' && profile.confidence_level !== 'low') {
-            <button type="button" class="dna-reset" (click)="resetRecommendation.emit()">
-              {{ copy().reset }}: {{ atmosphereLabel(profile.atmosphere) }} · {{ profile.character_intensity }}%
-            </button>
-          }
-        </section>
-
-        <section class="why-master" aria-labelledby="why-master-title">
-          <h4 id="why-master-title">{{ copy().whyThisMaster }}</h4>
-          <ul>
-            @for (reason of masterReasonLabels(); track $index) {
-              <li>{{ reason }}</li>
+      @if (workspaceMode === 'master') {
+        @if (audioDna?.master_profile; as profile) {
+          <section class="master-profile" [class.inconclusive]="profile.confidence_level === 'low'" aria-labelledby="master-profile-title">
+            <div class="title-row">
+              <h3 id="master-profile-title">{{ copy().masterRecommended }}</h3>
+              <span class="source-badge" [class.manual]="masterProfileSource() === 'MANUAL'">
+                {{ profile.confidence_level === 'low' ? copy().inconclusive : (masterProfileSource() === 'AUDIO_DNA' ? copy().recommended : copy().manualOverride) }}
+              </span>
+            </div>
+            <dl class="profile-facts">
+              <div><dt>{{ copy().atmosphere }}</dt><dd>{{ atmosphereLabel(profile.atmosphere) }}</dd></div>
+              <div><dt>{{ copy().character }}</dt><dd>{{ profile.character_intensity }}%</dd></div>
+              <div><dt>{{ copy().confidence }}</dt><dd>{{ confidenceLabel(profile.confidence_level) }}</dd></div>
+            </dl>
+            <p>{{ copy().recommendationApplied }}</p>
+            @if (masterProfileSource() === 'MANUAL' && profile.confidence_level !== 'low') {
+              <button type="button" class="dna-reset" (click)="resetRecommendation.emit()">
+                {{ copy().reset }}: {{ atmosphereLabel(profile.atmosphere) }} · {{ profile.character_intensity }}%
+              </button>
             }
-          </ul>
+          </section>
+
+          <section class="why-master" aria-labelledby="why-master-title">
+            <h4 id="why-master-title">{{ copy().whyThisMaster }}</h4>
+            <ul>
+              @for (reason of masterReasonLabels(); track $index) {
+                <li>{{ reason }}</li>
+              }
+            </ul>
+          </section>
+        }
+
+        <section class="distribution-readiness" aria-labelledby="distribution-readiness-title">
+          <h3 id="distribution-readiness-title">{{ copy().distributionReadiness }}</h3>
+          <div class="readiness-grid">
+            <div>
+              <span>LOUDNESS</span>
+              <strong>{{ audioDna!.technical.lufs_integrated | number:'1.1-1' }} LUFS</strong>
+              <small [class.attention]="!loudnessWithinTarget()">{{ loudnessReadinessLabel() }}</small>
+            </div>
+            <div>
+              <span>TRUE PEAK</span>
+              <strong>{{ audioDna!.technical.true_peak_dbtp | number:'1.1-1' }} dBTP</strong>
+              <small [class.attention]="!truePeakWithinTarget()">{{ truePeakReadinessLabel() }}</small>
+            </div>
+            <div class="secondary"><span>{{ copy().dynamics }}</span><strong>{{ dynamicsLabel() }}</strong></div>
+            <div class="secondary"><span>{{ copy().duration }}</span><strong>{{ formatDuration(audioDna!.technical.duration_seconds) }}</strong></div>
+          </div>
         </section>
       }
-
-      <section class="distribution-readiness" aria-labelledby="distribution-readiness-title">
-        <h3 id="distribution-readiness-title">{{ copy().distributionReadiness }}</h3>
-        <div class="readiness-grid">
-          <div>
-            <span>LOUDNESS</span>
-            <strong>{{ audioDna!.technical.lufs_integrated | number:'1.1-1' }} LUFS</strong>
-            <small [class.attention]="!loudnessWithinTarget()">{{ loudnessReadinessLabel() }}</small>
-          </div>
-          <div>
-            <span>TRUE PEAK</span>
-            <strong>{{ audioDna!.technical.true_peak_dbtp | number:'1.1-1' }} dBTP</strong>
-            <small [class.attention]="!truePeakWithinTarget()">{{ truePeakReadinessLabel() }}</small>
-          </div>
-          <div class="secondary"><span>{{ copy().dynamics }}</span><strong>{{ dynamicsLabel() }}</strong></div>
-          <div class="secondary"><span>{{ copy().duration }}</span><strong>{{ formatDuration(audioDna!.technical.duration_seconds) }}</strong></div>
-        </div>
-      </section>
     }
   </section>
 } @else if (state === 'success' && audioDna?.music; as music) {

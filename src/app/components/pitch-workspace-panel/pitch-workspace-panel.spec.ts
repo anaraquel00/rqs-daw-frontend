@@ -14,6 +14,7 @@ class AudioDnaStub {
   @Input() audioIntelligence: unknown;
   @Input() openAiMusicAnalyst: unknown;
   @Input() state: unknown;
+  @Input() workspaceMode: 'master' | 'pitch' = 'master';
 }
 
 @Component({ selector: 'app-spotify-pitch-panel', standalone: true, template: 'PITCH READY' })
@@ -61,6 +62,8 @@ describe('PitchWorkspacePanelComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('AI RELEASE INTELLIGENCE');
     expect(fixture.nativeElement.textContent).toContain('AUDIO DNA');
     expect(fixture.nativeElement.textContent).toContain('PITCH READY');
+    const audioDna = fixture.debugElement.query(By.directive(AudioDnaStub)).componentInstance as AudioDnaStub;
+    expect(audioDna.workspaceMode).toBe('pitch');
   });
 
   it('passes an existing persisted pitch to the pitch panel without inference', () => {

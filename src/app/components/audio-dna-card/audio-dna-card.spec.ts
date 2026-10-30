@@ -224,6 +224,43 @@ describe('AudioDnaCardComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('DISTRIBUTION READINESS');
   });
 
+  it('renders shared release evidence in PITCH without Master-only recommendations or delivery metrics', () => {
+    const intelligence: AudioIntelligenceV2Payload = {
+      analysisVersion: 'audio-intelligence-v2', status: 'READY', provider: 'openai', model: 'gpt-audio-1.5',
+      genre_family_taxonomy: ['electronic', 'rock'],
+      source_generation: 'source-v2', analyzer_generation: 'source-v2',
+      genre_family: ['electronic'], subgenres: ['Progressive House'], moods: ['uplifting'],
+      instruments: ['Synthesizer', 'Drum machine'], vocals: ['Processed vocals'],
+      production_elements: ['Layered synth texture'], uncertainty: 'medium',
+    };
+    fixture.componentRef.setInput('workspaceMode', 'pitch');
+    fixture.componentRef.setInput('audioIntelligence', intelligence);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const text = root.textContent ?? '';
+    expect(root.querySelector('.track-summary')).not.toBeNull();
+    expect(root.querySelector('[data-testid="audio-intelligence-v2"]')).not.toBeNull();
+    expect(text).toContain('63 BPM');
+    expect(text).toContain('Possible double-time: 126 BPM');
+    expect(text).toContain('D# minor');
+    expect(text).toContain('04:45');
+    expect(root.querySelector('[data-testid="pitch-music-dna-genre-family"]')?.textContent).toContain('electronic');
+    expect(root.querySelector('[data-testid="pitch-music-dna-subgenres"]')?.textContent).toContain('Progressive House');
+    expect(root.querySelector('[data-testid="pitch-music-dna-moods"]')?.textContent).toContain('uplifting');
+    expect(root.querySelector('[data-testid="pitch-music-dna-instruments"]')?.textContent).toContain('Synthesizer · Drum machine');
+    expect(root.querySelector('[data-testid="pitch-music-dna-vocals"]')?.textContent).toContain('Processed vocals');
+    expect(root.querySelector('[data-testid="pitch-music-dna-production-elements"]')?.textContent).toContain('Layered synth texture');
+    expect(root.querySelector('.master-profile')).toBeNull();
+    expect(root.querySelector('.why-master')).toBeNull();
+    expect(root.querySelector('.distribution-readiness')).toBeNull();
+    expect(text).not.toContain('RECOMMENDED MASTER');
+    expect(text).not.toContain('WHY THIS MASTER?');
+    expect(text).not.toContain('DISTRIBUTION READINESS');
+    expect(text).not.toContain('LUFS');
+    expect(text).not.toContain('TRUE PEAK');
+  });
+
   it('isolates an unavailable V2 analysis without falling back to legacy CocoTagger labels', () => {
     const legacy = structuredClone(audioDna);
     legacy.semantic = {
