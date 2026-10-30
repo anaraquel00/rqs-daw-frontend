@@ -11,7 +11,7 @@ const expected = {
     canonical: 'https://studio.raquelsynths.com/'
   },
   app: {
-    title: 'RQS Studio Apps | Online Mastering, Stems, Setlists & Music Links',
+    title: 'RQS Studio Apps | Online Mastering, Editorial Pitch, Setlists & Music Links',
     robots: 'index, follow',
     canonical: 'https://studio.raquelsynths.com/app'
   },
@@ -45,9 +45,10 @@ for (const route of routes) {
 }
 
 const appHtml = fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8');
-for (const label of ['MASTER', 'SPLIT', 'BUILD', 'UPLINK']) {
+  for (const label of ['MASTER', 'PITCH', 'BUILD', 'UPLINK']) {
   assert.match(appHtml, new RegExp('>' + label + '<'), 'prerendered /app must contain ' + label);
 }
+assert.doesNotMatch(appHtml, />SPLIT</, 'prerendered /app must not expose SPLIT as a primary pillar');
 assert.match(appHtml, /application\/ld\+json/);
 assert.match(appHtml, /WebApplication/);
 assert.doesNotMatch(appHtml, /WebSite/);

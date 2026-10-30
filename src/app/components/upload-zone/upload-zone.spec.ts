@@ -138,6 +138,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
 
   it('rehydrates a persisted analysis after reload without invoking GPT Audio analysis', () => {
     const analysisId = '00000000-0000-4000-8000-000000000030';
+    component.workspace = 'pitch';
     component.selectedFile = null;
     isLoggedIn.set(true);
     dsp.getMasteringV2Analysis.and.returnValue(of({

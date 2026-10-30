@@ -114,19 +114,14 @@
     (resetRecommendation)="resetToAudioDna()">
   </app-audio-dna-card>
 
-  <app-spotify-pitch-panel
-    *ngIf="capabilities()?.features?.spotify_pitch_enabled === true && analysisState === 'success'"
-    [analysisMetrics]="analysisMetrics"
-    [audioDna]="audioDna"
-    [audioIntelligence]="audioIntelligence"
-    [openAiMusicAnalyst]="openAiMusicAnalyst"
-    [sourceGeneration]="audioDna?.source_generation ?? null"
-    [analysisId]="analysisId"
-    [persistedArtistConfirmation]="persistedArtistConfirmation"
-    [persistedFlowStage]="persistedFlowStage"
-    [persistedConfirmedAt]="persistedConfirmedAt"
-    [persistedPitchResult]="persistedPitchResult">
-  </app-spotify-pitch-panel>
+  <section class="pitch-handoff" *ngIf="capabilities()?.features?.spotify_pitch_enabled === true && analysisState === 'success' && analysisId">
+    <div>
+      <span>AI RELEASE INTELLIGENCE</span>
+      <h3>PREPARE YOUR SPOTIFY PITCH</h3>
+      <p>Continue with this existing analysis in the dedicated PITCH workspace. No new audio analysis is required.</p>
+    </div>
+    <a [routerLink]="['/pitch']" [queryParams]="{ analysis: analysisId }">PREPARAR SPOTIFY PITCH →</a>
+  </section>
 
   <ng-container *ngIf="originalFile">
   <div class="mastering-help-toolbar">

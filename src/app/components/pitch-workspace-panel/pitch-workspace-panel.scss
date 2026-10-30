@@ -1,0 +1,12 @@
+:host { display: block; min-width: 0; }
+.pitch-workspace-panel { display: grid; gap: 28px; min-width: 0; text-align: left; }
+.pitch-workspace-heading { padding: 24px; border: 1px solid var(--studio-border, #2f2340); border-radius: 12px; background: var(--studio-panel, rgba(120, 70, 180, .08)); }
+.pitch-workspace-heading p { margin: 0 0 8px; color: var(--studio-violet, #b78cff); font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+.pitch-workspace-heading h2 { margin: 0; color: var(--studio-heading, #fff); font-size: clamp(30px, 5vw, 44px); letter-spacing: 4px; }
+.pitch-workspace-heading span { display: block; margin-top: 10px; color: var(--studio-muted, #a9a3b3); font-size: 13px; line-height: 1.6; }
+.pitch-state { padding: 18px; border: 1px solid var(--studio-border, #2f2340); border-radius: 10px; color: var(--studio-text, #fff); background: var(--studio-display, rgba(0, 0, 0, .2)); font-size: 12px; letter-spacing: 1px; }
+.pitch-state.error { border-color: rgba(255, 92, 150, .45); color: var(--studio-pink, #ff5c96); }
+@media (max-width: 600px) {
+  .pitch-workspace-panel { gap: 20px; }
+  .pitch-workspace-heading { padding: 20px 16px; }
+}

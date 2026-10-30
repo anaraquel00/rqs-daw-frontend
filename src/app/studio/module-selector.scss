@@ -4,7 +4,7 @@
 .module-card { --accent: var(--studio-cyan); position: relative; display: flex; flex-direction: column; min-width: 0; padding: 40px; border: 1px solid var(--studio-border); border-radius: var(--studio-radius); background: var(--studio-card); color: var(--studio-text); text-decoration: none; transition: border-color .2s, transform .2s; }
 .module-card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .module-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
-.split { --accent: var(--studio-violet); } .build { --accent: var(--studio-pink); } .uplink { --accent: var(--studio-uplink); }
+.pitch, .split { --accent: var(--studio-violet); } .build { --accent: var(--studio-pink); } .uplink { --accent: var(--studio-uplink); }
 .card-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 40px; }
 .engine { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 2px; color: var(--studio-muted); }
 .engine i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
@@ -17,6 +17,10 @@ h2 { margin: 14px 0 8px; font-size: 30px; font-weight: 700; letter-spacing: 3px;
 .meter { flex: 1; display: flex; flex-direction: column-reverse; gap: 2px; }
 .meter i { height: 3px; background: var(--studio-meter-off); } .meter .lit { background: var(--studio-cyan); box-shadow: 0 0 4px var(--studio-cyan); }
 .stems { width: 100%; height: 100px; } .stems text { font-size: 8px; font-weight: 700; }
+.pitch-flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; width: 100%; color: var(--studio-muted); font-size: 10px; letter-spacing: 1px; }
+.pitch-flow span, .pitch-flow strong { padding: 12px 14px; border: 1px solid var(--studio-border); border-radius: 8px; background: var(--studio-card); }
+.pitch-flow strong { border-color: var(--studio-violet); color: var(--studio-violet); }
+.pitch-flow i { color: var(--studio-violet); font-style: normal; }
 .timeline { width: 100%; } .track { display: flex; gap: 8px; margin-bottom: 16px; }
 .track i, .track b { display: block; height: 24px; border-radius: 2px; border: 1px solid; }
 .pink i { width: 96px; border-color: var(--studio-timeline-pink-border); background: var(--studio-timeline-pink-bg); } .pink b { width: 64px; border-color: var(--studio-timeline-pink-secondary-border); background: var(--studio-timeline-pink-secondary-bg); }

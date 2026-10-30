@@ -6,7 +6,7 @@ import { studioSeoConfig, StudioSurface } from '../studio/studio-seo';
 import { SeoService } from './seo.service';
 
 describe('RQS Studio SEO configuration', () => {
-  const appRoutes: StudioSurface[] = ['master', 'build', 'uplink', 'split', 'learn', 'account'];
+  const appRoutes: StudioSurface[] = ['master', 'pitch', 'build', 'uplink', 'split', 'learn', 'account'];
   let seo: SeoService;
   let title: Title;
   let meta: Meta;
@@ -43,8 +43,8 @@ describe('RQS Studio SEO configuration', () => {
   it('uses indexable app discovery SEO and truthful WebApplication data', () => {
     const config = studioSeoConfig('home', 'en');
 
-    expect(config.title).toBe('RQS Studio Apps | Online Mastering, Stems, Setlists & Music Links');
-    expect(config.description).toBe('Explore RQS Studio tools for independent musicians and producers: browser-based mastering, stem separation preview, continuous setlist building and smart music links.');
+    expect(config.title).toBe('RQS Studio Apps | Online Mastering, Editorial Pitch, Setlists & Music Links');
+    expect(config.description).toBe('Explore MASTER, PITCH, BUILD and UPLINK: browser-based mastering, artist-controlled editorial intelligence, setlists and smart music links.');
     expect(config.url).toBe('https://studio.raquelsynths.com/app');
     expect(config.robots).toBe('index, follow');
     expect(config.jsonLd).toEqual(jasmine.objectContaining({
@@ -54,13 +54,15 @@ describe('RQS Studio SEO configuration', () => {
       operatingSystem: 'Web',
       url: 'https://studio.raquelsynths.com/app'
     }));
-    expect(JSON.stringify(config.jsonLd)).toContain('not available in Public Beta');
+    expect(JSON.stringify(config.jsonLd)).toContain('Artist-controlled AI Spotify Pitch');
   });
 
   it('marks every operational workspace noindex, follow except account', () => {
     for (const route of appRoutes) {
       const config = studioSeoConfig(route, 'en');
-      expect(config.url).toBe('https://studio.raquelsynths.com/app/' + route);
+      expect(config.url).toBe(route === 'pitch'
+        ? 'https://studio.raquelsynths.com/pitch'
+        : 'https://studio.raquelsynths.com/app/' + route);
       expect(config.robots).toBe(route === 'account' ? 'noindex, nofollow' : 'noindex, follow');
       expect(config.jsonLd).toBeUndefined();
     }
@@ -78,7 +80,7 @@ describe('RQS Studio SEO configuration', () => {
 
     seo.update(studioSeoConfig('home', 'en'));
 
-    expect(title.getTitle()).toBe('RQS Studio Apps | Online Mastering, Stems, Setlists & Music Links');
+    expect(title.getTitle()).toBe('RQS Studio Apps | Online Mastering, Editorial Pitch, Setlists & Music Links');
     expect(meta.getTag('name="robots"')?.content).toBe('index, follow');
     expect(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href)
       .toBe('https://studio.raquelsynths.com/app');

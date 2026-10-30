@@ -20,6 +20,11 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'studio/pitch',
+    redirectTo: 'pitch',
+    pathMatch: 'full'
+  },
+  {
     path: 'studio/build',
     redirectTo: 'app/build',
     pathMatch: 'full'
@@ -47,6 +52,10 @@ export const routes: Routes = [
   {
     path: 'app',
     loadChildren: () => import('./studio/studio.routes').then(m => m.STUDIO_ROUTES)
+  },
+  {
+    path: 'pitch',
+    loadChildren: () => import('./studio/studio.routes').then(m => m.PITCH_ROUTES)
   },
   {
     path: 'master/online',

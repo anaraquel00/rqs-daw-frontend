@@ -25,7 +25,7 @@ import { MasteringService } from '../services/mastering.service';
 // Real shell/upload/panel/waveform and request state; only external boundaries are mocked.
 const target = {target_lufs: -14, min_lufs: -16, max_lufs: -10, true_peak_ceiling_dbtp: -1.2,
   min_plr_lu: 9, min_lra_retention: .85, max_crest_loss_db: 1.5, policy_source: 'local-test'};
-const capabilities = {engine: 'rqs-core-mastering-v2', destinations: {
+const capabilities = {engine: 'rqs-core-mastering-v2', features: {spotify_pitch_enabled: true}, destinations: {
   streaming: {platforms: Object.fromEntries(['spotify','apple_music','youtube','soundcloud','generic'].map(p => [p, {standard: target, loud: target}]))},
   club: {target}, festival: {target},
 }};
@@ -57,6 +57,7 @@ describe('Studio MASTER full-width integration', () => {
     commands = spyOn(upload, 'processarMaster');
   };
   beforeEach(async () => {
+    localStorage.removeItem('rqs:lastAnalysisId:test-owner');
     auth = {session: signal({user:{id:'test-owner'}}), isLoggedIn: signal(true), isPremium: signal(false),
       canMaster: signal(true), remainingMasters: signal(3), reselectAudioRequired: signal(false),
       requestSignIn: jasmine.createSpy(), logout: jasmine.createSpy(), refreshProfile: jasmine.createSpy()};
@@ -71,8 +72,8 @@ describe('Studio MASTER full-width integration', () => {
     dsp = {getMasteringV2Capabilities: jasmine.createSpy().and.returnValue(of(capabilities)),
       getMasteringV2PresignedUrl: jasmine.createSpy().and.returnValue(of({uploadUrl:'https://example.invalid/local', s3Key:'test-only'})),
       uploadToS3: jasmine.createSpy().and.returnValue(of({})),
-      analyzeMasteringV2: jasmine.createSpy().and.returnValue(of({integrated_lufs:-14,true_peak_dbtp:-1.3,
-        rms_dbfs:-18,crest_factor_db:8,loudness_range_lu:5,duration_seconds:60}))};
+      analyzeMasteringV2: jasmine.createSpy().and.returnValue(of({analysis_id:'00000000-0000-4000-8000-000000000040',
+        integrated_lufs:-14,true_peak_dbtp:-1.3,rms_dbfs:-18,crest_factor_db:8,loudness_range_lu:5,duration_seconds:60}))};
     TestBed.configureTestingModule({providers:[provideRouter([{path:'app',children:STUDIO_ROUTES}]),
       {provide:AuthService,useValue:auth}, {provide:AudioComparisonService,useValue:audio}, {provide:DspService,useValue:dsp},
       {provide:AnalyticsService,useValue:{trackEvent:jasmine.createSpy()}},
@@ -87,7 +88,10 @@ describe('Studio MASTER full-width integration', () => {
     await harness.fixture.whenStable(); harness.detectChanges();
     upload = harness.fixture.debugElement.query(By.directive(UploadZoneComponent)).componentInstance;
   });
-  afterEach(() => { harness?.fixture.nativeElement.remove(); });
+  afterEach(() => {
+    localStorage.removeItem('rqs:lastAnalysisId:test-owner');
+    harness?.fixture.nativeElement.remove();
+  });
 
   it('opens the real MASTER alone at full content width and returns without remounting the source', async () => {
     expect(TestBed.inject(Router).url).toBe('/app/master');
@@ -140,6 +144,15 @@ describe('Studio MASTER full-width integration', () => {
     await harness.fixture.whenStable(); expect(audio.switchVariant).toHaveBeenCalledWith('master');
     (root().querySelectorAll('.ab-btn')[0] as HTMLButtonElement).click();
     await harness.fixture.whenStable(); expect(audio.switchVariant).toHaveBeenCalledWith('original');
+  });
+  it('hands an existing MASTER analysis to the dedicated PITCH route without embedding the pitch panel', async () => {
+    await selectFile();
+
+    const handoff = root().querySelector('.pitch-handoff a') as HTMLAnchorElement;
+    expect(root().querySelector('app-spotify-pitch-panel')).toBeNull();
+    expect(handoff.textContent).toContain('PREPARAR SPOTIFY PITCH');
+    expect(handoff.getAttribute('href')).toBe('/pitch?analysis=00000000-0000-4000-8000-000000000040');
+    expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
   });
   it('keeps destination/platform, Atmosphere/Intensity and requested LUFS connected to existing request state', async () => {
     await selectFile();

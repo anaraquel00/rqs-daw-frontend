@@ -15,12 +15,14 @@ const expected = [
 ];
 
 assert.deepEqual(urls, expected, 'sitemap must contain exactly the public discovery/trust URLs');
-for (const path of ['/app/master', '/app/split', '/app/build', '/app/uplink', '/app/learn', '/app/account', '/legacy']) {
+for (const path of ['/app/master', '/app/split', '/app/build', '/app/uplink', '/app/learn', '/app/account', '/pitch', '/legacy']) {
   assert.equal(urls.includes('https://studio.raquelsynths.com' + path), false, 'sitemap must exclude ' + path);
 }
 
 const selector = fs.readFileSync('src/app/studio/module-selector.ts', 'utf8');
-assert.match(selector, /Stem separation preview[\s\S]*not yet available in the Public Beta/);
+assert.match(selector, /id: 'master'[\s\S]*id: 'pitch'[\s\S]*id: 'build'[\s\S]*id: 'uplink'/);
+assert.match(selector, /id: 'pitch'[\s\S]*route: '\/pitch'[\s\S]*AI RELEASE INTELLIGENCE/);
+assert.doesNotMatch(selector, /id: 'split'/);
 assert.doesNotMatch(selector, /Direct uplink to streaming services|worldwide deployment|DISTRIBUTION ENGINE/);
 assert.match(selector, /smart music link[\s\S]*streaming destinations/);
 

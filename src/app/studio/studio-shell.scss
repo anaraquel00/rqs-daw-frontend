@@ -28,6 +28,8 @@ section[hidden] { display: none !important; }
 section { min-width: 0; }
 .master-workspace { width: 100%; }
 .master-title { margin: 0 0 24px; font-size: 24px; letter-spacing: 3px; }
+.pitch-workspace { width: 100%; }
+.pitch-title { margin: 0 0 24px; color: var(--studio-violet); font-size: 24px; letter-spacing: 3px; }
 .simple-surface { max-width: 800px; margin: 40px auto; padding: 40px; border: 1px solid var(--studio-border); border-radius: var(--studio-radius); background: var(--studio-card); }
 .simple-surface h1 { letter-spacing: 3px; }
 .simple-surface p { color: var(--studio-muted); line-height: 1.7; }

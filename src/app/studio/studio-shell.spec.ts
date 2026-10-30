@@ -1,9 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, Input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { StudioShellComponent } from './studio-shell';
-import { STUDIO_ROUTES } from './studio.routes';
+import { PITCH_ROUTES, STUDIO_ROUTES } from './studio.routes';
 import { AuthService } from '../services/auth.service';
 import { LanguageService } from '../services/language.service';
 import { CookieConsentService } from '../services/cookie-consent.service';
@@ -13,7 +14,7 @@ import { RqsUplinkEngineComponent } from '../rqs-uplink-engine/rqs-uplink-engine
 import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/rqs-uplink-dashboard';
 import { AuthPromptComponent } from '../components/auth-prompt/auth-prompt';
 
-@Component({ selector: 'app-upload-zone', template: '<input aria-label="Source marker" value="retained-audio">' }) class MasterStub {}
+@Component({ selector: 'app-upload-zone', template: '<input aria-label="Source marker" value="retained-audio">' }) class MasterStub { @Input() workspace: 'master' | 'pitch' = 'master'; }
 @Component({ selector: 'app-mix-panel', template: 'BUILD existing entry' }) class BuildStub {}
 @Component({ selector: 'app-rqs-uplink-engine', template: 'UPLINK existing entry' }) class UplinkStub {}
 @Component({ selector: 'app-rqs-uplink-dashboard', template: 'UPLINK list' }) class DashboardStub {}
@@ -28,7 +29,7 @@ describe('Studio V2 shell integration', () => {
     localStorage.removeItem('rqs_theme');
     session.set(null); premium.set(false); requestSignIn.calls.reset();
     TestBed.configureTestingModule({ providers: [
-      provideRouter([{ path: 'app', children: STUDIO_ROUTES }]),
+      provideRouter([{ path: 'app', children: STUDIO_ROUTES }, { path: 'pitch', children: PITCH_ROUTES }]),
       { provide: AuthService, useValue: { session, isPremium: premium, remainingMasters: () => 2, requestSignIn, loginWithProvider: jasmine.createSpy(), logout: jasmine.createSpy() } },
       { provide: CookieConsentService, useValue: { openPreferences: jasmine.createSpy() } },
     ] });
@@ -68,26 +69,39 @@ describe('Studio V2 shell integration', () => {
 
   it('renders the exact four approved module gateways and shared shell', () => {
     const root = harness.routeNativeElement!;
-    expect(Array.from(root.querySelectorAll('.module-card h2')).map(e => e.textContent)).toEqual(['MASTER', 'SPLIT', 'BUILD', 'UPLINK']);
+    expect(Array.from(root.querySelectorAll('.module-card h2')).map(e => e.textContent)).toEqual(['MASTER', 'PITCH', 'BUILD', 'UPLINK']);
     expect(root.querySelector('header')).not.toBeNull();
     expect(root.querySelector('footer')).not.toBeNull();
     expect(root.querySelector('app-upload-zone')).toBeNull();
   });
-  it('uses only canonical /app links throughout the V2 shell', () => {
+  it('uses canonical /app links plus the first-class /pitch route throughout the shell', () => {
     const links = Array.from(harness.routeNativeElement!.querySelectorAll('a[href]')) as HTMLAnchorElement[];
     const internalStudioLinks = links.map(link => link.getAttribute('href')).filter(path => path?.startsWith('/app'));
     expect(internalStudioLinks.length).toBeGreaterThan(0);
+    expect(links.some(link => link.getAttribute('href') === '/pitch')).toBeTrue();
     expect(links.some(link => link.getAttribute('href')?.startsWith('/studio'))).toBeFalse();
   });
   it('opens each module through the selector and retains only one visible workspace', async () => {
-    for (const name of ['master', 'build', 'uplink']) {
+    for (const name of ['master', 'pitch', 'build', 'uplink']) {
       await harness.navigateByUrl('/app');
       (harness.routeNativeElement!.querySelector(`#module-${name}`) as HTMLAnchorElement).click();
       await harness.fixture.whenStable(); harness.detectChanges();
-      expect(TestBed.inject(Router).url).toBe(`/app/${name}`);
+      expect(TestBed.inject(Router).url).toBe(name === 'pitch' ? '/pitch' : `/app/${name}`);
       expect(harness.routeNativeElement!.querySelectorAll('section:not([hidden])').length).toBe(1);
       expect(harness.routeNativeElement!.querySelector(`section[aria-label="${name.toUpperCase()}"]`)).not.toBeNull();
     }
+  });
+  it('renders the first-class PITCH route with the dedicated upload workspace', async () => {
+    await harness.navigateByUrl('/pitch?analysis=00000000-0000-4000-8000-000000000040');
+    harness.detectChanges();
+
+    const pitchSection = harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]');
+    const upload = harness.fixture.debugElement.queryAll(By.directive(MasterStub))
+      .find(debug => debug.componentInstance.workspace === 'pitch')?.componentInstance as MasterStub | undefined;
+
+    expect(pitchSection).not.toBeNull();
+    expect(upload?.workspace).toBe('pitch');
+    expect(TestBed.inject(Router).url).toContain('/pitch?analysis=');
   });
   it('preserves the MASTER instance and local input across selector and BUILD navigation', async () => {
     await harness.navigateByUrl('/app/master');
@@ -142,8 +156,9 @@ describe('Studio V2 shell integration', () => {
     }
   });
   it('restores SEO metadata across home, operational and account navigation', async () => {
+    TestBed.inject(LanguageService).setLanguage('en');
     await harness.navigateByUrl('/app');
-    expect(document.title).toBe('RQS Studio Apps | Online Mastering, Stems, Setlists & Music Links');
+    expect(document.title).toBe('RQS Studio Apps | Online Mastering, Editorial Pitch, Setlists & Music Links');
     expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('index, follow');
     expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://studio.raquelsynths.com/app');
 

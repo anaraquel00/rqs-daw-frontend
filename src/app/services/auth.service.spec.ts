@@ -190,7 +190,7 @@ describe('AuthService OAuth and Magic Link', () => {
     expect(window.sessionStorage.getItem('rqs_resume_mastering')).toBeNull();
   });
 
-  for (const path of ['/app/master', '/app/build', '/app/uplink', '/app/split', '/app']) {
+  for (const path of ['/app/master', '/pitch', '/app/pitch', '/app/build', '/app/uplink', '/app/split', '/app']) {
     it(`restores ${path} after a successful authentication callback`, () => {
       window.history.replaceState({}, '', path);
       service.requestSignIn(path === '/app/master' ? 'mastering' : 'general');
@@ -202,6 +202,27 @@ describe('AuthService OAuth and Magic Link', () => {
       expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBeNull();
     });
   }
+
+  it('preserves a validated analysis id when authentication starts from PITCH', () => {
+    const analysisId = '00000000-0000-4000-8000-000000000050';
+    const path = `/pitch?analysis=${analysisId}`;
+    window.history.replaceState({}, '', path);
+    service.requestSignIn('general');
+    window.history.replaceState({}, '', '/');
+
+    callbackHandler().handleAuthCallbackReturn({ present: true, errorCode: null }, authenticatedSession);
+
+    expect(router.navigateByUrl).toHaveBeenCalledOnceWith(path, { replaceUrl: true });
+  });
+
+  it('drops an invalid analysis id instead of restoring an untrusted query value', () => {
+    window.sessionStorage.setItem('rqs_auth_return_path', '/pitch?analysis=not-a-uuid');
+    window.history.replaceState({}, '', '/');
+
+    callbackHandler().handleAuthCallbackReturn({ present: true, errorCode: null }, authenticatedSession);
+
+    expect(router.navigateByUrl).toHaveBeenCalledOnceWith('/pitch', { replaceUrl: true });
+  });
 
   it('keeps an already-restored safe callback path without duplicate navigation', () => {
     window.history.replaceState({}, '', '/app/master');

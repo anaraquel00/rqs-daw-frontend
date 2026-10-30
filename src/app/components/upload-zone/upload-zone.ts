@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, DestroyRef, ElementRef, OnDestroy, OnInit, ViewChild, effect, inject, signal } from '@angular/core';
+import { AfterViewChecked, Component, DestroyRef, ElementRef, Input, OnDestroy, OnInit, ViewChild, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,17 +23,19 @@ import {
 import { MasteringService } from '../../services/mastering.service';
 import { environment } from '../../../environments/environment';
 import { AnalyticsService } from '../../services/analytics.service';
+import { PitchWorkspacePanelComponent } from '../pitch-workspace-panel/pitch-workspace-panel';
 
 type MasteringFeedback = 'invalid_format' | 'upload_failed' | 'source_preparing' | 'preview_failed' | 'full_failed';
 
 @Component({
   selector: 'app-upload-zone',
   standalone: true,
-  imports: [CommonModule, EkgMonitorComponent, MasteringPanelComponent],
+  imports: [CommonModule, EkgMonitorComponent, MasteringPanelComponent, PitchWorkspacePanelComponent],
   templateUrl: './upload-zone.html',
   styleUrls: ['./upload-zone.scss'],
 })
 export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked {
+  @Input() workspace: 'master' | 'pitch' = 'master';
   @ViewChild('terminalBody') private terminalScrollContainer?: ElementRef<HTMLElement>;
 
   isFullMasterCompleted = false;

@@ -11,9 +11,17 @@ export const STUDIO_ROUTES: Routes = [{
   path: '', component: StudioShellComponent,
   children: [
     { path: '', pathMatch: 'full', component: StudioRouteSurface, data: { surface: 'home' }, title: 'RQS Studio' },
-    ...['master', 'build', 'uplink', 'split', 'learn', 'account'].map(surface => ({
+    ...['master', 'pitch', 'build', 'uplink', 'split', 'learn', 'account'].map(surface => ({
       path: surface, component: StudioRouteSurface, data: { surface }, title: `RQS Studio — ${surface.toUpperCase()}`,
     })),
+    { path: '**', redirectTo: '' },
+  ],
+}];
+
+export const PITCH_ROUTES: Routes = [{
+  path: '', component: StudioShellComponent,
+  children: [
+    { path: '', pathMatch: 'full', component: StudioRouteSurface, data: { surface: 'pitch' }, title: 'RQS Studio — PITCH' },
     { path: '**', redirectTo: '' },
   ],
 }];

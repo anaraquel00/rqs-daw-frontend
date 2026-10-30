@@ -29,7 +29,7 @@
   @if (surface() !== 'home') {
     <a routerLink="/app">← {{ copy().back }}</a>
     @for (module of modules; track module) {
-      <a [routerLink]="['/app', module]" routerLinkActive="active" ariaCurrentWhenActive="page">{{ module.toUpperCase() }}</a>
+      <a [routerLink]="moduleRoute(module)" routerLinkActive="active" ariaCurrentWhenActive="page">{{ module.toUpperCase() }}</a>
     }
   }
   <span class="nav-spacer"></span>
@@ -43,6 +43,12 @@
     <section class="master-workspace" [hidden]="surface() !== 'master'" [attr.inert]="surface() !== 'master' ? '' : null" aria-label="MASTER">
       <h1 class="master-title">MASTER</h1>
       <app-upload-zone class="studio-master"></app-upload-zone>
+    </section>
+  }
+  @if (visited().has('pitch')) {
+    <section class="pitch-workspace" [hidden]="surface() !== 'pitch'" [attr.inert]="surface() !== 'pitch' ? '' : null" aria-label="PITCH">
+      <h1 class="pitch-title">PITCH</h1>
+      <app-upload-zone workspace="pitch" class="studio-pitch"></app-upload-zone>
     </section>
   }
   @if (visited().has('build')) {

@@ -1197,3 +1197,24 @@
   line-height: 1.45;
 }
 /* RQS_PREVIEW_NOTE_OFFSET_20261025 END */
+.pitch-handoff {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 28px 0;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--studio-violet, #b78cff) 55%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--studio-violet, #b78cff) 8%, var(--studio-card, #08050d));
+  text-align: left;
+}
+.pitch-handoff span { color: var(--studio-violet, #b78cff); font-size: 10px; font-weight: 700; letter-spacing: 2px; }
+.pitch-handoff h3 { margin: 8px 0; color: var(--studio-heading, #fff); font-size: 20px; letter-spacing: 1px; }
+.pitch-handoff p { margin: 0; max-width: 680px; color: var(--studio-muted, #aaa); line-height: 1.6; }
+.pitch-handoff a { flex: 0 0 auto; padding: 14px 18px; border: 1px solid var(--studio-violet, #b78cff); border-radius: 8px; color: var(--studio-heading, #fff); background: color-mix(in srgb, var(--studio-violet, #b78cff) 18%, transparent); text-decoration: none; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.pitch-handoff a:hover { background: color-mix(in srgb, var(--studio-violet, #b78cff) 28%, transparent); }
+@media (max-width: 720px) {
+  .pitch-handoff { align-items: stretch; flex-direction: column; padding: 20px 16px; }
+  .pitch-handoff a { text-align: center; }
+}

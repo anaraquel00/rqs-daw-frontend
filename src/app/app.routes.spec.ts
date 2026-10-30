@@ -8,6 +8,7 @@ describe('V2 canonical app routes', () => {
   const expectedRedirects: Record<string, string> = {
     studio: 'app',
     'studio/master': 'app/master',
+    'studio/pitch': 'pitch',
     'studio/build': 'app/build',
     'studio/uplink': 'app/uplink',
     'studio/split': 'app/split',
@@ -31,9 +32,16 @@ describe('V2 canonical app routes', () => {
     const shellChildren = children[0].children ?? [];
 
     expect(shellChildren.some(route => route.path === '' && route.pathMatch === 'full')).toBeTrue();
-    for (const path of ['master', 'build', 'uplink', 'split']) {
+    for (const path of ['master', 'pitch', 'build', 'uplink', 'split']) {
       expect(shellChildren.some(route => route.path === path)).withContext(path).toBeTrue();
     }
+  });
+
+  it('exposes /pitch as a first-class workspace with query-string compatible client rendering', async () => {
+    const pitch = routes.find(route => route.path === 'pitch')!;
+    const children = await (pitch.loadChildren as () => Promise<Routes>)();
+    expect(children[0].children?.[0].data?.['surface']).toBe('pitch');
+    expect(serverRoutes.find(route => route.path === 'pitch')?.renderMode).toBe(RenderMode.Client);
   });
 
   it('redirects legacy /studio deep links to canonical /app paths without a loop', () => {

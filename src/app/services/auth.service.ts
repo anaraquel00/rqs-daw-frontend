@@ -47,6 +47,8 @@ export class AuthService {
   private readonly allowedV2ReturnPaths = new Set([
     '/app',
     '/app/master',
+    '/app/pitch',
+    '/pitch',
     '/app/build',
     '/app/uplink',
     '/app/split',
@@ -402,9 +404,12 @@ export class AuthService {
 
     const safeQuery = new URLSearchParams();
     for (const [key, rawValue] of parsed.searchParams.entries()) {
-      if (!this.allowedAttributionParams.has(key)) continue;
       const value = rawValue.trim();
-      if (value) safeQuery.set(key, value.slice(0, 256));
+      if (key === 'analysis' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
+        safeQuery.set(key, value);
+        continue;
+      }
+      if (this.allowedAttributionParams.has(key) && value) safeQuery.set(key, value.slice(0, 256));
     }
 
     const query = safeQuery.toString();

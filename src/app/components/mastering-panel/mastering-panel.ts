@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { LanguageService } from '../../services/language.service';
 import { AuthService } from '../../services/auth.service';
@@ -48,7 +49,6 @@ import { PreviewWaveformComponent } from './preview-waveform';
 import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
 import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
 import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
-import { SpotifyPitchPanelComponent } from '../spotify-pitch-panel/spotify-pitch-panel';
 
 @Component({
   selector: 'app-mastering-panel',
@@ -60,7 +60,7 @@ import { SpotifyPitchPanelComponent } from '../spotify-pitch-panel/spotify-pitch
     AnalyzerSimpleComponent,
     DeliveryAutoComponent,
     AudioDnaCardComponent,
-    SpotifyPitchPanelComponent,
+    RouterLink,
   ],
   templateUrl: './mastering-panel.html',
   styleUrls: ['./mastering-panel.scss'],

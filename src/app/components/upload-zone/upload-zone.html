@@ -10,8 +10,13 @@
   </div>
 
   <div class="scanner-header">
-    <h2>{{ lang.t().RQS_DSP_CORE }}</h2>
-    <p>{{ lang.t().SUBTITLE }}</p>
+    @if (workspace === 'pitch') {
+      <h2>AI RELEASE ENGINE</h2>
+      <p>Transforme a análise musical em um pitch editorial mantendo o artista no controle.</p>
+    } @else {
+      <h2>{{ lang.t().RQS_DSP_CORE }}</h2>
+      <p>{{ lang.t().SUBTITLE }}</p>
+    }
   </div>
 
   <div class="drop-zone"
@@ -22,6 +27,8 @@
        [class.active]="isDragging">
     <div class="icon-container"><span class="cyber-icon">🎧</span></div>
     <p class="drop-text" *ngIf="!selectedFile">
+      <strong *ngIf="workspace === 'pitch'">NOVA FAIXA</strong>
+      <br *ngIf="workspace === 'pitch'">
       {{ lang.t().DROP_PROMPT }}<br>
       <span style="font-size: 12px; color: #00f0ff; opacity: 0.8;">{{ lang.t().OR_CLICK }}</span>
     </p>
@@ -38,7 +45,7 @@
   </div>
 
   <app-mastering-panel
-    *ngIf="selectedFile || analysisState() === 'success'"
+    *ngIf="workspace === 'master' && (selectedFile || analysisState() === 'success')"
     [originalFile]="selectedFile"
     [isProcessing]="isProcessing || isUploadingS3"
     [isUploading]="isUploadingS3"
@@ -62,6 +69,20 @@
     (configChanged)="invalidateMasteringResult()">
   </app-mastering-panel>
 
+  <app-pitch-workspace-panel
+    *ngIf="workspace === 'pitch' && (selectedFile || analysisState() === 'success')"
+    [analysisState]="analysisState()"
+    [analysisMetrics]="analysisMetrics()"
+    [audioDna]="audioDna"
+    [audioIntelligence]="audioIntelligence"
+    [openAiMusicAnalyst]="openAiMusicAnalyst"
+    [analysisId]="analysisId"
+    [persistedArtistConfirmation]="persistedArtistConfirmation"
+    [persistedFlowStage]="persistedFlowStage"
+    [persistedConfirmedAt]="persistedConfirmedAt"
+    [persistedPitchResult]="persistedPitchResult">
+  </app-pitch-workspace-panel>
+
   <div class="cyber-terminal" *ngIf="isProcessing || isUploadingS3">
     <div class="terminal-header">
       <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
@@ -81,7 +102,7 @@
     </div>
   </div>
 
-  <div class="download-section" *ngIf="processedAudioUrl && !isProcessing">
+  <div class="download-section" *ngIf="workspace === 'master' && processedAudioUrl && !isProcessing">
     <a
       *ngIf="isFullMasterCompleted"
       [href]="processedAudioUrl"
@@ -93,7 +114,7 @@
   </div>
 
   <app-ekg-monitor
-    *ngIf="isFullMasterCompleted && !isProcessing"
+    *ngIf="workspace === 'master' && isFullMasterCompleted && !isProcessing"
     [audioUrl]="processedAudioUrl">
   </app-ekg-monitor>
 </div>

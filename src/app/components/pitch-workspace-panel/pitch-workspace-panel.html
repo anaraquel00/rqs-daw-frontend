@@ -1,0 +1,41 @@
+<section class="pitch-workspace-panel" aria-labelledby="pitch-workspace-title">
+  <header class="pitch-workspace-heading">
+    <p>AI RELEASE INTELLIGENCE</p>
+    <h2 id="pitch-workspace-title">PITCH</h2>
+    <span>Audio DNA → Artist Confirmation → AI Spotify Pitch</span>
+  </header>
+
+  @if (analysisState === 'loading') {
+    <div class="pitch-state" role="status">ANALYZING RELEASE INTELLIGENCE…</div>
+  } @else if (analysisState === 'error') {
+    <div class="pitch-state error" role="alert">AUDIO INTELLIGENCE UNAVAILABLE</div>
+  } @else if (analysisState === 'auth_required') {
+    <div class="pitch-state" role="status">SIGN IN TO ANALYZE THIS TRACK</div>
+  }
+
+  @if (analysisState === 'success') {
+    <app-audio-dna-card
+      [audioDna]="audioDna"
+      [audioIntelligence]="audioIntelligence"
+      [openAiMusicAnalyst]="openAiMusicAnalyst"
+      [state]="analysisState">
+    </app-audio-dna-card>
+
+    @if (pitchEnabled() === true) {
+      <app-spotify-pitch-panel
+        [analysisMetrics]="analysisMetrics"
+        [audioDna]="audioDna"
+        [audioIntelligence]="audioIntelligence"
+        [openAiMusicAnalyst]="openAiMusicAnalyst"
+        [sourceGeneration]="audioDna?.source_generation ?? null"
+        [analysisId]="analysisId"
+        [persistedArtistConfirmation]="persistedArtistConfirmation"
+        [persistedFlowStage]="persistedFlowStage"
+        [persistedConfirmedAt]="persistedConfirmedAt"
+        [persistedPitchResult]="persistedPitchResult">
+      </app-spotify-pitch-panel>
+    } @else if (pitchEnabled() === false) {
+      <div class="pitch-state error" role="alert">SPOTIFY PITCH ENGINE UNAVAILABLE</div>
+    }
+  }
+</section>

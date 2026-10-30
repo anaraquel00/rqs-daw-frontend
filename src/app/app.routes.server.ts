@@ -45,6 +45,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'pitch',
+    renderMode: RenderMode.Client
+  },
+  {
     path: 'legacy',
     renderMode: RenderMode.Client
   },

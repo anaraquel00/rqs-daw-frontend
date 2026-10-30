@@ -32,7 +32,7 @@ export class StudioShellComponent {
   readonly themes = this.theme.themes;
   readonly themePreference = this.theme.themePreference;
   readonly resolvedTheme = this.theme.resolvedTheme;
-  readonly modules = ['master', 'build', 'uplink', 'split'] as const;
+  readonly modules = ['master', 'pitch', 'build', 'uplink'] as const;
   readonly surface = signal<StudioSurface>('home');
   readonly visited = signal<ReadonlySet<StudioSurface>>(new Set());
   private readonly route = inject(ActivatedRoute);
@@ -67,6 +67,10 @@ export class StudioShellComponent {
 
   setTheme(theme: StudioThemePreference): void {
     this.theme.setTheme(theme);
+  }
+
+  moduleRoute(module: typeof this.modules[number]): string {
+    return module === 'pitch' ? '/pitch' : `/app/${module}`;
   }
 
   private syncSurface(): void {
