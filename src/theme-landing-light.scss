@@ -110,9 +110,20 @@ app-root[data-theme='light'] .rqs-landing .setlist-ui,
 app-root[data-theme='light'] .rqs-landing .uplink-ui,
 app-root[data-theme='light'] .rqs-landing .proof-ui > div,
 app-root[data-theme='light'] .rqs-landing .plan {
-  background: rgba(255,255,255,.94) !important;
   border-color: var(--studio-border-strong) !important;
   box-shadow: 0 20px 46px rgba(23,32,51,.10) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .master-ui,
+app-root[data-theme='light'] .rqs-landing .setlist-ui,
+app-root[data-theme='light'] .rqs-landing .plan {
+  background: rgba(255,255,255,.72) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .pitch-ui,
+app-root[data-theme='light'] .rqs-landing .uplink-ui,
+app-root[data-theme='light'] .rqs-landing .proof-ui > div {
+  background: rgba(255,255,255,.94) !important;
 }
 
 app-root[data-theme='light'] .rqs-landing .pitch-ui {
@@ -124,7 +135,7 @@ app-root[data-theme='light'] .rqs-landing .pitch-ui {
 app-root[data-theme='light'] .rqs-landing .plan--pro {
   background:
     radial-gradient(circle at 90% 0%, rgba(105,65,181,.09), transparent 16rem),
-    rgba(255,255,255,.96) !important;
+    rgba(255,255,255,.72) !important;
 }
 
 app-root[data-theme='light'] .rqs-landing .final-cta small {

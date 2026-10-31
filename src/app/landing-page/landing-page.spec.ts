@@ -211,6 +211,12 @@ describe('LandingPageComponent', () => {
     const build = host.querySelector<HTMLVideoElement>('.section-motion-layer--build .section-motion');
     const origin = host.querySelector<HTMLVideoElement>('.section-motion-layer--origin .section-motion');
     const pricing = host.querySelector<HTMLVideoElement>('.section-motion-layer--pricing .section-motion');
+    const masterPanel = host.querySelector<HTMLElement>('.master-ui');
+    const setlistPanel = host.querySelector<HTMLElement>('.setlist-ui');
+    const plans = host.querySelectorAll<HTMLElement>('.plan');
+    const pitchPanel = host.querySelector<HTMLElement>('.pitch-ui');
+    const uplinkPanel = host.querySelector<HTMLElement>('.uplink-ui');
+    const proofPanel = host.querySelector<HTMLElement>('.proof-ui > div');
     const videos = [master, build, origin, pricing] as HTMLVideoElement[];
 
     appRoot.setAttribute('data-theme', 'light');
@@ -229,6 +235,14 @@ describe('LandingPageComponent', () => {
     expect(document.defaultView?.getComputedStyle(build!).opacity).toBe('0.6');
     expect(document.defaultView?.getComputedStyle(origin!).opacity).toBe('0.56');
     expect(document.defaultView?.getComputedStyle(pricing!).opacity).toBe('0.5');
+    expect(document.defaultView?.getComputedStyle(masterPanel!).backgroundColor).toBe('rgba(255, 255, 255, 0.72)');
+    expect(document.defaultView?.getComputedStyle(setlistPanel!).backgroundColor).toBe('rgba(255, 255, 255, 0.72)');
+    plans.forEach((plan) => {
+      expect(document.defaultView?.getComputedStyle(plan).backgroundColor).toBe('rgba(255, 255, 255, 0.72)');
+    });
+    expect(document.defaultView?.getComputedStyle(pitchPanel!).backgroundColor).toBe('rgba(255, 255, 255, 0.96)');
+    expect(document.defaultView?.getComputedStyle(uplinkPanel!).backgroundColor).toBe('rgba(255, 255, 255, 0.94)');
+    expect(document.defaultView?.getComputedStyle(proofPanel!).backgroundColor).toBe('rgba(255, 255, 255, 0.94)');
 
     appRoot.setAttribute('data-theme', 'dark');
 
@@ -238,6 +252,11 @@ describe('LandingPageComponent', () => {
     expect(document.defaultView?.getComputedStyle(build!).opacity).toBe('0.6');
     expect(document.defaultView?.getComputedStyle(origin!).opacity).toBe('0.56');
     expect(document.defaultView?.getComputedStyle(pricing!).opacity).toBe('0.5');
+    expect(document.defaultView?.getComputedStyle(masterPanel!).backgroundColor).toBe('rgba(9, 11, 15, 0.75)');
+    expect(document.defaultView?.getComputedStyle(setlistPanel!).backgroundColor).toBe('rgba(9, 11, 15, 0.75)');
+    plans.forEach((plan) => {
+      expect(document.defaultView?.getComputedStyle(plan).backgroundColor).toBe('rgba(255, 255, 255, 0.01)');
+    });
 
     originalParent?.appendChild(host);
     appRoot.remove();
