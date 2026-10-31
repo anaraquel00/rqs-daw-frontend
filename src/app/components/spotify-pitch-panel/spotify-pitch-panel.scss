@@ -11,9 +11,38 @@
   font-family: var(--studio-mono, monospace);
 }
 
-.workflow-separation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
-.workflow-separation div { display: grid; gap: 4px; padding: 11px 12px; border: 1px solid var(--studio-border, rgba(255,255,255,.08)); border-radius: 8px; color: var(--studio-muted, #9aa2af); }
-.workflow-separation div.active { border-color: rgba(151, 109, 255, .46); background: rgba(151, 109, 255, .08); }
+.workflow-separation { margin-bottom: 20px; }
+.workflow-master-link {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 11px 42px 11px 12px;
+  border: 1px solid var(--studio-border, rgba(255,255,255,.08));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--studio-muted, #9aa2af);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+.workflow-master-link::after {
+  content: '→';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--studio-cyan, #35dcec);
+  font-weight: 800;
+}
+.workflow-master-link:hover {
+  border-color: rgba(151, 109, 255, .46);
+  background: rgba(151, 109, 255, .08);
+  transform: translateY(-1px);
+}
+.workflow-master-link:focus-visible {
+  outline: 2px solid var(--studio-cyan, #35dcec);
+  outline-offset: 3px;
+}
 .workflow-separation strong { color: var(--studio-heading, #fff); font-size: 10px; letter-spacing: 1px; }
 .workflow-separation span { font: 10px/1.4 var(--studio-font, sans-serif); }
 
@@ -141,15 +170,15 @@ button:disabled { cursor: not-allowed; opacity: .5; }
     box-shadow: var(--pitch-light-shadow);
   }
 
-  .workflow-separation { gap: 12px; margin-bottom: 28px; }
-  .workflow-separation div {
+  .workflow-separation { margin-bottom: 28px; }
+  .workflow-master-link {
     gap: 7px;
-    padding: 16px 18px;
+    padding: 16px 48px 16px 18px;
     border-color: var(--pitch-light-border);
     background: var(--pitch-light-surface);
     color: var(--pitch-light-text-secondary);
   }
-  .workflow-separation div.active {
+  .workflow-master-link:hover {
     border-color: #9d86c8;
     background: #f3effa;
   }

@@ -578,4 +578,16 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(styles).toContain('button[type=submit]');
     expect(styles).toContain('background: var(--pitch-light-surface);');
   });
+  it('shows one actionable MASTER return card without a redundant PITCH workflow card', () => {
+    fixture.detectChanges();
+
+    const workflow = fixture.nativeElement.querySelector('.workflow-separation') as HTMLElement;
+    const links = workflow.querySelectorAll('a.workflow-master-link');
+
+    expect(links.length).toBe(1);
+    expect(links[0].getAttribute('href')).toBe('/app/master');
+    expect(workflow.textContent).toContain('MASTER');
+    expect(workflow.textContent).not.toContain('PITCH');
+  });
+
 });

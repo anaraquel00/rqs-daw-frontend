@@ -26,10 +26,13 @@ describe('Studio V2 shell integration', () => {
   const premium = signal(false);
   const isLoggedIn = () => !!session()?.user;
   const requestSignIn = jasmine.createSpy('requestSignIn');
+  const requestSignInForPath = jasmine.createSpy('requestSignInForPath');
   beforeEach(async () => {
     localStorage.removeItem('rqs_theme');
     session.set({ user: { id: 'owner-a', email: 'owner@example.invalid' } });
-    premium.set(false); requestSignIn.calls.reset();
+    premium.set(false);
+    requestSignIn.calls.reset();
+    requestSignInForPath.calls.reset();
     TestBed.configureTestingModule({ providers: [
       provideRouter([{ path: 'app', children: STUDIO_ROUTES }, { path: 'pitch', children: PITCH_ROUTES }]),
       { provide: AuthService, useValue: {
@@ -38,6 +41,7 @@ describe('Studio V2 shell integration', () => {
         isPremium: premium,
         remainingMasters: () => 2,
         requestSignIn,
+        requestSignInForPath,
         loginWithProvider: jasmine.createSpy(),
         logout: jasmine.createSpy(),
         whenAuthStateResolved: () => Promise.resolve(),
@@ -126,7 +130,7 @@ describe('Studio V2 shell integration', () => {
     expect(harness.routeNativeElement!.querySelector('input')).toBe(source);
     expect(source.value).toBe('user-selected-file');
   });
-  it('blocks direct unauthenticated access to PITCH and MASTER', async () => {
+  it('opens authentication when unauthenticated users request PITCH or MASTER', async () => {
     session.set(null);
     harness.detectChanges();
 
@@ -135,11 +139,13 @@ describe('Studio V2 shell integration', () => {
     expect(TestBed.inject(Router).url).toBe('/app');
     expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).toBeNull();
     expect(harness.routeNativeElement!.querySelector('input[type=file]')).toBeNull();
+    expect(requestSignInForPath).toHaveBeenCalledWith('/pitch', 'providers');
 
     await harness.navigateByUrl('/app/master');
     harness.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/app');
     expect(harness.routeNativeElement!.querySelector('section[aria-label="MASTER"]')).toBeNull();
+    expect(requestSignInForPath).toHaveBeenCalledWith('/app/master', 'providers');
   });
   it('removes PITCH immediately and redirects when the active session signs out', async () => {
     await harness.navigateByUrl('/pitch');

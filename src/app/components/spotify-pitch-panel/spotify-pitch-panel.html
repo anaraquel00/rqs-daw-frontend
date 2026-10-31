@@ -1,7 +1,12 @@
 <section class="spotify-pitch" data-testid="spotify-pitch-panel">
-  <div class="workflow-separation" aria-label="Master and pitch workflow">
-    <div><strong>{{ copy().masterLabel }}</strong><span>{{ copy().masterDescription }}</span></div>
-    <div class="active"><strong>{{ copy().pitchLabel }}</strong><span>{{ copy().pitchDescription }}</span></div>
+  <div class="workflow-separation" aria-label="Master workflow">
+    <a
+      class="workflow-master-link"
+      href="/app/master"
+      [attr.aria-label]="copy().masterLabel + ' — ' + copy().masterDescription">
+      <strong>{{ copy().masterLabel }}</strong>
+      <span>{{ copy().masterDescription }}</span>
+    </a>
   </div>
 
   <header class="pitch-header">

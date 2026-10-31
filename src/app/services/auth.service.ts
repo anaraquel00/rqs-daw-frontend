@@ -256,6 +256,17 @@ export class AuthService {
     this.authPromptOpen.set(true);
   }
 
+  requestSignInForPath(returnPath: string, mode: AuthPromptMode = 'providers'): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const safeReturnPath = this.sanitizeReturnPath(returnPath) ?? '/app';
+    window.sessionStorage.setItem(this.authReturnPathKey, safeReturnPath);
+
+    this.authMessageKey.set(null);
+    this.authPromptMode.set(mode);
+    this.authPromptOpen.set(true);
+  }
+
   closeAuthPrompt(): void {
     if (isPlatformBrowser(this.platformId)) {
       window.sessionStorage.removeItem(this.authReturnPathKey);
@@ -296,7 +307,7 @@ export class AuthService {
     this.authMessageKey.set(null);
     this.authEmailSending.set(true);
     this.analytics.trackEvent('auth_email_started');
-    const returnPath = this.captureCurrentReturnPath();
+    const returnPath = this.authFlowReturnPath();
 
     try {
       const { error } = await this.supabase.auth.signInWithOtp({
@@ -326,7 +337,7 @@ export class AuthService {
       return;
     }
 
-    const returnPath = this.captureCurrentReturnPath();
+    const returnPath = this.authFlowReturnPath();
     const { error } = await this.supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -391,6 +402,16 @@ export class AuthService {
     window.sessionStorage.removeItem(this.authReturnPathKey);
     this.closeAuthPrompt();
     this.restoreReturnPath(returnPath);
+  }
+
+  private authFlowReturnPath(): string {
+    if (!isPlatformBrowser(this.platformId)) return '/app';
+
+    const pending = this.sanitizeReturnPath(
+      window.sessionStorage.getItem(this.authReturnPathKey)
+    );
+
+    return pending ?? this.captureCurrentReturnPath();
   }
 
   private captureCurrentReturnPath(): string {

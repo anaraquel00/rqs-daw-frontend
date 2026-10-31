@@ -72,6 +72,26 @@ describe('AuthService OAuth and Magic Link', () => {
     });
   });
 
+  it('preserves an explicit guarded PITCH return path through OAuth', async () => {
+    const analysisId = '00000000-0000-4000-8000-000000000040';
+    const path = `/pitch?analysis=${analysisId}`;
+    const signIn = spyOn(service.getSupabaseClient().auth, 'signInWithOAuth')
+      .and.resolveTo({ data: {}, error: null } as never);
+
+    service.requestSignInForPath(path, 'providers');
+
+    expect(service.authPromptOpen()).toBeTrue();
+    expect(service.authPromptMode()).toBe('providers');
+    expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBe(path);
+
+    await service.loginWithProvider('google');
+
+    expect(signIn).toHaveBeenCalledOnceWith({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}${path}` },
+    });
+  });
+
   it('preserves allowlisted paid-traffic attribution through OAuth return', async () => {
     window.history.replaceState({}, '', '/app/master?gclid=click-123&utm_source=google&utm_campaign=master-search&access_token=secret');
     const signIn = spyOn(service.getSupabaseClient().auth, 'signInWithOAuth').and.resolveTo({ data: {}, error: null } as never);
