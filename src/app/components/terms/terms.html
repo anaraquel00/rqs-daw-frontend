@@ -38,10 +38,18 @@
     <h3>6.1. MASTER — RQS DSP Core</h3>
     <p>Realiza análise e processamento automatizado de áudio. Os resultados dependem do arquivo de origem, parâmetros selecionados e limitações inerentes ao processamento digital de sinais. O RQS Studio não garante resultado artístico ou comercial, loudness específico, aprovação por plataforma de streaming ou melhoria subjetiva da música.</p>
 
-    <h3>6.2. BUILD — RQS Setlist Engine</h3>
+    <h3>6.2. PITCH — AI Release Intelligence</h3>
+    <p>O módulo PITCH utiliza análise automatizada de áudio e informações confirmadas pelo próprio artista para auxiliar na preparação de conteúdo editorial relacionado ao lançamento musical.</p>
+    <p>O recurso pode analisar ou sugerir características como família de gênero, subgêneros, moods, instrumentação, características vocais, produção e outros elementos musicais. Essas classificações são assistivas e podem conter imprecisões.</p>
+    <p>Antes da geração do pitch, o usuário pode revisar, confirmar, remover, corrigir ou complementar as informações sugeridas pela plataforma. As informações confirmadas pelo artista constituem a referência final utilizada pelo fluxo editorial do módulo.</p>
+    <p>O RQS Studio não garante identificação perfeita de gênero, mood ou características musicais, nem garante que o conteúdo gerado seja aceito, selecionado, recomendado ou utilizado por Spotify, curadores, plataformas de streaming ou terceiros.</p>
+    <p>O módulo PITCH não realiza submissões automáticas a plataformas externas, não garante inclusão em playlists editoriais e não representa afiliação, patrocínio ou endosso por parte do Spotify ou de qualquer outro serviço externo.</p>
+    <p>Os textos gerados devem ser revisados pelo usuário antes de sua utilização. O usuário permanece responsável pela exatidão das informações editoriais fornecidas a terceiros e pela decisão final sobre como descrever sua própria música.</p>
+
+    <h3>6.3. BUILD — RQS Setlist Engine</h3>
     <p>O Setlist Engine auxilia na organização de faixas, configuração de transições e geração de uma sessão contínua. O recurso é assistivo e não garante performance artística, mix perfeito, compatibilidade universal ou sucesso comercial.</p>
 
-    <h3>6.3. DEPLOY — RQS Uplink</h3>
+    <h3>6.4. DEPLOY — RQS Uplink</h3>
     <p>O RQS Uplink recebe URLs públicas fornecidas pelo usuário e pode gerar links de redirecionamento/deep links destinados a facilitar a abertura de conteúdo em serviços externos de música e mídia. O recurso não exige que você forneça ao RQS Studio a senha das plataformas de destino.</p>
     <p>A abertura do aplicativo, reprodução, autenticação e disponibilidade dependem do dispositivo, navegador e serviço externo. Terceiros podem alterar URLs, APIs, políticas, deep linking ou bloquear redirecionamentos. O RQS Studio não garante disponibilidade contínua dessas integrações indiretas e não é afiliado, patrocinado ou endossado por Spotify, SoundCloud, YouTube ou Bandcamp, salvo indicação expressa em contrário.</p>
 
@@ -101,9 +109,20 @@
     <h2>4. Prawa do przesyłanych treści</h2><p>Przesyłając treści, oświadczasz, że posiadasz wymagane prawa, licencje i zgody. RQS Studio nie nabywa własności Twojej muzyki i otrzymuje wyłącznie ograniczone, tymczasowe upoważnienie techniczne potrzebne do wykonania żądanego procesu.</p><p>Niniejsze Warunki nie rozstrzygają praw autorskich do treści generowanych lub wspomaganych przez AI.</p>
     <h2>5. Przetwarzanie i przechowywanie audio</h2><p>Przetwarzanie może korzystać z tymczasowej pamięci lokalnej i cloud object storage. Tymczasowe obiekty audio są skonfigurowane tak, aby wygasały automatycznie około 24 godziny po przesłaniu zgodnie z zasadami lifecycle. RQS Studio nie powinno być używane jako trwała kopia zapasowa.</p>
     <h2>6. Moduły platformy</h2>
-    <h3>6.1. MASTER — RQS DSP Core</h3><p>Wykonuje automatyczną analizę i przetwarzanie audio. Wyniki zależą od pliku źródłowego, wybranych ustawień i ograniczeń cyfrowego przetwarzania sygnału.</p>
-    <h3>6.2. BUILD — RQS Setlist Engine</h3><p>Setlist Engine pomaga organizować utwory, konfigurować przejścia i generować ciągłą sesję.</p>
-    <h3>6.3. DEPLOY — RQS Uplink</h3><p>RQS Uplink przyjmuje publiczne adresy URL i może generować przekierowania/deep linki. Otwieranie, odtwarzanie i uwierzytelnianie zależą od urządzenia, przeglądarki i usługi zewnętrznej.</p>
+    <h3>6.1. MASTER — RQS DSP Core</h3>
+    <p>Wykonuje automatyczną analizę i przetwarzanie audio. Wyniki zależą od pliku źródłowego, wybranych parametrów i nieodłącznych ograniczeń cyfrowego przetwarzania sygnału. RQS Studio nie gwarantuje rezultatu artystycznego ani komercyjnego, określonego poziomu loudness, akceptacji przez platformę streamingową ani subiektywnej poprawy muzyki.</p>
+    <h3>6.2. PITCH — AI Release Intelligence</h3>
+    <p>Moduł PITCH wykorzystuje zautomatyzowaną analizę audio oraz informacje potwierdzone przez samego artystę, aby wspierać przygotowanie treści redakcyjnych związanych z wydaniem muzycznym.</p>
+    <p>Funkcja może analizować lub sugerować cechy takie jak rodzina gatunkowa, podgatunki, nastroje, instrumentacja, cechy wokalne, produkcja i inne elementy muzyczne. Klasyfikacje te mają charakter pomocniczy i mogą zawierać nieścisłości.</p>
+    <p>Przed wygenerowaniem pitchu użytkownik może przejrzeć, potwierdzić, usunąć, poprawić lub uzupełnić informacje sugerowane przez platformę. Informacje potwierdzone przez artystę stanowią ostateczny punkt odniesienia wykorzystywany w procesie redakcyjnym modułu.</p>
+    <p>RQS Studio nie gwarantuje bezbłędnego rozpoznania gatunku, nastroju ani cech muzycznych ani tego, że wygenerowane treści zostaną zaakceptowane, wybrane, polecone lub wykorzystane przez Spotify, kuratorów, platformy streamingowe lub strony trzecie.</p>
+    <p>Moduł PITCH nie dokonuje automatycznych zgłoszeń do zewnętrznych platform, nie gwarantuje umieszczenia na playlistach redakcyjnych i nie oznacza powiązania, sponsorowania ani poparcia ze strony Spotify czy jakiejkolwiek innej usługi zewnętrznej.</p>
+    <p>Wygenerowane teksty muszą zostać sprawdzone przez użytkownika przed wykorzystaniem. Użytkownik pozostaje odpowiedzialny za prawidłowość informacji redakcyjnych przekazywanych stronom trzecim oraz za ostateczną decyzję o sposobie opisywania własnej muzyki.</p>
+    <h3>6.3. BUILD — RQS Setlist Engine</h3>
+    <p>Setlist Engine pomaga organizować utwory, konfigurować przejścia i generować ciągłą sesję. Funkcja ma charakter pomocniczy i nie gwarantuje jakości wykonania artystycznego, idealnego miksu, powszechnej kompatybilności ani sukcesu komercyjnego.</p>
+    <h3>6.4. DEPLOY — RQS Uplink</h3>
+    <p>RQS Uplink przyjmuje publiczne adresy URL podane przez użytkownika i może generować przekierowania/deep linki ułatwiające otwieranie treści w zewnętrznych serwisach muzycznych i medialnych. Funkcja nie wymaga podawania RQS Studio haseł do platform docelowych.</p>
+    <p>Otwarcie aplikacji, odtwarzanie, uwierzytelnianie i dostępność zależą od urządzenia, przeglądarki i usługi zewnętrznej. Strony trzecie mogą zmieniać adresy URL, API, zasady lub obsługę deep linków albo blokować przekierowania. RQS Studio nie gwarantuje ciągłej dostępności tych pośrednich integracji i nie jest powiązane, sponsorowane ani popierane przez Spotify, SoundCloud, YouTube lub Bandcamp, chyba że wyraźnie wskazano inaczej.</p>
     <h2>7. Publiczna wersja beta</h2><p>Funkcje, moduły, interfejsy, limity i dostępność mogą się zmieniać; mogą występować błędy.</p>
     <h2>8. Limity użycia i rozsądne korzystanie</h2><p>Niektóre funkcje mogą podlegać limitom lub quota wyświetlanym w aplikacji.</p>
     <h2>9. Niedozwolone zastosowania</h2><p>Nie wolno używać RQS Studio do nielegalnych treści, złośliwego kodu, obchodzenia limitów lub zabezpieczeń, wykorzystywania luk ani nadużywającej automatyzacji.</p>
@@ -127,9 +146,20 @@
     <h2>4. Droits sur le contenu envoyé</h2><p>En envoyant du contenu à RQS Studio, vous déclarez détenir ou avoir obtenu les droits, licences et autorisations nécessaires. RQS Studio n’acquiert pas la propriété de votre musique et reçoit uniquement l’autorisation technique limitée et temporaire nécessaire au workflow demandé.</p><p>Ces Conditions ne déterminent pas la titularité du copyright sur les contenus générés ou assistés par IA.</p>
     <h2>5. Traitement et conservation de l’audio</h2><p>Le traitement peut utiliser un stockage local éphémère et un object storage cloud. Les objets audio temporaires sont configurés pour expirer automatiquement environ 24 heures après l’upload selon les politiques techniques de lifecycle. RQS Studio ne doit pas être utilisé comme sauvegarde permanente.</p>
     <h2>6. Modules de la plateforme</h2>
-    <h3>6.1. MASTER — RQS DSP Core</h3><p>Réalise une analyse et un traitement audio automatisés. Les résultats dépendent du fichier source, des paramètres sélectionnés et des limites du traitement numérique du signal.</p>
-    <h3>6.2. BUILD — RQS Setlist Engine</h3><p>Setlist Engine aide à organiser les pistes, configurer les transitions et générer une session continue.</p>
-    <h3>6.3. DEPLOY — RQS Uplink</h3><p>RQS Uplink reçoit des URL publiques et peut générer des liens de redirection/deep links. L’ouverture, la lecture et l’authentification dépendent du terminal, du navigateur et du service externe.</p>
+    <h3>6.1. MASTER — RQS DSP Core</h3>
+    <p>Réalise une analyse et un traitement audio automatisés. Les résultats dépendent du fichier source, des paramètres sélectionnés et des limites inhérentes au traitement numérique du signal. RQS Studio ne garantit aucun résultat artistique ou commercial, aucun niveau de loudness précis, aucune approbation par une plateforme de streaming ni aucune amélioration subjective de la musique.</p>
+    <h3>6.2. PITCH — AI Release Intelligence</h3>
+    <p>Le module PITCH utilise une analyse audio automatisée et des informations confirmées par l’artiste lui-même afin d’aider à préparer du contenu éditorial lié à une sortie musicale.</p>
+    <p>La fonctionnalité peut analyser ou suggérer des caractéristiques telles que la famille de genres, les sous-genres, les ambiances, l’instrumentation, les caractéristiques vocales, la production et d’autres éléments musicaux. Ces classifications sont fournies à titre d’assistance et peuvent contenir des imprécisions.</p>
+    <p>Avant la génération du pitch, l’utilisateur peut examiner, confirmer, supprimer, corriger ou compléter les informations suggérées par la plateforme. Les informations confirmées par l’artiste constituent la référence finale utilisée par le processus éditorial du module.</p>
+    <p>RQS Studio ne garantit pas l’identification parfaite du genre, de l’ambiance ou des caractéristiques musicales, ni que le contenu généré sera accepté, sélectionné, recommandé ou utilisé par Spotify, des curateurs, des plateformes de streaming ou des tiers.</p>
+    <p>Le module PITCH n’effectue aucune soumission automatique à des plateformes externes, ne garantit aucune inclusion dans des playlists éditoriales et ne constitue aucune affiliation, aucun parrainage ni aucune approbation de la part de Spotify ou de tout autre service externe.</p>
+    <p>Les textes générés doivent être examinés par l’utilisateur avant leur utilisation. L’utilisateur reste responsable de l’exactitude des informations éditoriales fournies à des tiers et de la décision finale concernant la manière de décrire sa propre musique.</p>
+    <h3>6.3. BUILD — RQS Setlist Engine</h3>
+    <p>Setlist Engine aide à organiser les pistes, configurer les transitions et générer une session continue. Cette fonctionnalité est un outil d’assistance et ne garantit aucune performance artistique, aucun mix parfait, aucune compatibilité universelle ni aucun succès commercial.</p>
+    <h3>6.4. DEPLOY — RQS Uplink</h3>
+    <p>RQS Uplink reçoit les URL publiques fournies par l’utilisateur et peut générer des liens de redirection/deep links destinés à faciliter l’ouverture de contenus dans des services externes de musique et de médias. Cette fonctionnalité ne vous demande pas de fournir à RQS Studio les mots de passe des plateformes de destination.</p>
+    <p>L’ouverture de l’application, la lecture, l’authentification et la disponibilité dépendent de l’appareil, du navigateur et du service externe. Des tiers peuvent modifier les URL, les API, les politiques ou le fonctionnement des deep links, ou bloquer les redirections. RQS Studio ne garantit pas la disponibilité continue de ces intégrations indirectes et n’est ni affilié, ni sponsorisé, ni approuvé par Spotify, SoundCloud, YouTube ou Bandcamp, sauf indication expresse contraire.</p>
     <h2>7. Bêta publique</h2><p>Les fonctionnalités, modules, interfaces, limites et disponibilités peuvent évoluer ; des bugs peuvent survenir.</p>
     <h2>8. Limites d’utilisation et usage raisonnable</h2><p>Certaines fonctionnalités peuvent être soumises à des limites ou quotas affichés dans l’application.</p>
     <h2>9. Utilisations interdites</h2><p>Vous ne devez pas utiliser RQS Studio pour du contenu illégal, du code malveillant, le contournement de quotas ou de sécurité, l’exploitation de vulnérabilités ou des automatisations abusives.</p>
@@ -173,10 +203,18 @@
     <h3>6.1. MASTER — RQS DSP Core</h3>
     <p>Provides automated audio analysis and processing. Results depend on the source file, selected parameters and inherent limits of digital signal processing. RQS Studio does not guarantee an artistic or commercial outcome, a specific loudness value, streaming-platform approval or a subjective improvement in the music.</p>
 
-    <h3>6.2. BUILD — RQS Setlist Engine</h3>
+    <h3>6.2. PITCH — AI Release Intelligence</h3>
+    <p>The PITCH module uses automated audio analysis and information confirmed by the artist to assist in preparing editorial content related to a music release.</p>
+    <p>The feature may analyze or suggest characteristics such as genre family, subgenres, moods, instrumentation, vocal characteristics, production and other musical elements. These classifications are assistive and may contain inaccuracies.</p>
+    <p>Before the pitch is generated, the user may review, confirm, remove, correct or supplement information suggested by the platform. Information confirmed by the artist constitutes the final reference used by the module’s editorial workflow.</p>
+    <p>RQS Studio does not guarantee perfect identification of genre, mood or musical characteristics, nor does it guarantee that generated content will be accepted, selected, recommended or used by Spotify, curators, streaming platforms or third parties.</p>
+    <p>The PITCH module does not make automatic submissions to external platforms, does not guarantee inclusion in editorial playlists and does not represent affiliation with, sponsorship by or endorsement from Spotify or any other external service.</p>
+    <p>Generated text must be reviewed by the user before use. The user remains responsible for the accuracy of editorial information provided to third parties and for the final decision on how to describe their own music.</p>
+
+    <h3>6.3. BUILD — RQS Setlist Engine</h3>
     <p>The Setlist Engine assists with track organization, transition settings and continuous-session rendering. It is an assistive tool and does not guarantee artistic performance, a perfect mix, universal compatibility or commercial success.</p>
 
-    <h3>6.3. DEPLOY — RQS Uplink</h3>
+    <h3>6.4. DEPLOY — RQS Uplink</h3>
     <p>RQS Uplink receives public URLs supplied by users and may generate redirect/deep links intended to make it easier to open content in external music and media services. It does not require you to provide RQS Studio with passwords for destination platforms.</p>
     <p>App opening, playback, authentication and availability depend on the device, browser and external service. Third parties may change URLs, APIs, policies or deep-link behavior, or block redirections. RQS Studio does not guarantee continuous availability of these indirect integrations and is not affiliated with, sponsored by or endorsed by Spotify, SoundCloud, YouTube or Bandcamp unless expressly stated otherwise.</p>
 
