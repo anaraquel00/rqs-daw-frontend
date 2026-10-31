@@ -35,7 +35,17 @@ app-root[data-theme='light'] .rqs-landing .section-motion {
 }
 
 app-root[data-theme='light'] .rqs-landing .section-motion.is-active {
-  opacity: .28 !important;
+  opacity: .60 !important;
+}
+
+app-root[data-theme='light'] .rqs-landing
+.section-motion-layer--origin .section-motion.is-active {
+  opacity: .56 !important;
+}
+
+app-root[data-theme='light'] .rqs-landing
+.section-motion-layer--pricing .section-motion.is-active {
+  opacity: .50 !important;
 }
 
 app-root[data-theme='light'] .rqs-landing .section-motion-layer::after {
@@ -119,6 +129,10 @@ app-root[data-theme='light'] .rqs-landing .plan--pro {
 
 app-root[data-theme='light'] .rqs-landing .final-cta small {
   color: var(--studio-muted) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .btn--primary {
+  color: #fff !important;
 }
 
 @media (max-width: 720px) {

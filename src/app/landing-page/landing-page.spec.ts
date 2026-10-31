@@ -199,4 +199,44 @@ describe('LandingPageComponent', () => {
 
     expect(document.defaultView?.getComputedStyle(landing!).overflowX).toBe('hidden');
   });
+
+  it('uses accessible light CTA text and canonical active video opacity without changing dark mode', () => {
+    const document = TestBed.inject(DOCUMENT);
+    const host = fixture.nativeElement as HTMLElement;
+    const originalParent = host.parentNode;
+    const appRoot = document.createElement('app-root');
+    const primary = host.querySelector<HTMLElement>('.btn--primary');
+    const master = host.querySelector<HTMLVideoElement>('.section-motion-layer--master .section-motion');
+    const build = host.querySelector<HTMLVideoElement>('.section-motion-layer--build .section-motion');
+    const origin = host.querySelector<HTMLVideoElement>('.section-motion-layer--origin .section-motion');
+    const pricing = host.querySelector<HTMLVideoElement>('.section-motion-layer--pricing .section-motion');
+    const videos = [master, build, origin, pricing] as HTMLVideoElement[];
+
+    appRoot.setAttribute('data-theme', 'light');
+    appRoot.appendChild(host);
+    document.body.appendChild(appRoot);
+
+    expect(document.defaultView?.getComputedStyle(master!).opacity).toBe('0');
+    videos.forEach((video) => {
+      video.style.transition = 'none';
+      video.classList.add('is-active');
+    });
+
+    expect(document.defaultView?.getComputedStyle(primary!).color).toBe('rgb(255, 255, 255)');
+    expect(document.defaultView?.getComputedStyle(master!).opacity).toBe('0.6');
+    expect(document.defaultView?.getComputedStyle(build!).opacity).toBe('0.6');
+    expect(document.defaultView?.getComputedStyle(origin!).opacity).toBe('0.56');
+    expect(document.defaultView?.getComputedStyle(pricing!).opacity).toBe('0.5');
+
+    appRoot.setAttribute('data-theme', 'dark');
+
+    expect(document.defaultView?.getComputedStyle(primary!).color).toBe('rgb(3, 16, 20)');
+    expect(document.defaultView?.getComputedStyle(master!).opacity).toBe('0.6');
+    expect(document.defaultView?.getComputedStyle(build!).opacity).toBe('0.6');
+    expect(document.defaultView?.getComputedStyle(origin!).opacity).toBe('0.56');
+    expect(document.defaultView?.getComputedStyle(pricing!).opacity).toBe('0.5');
+
+    originalParent?.appendChild(host);
+    appRoot.remove();
+  });
 });
