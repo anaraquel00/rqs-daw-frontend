@@ -66,6 +66,11 @@ app-root[data-theme='light'] .rqs-landing .final-cta h2 {
   color: var(--studio-heading) !important;
 }
 
+app-root[data-theme='light'] .rqs-landing .feature--pitch h2,
+app-root[data-theme='light'] .rqs-landing .feature--pitch .module-label {
+  color: var(--studio-violet) !important;
+}
+
 app-root[data-theme='light'] .rqs-landing .feature__copy > p:not(.module-label),
 app-root[data-theme='light'] .rqs-landing .origin__copy p,
 app-root[data-theme='light'] .rqs-landing .proof__copy > p:last-child,
@@ -90,6 +95,7 @@ app-root[data-theme='light'] .rqs-landing .plan header span {
 }
 
 app-root[data-theme='light'] .rqs-landing .master-ui,
+app-root[data-theme='light'] .rqs-landing .pitch-ui,
 app-root[data-theme='light'] .rqs-landing .setlist-ui,
 app-root[data-theme='light'] .rqs-landing .uplink-ui,
 app-root[data-theme='light'] .rqs-landing .proof-ui > div,
@@ -97,6 +103,12 @@ app-root[data-theme='light'] .rqs-landing .plan {
   background: rgba(255,255,255,.94) !important;
   border-color: var(--studio-border-strong) !important;
   box-shadow: 0 20px 46px rgba(23,32,51,.10) !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .pitch-ui {
+  background:
+    radial-gradient(circle at 88% 5%, rgba(105,65,181,.10), transparent 19rem),
+    rgba(255,255,255,.96) !important;
 }
 
 app-root[data-theme='light'] .rqs-landing .plan--pro {

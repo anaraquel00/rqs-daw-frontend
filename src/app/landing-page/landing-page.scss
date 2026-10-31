@@ -35,6 +35,8 @@
 .console-topbar,
 .console-module,
 .ui-head,
+.pitch-flow,
+.pitch-card,
 .track-row,
 .crossfade,
 .platforms,
@@ -155,6 +157,7 @@
 
 .hero-console,
 .master-ui,
+.pitch-ui,
 .setlist-ui,
 .uplink-ui {
   border: 1px solid var(--line);
@@ -245,6 +248,13 @@
 .console-module strong { color: #e8ebf0; font-size: 1rem; letter-spacing: 0.08em; }
 .console-module span { margin-top: 0.35rem; color: #727b87; font-size: 0.58rem; line-height: 1.45; }
 
+.console-module--pitch {
+  border-color: rgba(151, 109, 255, .18);
+  background: radial-gradient(circle at 100% 0%, rgba(151, 109, 255, .12), transparent 9rem), rgba(255,255,255,.012);
+}
+
+.console-module--pitch strong { color: var(--violet); }
+
 .capabilities {
   padding: 1.35rem 1.5rem 1.55rem;
   border-top: 1px solid var(--line);
@@ -259,7 +269,7 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
-.capabilities__inner span {
+.capabilities__inner a {
   padding: 0.35rem 1rem;
   border-right: 1px solid var(--line);
   color: #c5cbd4;
@@ -268,9 +278,17 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-align: center;
+  text-decoration: none;
+  transition: color 160ms ease;
 }
 
-.capabilities__inner span:last-child { border-right: 0; }
+.capabilities__inner a:hover,
+.capabilities__inner a:focus-visible { color: var(--cyan); }
+
+.capabilities__inner a:nth-child(2):hover,
+.capabilities__inner a:nth-child(2):focus-visible { color: var(--violet); }
+
+.capabilities__inner a:last-child { border-right: 0; }
 
 .capabilities p {
   width: min(var(--max), 100%);
@@ -350,9 +368,195 @@
   background: var(--cyan);
 }
 
+.feature--pitch .module-label,
+.feature--pitch h2,
+.feature--pitch .feature__copy li::before { color: var(--violet); }
+
+.feature--pitch .feature__copy li::before { background: var(--violet); }
+
+.feature--pitch .feature__copy { max-width: 34rem; }
+
+.pitch-persistence {
+  padding-left: .8rem;
+  border-left: 2px solid rgba(151, 109, 255, .65);
+  color: #c7b8f3 !important;
+  font-size: .82rem;
+}
+
+.btn--pitch {
+  margin-top: 1.4rem;
+  border-color: rgba(151, 109, 255, .55);
+  background: var(--violet);
+  color: #090512;
+  box-shadow: 0 10px 28px rgba(151, 109, 255, .16);
+}
+
+.btn--pitch:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(151, 109, 255, .24);
+}
+
 .master-ui,
+.pitch-ui,
 .setlist-ui,
 .uplink-ui { min-height: 28rem; padding: 1rem; }
+
+.pitch-ui {
+  min-width: 0;
+  overflow: hidden;
+  border-color: rgba(151, 109, 255, .24);
+  background:
+    radial-gradient(circle at 88% 5%, rgba(151, 109, 255, .11), transparent 19rem),
+    linear-gradient(145deg, rgba(255,255,255,.025), rgba(255,255,255,.006)),
+    rgba(9, 8, 15, .82);
+}
+
+.pitch-ready { color: var(--violet); }
+
+.pitch-flow {
+  margin: 1rem 0;
+  padding: .8rem;
+  border: 1px solid rgba(151, 109, 255, .16);
+  border-radius: .65rem;
+  display: grid;
+  grid-template-columns: minmax(3.2rem, .55fr) auto minmax(8rem, 1.25fr) auto minmax(6rem, 1fr) auto minmax(4rem, .6fr);
+  align-items: center;
+  gap: .45rem;
+  background: rgba(151, 109, 255, .035);
+  text-align: center;
+}
+
+.pitch-flow strong {
+  color: #d9d2e8;
+  font-size: .54rem;
+  line-height: 1.45;
+  letter-spacing: .05em;
+}
+
+.pitch-flow i {
+  color: var(--violet);
+  font-size: .8rem;
+  font-style: normal;
+  transform: rotate(-90deg);
+}
+
+.pitch-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.35fr) minmax(0, .8fr);
+  align-items: stretch;
+  gap: .65rem;
+}
+
+.pitch-card {
+  min-width: 0;
+  min-height: 19rem;
+  padding: .9rem;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: .62rem;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255,255,255,.012);
+}
+
+.pitch-card > small,
+.pitch-card dt,
+.pitch-card b,
+.pitch-status {
+  font-family: "Fira Code", "Courier New", monospace;
+  text-transform: uppercase;
+}
+
+.pitch-card > small {
+  color: #8a7ca8;
+  font-size: .56rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.pitch-card dl { margin: 1.2rem 0; }
+
+.pitch-card dl > div {
+  padding: .55rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.045);
+}
+
+.pitch-card dt { color: #716982; font-size: .5rem; }
+.pitch-card dd { margin: .2rem 0 0; color: #ddd8e7; font-size: .72rem; overflow-wrap: anywhere; }
+
+.pitch-card--confirmation {
+  border-color: rgba(151, 109, 255, .38);
+  background: rgba(151, 109, 255, .065);
+  box-shadow: 0 16px 38px rgba(10, 5, 24, .26);
+}
+
+.pitch-card h4 {
+  margin: 1rem 0 0;
+  color: #f0ebff;
+  font-size: .92rem;
+  line-height: 1.25;
+}
+
+.pitch-card p {
+  margin: .55rem 0 0;
+  color: #a9a1b8;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: .66rem;
+  line-height: 1.45;
+}
+
+.confirmation-sources {
+  margin: .85rem 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+  gap: .55rem;
+}
+
+.confirmation-sources > div {
+  min-width: 0;
+  display: flex;
+  align-content: flex-start;
+  flex-wrap: wrap;
+  gap: .3rem;
+}
+
+.confirmation-sources b {
+  flex-basis: 100%;
+  margin-bottom: .1rem;
+  color: #958aa8;
+  font-size: .48rem;
+  letter-spacing: .05em;
+}
+
+.confirmation-sources span {
+  padding: .28rem .38rem;
+  border: 1px solid rgba(151, 109, 255, .24);
+  border-radius: 999px;
+  color: #cfc6df;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: .5rem;
+  overflow-wrap: anywhere;
+}
+
+.pitch-status {
+  margin-top: auto;
+  padding-top: .7rem;
+  border-top: 1px solid rgba(151, 109, 255, .15);
+  color: var(--violet);
+  font-size: .5rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.editorial-lines { margin: 1.5rem 0; display: grid; gap: .62rem; }
+
+.editorial-lines i {
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(151, 109, 255, .4);
+}
+
+.editorial-lines i:nth-child(2) { width: 82%; }
+.editorial-lines i:nth-child(3) { width: 58%; }
 
 .master-wave {
   height: 6rem;
@@ -652,6 +856,11 @@
   .capabilities__inner { grid-template-columns: repeat(2, 1fr); }
   .feature { padding: 5.5rem 0; gap: 2.25rem; }
   .feature h2 { font-size: clamp(3.8rem, 20vw, 5.8rem); }
+  .pitch-flow { grid-template-columns: 1fr; }
+  .pitch-flow i { transform: none; }
+  .pitch-workbench { grid-template-columns: 1fr; }
+  .pitch-card { min-height: auto; }
+  .pitch-card--confirmation { min-height: 21rem; }
   .track-row { grid-template-columns: 2rem 1fr 3rem; }
   .track-row i { display: none; }
   .proof-ui, .pricing__grid { grid-template-columns: 1fr; }
@@ -817,6 +1026,7 @@
 }
 
 .master-ui,
+.pitch-ui,
 .setlist-ui,
 .plan {
   backdrop-filter: blur(2px);

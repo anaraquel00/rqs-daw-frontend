@@ -58,15 +58,20 @@
           <strong>MASTER</strong>
           <span>LUFS / TRUE PEAK / A-B</span>
         </div>
-        <div class="console-module">
+        <div class="console-module console-module--pitch">
           <small>MODULE_02</small>
+          <strong>PITCH</strong>
+          <span>AUDIO DNA / ARTIST CONFIRMATION / AI PITCH</span>
+        </div>
+        <div class="console-module">
+          <small>MODULE_03</small>
           <strong>BUILD</strong>
           <span>SETLIST / CROSSFADE / WAV</span>
         </div>
         <div class="console-module">
-          <small>MODULE_03</small>
-          <strong>DEPLOY</strong>
-          <span>RQS UPLINK ENGINE</span>
+          <small>MODULE_04</small>
+          <strong>UPLINK</strong>
+          <span>SMART LINKS / RELEASE / TRACKING</span>
         </div>
       </div>
     </div>
@@ -74,17 +79,18 @@
 
   <section class="capabilities" aria-label="RQS Studio capabilities">
     <div class="capabilities__inner">
-      <span>{{ lang.tr().LANDING_CAP_MASTERING }}</span>
-      <span>{{ lang.tr().LANDING_CAP_SETLIST }}</span>
-      <span>{{ lang.tr().LANDING_CAP_UPLINK }}</span>
+      <a href="#master">{{ lang.tr().LANDING_CAP_MASTERING }}</a>
+      <a href="#pitch">{{ lang.tr().LANDING_CAP_PITCH }}</a>
+      <a href="#build">{{ lang.tr().LANDING_CAP_SETLIST }}</a>
+      <a href="#uplink">{{ lang.tr().LANDING_CAP_UPLINK }}</a>
     </div>
     <p>{{ lang.tr().LANDING_CAP_NOTE }}</p>
   </section>
 
   <div id="workflow" class="workflow">
-    <section class="feature feature--master" aria-labelledby="master-title">
+    <section id="master" class="feature feature--master" aria-labelledby="master-title">
       <div class="section-motion-layer section-motion-layer--master" aria-hidden="true">
-        <video class="section-motion" data-src="/assets/videos/master-instrument.mp4" muted loop playsinline preload="none"></video>
+        <video class="section-motion" data-src="/assets/videos/master-instrument.mp4" muted autoplay loop playsinline preload="none"></video>
       </div>
 
       <div class="feature__copy">
@@ -118,13 +124,95 @@
       </div>
     </section>
 
-    <section class="feature feature--build" aria-labelledby="build-title">
+    <section id="pitch" class="feature feature--reverse feature--pitch" aria-labelledby="pitch-title">
+      <div class="feature__copy">
+        <p class="module-label">MODULE_02 // AI RELEASE ENGINE</p>
+        <h2 id="pitch-title">PITCH.</h2>
+        <h3>{{ lang.tr().LANDING_PITCH_TAGLINE }}</h3>
+        <p>{{ lang.tr().LANDING_PITCH_DESC_1 }}</p>
+        <p>{{ lang.tr().LANDING_PITCH_DESC_2 }}</p>
+        <ul>
+          <li>{{ lang.tr().LANDING_PITCH_ITEM_1 }}</li>
+          <li>{{ lang.tr().LANDING_PITCH_ITEM_2 }}</li>
+          <li>{{ lang.tr().LANDING_PITCH_ITEM_3 }}</li>
+          <li>{{ lang.tr().LANDING_PITCH_ITEM_4 }}</li>
+          <li>{{ lang.tr().LANDING_PITCH_ITEM_5 }}</li>
+          <li>{{ lang.tr().LANDING_PITCH_ITEM_6 }}</li>
+          <li>{{ lang.tr().LANDING_PITCH_ITEM_7 }}</li>
+          <li>{{ lang.tr().LANDING_PITCH_ITEM_8 }}</li>
+        </ul>
+        <p class="pitch-persistence">{{ lang.tr().LANDING_PITCH_PERSISTENCE }}</p>
+        <a class="btn btn--pitch" href="/pitch">{{ lang.tr().LANDING_PITCH_CTA }}</a>
+      </div>
+
+      <div class="pitch-ui">
+        <div class="ui-head">
+          <span>RQS_PITCH_ENGINE</span>
+          <span class="pitch-ready">PITCH READY</span>
+        </div>
+
+        <div class="pitch-flow" aria-label="Audio DNA to AI Pitch workflow">
+          <strong>{{ lang.tr().LANDING_PITCH_FLOW_AUDIO }}</strong>
+          <i aria-hidden="true">↓</i>
+          <strong>{{ lang.tr().LANDING_PITCH_FLOW_INTELLIGENCE }}</strong>
+          <i aria-hidden="true">↓</i>
+          <strong>{{ lang.tr().LANDING_PITCH_FLOW_CONFIRMATION }}</strong>
+          <i aria-hidden="true">↓</i>
+          <strong>{{ lang.tr().LANDING_PITCH_FLOW_RESULT }}</strong>
+        </div>
+
+        <div class="pitch-workbench">
+          <div class="pitch-card pitch-card--dna">
+            <small>AUDIO DNA</small>
+            <dl>
+              <div><dt>{{ lang.tr().LANDING_PITCH_SUGGEST_GENRE }}</dt><dd>Electronic</dd></div>
+              <div><dt>{{ lang.tr().LANDING_PITCH_SUGGEST_SUBGENRES }}</dt><dd>Trance</dd></div>
+              <div><dt>{{ lang.tr().LANDING_PITCH_SUGGEST_MOODS }}</dt><dd>Atmospheric</dd></div>
+            </dl>
+            <span class="pitch-status">ANALYSIS READY</span>
+          </div>
+
+          <div class="pitch-card pitch-card--confirmation">
+            <small>ARTIST CONFIRMATION</small>
+            <h4>{{ lang.tr().LANDING_PITCH_CONFIRM_TITLE }}</h4>
+            <p>{{ lang.tr().LANDING_PITCH_CONFIRM_DESC }}</p>
+            <div class="confirmation-sources">
+              <div>
+                <b>{{ lang.tr().LANDING_PITCH_AI_SUGGESTS }}</b>
+                <span>{{ lang.tr().LANDING_PITCH_SUGGEST_GENRE }}</span>
+                <span>{{ lang.tr().LANDING_PITCH_SUGGEST_SUBGENRES }}</span>
+                <span>{{ lang.tr().LANDING_PITCH_SUGGEST_MOODS }}</span>
+                <span>{{ lang.tr().LANDING_PITCH_SUGGEST_INSTRUMENTS }}</span>
+                <span>{{ lang.tr().LANDING_PITCH_SUGGEST_VOCALS }}</span>
+                <span>{{ lang.tr().LANDING_PITCH_SUGGEST_PRODUCTION }}</span>
+              </div>
+              <div>
+                <b>{{ lang.tr().LANDING_PITCH_ARTIST_CAN }}</b>
+                <span>{{ lang.tr().LANDING_PITCH_ACTION_ACCEPT }} ✓</span>
+                <span>{{ lang.tr().LANDING_PITCH_ACTION_REMOVE }} ×</span>
+                <span>{{ lang.tr().LANDING_PITCH_ACTION_CORRECT }} ↺</span>
+                <span>{{ lang.tr().LANDING_PITCH_ACTION_ADD }} +</span>
+              </div>
+            </div>
+            <span class="pitch-status">ARTIST CONFIRMED</span>
+          </div>
+
+          <div class="pitch-card pitch-card--editorial">
+            <small>EDITORIAL</small>
+            <div class="editorial-lines" aria-hidden="true"><i></i><i></i><i></i></div>
+            <span class="pitch-status">PITCH READY</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="build" class="feature feature--build" aria-labelledby="build-title">
       <div class="section-motion-layer section-motion-layer--build" aria-hidden="true">
-        <video class="section-motion" data-src="/assets/videos/build.mp4" muted loop playsinline preload="none"></video>
+        <video class="section-motion" data-src="/assets/videos/build.mp4" muted autoplay loop playsinline preload="none"></video>
       </div>
 
       <div class="feature__copy">
-        <p class="module-label">MODULE_02 // SETLIST ENGINE</p>
+        <p class="module-label">MODULE_03 // SETLIST ENGINE</p>
         <h2 id="build-title">BUILD.</h2>
         <h3>{{ lang.tr().LANDING_BUILD_TAGLINE }}</h3>
         <p>{{ lang.tr().LANDING_BUILD_DESC }}</p>
@@ -148,10 +236,10 @@
       </div>
     </section>
 
-    <section class="feature feature--reverse feature--deploy" aria-labelledby="deploy-title">
+    <section id="uplink" class="feature feature--reverse feature--deploy" aria-labelledby="uplink-title">
       <div class="feature__copy">
-        <p class="module-label">MODULE_03 // RQS UPLINK ENGINE</p>
-        <h2 id="deploy-title">DEPLOY.</h2>
+        <p class="module-label">MODULE_04 // RQS UPLINK ENGINE</p>
+        <h2 id="uplink-title">UPLINK.</h2>
         <h3>{{ lang.tr().LANDING_DEPLOY_TAGLINE }}</h3>
         <p>{{ lang.tr().LANDING_DEPLOY_DESC }}</p>
         <div class="platforms" aria-label="Supported music destinations">
@@ -182,7 +270,7 @@
 
   <section class="origin" aria-labelledby="origin-title">
     <div class="section-motion-layer section-motion-layer--origin" aria-hidden="true">
-      <video class="section-motion" data-src="/assets/videos/built_in_the_music.mp4" muted loop playsinline preload="none"></video>
+      <video class="section-motion" data-src="/assets/videos/built_in_the_music.mp4" muted autoplay loop playsinline preload="none"></video>
     </div>
 
     <div>
@@ -214,7 +302,7 @@
 
   <section class="pricing" aria-labelledby="pricing-title">
     <div class="section-motion-layer section-motion-layer--pricing" aria-hidden="true">
-      <video class="section-motion" data-src="/assets/videos/start_free.mp4" muted loop playsinline preload="none"></video>
+      <video class="section-motion" data-src="/assets/videos/start_free.mp4" muted autoplay loop playsinline preload="none"></video>
     </div>
 
     <div class="pricing__intro">

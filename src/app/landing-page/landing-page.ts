@@ -96,15 +96,17 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
       '(prefers-reduced-motion: reduce)'
     ).matches;
 
-    if (mobile || reducedMotion) {
-      return;
-    }
-
     const videos = Array.from(
       this.host.nativeElement.querySelectorAll<HTMLVideoElement>(
         'video.section-motion[data-src]'
       )
     );
+
+    videos.forEach(video => this.ensureMuted(video));
+
+    if (mobile || reducedMotion) {
+      return;
+    }
 
     this.videoObserver = new IntersectionObserver(
       entries => {
@@ -139,7 +141,10 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
   }
 
   private activateVideo(video: HTMLVideoElement): void {
+    this.ensureMuted(video);
+
     const startPlayback = () => {
+      this.ensureMuted(video);
       void video.play()
         .then(() => video.classList.add('is-active'))
         .catch(() => video.classList.remove('is-active'));
@@ -163,6 +168,11 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
     } else {
       video.addEventListener('canplay', startPlayback, { once: true });
     }
+  }
+
+  private ensureMuted(video: HTMLVideoElement): void {
+    video.defaultMuted = true;
+    video.muted = true;
   }
 
   enterMainframe(): void {

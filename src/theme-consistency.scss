@@ -33,11 +33,13 @@ app-root[data-theme='light'] .rqs-landing {
 app-root[data-theme='light'] .rqs-landing .btn--secondary,
 app-root[data-theme='light'] .rqs-landing .hero-console,
 app-root[data-theme='light'] .rqs-landing .master-ui,
+app-root[data-theme='light'] .rqs-landing .pitch-ui,
 app-root[data-theme='light'] .rqs-landing .setlist-ui,
 app-root[data-theme='light'] .rqs-landing .uplink-ui,
 app-root[data-theme='light'] .rqs-landing .proof-ui > div,
 app-root[data-theme='light'] .rqs-landing .plan,
 app-root[data-theme='light'] .rqs-landing .console-module,
+app-root[data-theme='light'] .rqs-landing .pitch-card,
 app-root[data-theme='light'] .rqs-landing .meter-grid > div {
   border-color: var(--studio-border);
   background: var(--studio-card);
@@ -74,8 +76,36 @@ app-root[data-theme='light'] .rqs-landing .console-module strong,
 app-root[data-theme='light'] .rqs-landing .track-row strong,
 app-root[data-theme='light'] .rqs-landing .feature__copy li,
 app-root[data-theme='light'] .rqs-landing .plan li,
-app-root[data-theme='light'] .rqs-landing .capabilities__inner span {
+app-root[data-theme='light'] .rqs-landing .capabilities__inner a {
   color: var(--studio-text);
+}
+
+app-root[data-theme='light'] .rqs-landing .console-module--pitch strong,
+app-root[data-theme='light'] .rqs-landing .feature--pitch .module-label,
+app-root[data-theme='light'] .rqs-landing .feature--pitch h2,
+app-root[data-theme='light'] .rqs-landing .pitch-ready,
+app-root[data-theme='light'] .rqs-landing .pitch-status,
+app-root[data-theme='light'] .rqs-landing .pitch-flow i {
+  color: var(--studio-violet);
+}
+
+app-root[data-theme='light'] .rqs-landing .pitch-card--confirmation {
+  border-color: color-mix(in srgb, var(--studio-violet) 45%, var(--studio-border));
+  background: color-mix(in srgb, var(--studio-violet) 7%, white);
+}
+
+app-root[data-theme='light'] .rqs-landing .pitch-card h4,
+app-root[data-theme='light'] .rqs-landing .pitch-card dd,
+app-root[data-theme='light'] .rqs-landing .pitch-flow strong {
+  color: var(--studio-text);
+}
+
+app-root[data-theme='light'] .rqs-landing .pitch-card p,
+app-root[data-theme='light'] .rqs-landing .pitch-card dt,
+app-root[data-theme='light'] .rqs-landing .pitch-card > small,
+app-root[data-theme='light'] .rqs-landing .confirmation-sources b,
+app-root[data-theme='light'] .rqs-landing .confirmation-sources span {
+  color: var(--studio-text-secondary);
 }
 
 app-root[data-theme='light'] .rqs-landing .plan li,
