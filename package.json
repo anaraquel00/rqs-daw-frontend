@@ -59,5 +59,13 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.9.2"
+  },
+  "overrides": {
+    "body-parser": "2.4.0",
+    "proxy-addr": "2.0.8",
+    "qs": "6.17.1",
+    "@vercel/cli-config": {
+      "zod": "4.6.7"
+    }
   }
 }
