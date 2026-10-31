@@ -7,6 +7,7 @@ import { ContactPageComponent } from './contact-page/contact-page';
 import { PricingPageComponent } from './pricing-page/pricing-page';
 import { CookiesPageComponent } from './cookies-page/cookies-page';
 import { MasterLandingPageComponent } from './master-landing-page/master-landing-page';
+import { ReferralTermsComponent } from './referral-terms/referral-terms';
 
 export const routes: Routes = [
   {
@@ -83,6 +84,15 @@ export const routes: Routes = [
   {
     path: 'cookies',
     component: CookiesPageComponent
+  },
+  {
+    path: 'referral-terms',
+    component: ReferralTermsComponent
+  },
+  {
+    path: 'indicacoes',
+    redirectTo: 'referral-terms',
+    pathMatch: 'full'
   },
   {
     path: 'contato',

@@ -63,7 +63,10 @@ export class AnalyticsService {
     'oauth_token',
     'access_token',
     'refresh_token',
-    'token'
+    'token',
+    'ref',
+    'referral_code',
+    'referralcode'
   ]);
 
   initialize(): void {

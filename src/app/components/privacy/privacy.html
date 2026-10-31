@@ -257,6 +257,14 @@
     <p>For privacy, personal-data requests, support or questions about this Policy: <a routerLink="/contact">Contact Us</a></p>
   }
 
+  <section class="referral-privacy-summary">
+    @if (lang.currentLang() === 'pt') { <h2>Programa de indicação</h2><p>Para operar o programa, tratamos identificador da conta, fingerprint do e-mail do participante, código opaco, atribuição da waitlist, aceite dos termos e contagens agregadas. O código não contém e-mail ou UUID do usuário.</p> }
+    @else if (lang.currentLang() === 'pl') { <h2>Program poleceń</h2><p>Program przetwarza identyfikator konta, odcisk e-maila uczestnika, nieprzezroczysty kod, atrybucję listy oczekujących, akceptację warunków i zagregowane liczniki. Kod nie zawiera e-maila ani UUID użytkownika.</p> }
+    @else if (lang.currentLang() === 'fr') { <h2>Programme de parrainage</h2><p>Le programme traite l’identifiant du compte, l’empreinte de l’e-mail du participant, un code opaque, l’attribution de la liste d’attente, l’acceptation des conditions et des compteurs agrégés. Le code ne contient ni e-mail ni UUID utilisateur.</p> }
+    @else { <h2>Referral program</h2><p>The program processes the account identifier, participant email fingerprint, opaque code, waitlist attribution, terms acceptance and aggregate counts. The code contains no email or user UUID.</p> }
+    <p><a routerLink="/referral-terms">/referral-terms</a></p>
+  </section>
+
   <div class="bottom-nav">
     <a routerLink="/app" class="primary">Voltar ao Estúdio / Back to Studio</a>
     <a routerLink="/terms" class="secondary">Termos de Serviço / Terms of Service</a>
