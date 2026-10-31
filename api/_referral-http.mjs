@@ -2,6 +2,16 @@ import { createClient } from '@supabase/supabase-js';
 import { FIRESTORE_PROJECT_ID } from './_referral-core.mjs';
 
 const FIRESTORE_ROOT = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents`;
+const AUTH_ENVIRONMENTS = Object.freeze({
+  production: {
+    url: 'https://ucearnthodrltkvkmhit.supabase.co',
+    key: 'sb_publishable_v2YYX5ksPlYxbh2Xf4HwwQ_UEc5NZyR',
+  },
+  preview: {
+    url: 'https://uwrqbywapomuloresoek.supabase.co',
+    key: 'sb_publishable_evTmfCYwvcaPKqwyfEVMGA_kYXQftOX',
+  },
+});
 
 export function applyCors(req, res, methods = 'GET, POST, OPTIONS') {
   const origin = req.headers.origin;
@@ -20,14 +30,33 @@ export async function authenticateRequest(req) {
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
   if (!token) return null;
 
-  const production = String(req.headers.host || '').split(':')[0] === 'studio.raquelsynths.com';
-  const url = production ? 'https://ucearnthodrltkvkmhit.supabase.co' : 'https://uwrqbywapomuloresoek.supabase.co';
-  const key = production
-    ? 'sb_publishable_v2YYX5ksPlYxbh2Xf4HwwQ_UEc5NZyR'
-    : 'sb_publishable_evTmfCYwvcaPKqwyfEVMGA_kYXQftOX';
+  const environment = authEnvironmentForRequest(req, token);
+  const { url, key } = AUTH_ENVIRONMENTS[environment];
   const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await client.auth.getUser(token);
   return error || !data.user?.id || !data.user.email ? null : data.user;
+}
+
+export function authEnvironmentForRequest(req, token) {
+  const host = String(req.headers.host || '').split(':')[0];
+  if (host === 'studio.raquelsynths.com') return 'production';
+
+  // The issuer only selects an allowlisted Supabase project. auth.getUser still
+  // performs the authoritative server-side token validation below.
+  const issuer = tokenIssuer(token);
+  if (issuer === `${AUTH_ENVIRONMENTS.production.url}/auth/v1`) return 'production';
+  if (issuer === `${AUTH_ENVIRONMENTS.preview.url}/auth/v1`) return 'preview';
+  return 'preview';
+}
+
+function tokenIssuer(token) {
+  try {
+    const payload = String(token).split('.')[1];
+    if (!payload) return '';
+    return String(JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')).iss || '');
+  } catch {
+    return '';
+  }
 }
 
 export async function getDocument(collection, id) {
