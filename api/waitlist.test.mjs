@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import handler from './waitlist.js';
 import { emailFingerprint } from './_referral-core.mjs';
+import { setFirestoreAccessTokenProviderForTests } from './_referral-http.mjs';
 
 const CODE = 'RQSA23456789';
+setFirestoreAccessTokenProviderForTests(async () => 'short-lived-test-token');
 
 function firestoreDocument(collection, id, fields) {
   return { name: `projects/test/databases/(default)/documents/${collection}/${id}`, fields: Object.fromEntries(

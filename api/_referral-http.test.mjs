@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authEnvironmentForRequest } from './_referral-http.mjs';
+import { authEnvironmentForRequest, getDocument, setFirestoreAccessTokenProviderForTests } from './_referral-http.mjs';
+
+setFirestoreAccessTokenProviderForTests(async () => 'short-lived-test-token');
 
 function tokenFor(issuer) {
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -20,4 +22,20 @@ test('production host never routes authentication to the preview project', () =>
   const request = { headers: { host: 'studio.raquelsynths.com' } };
   assert.equal(authEnvironmentForRequest(request,
     tokenFor('https://uwrqbywapomuloresoek.supabase.co/auth/v1')), 'production');
+});
+
+test('Firestore requests use a server-side bearer token and reject non-referral collections', async () => {
+  const originalFetch = globalThis.fetch;
+  let authorization = '';
+  globalThis.fetch = async (_url, options = {}) => {
+    authorization = new Headers(options.headers).get('Authorization') || '';
+    return { ok: false, status: 404 };
+  };
+  try {
+    assert.equal(await getDocument('pro_waitlist', 'test-document'), null);
+    assert.equal(authorization, 'Bearer short-lived-test-token');
+    await assert.rejects(() => getDocument('users', 'test-document'), /not allowed/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

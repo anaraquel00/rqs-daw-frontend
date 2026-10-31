@@ -1,7 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import { getVercelOidcToken } from '@vercel/oidc';
+import { ExternalAccountClient } from 'google-auth-library';
 import { FIRESTORE_PROJECT_ID } from './_referral-core.mjs';
 
 const FIRESTORE_ROOT = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents`;
+const REFERRAL_COLLECTIONS = new Set(['pro_waitlist', 'founding_referral_participants']);
 const AUTH_ENVIRONMENTS = Object.freeze({
   production: {
     url: 'https://ucearnthodrltkvkmhit.supabase.co',
@@ -59,15 +62,74 @@ function tokenIssuer(token) {
   }
 }
 
+let firestoreAuthClient;
+let firestoreAccessTokenProvider = async () => {
+  const client = getFirestoreAuthClient();
+  const credentials = await client.getAccessToken();
+  if (!credentials.token) throw new Error('Google access token unavailable');
+  return credentials.token;
+};
+
+function getFirestoreAuthClient() {
+  if (firestoreAuthClient) return firestoreAuthClient;
+
+  const projectId = requiredEnvironment('GCP_PROJECT_ID');
+  const projectNumber = requiredEnvironment('GCP_PROJECT_NUMBER');
+  const poolId = requiredEnvironment('GCP_WORKLOAD_IDENTITY_POOL_ID');
+  const providerId = requiredEnvironment('GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID');
+  const serviceAccountEmail = requiredEnvironment('GCP_SERVICE_ACCOUNT_EMAIL');
+  const oidcAudience = requiredEnvironment('GCP_AUDIENCE');
+  const providerResource = `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${poolId}/providers/${providerId}`;
+  if (projectId !== FIRESTORE_PROJECT_ID) throw new Error('Configured GCP project does not match Firestore project');
+  if (oidcAudience !== `https:${providerResource}`) throw new Error('Configured GCP audience does not match provider');
+
+  firestoreAuthClient = ExternalAccountClient.fromJSON({
+    type: 'external_account',
+    audience: providerResource,
+    subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+    token_url: 'https://sts.googleapis.com/v1/token',
+    service_account_impersonation_url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${serviceAccountEmail}:generateAccessToken`,
+    subject_token_supplier: {
+      getSubjectToken: () => getVercelOidcToken({ audience: oidcAudience }),
+    },
+  });
+  if (!firestoreAuthClient) throw new Error('Google external account client unavailable');
+  return firestoreAuthClient;
+}
+
+function requiredEnvironment(name) {
+  const value = String(process.env[name] || '').trim();
+  if (!value) throw new Error(`Missing server environment: ${name}`);
+  return value;
+}
+
+function assertReferralCollection(collection) {
+  if (!REFERRAL_COLLECTIONS.has(collection)) throw new Error('Firestore collection is not allowed');
+}
+
+async function firestoreFetch(url, options = {}) {
+  const accessToken = await firestoreAccessTokenProvider();
+  const headers = new Headers(options.headers || {});
+  headers.set('Authorization', `Bearer ${accessToken}`);
+  return fetch(url, { ...options, headers });
+}
+
+export function setFirestoreAccessTokenProviderForTests(provider) {
+  if (!process.env.NODE_TEST_CONTEXT) throw new Error('Test-only Firestore credential override');
+  firestoreAccessTokenProvider = provider;
+}
+
 export async function getDocument(collection, id) {
-  const response = await fetch(`${FIRESTORE_ROOT}/${collection}/${encodeURIComponent(id)}`);
+  assertReferralCollection(collection);
+  const response = await firestoreFetch(`${FIRESTORE_ROOT}/${collection}/${encodeURIComponent(id)}`);
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`Firestore read failed (${response.status})`);
   return decodeDocument(await response.json());
 }
 
 export async function createDocument(collection, id, values) {
-  const response = await fetch(`${FIRESTORE_ROOT}/${collection}?documentId=${encodeURIComponent(id)}`, {
+  assertReferralCollection(collection);
+  const response = await firestoreFetch(`${FIRESTORE_ROOT}/${collection}?documentId=${encodeURIComponent(id)}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields: encodeFields(values) }),
   });
@@ -77,7 +139,8 @@ export async function createDocument(collection, id, values) {
 }
 
 export async function queryDocuments(collection, field, value) {
-  const response = await fetch(`${FIRESTORE_ROOT}:runQuery`, {
+  assertReferralCollection(collection);
+  const response = await firestoreFetch(`${FIRESTORE_ROOT}:runQuery`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ structuredQuery: { from: [{ collectionId: collection }], where: { fieldFilter: {
       field: { fieldPath: field }, op: 'EQUAL', value: encodeValue(value),
