@@ -151,10 +151,56 @@ describe('Studio MASTER full-width integration', () => {
 
     const handoff = root().querySelector('.pitch-handoff a') as HTMLAnchorElement;
     expect(root().querySelector('app-spotify-pitch-panel')).toBeNull();
-    expect(handoff.textContent).toContain('PREPARAR SPOTIFY PITCH');
+    expect(handoff.textContent).toContain('PREPARE SPOTIFY PITCH');
     expect(handoff.getAttribute('href')).toBe('/pitch?analysis=00000000-0000-4000-8000-000000000040');
     expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
   });
+  it('localizes the MASTER to PITCH handoff in all supported languages', async () => {
+    await selectFile();
+
+    const language = TestBed.inject(LanguageService);
+    const cases = [
+      {
+        code: 'en',
+        title: 'PREPARE YOUR SPOTIFY PITCH',
+        body: 'No new audio analysis is required.',
+        cta: 'PREPARE SPOTIFY PITCH',
+      },
+      {
+        code: 'pt',
+        title: 'PREPARE SEU PITCH PARA O SPOTIFY',
+        body: 'Nenhuma nova análise de áudio é necessária.',
+        cta: 'PREPARAR SPOTIFY PITCH',
+      },
+      {
+        code: 'pl',
+        title: 'PRZYGOTUJ SWÓJ PITCH SPOTIFY',
+        body: 'Ponowna analiza audio nie jest wymagana.',
+        cta: 'PRZYGOTUJ PITCH SPOTIFY',
+      },
+      {
+        code: 'fr',
+        title: 'PRÉPAREZ VOTRE PITCH SPOTIFY',
+        body: 'Aucune nouvelle analyse audio n’est nécessaire.',
+        cta: 'PRÉPARER LE PITCH SPOTIFY',
+      },
+    ] as const;
+
+    for (const item of cases) {
+      language.setLanguage(item.code);
+      harness.detectChanges();
+
+      const handoff = root().querySelector('.pitch-handoff') as HTMLElement;
+      const link = handoff.querySelector('a') as HTMLAnchorElement;
+
+      expect(handoff.textContent).toContain(item.title);
+      expect(handoff.textContent).toContain(item.body);
+      expect(link.textContent).toContain(item.cta);
+      expect(link.getAttribute('href'))
+        .toBe('/pitch?analysis=00000000-0000-4000-8000-000000000040');
+    }
+  });
+
   it('keeps destination/platform, Atmosphere/Intensity and requested LUFS connected to existing request state', async () => {
     await selectFile();
     const state = TestBed.inject(MasteringService);

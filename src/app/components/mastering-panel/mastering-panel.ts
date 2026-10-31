@@ -50,6 +50,33 @@ import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
 import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
 import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
 
+const PITCH_HANDOFF_COPY = {
+  en: {
+    eyebrow: 'AI RELEASE INTELLIGENCE',
+    title: 'PREPARE YOUR SPOTIFY PITCH',
+    body: 'Continue with this existing analysis in the dedicated PITCH workspace. No new audio analysis is required.',
+    cta: 'PREPARE SPOTIFY PITCH →',
+  },
+  pt: {
+    eyebrow: 'INTELIGÊNCIA DE LANÇAMENTO COM IA',
+    title: 'PREPARE SEU PITCH PARA O SPOTIFY',
+    body: 'Continue com esta análise existente no workspace dedicado PITCH. Nenhuma nova análise de áudio é necessária.',
+    cta: 'PREPARAR SPOTIFY PITCH →',
+  },
+  pl: {
+    eyebrow: 'INTELIGENCJA WYDANIA AI',
+    title: 'PRZYGOTUJ SWÓJ PITCH SPOTIFY',
+    body: 'Kontynuuj, korzystając z istniejącej analizy w dedykowanym obszarze PITCH. Ponowna analiza audio nie jest wymagana.',
+    cta: 'PRZYGOTUJ PITCH SPOTIFY →',
+  },
+  fr: {
+    eyebrow: 'INTELLIGENCE DE SORTIE PAR IA',
+    title: 'PRÉPAREZ VOTRE PITCH SPOTIFY',
+    body: 'Continuez avec cette analyse existante dans l’espace PITCH dédié. Aucune nouvelle analyse audio n’est nécessaire.',
+    cta: 'PRÉPARER LE PITCH SPOTIFY →',
+  },
+} as const;
+
 @Component({
   selector: 'app-mastering-panel',
   standalone: true,
@@ -123,6 +150,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   private autoRecommendationSubscription: Subscription | null = null;
 
   readonly education = computed(() => masteringEducation(this.lang.currentLang()));
+  readonly pitchHandoff = computed(() => PITCH_HANDOFF_COPY[this.lang.currentLang()]);
   readonly capabilitiesLoading = computed(() => this.capabilities() === null && this.capabilitiesError() === null);
 
   workflowStep(): 1 | 2 | 3 | 4 {
