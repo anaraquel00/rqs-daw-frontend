@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { authEnvironmentForRequest, getDocument, setFirestoreAccessTokenProviderForTests } from './_referral-http.mjs';
 
+process.env.GCP_FIRESTORE_DATABASE_ID = 'rqs-referral-preview';
 setFirestoreAccessTokenProviderForTests(async () => 'short-lived-test-token');
 
 function tokenFor(issuer) {
@@ -26,16 +27,22 @@ test('production host never routes authentication to the preview project', () =>
 
 test('Firestore requests use a server-side bearer token and reject non-referral collections', async () => {
   const originalFetch = globalThis.fetch;
+  let requestedUrl = '';
   let authorization = '';
-  globalThis.fetch = async (_url, options = {}) => {
+  globalThis.fetch = async (url, options = {}) => {
+    requestedUrl = String(url);
     authorization = new Headers(options.headers).get('Authorization') || '';
     return { ok: false, status: 404 };
   };
   try {
     assert.equal(await getDocument('pro_waitlist', 'test-document'), null);
+    assert.match(requestedUrl, /\/databases\/rqs-referral-preview\/documents\/pro_waitlist\/test-document$/);
     assert.equal(authorization, 'Bearer short-lived-test-token');
     await assert.rejects(() => getDocument('users', 'test-document'), /not allowed/);
+    process.env.GCP_FIRESTORE_DATABASE_ID = '(default)';
+    await assert.rejects(() => getDocument('pro_waitlist', 'test-document'), /database is not allowed/);
   } finally {
+    process.env.GCP_FIRESTORE_DATABASE_ID = 'rqs-referral-preview';
     globalThis.fetch = originalFetch;
   }
 });

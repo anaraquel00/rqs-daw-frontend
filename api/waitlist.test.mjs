@@ -5,6 +5,7 @@ import { emailFingerprint } from './_referral-core.mjs';
 import { setFirestoreAccessTokenProviderForTests } from './_referral-http.mjs';
 
 const CODE = 'RQSA23456789';
+process.env.GCP_FIRESTORE_DATABASE_ID = 'rqs-referral-preview';
 setFirestoreAccessTokenProviderForTests(async () => 'short-lived-test-token');
 
 function firestoreDocument(collection, id, fields) {

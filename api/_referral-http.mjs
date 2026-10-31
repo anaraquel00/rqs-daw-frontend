@@ -3,7 +3,7 @@ import { getVercelOidcToken } from '@vercel/oidc';
 import { ExternalAccountClient } from 'google-auth-library';
 import { FIRESTORE_PROJECT_ID } from './_referral-core.mjs';
 
-const FIRESTORE_ROOT = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents`;
+const REFERRAL_DATABASE_ID = 'rqs-referral-preview';
 const REFERRAL_COLLECTIONS = new Set(['pro_waitlist', 'founding_referral_participants']);
 const AUTH_ENVIRONMENTS = Object.freeze({
   production: {
@@ -107,6 +107,12 @@ function assertReferralCollection(collection) {
   if (!REFERRAL_COLLECTIONS.has(collection)) throw new Error('Firestore collection is not allowed');
 }
 
+function firestoreRoot() {
+  const databaseId = requiredEnvironment('GCP_FIRESTORE_DATABASE_ID');
+  if (databaseId !== REFERRAL_DATABASE_ID) throw new Error('Configured Firestore database is not allowed');
+  return `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/${databaseId}/documents`;
+}
+
 async function firestoreFetch(url, options = {}) {
   const accessToken = await firestoreAccessTokenProvider();
   const headers = new Headers(options.headers || {});
@@ -121,7 +127,7 @@ export function setFirestoreAccessTokenProviderForTests(provider) {
 
 export async function getDocument(collection, id) {
   assertReferralCollection(collection);
-  const response = await firestoreFetch(`${FIRESTORE_ROOT}/${collection}/${encodeURIComponent(id)}`);
+  const response = await firestoreFetch(`${firestoreRoot()}/${collection}/${encodeURIComponent(id)}`);
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`Firestore read failed (${response.status})`);
   return decodeDocument(await response.json());
@@ -129,7 +135,7 @@ export async function getDocument(collection, id) {
 
 export async function createDocument(collection, id, values) {
   assertReferralCollection(collection);
-  const response = await firestoreFetch(`${FIRESTORE_ROOT}/${collection}?documentId=${encodeURIComponent(id)}`, {
+  const response = await firestoreFetch(`${firestoreRoot()}/${collection}?documentId=${encodeURIComponent(id)}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields: encodeFields(values) }),
   });
@@ -140,7 +146,7 @@ export async function createDocument(collection, id, values) {
 
 export async function queryDocuments(collection, field, value) {
   assertReferralCollection(collection);
-  const response = await firestoreFetch(`${FIRESTORE_ROOT}:runQuery`, {
+  const response = await firestoreFetch(`${firestoreRoot()}:runQuery`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ structuredQuery: { from: [{ collectionId: collection }], where: { fieldFilter: {
       field: { fieldPath: field }, op: 'EQUAL', value: encodeValue(value),
