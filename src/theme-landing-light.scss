@@ -50,20 +50,20 @@ app-root[data-theme='light'] .rqs-landing
 
 app-root[data-theme='light'] .rqs-landing .section-motion-layer::after {
   background:
-    linear-gradient(90deg, rgba(244,246,248,.97), rgba(244,246,248,.92) 22%, rgba(244,246,248,.78) 52%, rgba(244,246,248,.70) 74%, rgba(244,246,248,.84)),
-    linear-gradient(180deg, rgba(244,246,248,.88), rgba(244,246,248,.66) 34%, rgba(244,246,248,.70) 68%, rgba(244,246,248,.94)) !important;
+    linear-gradient(90deg, rgba(244,246,248,.68), rgba(244,246,248,.56) 22%, rgba(244,246,248,.42) 52%, rgba(244,246,248,.36) 74%, rgba(244,246,248,.52)),
+    linear-gradient(180deg, rgba(244,246,248,.60), rgba(244,246,248,.38) 34%, rgba(244,246,248,.42) 68%, rgba(244,246,248,.66)) !important;
 }
 
 app-root[data-theme='light'] .rqs-landing .section-motion-layer--origin::after {
   background:
-    linear-gradient(90deg, rgba(244,246,248,.88), rgba(244,246,248,.72) 50%, rgba(244,246,248,.84)),
-    linear-gradient(180deg, rgba(244,246,248,.82), rgba(244,246,248,.68) 46%, rgba(244,246,248,.90)) !important;
+    linear-gradient(90deg, rgba(244,246,248,.62), rgba(244,246,248,.46) 50%, rgba(244,246,248,.58)),
+    linear-gradient(180deg, rgba(244,246,248,.58), rgba(244,246,248,.42) 46%, rgba(244,246,248,.66)) !important;
 }
 
 app-root[data-theme='light'] .rqs-landing .section-motion-layer--pricing::after {
   background:
-    linear-gradient(180deg, rgba(244,246,248,.91), rgba(244,246,248,.77) 32%, rgba(244,246,248,.82) 62%, rgba(244,246,248,.95)),
-    linear-gradient(90deg, rgba(244,246,248,.86), rgba(244,246,248,.70) 50%, rgba(244,246,248,.86)) !important;
+    linear-gradient(180deg, rgba(244,246,248,.66), rgba(244,246,248,.48) 32%, rgba(244,246,248,.52) 62%, rgba(244,246,248,.70)),
+    linear-gradient(90deg, rgba(244,246,248,.60), rgba(244,246,248,.42) 50%, rgba(244,246,248,.60)) !important;
 }
 
 app-root[data-theme='light'] .rqs-landing .feature h2,
@@ -132,6 +132,10 @@ app-root[data-theme='light'] .rqs-landing .final-cta small {
 }
 
 app-root[data-theme='light'] .rqs-landing .btn--primary {
+  color: #fff !important;
+}
+
+app-root[data-theme='light'] .rqs-landing .btn--pitch {
   color: #fff !important;
 }
 

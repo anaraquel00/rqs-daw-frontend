@@ -206,6 +206,7 @@ describe('LandingPageComponent', () => {
     const originalParent = host.parentNode;
     const appRoot = document.createElement('app-root');
     const primary = host.querySelector<HTMLElement>('.btn--primary');
+    const pitch = host.querySelector<HTMLElement>('.btn--pitch');
     const master = host.querySelector<HTMLVideoElement>('.section-motion-layer--master .section-motion');
     const build = host.querySelector<HTMLVideoElement>('.section-motion-layer--build .section-motion');
     const origin = host.querySelector<HTMLVideoElement>('.section-motion-layer--origin .section-motion');
@@ -223,6 +224,7 @@ describe('LandingPageComponent', () => {
     });
 
     expect(document.defaultView?.getComputedStyle(primary!).color).toBe('rgb(255, 255, 255)');
+    expect(document.defaultView?.getComputedStyle(pitch!).color).toBe('rgb(255, 255, 255)');
     expect(document.defaultView?.getComputedStyle(master!).opacity).toBe('0.6');
     expect(document.defaultView?.getComputedStyle(build!).opacity).toBe('0.6');
     expect(document.defaultView?.getComputedStyle(origin!).opacity).toBe('0.56');
@@ -231,6 +233,7 @@ describe('LandingPageComponent', () => {
     appRoot.setAttribute('data-theme', 'dark');
 
     expect(document.defaultView?.getComputedStyle(primary!).color).toBe('rgb(3, 16, 20)');
+    expect(document.defaultView?.getComputedStyle(pitch!).color).toBe('rgb(9, 5, 18)');
     expect(document.defaultView?.getComputedStyle(master!).opacity).toBe('0.6');
     expect(document.defaultView?.getComputedStyle(build!).opacity).toBe('0.6');
     expect(document.defaultView?.getComputedStyle(origin!).opacity).toBe('0.56');
