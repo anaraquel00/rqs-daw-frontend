@@ -11,6 +11,7 @@
     "test:seo:build": "node scripts/seo-build-check.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:api": "node --test api/*.test.mjs",
     "serve:ssr:rqs-daw": "node dist/rqs-daw/server/server.mjs"
   },
   "prettier": {

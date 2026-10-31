@@ -1,0 +1,14 @@
+<section class="founding-referral" aria-labelledby="founding-referral-title" data-testid="founding-referral-banner">
+  <div class="referral-copy"><p class="eyebrow">{{ copy().eyebrow }}</p><h1 id="founding-referral-title">{{ copy().title }}</h1><p>{{ copy().body }}</p><p class="inactive">{{ copy().inactive }}</p></div>
+  <div class="referral-action">
+    @if (!auth.session()) { <a routerLink="/pricing" fragment="waitlist" class="primary">{{ copy().join }}</a> }
+    @else if (!referral.status().referralCode) {
+      @if (!confirming()) { <button type="button" class="primary" (click)="confirming.set(true); analytics.trackEvent('referral_program_opened')">{{ copy().activate }}</button> }
+      @else { <label class="consent"><input type="checkbox" [checked]="accepted()" (change)="accepted.set(!accepted())"> <span>{{ copy().accept }}</span></label><a routerLink="/referral-terms">{{ copy().terms }}</a><div class="button-row"><button type="button" (click)="confirming.set(false)">{{ copy().cancel }}</button><button type="button" class="primary" [disabled]="!accepted() || referral.loading()" (click)="activate()">{{ copy().activate }}</button></div> }
+    } @else {
+      <div class="status"><strong>{{ referral.status().discountPercent }}%</strong><span>{{ referral.status().participantStatus === 'maxed' ? copy().maxed : referral.status().participantStatus === 'qualified' ? copy().qualified : copy().pending }}</span><small>{{ referral.status().qualifiedCount }} / 5 {{ copy().progress }} · {{ referral.status().pendingCount }} pending</small></div>
+      <div class="button-row"><button type="button" (click)="copyLink()">{{ copied() ? copy().copied : copy().copy }}</button><button type="button" class="primary" (click)="share()">{{ copy().share }}</button></div>
+    }
+    @if (referral.error()) { <p class="error" role="alert">{{ referral.error() === 'waitlist' ? copy().waitlistRequired : copy().error }}</p> }
+  </div>
+</section>

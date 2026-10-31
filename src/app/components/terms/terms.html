@@ -228,6 +228,14 @@
     <p>For questions about these Terms, support or service-related matters, use <a routerLink="/contact">the official contact channel.</a></p>
   }
 
+  <section class="referral-terms-summary">
+    @if (lang.currentLang() === 'pt') { <h2>Programa de Indicação Fundadora</h2><p>A participação no programa exige conta autenticada, entrada válida na waitlist anterior ao lançamento e aceitação das regras específicas. Nenhum desconto é aplicado durante o Beta Público.</p> }
+    @else if (lang.currentLang() === 'pl') { <h2>Program Poleceń Założycielskich</h2><p>Udział wymaga uwierzytelnionego konta, ważnego wpisu na liście oczekujących sprzed premiery i akceptacji szczegółowych zasad. W Public Beta rabaty nie są stosowane.</p> }
+    @else if (lang.currentLang() === 'fr') { <h2>Programme de Parrainage Fondateur</h2><p>La participation exige un compte authentifié, une inscription valide antérieure au lancement et l’acceptation des règles spécifiques. Aucune remise ne s’applique pendant la Bêta publique.</p> }
+    @else { <h2>Founding Referral Program</h2><p>Participation requires an authenticated account, a valid prelaunch waitlist entry and acceptance of the specific rules. No discount is applied during Public Beta.</p> }
+    <p><a routerLink="/referral-terms">/referral-terms</a></p>
+  </section>
+
   <div class="bottom-nav">
     <a routerLink="/app" class="primary">Voltar ao Estúdio / Back to Studio</a>
     <a routerLink="/privacy" class="secondary">Política de Privacidade / Privacy Policy</a>

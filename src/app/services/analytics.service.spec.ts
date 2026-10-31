@@ -98,4 +98,15 @@ describe('AnalyticsService privacy contract', () => {
     expect(payload['email']).toBeUndefined();
     expect(payload['filename']).toBeUndefined();
   });
+
+  it('removes referral codes from page URLs and custom events', () => {
+    history.replaceState({}, '', '/pricing?ref=RQSABCDEFGH1#waitlist');
+    service.initialize();
+    service.trackPageView();
+    service.trackEvent('referral_link_shared', { referral_code: 'RQSABCDEFGH1', referralCode: 'RQSABCDEFGH1', qualified_count: 5 });
+
+    const serialized = JSON.stringify(gtag.calls.allArgs());
+    expect(serialized).not.toContain('RQSABCDEFGH1');
+    expect(serialized).toContain('qualified_count');
+  });
 });

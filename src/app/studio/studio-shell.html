@@ -38,7 +38,10 @@
 </nav>
 <main id="studio-content" tabindex="-1" [class.selector-surface]="surface() === 'home'">
   <router-outlet></router-outlet>
-  @if (surface() === 'home') { <app-module-selector></app-module-selector> }
+  @if (surface() === 'home') {
+    <app-founding-referral-banner></app-founding-referral-banner>
+    <app-module-selector></app-module-selector>
+  }
   @if (visited().has('master') && auth.isLoggedIn()) {
     <section class="master-workspace" [hidden]="surface() !== 'master'" [attr.inert]="surface() !== 'master' ? '' : null" aria-label="MASTER">
       <h1 class="master-title">MASTER</h1>

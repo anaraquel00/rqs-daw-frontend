@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ViewportScroller } from '@angular/common';
 import { Footer } from '../footer/footer';
 import { LanguageService, UiLanguage } from '../services/language.service';
@@ -10,6 +10,7 @@ import { AnalyticsService } from '../services/analytics.service';
 import { StudioThemePreference, ThemeService } from '../services/theme.service';
 import { RqsPlan } from '../services/mastering-types';
 import { plannedEntitlementLine } from '../services/plan-entitlements';
+import { isValidReferralCode } from '../services/founding-referral';
 
 type PricingCurrency = 'BRL' | 'USD' | 'PLN';
 
@@ -76,6 +77,11 @@ export class PricingPageComponent implements AfterViewInit {
   readonly prices = computed(() => PRICING[this.currency()]);
   readonly waitlistState = signal<'idle' | 'sending' | 'success' | 'error'>('idle');
   private readonly viewportScroller = inject(ViewportScroller);
+  private readonly route = inject(ActivatedRoute);
+  private readonly referralCode = computed(() => {
+    const value = this.route.snapshot.queryParamMap.get('ref')?.trim().toUpperCase() ?? '';
+    return isValidReferralCode(value) ? value : '';
+  });
 
   waitlistEmail = '';
   private currencyManuallySelected = false;
@@ -135,7 +141,8 @@ export class PricingPageComponent implements AfterViewInit {
         body: JSON.stringify({
           email,
           source: 'studio.raquelsynths.com/pricing',
-          language: this.lang.currentLang() === 'pl' ? 'en' : this.lang.currentLang(),
+          language: this.lang.currentLang(),
+          referralCode: this.referralCode() || undefined,
           website: ''
         })
       });
@@ -147,6 +154,7 @@ export class PricingPageComponent implements AfterViewInit {
         this.analytics.trackEvent('waitlist_joined', {
           desired_plan: this.desiredPlan
         });
+        if (result?.referralAttributed) this.analytics.trackEvent('referral_waitlist_joined');
       }
     } catch {
       this.waitlistState.set('error');
