@@ -60,7 +60,8 @@ describe('Studio MASTER full-width integration', () => {
     localStorage.removeItem('rqs:lastAnalysisId:test-owner');
     auth = {session: signal({user:{id:'test-owner'}}), isLoggedIn: signal(true), isPremium: signal(false),
       canMaster: signal(true), remainingMasters: signal(3), reselectAudioRequired: signal(false),
-      requestSignIn: jasmine.createSpy(), logout: jasmine.createSpy(), refreshProfile: jasmine.createSpy()};
+      requestSignIn: jasmine.createSpy(), logout: jasmine.createSpy(), refreshProfile: jasmine.createSpy(),
+      whenAuthStateResolved: () => Promise.resolve()};
     audio = {previewStart:signal(0), previewEnd:signal(15), previewStatus:signal('not-generated'),
       playbackMode:signal('full-track'), activeVariant:signal('original'), currentTime:signal(0), duration:signal(60),
       displayCurrentTime:signal(0), displayDuration:signal(60), canUseMaster:signal(false), isPlaying:signal(false),

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Routes } from '@angular/router';
 import { StudioShellComponent } from './studio-shell';
+import { studioAuthGuard } from './studio-auth.guard';
 
 // The route selects a surface. The parent owns visited engine instances so that
 // Back/Forward and Module Selector navigation do not destroy local audio/jobs.
@@ -12,7 +13,11 @@ export const STUDIO_ROUTES: Routes = [{
   children: [
     { path: '', pathMatch: 'full', component: StudioRouteSurface, data: { surface: 'home' }, title: 'RQS Studio' },
     ...['master', 'pitch', 'build', 'uplink', 'split', 'learn', 'account'].map(surface => ({
-      path: surface, component: StudioRouteSurface, data: { surface }, title: `RQS Studio — ${surface.toUpperCase()}`,
+      path: surface,
+      component: StudioRouteSurface,
+      data: { surface },
+      title: `RQS Studio — ${surface.toUpperCase()}`,
+      canActivate: surface === 'master' || surface === 'pitch' ? [studioAuthGuard] : [],
     })),
     { path: '**', redirectTo: '' },
   ],
@@ -21,7 +26,14 @@ export const STUDIO_ROUTES: Routes = [{
 export const PITCH_ROUTES: Routes = [{
   path: '', component: StudioShellComponent,
   children: [
-    { path: '', pathMatch: 'full', component: StudioRouteSurface, data: { surface: 'pitch' }, title: 'RQS Studio — PITCH' },
+    {
+      path: '',
+      pathMatch: 'full',
+      component: StudioRouteSurface,
+      data: { surface: 'pitch' },
+      title: 'RQS Studio — PITCH',
+      canActivate: [studioAuthGuard],
+    },
     { path: '**', redirectTo: '' },
   ],
 }];

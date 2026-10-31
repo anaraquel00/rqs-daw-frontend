@@ -42,6 +42,11 @@ export class AuthService {
   readonly authMessageKey = signal<AuthMessageKey | null>(null);
   readonly authEmailSending = signal(false);
   readonly reselectAudioRequired = signal(false);
+  readonly authStateResolved = signal(false);
+  private resolveInitialAuthState!: () => void;
+  private readonly initialAuthState = new Promise<void>((resolve) => {
+    this.resolveInitialAuthState = resolve;
+  });
   private readonly resumeMasteringKey = 'rqs_resume_mastering';
   private readonly authReturnPathKey = 'rqs_auth_return_path';
   private readonly allowedV2ReturnPaths = new Set([
@@ -96,6 +101,7 @@ export class AuthService {
 
   constructor() {
     if (!isPlatformBrowser(this.platformId)) {
+      this.markAuthStateResolved();
       return;
     }
 
@@ -113,6 +119,10 @@ export class AuthService {
     return this.supabase;
   }
 
+  whenAuthStateResolved(): Promise<void> {
+    return this.initialAuthState;
+  }
+
   async refreshProfile(): Promise<void> {
     await this.handleSessionUpdate(this.session());
   }
@@ -127,6 +137,14 @@ export class AuthService {
       .then(({ data: { session } }) => {
         void this.handleSessionUpdate(session);
         this.handleAuthCallbackReturn(callbackState, session);
+        this.markAuthStateResolved();
+      })
+      .catch((error: unknown) => {
+        console.error(
+          '[RQS AUTH] Session bootstrap error:',
+          error instanceof Error ? error.message : 'Unknown session bootstrap error'
+        );
+        this.markAuthStateResolved();
       });
 
     this.supabase.auth
@@ -138,7 +156,14 @@ export class AuthService {
         }
 
         void this.handleSessionUpdate(session);
+        this.markAuthStateResolved();
       });
+  }
+
+  private markAuthStateResolved(): void {
+    if (this.authStateResolved()) return;
+    this.authStateResolved.set(true);
+    this.resolveInitialAuthState();
   }
 
   // =================================================

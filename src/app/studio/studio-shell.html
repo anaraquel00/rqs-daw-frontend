@@ -39,13 +39,13 @@
 <main id="studio-content" tabindex="-1" [class.selector-surface]="surface() === 'home'">
   <router-outlet></router-outlet>
   @if (surface() === 'home') { <app-module-selector></app-module-selector> }
-  @if (visited().has('master')) {
+  @if (visited().has('master') && auth.isLoggedIn()) {
     <section class="master-workspace" [hidden]="surface() !== 'master'" [attr.inert]="surface() !== 'master' ? '' : null" aria-label="MASTER">
       <h1 class="master-title">MASTER</h1>
       <app-upload-zone class="studio-master"></app-upload-zone>
     </section>
   }
-  @if (visited().has('pitch')) {
+  @if (visited().has('pitch') && auth.isLoggedIn()) {
     <section class="pitch-workspace" [hidden]="surface() !== 'pitch'" [attr.inert]="surface() !== 'pitch' ? '' : null" aria-label="PITCH">
       <h1 class="pitch-title">PITCH</h1>
       <app-upload-zone workspace="pitch" class="studio-pitch"></app-upload-zone>

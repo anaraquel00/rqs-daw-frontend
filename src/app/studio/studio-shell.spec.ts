@@ -24,13 +24,24 @@ describe('Studio V2 shell integration', () => {
   let harness: RouterTestingHarness;
   const session = signal<any>(null);
   const premium = signal(false);
+  const isLoggedIn = () => !!session()?.user;
   const requestSignIn = jasmine.createSpy('requestSignIn');
   beforeEach(async () => {
     localStorage.removeItem('rqs_theme');
-    session.set(null); premium.set(false); requestSignIn.calls.reset();
+    session.set({ user: { id: 'owner-a', email: 'owner@example.invalid' } });
+    premium.set(false); requestSignIn.calls.reset();
     TestBed.configureTestingModule({ providers: [
       provideRouter([{ path: 'app', children: STUDIO_ROUTES }, { path: 'pitch', children: PITCH_ROUTES }]),
-      { provide: AuthService, useValue: { session, isPremium: premium, remainingMasters: () => 2, requestSignIn, loginWithProvider: jasmine.createSpy(), logout: jasmine.createSpy() } },
+      { provide: AuthService, useValue: {
+        session,
+        isLoggedIn,
+        isPremium: premium,
+        remainingMasters: () => 2,
+        requestSignIn,
+        loginWithProvider: jasmine.createSpy(),
+        logout: jasmine.createSpy(),
+        whenAuthStateResolved: () => Promise.resolve(),
+      } },
       { provide: CookieConsentService, useValue: { openPreferences: jasmine.createSpy() } },
     ] });
     TestBed.overrideComponent(StudioShellComponent, {
@@ -115,13 +126,45 @@ describe('Studio V2 shell integration', () => {
     expect(harness.routeNativeElement!.querySelector('input')).toBe(source);
     expect(source.value).toBe('user-selected-file');
   });
-  it('preserves the requested V2 surface when an anonymous user signs in', async () => {
+  it('blocks direct unauthenticated access to PITCH and MASTER', async () => {
+    session.set(null);
+    harness.detectChanges();
+
+    await harness.navigateByUrl('/pitch');
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/app');
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).toBeNull();
+    expect(harness.routeNativeElement!.querySelector('input[type=file]')).toBeNull();
+
     await harness.navigateByUrl('/app/master');
-    const source = harness.routeNativeElement!.querySelector('input');
-    session.set({ user: { id: 'owner-a', email: 'test@example.invalid' } });
-    harness.detectChanges(); await harness.fixture.whenStable(); harness.detectChanges();
-    expect(TestBed.inject(Router).url).toBe('/app/master');
-    expect(harness.routeNativeElement!.querySelector('input')).toBe(source);
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/app');
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="MASTER"]')).toBeNull();
+  });
+  it('removes PITCH immediately and redirects when the active session signs out', async () => {
+    await harness.navigateByUrl('/pitch');
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).not.toBeNull();
+
+    session.set(null);
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).toBeNull();
+    expect(harness.routeNativeElement!.querySelector('input[type=file]')).toBeNull();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/app');
+  });
+  it('allows PITCH again after authentication is restored', async () => {
+    session.set(null);
+    await harness.navigateByUrl('/pitch');
+    expect(TestBed.inject(Router).url).toBe('/app');
+
+    session.set({ user: { id: 'owner-a', email: 'owner@example.invalid' } });
+    harness.detectChanges();
+    await harness.navigateByUrl('/pitch');
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/pitch');
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).not.toBeNull();
   });
   it('clears retained engine views at a user-to-user identity boundary', async () => {
     session.set({ user: { id: 'owner-a', email: 'first@example.invalid' } });
@@ -136,6 +179,8 @@ describe('Studio V2 shell integration', () => {
     expect(harness.routeNativeElement!.querySelector('input')).not.toBe(source);
   });
   it('uses existing sign-in and profile/quota state in Account', async () => {
+    session.set(null);
+    harness.detectChanges();
     await harness.navigateByUrl('/app/account');
     (harness.routeNativeElement!.querySelector('.simple-surface button') as HTMLButtonElement).click();
     expect(requestSignIn).toHaveBeenCalledWith('general', 'email');
