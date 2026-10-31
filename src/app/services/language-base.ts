@@ -410,10 +410,10 @@ export const PT_TRANSLATIONS = {
   LANDING_DEPLOY_TAGLINE: "Envie o sinal.",
   LANDING_DEPLOY_DESC: "Cole o link da sua faixa no Spotify, SoundCloud, YouTube ou Bandcamp. O RQS Uplink Engine gera um link curto que tenta abrir o conteúdo no aplicativo oficial compatível e reduz a fricção de navegadores internos.",
 
-  LANDING_ORIGIN_TITLE: "CONSTRUÍDO DENTRO DA MÚSICA.",
-  LANDING_ORIGIN_TAGLINE: "Nós usamos as mesmas ferramentas.",
-  LANDING_ORIGIN_DESC: "O RQS Studio nasceu de ferramentas internas do workflow da RaQuel Synths — masterização, preparação de setlists e deep links musicais. Agora esse sistema está sendo aberto para outros criadores.",
-  LANDING_ORIGIN_CTA: "EXPLORAR RAQUEL SYNTHS",
+  LANDING_ORIGIN_TITLE: "CONSTRUÍDO DENTRO DE UM PROJETO MUSICAL REAL.",
+  LANDING_ORIGIN_DESC_1: "O RQS Studio nasceu do workflow da RaQuel Synths. MASTER, PITCH, BUILD e UPLINK evoluíram a partir de necessidades reais de produção, lançamento e operação de um projeto musical independente.",
+  LANDING_ORIGIN_DESC_2: "Em raquelsynths.com, publicamos os bastidores desse processo — música, tecnologia, desenvolvimento e decisões que deram origem às ferramentas do Studio.",
+  LANDING_ORIGIN_CTA: "CONHECER A RAQUEL SYNTHS",
 
   LANDING_PROOF_TITLE: "OUÇA A DIFERENÇA.",
   LANDING_PROOF_DESC: "A comparação pública A/B será adicionada somente com áudio real e métricas verificadas. Nenhum resultado fictício é usado como prova de produto.",
@@ -428,7 +428,7 @@ export const PT_TRANSLATIONS = {
 
   LANDING_PRO_DESC: "O RQS PRO continua em preparação para o lançamento público. A prévia de preços e limites planejados já está disponível, mas nenhuma assinatura paga ou checkout está ativo.",
   LANDING_PRO_ITEM_1: "Prévia de preços localizada em BRL, USD e PLN",
-  LANDING_PRO_ITEM_2: "Limites planejados de MASTER, BUILD e DEPLOY",
+  LANDING_PRO_ITEM_2: "Limites planejados de MASTER, PITCH, BUILD e UPLINK",
   LANDING_PRO_ITEM_3: "Assinaturas pagas continuam desativadas durante o Public Beta",
   LANDING_PRO_STATUS: "PRÉVIA DE LANÇAMENTO",
   LANDING_PRO_CTA: "VER PREÇOS // PRÉVIA",
@@ -691,10 +691,10 @@ export const EN_TRANSLATIONS = {
   LANDING_DEPLOY_TAGLINE: "Send the signal.",
   LANDING_DEPLOY_DESC: "Paste your track link from Spotify, SoundCloud, YouTube or Bandcamp. RQS Uplink Engine generates a short link that attempts to open the content in the compatible official app and reduces friction from in-app browsers.",
 
-  LANDING_ORIGIN_TITLE: "BUILT IN THE MUSIC.",
-  LANDING_ORIGIN_TAGLINE: "We use the same tools.",
-  LANDING_ORIGIN_DESC: "RQS Studio began as internal tooling for the RaQuel Synths workflow — mastering, setlist preparation and music deep links. Now the system is opening to other creators.",
-  LANDING_ORIGIN_CTA: "EXPLORE RAQUEL SYNTHS",
+  LANDING_ORIGIN_TITLE: "BUILT INSIDE A REAL MUSIC PROJECT.",
+  LANDING_ORIGIN_DESC_1: "RQS Studio grew out of the RaQuel Synths production process. MASTER, PITCH, BUILD and UPLINK evolved from real needs across production, release and the day-to-day operation of an independent music project.",
+  LANDING_ORIGIN_DESC_2: "At raquelsynths.com, we publish the story behind that process — the music, technology, development and decisions that gave rise to the Studio tools.",
+  LANDING_ORIGIN_CTA: "DISCOVER RAQUEL SYNTHS",
 
   LANDING_PROOF_TITLE: "HEAR THE DIFFERENCE.",
   LANDING_PROOF_DESC: "The public A/B comparison will be added only with real audio and verified metrics. No fictional result is used as product proof.",
@@ -709,7 +709,7 @@ export const EN_TRANSLATIONS = {
 
   LANDING_PRO_DESC: "RQS PRO is still being prepared for public launch. A preview of planned pricing and limits is now available, but no paid subscription or checkout is active.",
   LANDING_PRO_ITEM_1: "Localized pricing preview in BRL, USD and PLN",
-  LANDING_PRO_ITEM_2: "Planned limits across MASTER, BUILD and DEPLOY",
+  LANDING_PRO_ITEM_2: "Planned limits across MASTER, PITCH, BUILD and UPLINK",
   LANDING_PRO_ITEM_3: "Paid subscriptions remain disabled during Public Beta",
   LANDING_PRO_STATUS: "LAUNCH PREVIEW",
   LANDING_PRO_CTA: "VIEW PRICING // PREVIEW",
@@ -967,10 +967,10 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   LANDING_DEPLOY_TAGLINE: "Wyślij sygnał.",
   LANDING_DEPLOY_DESC: "Wklej link do utworu ze Spotify, SoundCloud, YouTube lub Bandcamp. RQS Uplink Engine tworzy krótki link, który próbuje otworzyć treść w zgodnej oficjalnej aplikacji i ogranicza tarcie wewnętrznych przeglądarek.",
 
-  LANDING_ORIGIN_TITLE: "ZBUDOWANE WEWNĄTRZ MUZYKI.",
-  LANDING_ORIGIN_TAGLINE: "Używamy tych samych narzędzi.",
-  LANDING_ORIGIN_DESC: "RQS Studio powstało jako wewnętrzne narzędzia workflow RaQuel Synths — do masteringu, przygotowania setlist i muzycznych deep linków. Teraz system otwiera się na innych twórców.",
-  LANDING_ORIGIN_CTA: "ODKRYJ RAQUEL SYNTHS",
+  LANDING_ORIGIN_TITLE: "STWORZONE W RAMACH PRAWDZIWEGO PROJEKTU MUZYCZNEGO.",
+  LANDING_ORIGIN_DESC_1: "RQS Studio wyrosło z procesu produkcyjnego RaQuel Synths. MASTER, PITCH, BUILD i UPLINK powstały z realnych potrzeb związanych z produkcją, wydawaniem i prowadzeniem niezależnego projektu muzycznego.",
+  LANDING_ORIGIN_DESC_2: "Na raquelsynths.com publikujemy kulisy tego procesu — muzykę, technologię, rozwój i decyzje, które doprowadziły do powstania narzędzi Studio.",
+  LANDING_ORIGIN_CTA: "POZNAJ RAQUEL SYNTHS",
 
   LANDING_PROOF_TITLE: "USŁYSZ RÓŻNICĘ.",
   LANDING_PROOF_DESC: "Publiczne porównanie A/B zostanie dodane wyłącznie z prawdziwym audio i zweryfikowanymi metrykami. Nie używamy fikcyjnych wyników jako dowodu działania produktu.",
@@ -985,7 +985,7 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
 
   LANDING_PRO_DESC: "RQS PRO jest nadal przygotowywany do publicznej premiery. Podgląd planowanych cen i limitów jest już dostępny, ale płatne subskrypcje i checkout pozostają wyłączone.",
   LANDING_PRO_ITEM_1: "Lokalny podgląd cen w BRL, USD i PLN",
-  LANDING_PRO_ITEM_2: "Planowane limity dla MASTER, BUILD i DEPLOY",
+  LANDING_PRO_ITEM_2: "Planowane limity dla MASTER, PITCH, BUILD i UPLINK",
   LANDING_PRO_ITEM_3: "Płatne subskrypcje pozostają wyłączone podczas Public Beta",
   LANDING_PRO_STATUS: "PODGLĄD PREMIERY",
   LANDING_PRO_CTA: "ZOBACZ CENY // PODGLĄD",

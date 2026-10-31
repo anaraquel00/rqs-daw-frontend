@@ -121,6 +121,60 @@ describe('LandingPageComponent', () => {
     }
   });
 
+  it('keeps the Public Beta module limits canonical in PT, EN, PL and FR', () => {
+    const expected: Record<UiLanguage, string> = {
+      pt: 'Limites planejados de MASTER, PITCH, BUILD e UPLINK',
+      en: 'Planned limits across MASTER, PITCH, BUILD and UPLINK',
+      pl: 'Planowane limity dla MASTER, PITCH, BUILD i UPLINK',
+      fr: 'Limites prévues pour MASTER, PITCH, BUILD et UPLINK',
+    };
+
+    for (const [locale, copy] of Object.entries(expected) as [UiLanguage, string][]) {
+      language.setLanguage(locale);
+      fixture.detectChanges();
+
+      const publicBeta = fixture.nativeElement.querySelector('.plan--pro')?.textContent ?? '';
+      const moduleOrder = ['MASTER', 'PITCH', 'BUILD', 'UPLINK'].map((module) =>
+        publicBeta.indexOf(module),
+      );
+
+      expect(publicBeta).toContain(copy);
+      expect(publicBeta).not.toContain('MASTER, BUILD e DEPLOY');
+      expect(moduleOrder.every((index) => index >= 0)).toBeTrue();
+      expect(moduleOrder).toEqual([...moduleOrder].sort((a, b) => a - b));
+    }
+  });
+
+  it('localizes the real-project origin story with all four modules and canonical CTA', () => {
+    const expected: Record<UiLanguage, [string, string, string]> = {
+      pt: ['CONSTRUÍDO DENTRO DE UM PROJETO MUSICAL REAL.', 'bastidores desse processo', 'CONHECER A RAQUEL SYNTHS →'],
+      en: ['BUILT INSIDE A REAL MUSIC PROJECT.', 'story behind that process', 'DISCOVER RAQUEL SYNTHS →'],
+      pl: ['STWORZONE W RAMACH PRAWDZIWEGO PROJEKTU MUZYCZNEGO.', 'kulisy tego procesu', 'POZNAJ RAQUEL SYNTHS →'],
+      fr: ['CONÇU AU SEIN D’UN VÉRITABLE PROJET MUSICAL.', 'coulisses de ce processus', 'DÉCOUVRIR RAQUEL SYNTHS →'],
+    };
+
+    for (const [locale, copy] of Object.entries(expected) as [UiLanguage, [string, string, string]][]) {
+      language.setLanguage(locale);
+      fixture.detectChanges();
+
+      const root = fixture.nativeElement as HTMLElement;
+      const origin = root.querySelector<HTMLElement>('.origin');
+      const originText = origin?.textContent ?? '';
+      const cta = origin?.querySelector<HTMLAnchorElement>('.origin__copy a');
+      const moduleOrder = ['MASTER', 'PITCH', 'BUILD', 'UPLINK'].map((module) =>
+        originText.indexOf(module),
+      );
+
+      expect(origin?.querySelector('h2')?.textContent).toContain(copy[0]);
+      expect(originText).toContain(copy[1]);
+      expect(origin?.querySelectorAll('.origin__copy p').length).toBe(2);
+      expect(moduleOrder.every((index) => index >= 0)).toBeTrue();
+      expect(moduleOrder).toEqual([...moduleOrder].sort((a, b) => a - b));
+      expect(cta?.textContent?.replace(/\s+/g, ' ').trim()).toBe(copy[2]);
+      expect(cta?.getAttribute('href')).toBe('https://raquelsynths.com');
+    }
+  });
+
   it('keeps every landing motion video natively and programmatically muted', () => {
     const root = fixture.nativeElement as HTMLElement;
     const videos = Array.from(

@@ -179,9 +179,9 @@ export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   LANDING_DEPLOY_TAGLINE: 'Envoyez le signal.',
   LANDING_DEPLOY_DESC: 'Collez le lien de votre piste Spotify, SoundCloud, YouTube ou Bandcamp. RQS Uplink Engine génère un lien court qui tente d’ouvrir le contenu dans l’application officielle compatible et réduit les frictions des navigateurs intégrés.',
 
-  LANDING_ORIGIN_TITLE: 'CONÇU AU CŒUR DE LA MUSIQUE.',
-  LANDING_ORIGIN_TAGLINE: 'Nous utilisons les mêmes outils.',
-  LANDING_ORIGIN_DESC: 'RQS Studio est né comme un ensemble d’outils internes du workflow RaQuel Synths — mastering, préparation de setlists et deep links musicaux. Le système s’ouvre maintenant à d’autres créateurs.',
+  LANDING_ORIGIN_TITLE: 'CONÇU AU SEIN D’UN VÉRITABLE PROJET MUSICAL.',
+  LANDING_ORIGIN_DESC_1: 'RQS Studio est né du processus de production de RaQuel Synths. MASTER, PITCH, BUILD et UPLINK ont évolué à partir de besoins réels de production, de lancement et de gestion quotidienne d’un projet musical indépendant.',
+  LANDING_ORIGIN_DESC_2: 'Sur raquelsynths.com, nous publions les coulisses de ce processus — la musique, la technologie, le développement et les décisions à l’origine des outils du Studio.',
   LANDING_ORIGIN_CTA: 'DÉCOUVRIR RAQUEL SYNTHS',
 
   LANDING_PROOF_TITLE: 'ÉCOUTEZ LA DIFFÉRENCE.',
@@ -197,7 +197,7 @@ export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
 
   LANDING_PRO_DESC: 'RQS PRO est encore en préparation pour son lancement public. Un aperçu des tarifs et limites prévus est disponible, mais aucun abonnement payant ni checkout n’est actif.',
   LANDING_PRO_ITEM_1: 'Aperçu des tarifs localisés en BRL, USD et PLN',
-  LANDING_PRO_ITEM_2: 'Limites prévues pour MASTER, BUILD et DEPLOY',
+  LANDING_PRO_ITEM_2: 'Limites prévues pour MASTER, PITCH, BUILD et UPLINK',
   LANDING_PRO_ITEM_3: 'Les abonnements payants restent désactivés pendant la bêta publique',
   LANDING_PRO_STATUS: 'APERÇU DU LANCEMENT',
   LANDING_PRO_CTA: 'VOIR LES TARIFS // APERÇU',
