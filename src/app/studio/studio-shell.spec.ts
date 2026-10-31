@@ -85,6 +85,8 @@ describe('Studio V2 shell integration', () => {
   it('renders the exact four approved module gateways and shared shell', () => {
     const root = harness.routeNativeElement!;
     expect(Array.from(root.querySelectorAll('.module-card h2')).map(e => e.textContent)).toEqual(['MASTER', 'PITCH', 'BUILD', 'UPLINK']);
+    expect(root.querySelector('#module-pitch [data-icon="square-pen"]')).not.toBeNull();
+    expect(root.querySelector('#module-pitch .module-icon')?.textContent).not.toContain('✦');
     expect(root.querySelector('header')).not.toBeNull();
     expect(root.querySelector('footer')).not.toBeNull();
     expect(root.querySelector('app-upload-zone')).toBeNull();

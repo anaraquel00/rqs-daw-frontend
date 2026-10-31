@@ -15,7 +15,7 @@ export class ModuleSelectorComponent {
   readonly meters = [0, 1, 2, 3, 4, 5, 6];
   readonly modules = [
     { id: 'master', route: '/app/master', name: 'MASTER', engine: 'DSP ENGINE 01', subtitle: 'CORE SIGNAL REFINEMENT', icon: 'ϟ', description: 'Professional DSP mastering chain. Finalize your tracks with surgical spectral balance and industry-standard loudness controls.', tags: ['LUFS', 'ANALYZE', 'DSP_CORE'] },
-    { id: 'pitch', route: '/pitch', name: 'PITCH', engine: 'AI RELEASE ENGINE 02', subtitle: 'AI RELEASE INTELLIGENCE', icon: '✦', description: 'Transforme a análise musical da sua faixa em um pitch editorial, mantendo o artista no controle das informações finais.', tags: ['AUDIO DNA', 'ARTIST CONFIRMATION', 'AI PITCH', 'EDITORIAL'] },
+    { id: 'pitch', route: '/pitch', name: 'PITCH', engine: 'AI RELEASE ENGINE 02', subtitle: 'AI RELEASE INTELLIGENCE', icon: 'square-pen', description: 'Transforme a análise musical da sua faixa em um pitch editorial, mantendo o artista no controle das informações finais.', tags: ['AUDIO DNA', 'ARTIST CONFIRMATION', 'AI PITCH', 'EDITORIAL'] },
     { id: 'build', route: '/app/build', name: 'BUILD', engine: 'SEQUENCER ENGINE 03', subtitle: 'SETLIST & FLOW ENGINE', icon: '≋', description: 'Architecture for your live sets. Sequence tracks, manage transitions, and analyze harmonic flow for a flawless performance.', tags: ['SETLIST', 'TRANSITION'] },
     { id: 'uplink', route: '/app/uplink', name: 'UPLINK', engine: 'SMART LINK ENGINE 04', subtitle: 'RELEASE LINK CORE', icon: '↥', description: 'Create one smart music link for your release and connect listeners to your streaming destinations.', tags: ['SMART_LINKS', 'RELEASE_LINKS', 'ARTIST_LINKS'] },
   ];
