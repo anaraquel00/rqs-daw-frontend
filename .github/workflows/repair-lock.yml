@@ -27,16 +27,8 @@ jobs:
 
       - name: Refresh package lock from security overrides
         run: |
-          npm install --package-lock-only --ignore-scripts \
-            @angular/common@20.3.34 \
-            @angular/compiler@20.3.34 \
-            @angular/core@20.3.34 \
-            @angular/forms@20.3.34 \
-            @angular/platform-browser@20.3.34 \
-            @angular/platform-server@20.3.34 \
-            @angular/router@20.3.34 \
-            @angular/compiler-cli@20.3.34 \
-            @angular/ssr@20.3.42
+          rm package-lock.json
+          npm install --package-lock-only --ignore-scripts
 
       - name: Verify production dependency audit
         run: npm audit --omit=dev --audit-level=high
