@@ -1,6 +1,189 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
+  "redirects": [
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/",
+      "destination": "https://studio.raquelsynths.com/",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/studio",
+      "destination": "https://studio.raquelsynths.com/studio",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/studio/master",
+      "destination": "https://studio.raquelsynths.com/studio/master",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/studio/pitch",
+      "destination": "https://studio.raquelsynths.com/studio/pitch",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/studio/build",
+      "destination": "https://studio.raquelsynths.com/studio/build",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/studio/uplink",
+      "destination": "https://studio.raquelsynths.com/studio/uplink",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/studio/split",
+      "destination": "https://studio.raquelsynths.com/studio/split",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/studio/learn",
+      "destination": "https://studio.raquelsynths.com/studio/learn",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/studio/account",
+      "destination": "https://studio.raquelsynths.com/studio/account",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/app",
+      "destination": "https://studio.raquelsynths.com/app",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/app/master",
+      "destination": "https://studio.raquelsynths.com/app/master",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/app/pitch",
+      "destination": "https://studio.raquelsynths.com/app/pitch",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/app/build",
+      "destination": "https://studio.raquelsynths.com/app/build",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/app/uplink",
+      "destination": "https://studio.raquelsynths.com/app/uplink",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/app/split",
+      "destination": "https://studio.raquelsynths.com/app/split",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/app/learn",
+      "destination": "https://studio.raquelsynths.com/app/learn",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/app/account",
+      "destination": "https://studio.raquelsynths.com/app/account",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/pitch",
+      "destination": "https://studio.raquelsynths.com/pitch",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/master/online",
+      "destination": "https://studio.raquelsynths.com/master/online",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/legacy",
+      "destination": "https://studio.raquelsynths.com/legacy",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/contact",
+      "destination": "https://studio.raquelsynths.com/contact",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/pricing",
+      "destination": "https://studio.raquelsynths.com/pricing",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/cookies",
+      "destination": "https://studio.raquelsynths.com/cookies",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/referral-terms",
+      "destination": "https://studio.raquelsynths.com/referral-terms",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/indicacoes",
+      "destination": "https://studio.raquelsynths.com/indicacoes",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/contato",
+      "destination": "https://studio.raquelsynths.com/contato",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/terms",
+      "destination": "https://studio.raquelsynths.com/terms",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/privacy",
+      "destination": "https://studio.raquelsynths.com/privacy",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/termos",
+      "destination": "https://studio.raquelsynths.com/termos",
+      "permanent": true
+    },
+    {
+      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
+      "source": "/privacidade",
+      "destination": "https://studio.raquelsynths.com/privacidade",
+      "permanent": true
+    }
+  ],
+
   "rewrites": [
     {
       "has": [

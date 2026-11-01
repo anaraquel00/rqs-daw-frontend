@@ -215,7 +215,13 @@ declare
   v_slug text;
   v_url text := btrim(target_url);
   v_row public.rqs_uplinks%rowtype;
-  v_reserved_slugs constant text[] := array['rqs-router'];
+  v_reserved_slugs constant text[] := array[
+    'account', 'admin', 'api', 'app', 'assets', 'build', 'contact', 'contato',
+    'cookies', 'indicacoes', 'learn', 'legacy', 'login', 'master', 'pitch',
+    'pricing', 'privacidade', 'privacy', 'referral-terms', 'rqs-router',
+    'robots.txt', 'signin', 'signup', 'sitemap.xml', 'split', 'studio', 'termos',
+    'terms', 'uplink', 'workspace'
+  ];
 begin
   if v_user_id is null then
     raise exception 'UPLINK_AUTH_REQUIRED';

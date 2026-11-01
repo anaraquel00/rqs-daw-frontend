@@ -260,6 +260,7 @@ do $rpc_functional_contract$
 declare
   v_state text := pg_catalog.current_setting('rqs.test.expected_state');
   v_before bigint;
+  v_reserved_slug text;
 begin
   if v_state = 'rollback' then return; end if;
 
@@ -269,16 +270,23 @@ begin
   set local role authenticated;
 
   select count(*) into v_before from public.rqs_uplinks;
-  begin
-    perform public.create_rqs_uplink('https://example.com/reserved', 'rqs-router');
-    raise exception 'RESERVED_SLUG_UNEXPECTEDLY_SUCCEEDED';
-  exception
-    when raise_exception then
-      if sqlerrm = 'RESERVED_SLUG_UNEXPECTEDLY_SUCCEEDED'
-         or sqlerrm not like '%UPLINK_RESERVED_SLUG%' then
-        raise;
-      end if;
-  end;
+  foreach v_reserved_slug in array array[
+    'account', 'admin', 'api', 'app', 'assets', 'build', 'contact', 'contato',
+    'cookies', 'indicacoes', 'learn', 'legacy', 'login', 'master', 'pitch',
+    'pricing', 'privacidade', 'privacy', 'referral-terms', 'rqs-router', 'signin',
+    'signup', 'split', 'studio', 'termos', 'terms', 'uplink', 'workspace'
+  ] loop
+    begin
+      perform public.create_rqs_uplink('https://example.com/reserved', v_reserved_slug);
+      raise exception 'RESERVED_SLUG_UNEXPECTEDLY_SUCCEEDED: %', v_reserved_slug;
+    exception
+      when raise_exception then
+        if sqlerrm like 'RESERVED_SLUG_UNEXPECTEDLY_SUCCEEDED:%'
+           or sqlerrm not like '%UPLINK_RESERVED_SLUG%' then
+          raise;
+        end if;
+    end;
+  end loop;
   if (select count(*) from public.rqs_uplinks) <> v_before then
     raise exception 'RESERVED_SLUG_INSERTED_A_ROW';
   end if;

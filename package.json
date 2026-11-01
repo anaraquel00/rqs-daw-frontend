@@ -10,6 +10,7 @@
     "build:staging": "ng build --configuration staging",
     "test:seo": "node scripts/seo-static-check.mjs",
     "test:seo:build": "node scripts/seo-build-check.mjs",
+    "test:host-containment": "node --test scripts/canonical-host-routing.test.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:api": "node --test api/*.test.mjs",
