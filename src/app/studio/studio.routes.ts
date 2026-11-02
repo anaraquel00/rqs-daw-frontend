@@ -17,7 +17,7 @@ export const STUDIO_ROUTES: Routes = [{
       component: StudioRouteSurface,
       data: { surface },
       title: `RQS Studio — ${surface.toUpperCase()}`,
-      canActivate: surface === 'master' || surface === 'pitch' ? [studioAuthGuard] : [],
+      canActivate: surface === 'pitch' ? [studioAuthGuard] : [],
     })),
     { path: '**', redirectTo: '' },
   ],

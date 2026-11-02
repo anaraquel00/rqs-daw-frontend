@@ -132,22 +132,31 @@ describe('Studio V2 shell integration', () => {
     expect(harness.routeNativeElement!.querySelector('input')).toBe(source);
     expect(source.value).toBe('user-selected-file');
   });
-  it('opens authentication when unauthenticated users request PITCH or MASTER', async () => {
+  it('keeps PITCH protected for unauthenticated users', async () => {
     session.set(null);
     harness.detectChanges();
 
     await harness.navigateByUrl('/pitch');
     harness.detectChanges();
+
     expect(TestBed.inject(Router).url).toBe('/app');
     expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).toBeNull();
     expect(harness.routeNativeElement!.querySelector('input[type=file]')).toBeNull();
     expect(requestSignInForPath).toHaveBeenCalledWith('/pitch', 'providers');
+  });
+
+  it('lets unauthenticated users enter MASTER without opening Auth UX', async () => {
+    session.set(null);
+    harness.detectChanges();
 
     await harness.navigateByUrl('/app/master');
     harness.detectChanges();
-    expect(TestBed.inject(Router).url).toBe('/app');
-    expect(harness.routeNativeElement!.querySelector('section[aria-label="MASTER"]')).toBeNull();
-    expect(requestSignInForPath).toHaveBeenCalledWith('/app/master', 'providers');
+
+    expect(TestBed.inject(Router).url).toBe('/app/master');
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="MASTER"]')).not.toBeNull();
+    expect(harness.fixture.debugElement.query(By.directive(MasterStub))).not.toBeNull();
+    expect(requestSignInForPath).not.toHaveBeenCalled();
+    expect(requestSignIn).not.toHaveBeenCalled();
   });
   it('removes PITCH immediately and redirects when the active session signs out', async () => {
     await harness.navigateByUrl('/pitch');

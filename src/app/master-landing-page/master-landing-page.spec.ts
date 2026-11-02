@@ -88,4 +88,23 @@ describe('MasterLandingPageComponent', () => {
 
     expect(lines).toEqual(['Masterização', 'online para', 'sua música.']);
   });
+
+  it('isolates the landing header controls from the legacy global header-controls selector', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [MasterLandingPageComponent],
+      providers: [
+        provideRouter([]),
+        SeoService,
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } }
+      ]
+    });
+
+    const fixture = TestBed.createComponent(MasterLandingPageComponent);
+    fixture.detectChanges();
+
+    const header = fixture.nativeElement.querySelector('.site-header') as HTMLElement;
+    expect(header.querySelector('.master-header-controls')).not.toBeNull();
+    expect(header.querySelector('.header-controls')).toBeNull();
+  });
 });

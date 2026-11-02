@@ -42,7 +42,7 @@
     <app-founding-referral-banner></app-founding-referral-banner>
     <app-module-selector></app-module-selector>
   }
-  @if (visited().has('master') && auth.isLoggedIn()) {
+  @if (visited().has('master')) {
     <section class="master-workspace" [hidden]="surface() !== 'master'" [attr.inert]="surface() !== 'master' ? '' : null" aria-label="MASTER">
       <h1 class="master-title">MASTER</h1>
       <app-upload-zone class="studio-master"></app-upload-zone>
