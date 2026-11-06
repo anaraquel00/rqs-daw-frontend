@@ -58,7 +58,8 @@ low-cardinality fields needed by the event. Render events also contain `attempt_
   property setting and Supabase cleanup policy were not changed. Enforcing the 30-day operational
   limit requires separate review because `audio_intelligence_analyses.expires_at` is nullable and no
   cleanup mutation is part of this patch.
-- Staging has `analyticsEnabled: false`; Preview smoke tests cannot reach the commercial GA4 property.
+- Staging has `analyticsEnabled: false` and uses `src/index.staging.html`, which omits the production
+  GTM bootstrap; Preview smoke tests cannot reach the commercial GA4 property.
 
 ## GA4 and Google Ads impact
 

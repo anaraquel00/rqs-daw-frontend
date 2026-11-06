@@ -72,6 +72,7 @@
               "extractLicenses": true,
               "sourceMap": false,
               "outputHashing": "all",
+              "index": "src/index.staging.html",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
