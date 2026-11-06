@@ -1,12 +1,19 @@
 # RQS Studio — Frontend
 
-Web frontend for **RQS Studio / RaQuel Synths Digital Audio Workstation**, an actively developed web-based music technology product integrated with `rqs-daw-backend` for mastering, setlist generation, stem separation, deep links and authentication workflows.
+Web frontend for **RQS Studio / RaQuel Synths Digital Audio Workstation**, a browser-based music production and release workflow integrated with the companion `rqs-daw-backend`.
 
-> **Project status:** actively developed independent product. The `main` branch contains public-facing functionality as well as areas still being hardened for a future SaaS/B2B offering. This README intentionally distinguishes implemented functionality from partially integrated features and roadmap items.
+The current product is organized around four public Studio modules:
 
-## What is implemented
+1. **MASTER** — DSP mastering and Audio Intelligence
+2. **PITCH** — AI-assisted editorial release preparation
+3. **BUILD** — setlist sequencing and continuous WAV rendering
+4. **UPLINK** — release smart links and link management
 
-### Frontend stack
+`SPLIT` remains available as a technical/roadmap surface, but it is intentionally not exposed as one of the four commercial module cards.
+
+> **Project status:** actively developed. This README documents the current frontend implementation and distinguishes implemented runtime behavior from planned pricing, entitlements and broader SaaS/B2B roadmap items.
+
+## Frontend stack
 
 The current frontend is built with:
 
@@ -18,44 +25,85 @@ The current frontend is built with:
 - Supabase JS
 - Express 5 for the SSR runtime
 - Web Audio API
-- AWS S3 uploads through backend-issued presigned URLs
-- a Vercel serverless function for the RQS Pro waitlist
+- AWS S3 uploads through backend-issued presigned URLs in staging/production flows
+- Vercel serverless functions for waitlist, contact and referral workflows
 
-The current `package.json` also contains AWS SDK, Stripe and WebSocket dependencies. Their presence in the dependency graph is not treated here as proof that all three are active frontend capabilities.
+The current dependency graph does **not** contain frontend Stripe, AWS SDK or WebSocket packages. Backend infrastructure and billing-related responsibilities must not be inferred from frontend package presence.
 
 ## Application routes and rendering model
 
+### Main public routes
+
 The application currently exposes:
 
-- `/` — landing page
-- `/app` — main RQS Studio workspace
+- `/` — public landing page
+- `/app` — prerendered Studio module selector
+- `/app/master` — MASTER workspace
+- `/pitch` — dedicated PITCH workspace
+- `/app/build` — BUILD / Setlist workspace
+- `/app/uplink` — UPLINK workspace
+- `/app/split` — SPLIT technical/roadmap surface
+- `/app/learn` — learning surface
+- `/app/account` — account surface
+- `/master/online` — MASTER acquisition landing page
+- `/pricing` — pricing / planned entitlement presentation
+- `/contact` — contact
 - `/terms` — terms
 - `/privacy` — privacy
-- `/termos` and `/privacidade` — compatibility redirects
+- `/cookies` — cookies
+- `/referral-terms` — referral terms
+- `/legacy` — legacy DAW mainframe
 
-The landing page, terms and privacy routes are configured for prerendering. The `/app` workspace is explicitly client-rendered because it depends heavily on browser APIs including Web Audio, `localStorage`, `navigator.clipboard`, `Audio`, `URL.createObjectURL` and OAuth flows.
+Compatibility redirects also exist for older `/studio/*` paths and Portuguese legal/contact aliases.
 
-## Workspace architecture
+### Rendering
 
-The workspace combines four main product areas:
+The following routes are currently prerendered:
 
-1. **Upload / Mastering Core**
-2. **Setlist Engine**
-3. **RQS Uplink Engine**
-4. **Uplink Dashboard**
+- `/`
+- `/terms`
+- `/privacy`
+- `/pricing`
+- `/cookies`
+- `/referral-terms`
+- `/contact`
+- `/master/online`
+- `/app`
 
-It also integrates authentication, PT/EN language switching, dynamic SEO metadata and legal navigation.
+The workspaces under `/app/**`, the dedicated `/pitch` route and `/legacy` are client-rendered because they depend on browser-side audio, authentication, local state and interactive workflow APIs.
+
+## Studio architecture
+
+The current Studio shell owns navigation and retains visited module surfaces so that switching between modules does not unnecessarily destroy local audio/job state.
 
 ```text
 Browser
   │
-  ├── Angular Workspace
-  │   ├── UploadZone
+  ├── Angular Studio Shell
+  │   ├── Module Selector
+  │   │   ├── MASTER
+  │   │   ├── PITCH
+  │   │   ├── BUILD
+  │   │   └── UPLINK
+  │   │
+  │   ├── MASTER
+  │   │   ├── UploadZone
   │   │   ├── MasteringPanel
-  │   │   └── EKG Monitor
-  │   ├── MixPanel
-  │   ├── RQS Uplink Engine
-  │   └── Uplink Dashboard
+  │   │   ├── Audio DNA
+  │   │   └── A/B Comparison
+  │   │
+  │   ├── PITCH
+  │   │   ├── UploadZone (workspace="pitch")
+  │   │   ├── Audio DNA / Audio Intelligence
+  │   │   ├── Artist Confirmation
+  │   │   └── AI Spotify Pitch
+  │   │
+  │   ├── BUILD
+  │   │   └── Setlist Engine
+  │   │
+  │   └── UPLINK
+  │       ├── Uplink Engine
+  │       └── Uplink Dashboard
   │
   ├── Supabase
   │   ├── Auth
@@ -63,184 +111,292 @@ Browser
   │   └── rqs_uplinks
   │
   ├── RQS backend / AWS Lambda
-  │   ├── /mastering
-  │   ├── /mix
-  │   ├── /video
-  │   └── /stems
+  │   ├── /mastering/v2/*
+  │   ├── /mix/*
+  │   ├── /stems/*
+  │   └── related audio-processing APIs
   │
-  └── /api/waitlist (Vercel)
-      ├── Firestore REST API
-      └── Brevo API
+  └── Vercel serverless APIs
+      ├── /api/waitlist
+      ├── /api/contact
+      └── /api/referral/*
 ```
 
-## Audio mastering workflow
+The commercial module selector currently presents **MASTER, PITCH, BUILD and UPLINK** in that order.
 
-### S3 upload path
+## MASTER — mastering and Audio Intelligence
 
-The main upload flow accepts `.wav` and `.mp3` files through file selection or drag and drop. The frontend requests a presigned URL from the backend and uploads the binary directly to S3.
+The current MASTER surface is available at `/app/master`.
+
+The primary frontend orchestration lives in `UploadZoneComponent`, which coordinates source preparation, analysis, Mastering V2 processing, progress state and A/B playback.
+
+### Source preparation
+
+The source path depends on the environment:
+
+- local development can use direct upload to the backend when `masteringV2DirectUpload=true`;
+- staging and production use backend-issued presigned S3 URLs before analysis/processing.
+
+The current V2 service surface includes:
+
+- `GET /mastering/v2/capabilities`
+- `GET /mastering/v2/presigned-url`
+- `POST /mastering/v2/analysis`
+- `GET /mastering/v2/analyses/:analysisId`
+- `POST /mastering/v2/auto/recommend`
+- `POST /mastering/v2/process`
+
+Authenticated Mastering V2 requests send the Supabase access token as a bearer token.
+
+### Audio analysis
+
+The analysis flow can receive and persist:
+
+- technical mastering metrics;
+- RQS Audio DNA;
+- Audio Intelligence V2;
+- OpenAI Music Analyst output;
+- an `analysis_id`;
+- persisted artist-confirmation and pitch state.
+
+The client protects analysis state against source-generation mismatches so analysis from one selected track is not silently reused for another.
+
+### A/B comparison
+
+`AudioComparisonService` implements original/master comparison using browser audio primitives, including:
+
+- separate original and processed audio elements;
+- Web Audio gain control;
+- A/B switching;
+- playback synchronization;
+- preview and full-track behavior;
+- cleanup/reset across source changes.
+
+## PITCH — AI Release Intelligence
+
+**PITCH is the newest public Studio module.**
+
+The dedicated route is:
 
 ```text
-File
-  -> GET /mastering/presigned-url
-  -> direct PUT to S3
-  -> s3Key stored in client state
-  -> POST /mastering/process
+/pitch
 ```
 
-The backend base URL is read from `src/environments/environment.ts`.
+A compatibility redirect also maps `/studio/pitch` to `/pitch`. The Studio route tree additionally understands the `pitch` surface, while module-selector and top-navigation links use the dedicated `/pitch` URL.
 
-### Mastering previews
+### Authentication boundary
 
-`UploadZoneComponent` can request a batch of four previews for the creative profiles:
+PITCH is protected by `studioAuthGuard`.
 
-- `thunder`
-- `clear_sky`
-- `sunroof`
-- `aurora`
+If the user is not authenticated, the frontend stores a safe return path, opens the sign-in flow and returns to the Studio selector until authentication is resolved.
 
-Each preview reuses the uploaded `s3Key` and sends `preview=true`. Returned binary audio is converted into object URLs and cached locally so the user can switch between generated profiles without uploading the source again.
+### Workflow
 
-### Full mastering
+The implemented product flow is:
 
-The full-master flow calls `/mastering/process` and expects a JSON response containing at least `downloadUrl` and `fileName`.
+```text
+Audio source
+    ↓
+Mastering V2 analysis
+    ↓
+Audio DNA / Audio Intelligence
+    ↓
+Artist Confirmation
+    ↓
+Optional release context
+    ↓
+AI Spotify Pitch
+    ↓
+Editorial draft + evidence trace
+```
 
-After a successful response, the frontend:
+The dedicated PITCH workspace reuses the upload/analyzer core with:
 
-- updates the A/B comparison state;
-- records the completed master in the current quota model;
-- exposes the download URL;
-- stores the processed filename in the shared audio-comparison service.
+```html
+<app-upload-zone workspace="pitch">
+```
 
-## A/B comparison with Web Audio API
+and then renders `PitchWorkspacePanelComponent`.
 
-`AudioComparisonService` implements original/master comparison with:
+### Audio Intelligence and artist control
 
-- two `HTMLAudioElement` instances;
-- an `AudioContext`;
-- dedicated `GainNode` instances;
-- a short crossfade when switching A/B;
-- periodic playback-position synchronization;
-- `full-track` and `preview-15s` modes.
+When analysis is ready, the PITCH surface can expose detected musical evidence and asks the artist to confirm or adjust the final release description before generation.
 
-The service also handles playback cleanup, state reset and `AudioContext` teardown.
+The current V2 confirmation model includes:
 
-## Mastering controls
+- genre family;
+- subgenres;
+- moods;
+- instruments;
+- vocals;
+- production elements.
 
-`MasteringService` stores reactive mastering parameters with Angular Signals, including:
+The artist can accept, remove, correct or add values before generating the editorial draft.
 
-- low crossover cutoff;
-- high crossover cutoff;
-- stereo width;
-- saturation amount;
-- mono-bass frequency;
-- limiter ceiling;
-- limiter threshold.
+The frontend tests explicitly verify that the V2 pitch request uses artist-confirmed values after editing and does not include raw audio, base64 audio, audio URLs or filenames inside the release-intelligence payload.
 
-`MasteringPanelComponent` exposes these controls and can produce a payload with fields such as `low_cutoff_hz`, `high_cutoff_hz`, `stereo_width`, `saturation_amount`, `mono_bass_frequency_hz`, `ceiling_dbtp` and `threshold_db`.
+### Optional artist context
 
-### Current integration limitation
+The user can optionally add contextual information such as:
 
-On the audited `main` branch, `UploadZoneComponent.processarMaster()` receives `estilo`, `intensidade` and `preview`. Although `MasteringPanelComponent` also emits `customParams`, those custom parameters are not forwarded by this method to the backend.
+- song story;
+- what is different about the release;
+- why the track is being released now;
+- real-world context;
+- collaboration information;
+- collaborator roles;
+- cultural or geographic context;
+- promotion channels;
+- confirmed promotion details.
 
-Therefore, **the advanced controls are implemented in frontend UI/state, but the current `main` branch does not provide evidence that those values are applied by the remote DSP path**.
+This context is optional. The UI can keep pitch generation available when the required sound confirmation is complete even if optional context fields are empty.
 
-## Setlist Engine
+### Backend endpoints
+
+The PITCH frontend currently uses:
+
+- `GET /mastering/v2/spotify-pitch/quota`
+- `POST /mastering/v2/spotify-pitch`
+- `PATCH /mastering/v2/analyses/:analysisId/artist-confirmation`
+- `GET /mastering/v2/analyses/:analysisId`
+
+Generation requests use an idempotency key.
+
+The PITCH UI is also capability-gated by the backend `spotify_pitch_enabled` feature flag returned from `/mastering/v2/capabilities`.
+
+### Persistence and restoration
+
+The current flow can restore an existing analysis and its persisted state instead of forcing a new generation.
+
+The frontend supports:
+
+- persisted `analysis_id`;
+- artist-confirmed sound;
+- flow stage;
+- confirmation timestamp;
+- persisted pitch result.
+
+A valid analysis can be restored from the `analysis` query parameter or from the current authenticated user's last-analysis pointer. The actual analysis/pitch state is reloaded from the backend.
+
+### Pitch output
+
+The current response model can contain:
+
+- Spotify metadata suggestions;
+- editorial pitch;
+- possible editorial positioning;
+- explanation of why the pitch works;
+- evidence trace;
+- warnings;
+- updated quota state.
+
+The UI presents the result as an **editorial draft / suggestion**, not as a guarantee of Spotify playlist inclusion.
+
+### PITCH quota model
+
+The runtime PITCH quota is read from the backend and is treated as authoritative by the frontend.
+
+The current pricing UI also contains **planned** entitlement values:
+
+| Plan | Planned AI Spotify Pitches |
+| --- | ---: |
+| Free | 3 total |
+| Master | 10 / month |
+| Plus | 30 / month |
+| Pro | 60 / month |
+
+These values come from `PLANNED_PLAN_ENTITLEMENTS` and must not be interpreted as proof that paid subscription billing or those paid-plan limits are already active in production. Runtime quota responses remain authoritative.
+
+## BUILD — Setlist Engine
+
+The BUILD surface is available at `/app/build`.
 
 `MixPanelComponent` implements a setlist workflow with:
 
 - drag and drop / file picker;
 - WAV and MP3 inputs;
-- individual background uploads to S3;
-- track ordering and removal;
+- individual source uploads;
+- ordering and removal;
 - per-track duration;
-- configurable crossfades;
-- `linear`, `equal-power` and `fast-cut` transition curves;
-- `off`, `perceived` and `normalize` loudness modes;
+- per-transition crossfade configuration;
+- `linear`, `equal-power` and `fast-cut` curves;
+- `off` and `normalize` loudness modes;
 - local transition preview through Web Audio API;
-- final server-side rendering through `/mix/generate-s3`.
+- final server-side rendering through `/mix/generate-s3`;
+- WAV export contract.
 
-### Audit notes
+The frontend request supports both a default transition curve and per-transition curve overrides.
 
-The visual waveform shown by the current Setlist Engine is not derived from decoded audio samples. `getCachedPeaks()` generates deterministic bar heights from the filename. It should therefore be understood as a **UI visualization**, not a measured waveform.
+## UPLINK — release smart links
 
-Similarly, the current sample-rate and bit-depth warning helpers infer differences from filename strings such as `48k` and `16bit`; they do not inspect the actual audio metadata.
+The UPLINK surface is available at `/app/uplink`.
 
-## Stem separation
+The module creates and manages release links associated with `go.raquelsynths.com`.
 
-The frontend exposes stem extraction through `/stems/split-s3`.
+The current frontend recognizes release destinations such as Spotify, Bandcamp, YouTube and SoundCloud.
 
-The already-uploaded S3 object is referenced by `s3Key`, and the backend returns a presigned URL for the resulting stem archive. Source separation itself is not performed in the browser; it is delegated to the backend.
+### Server-backed dashboard
 
-## RQS Uplink Engine
+The Uplink Dashboard is now backed by Supabase rather than by the old local-only dashboard model.
 
-The Uplink module creates short links under `go.raquelsynths.com` and recognizes platforms including:
+`DeepLinkService` currently:
 
-- Spotify
-- Bandcamp
-- YouTube
-- SoundCloud
+- reads records from the `rqs_uplinks` table;
+- creates links through the `create_rqs_uplink` RPC;
+- deletes links through the `delete_rqs_uplink` RPC;
+- refreshes the displayed list from Supabase after mutations;
+- tracks session epochs so stale async responses are not applied across identity changes.
 
-Link creation requires an authenticated session and inserts records into the Supabase `rqs_uplinks` table.
+The current non-premium UI limit is three links.
 
-The current frontend limit for non-premium users is three links.
+## SPLIT — stem separation surface
 
-### Current dashboard state
+`/app/split` remains routable but is intentionally not included in the four-card commercial module selector.
 
-`RqsUplinkDashboardComponent` currently reads its primary displayed dataset from `localStorage` (`rqs_uplink_database`). Link creation also inserts data into Supabase, but the dashboard on the audited `main` branch does not read its records back from Supabase.
+The frontend still exposes backend stem-separation calls including:
 
-As a result:
+- `POST /stems/split`
+- `POST /stems/split-s3`
 
-- displayed clicks, conversion rate and traffic-source data may represent local cached state;
-- deleting a link from the dashboard removes the local entry;
-- the audited branch does not provide evidence that this dashboard action deletes the corresponding Supabase record.
+Source separation itself is backend work; it is not performed in the browser.
 
-The current dashboard should therefore not be described as consolidated server-side analytics.
+## Authentication and quota boundaries
 
-## Authentication and quotas
+`AuthService` uses Supabase Auth and currently supports:
 
-`AuthService` uses Supabase Auth with OAuth providers for:
+- Google OAuth;
+- GitHub OAuth;
+- email magic-link / OTP sign-in.
 
-- GitHub
-- Google
+The Studio keeps a sanitized return path across authentication so users can return to protected workflows such as PITCH.
 
-Reactive account state includes:
+### Mastering quota
 
-- session;
-- `free | premium` role;
-- completed-master count;
-- remaining quota;
-- link limit.
+The frontend still exposes free/premium account state and a three-master free UI model.
 
-### Free mastering quota
+For authenticated secure Mastering V2 flows, the backend is the authority. Legacy browser-side anonymous counters remain for compatibility but must not be treated as a security boundary.
 
-The current UI model allows three free mastering operations.
+### PITCH quota
 
-For authenticated users, `completed_masters` is read from and updated in the Supabase `profiles` table. For anonymous users, the count is stored in `localStorage` and reset after 30 days.
+PITCH reads quota from the backend through `/mastering/v2/spotify-pitch/quota`. Generation is blocked when the authoritative response reports no remaining quota.
 
-### Security boundary
+### Local development bypass
 
-Frontend quota and entitlement checks are UX controls, not an authorization boundary. A browser client can be modified by the user. A SaaS/B2B version must enforce subscription entitlement, quotas and authorization on trusted server-side infrastructure as well.
+Only the local development environment enables `localAuthProfileBypass`.
 
-### Local development behavior
+Staging and production explicitly disable that bypass so they exercise real Supabase profile/auth state.
 
-On the audited `main` branch, authenticated sessions running on `localhost` or `127.0.0.1` receive `premium` locally for development purposes. This is a development behavior and must not be interpreted as a production permission model.
+## Serverless frontend APIs
 
-## RQS Pro waitlist
+The repository contains Vercel serverless functions in addition to the Angular application.
 
-`api/waitlist.js` is a serverless function separate from the Angular client bundle.
+Current frontend-owned API areas include:
 
-The endpoint currently:
+- waitlist handling;
+- contact handling;
+- founding-referral activation/status flows.
 
-- accepts `POST` and `OPTIONS`;
-- applies an origin allowlist;
-- uses a `website` honeypot field;
-- normalizes and validates email addresses;
-- creates a deterministic SHA-256 identifier from the email;
-- attempts persistence through the Firestore REST API;
-- creates or updates a Brevo contact;
-- reads Brevo credentials from environment variables.
-
-A Firestore `409` response is handled as an already-registered user.
+These functions are separate from the audio DSP backend.
 
 ## SEO and SSR
 
@@ -254,58 +410,98 @@ The frontend contains a dedicated `SeoService` for:
 - canonical URLs;
 - JSON-LD.
 
-The workspace publishes structured data using `SoftwareApplication` / `Digital Audio Workstation` terminology and positions the offer as SaaS. This metadata expresses product positioning; **it is not evidence by itself of B2B SaaS maturity, multi-tenant billing or enterprise operation**.
+The current routing also includes host/canonical containment checks and dedicated SEO test scripts.
 
-Public SEO-related assets also include:
+Available commands include:
+
+```bash
+npm run test:seo
+npm run test:seo:build
+npm run test:host-containment
+```
+
+Public SEO-related assets include:
 
 - `robots.txt`;
 - `sitemap.xml`;
-- favicon assets;
-- platform images.
+- favicon / webmanifest assets;
+- public product imagery.
 
 ## Internationalization
 
-The application contains an internal `LanguageService` that reactively switches between Portuguese and English.
+The main Studio UI supports four languages:
 
-The main runtime does not depend on an external i18n library for this behavior.
+- English (`en`)
+- Portuguese (`pt` / PT-BR)
+- Polish (`pl`)
+- French (`fr`)
+
+`LanguageService` supports stored user preference, browser-language detection and server-side `Accept-Language` resolution.
+
+The runtime does not require an external i18n library for this behavior.
+
+## Environment separation
+
+The frontend now has explicit development, staging and production environment files:
+
+```text
+src/environments/
+├── environment.ts
+├── environment.staging.ts
+└── environment.prod.ts
+```
+
+Current behavior:
+
+- **development** targets a local backend and enables local auth-profile bypass;
+- **staging** targets a remote staging backend with the bypass disabled;
+- **production** targets a separate production backend and production Supabase project with the bypass disabled.
+
+This replaces the older configuration in which development and production shared the same remote backend target.
 
 ## Repository structure
 
 ```text
 .
 ├── api/
+│   ├── contact.js
+│   ├── referral/
 │   └── waitlist.js
 ├── public/
-│   ├── assets/images/
+│   ├── assets/
 │   ├── robots.txt
-│   └── sitemap.xml
+│   ├── sitemap.xml
+│   └── site.webmanifest
+├── scripts/
+│   ├── canonical-host-routing.test.mjs
+│   ├── rqs-build.mjs
+│   ├── seo-build-check.mjs
+│   └── seo-static-check.mjs
 ├── src/
-│   ├── MANUAL_MASTERIZACAO.md
 │   ├── app/
 │   │   ├── components/
-│   │   │   ├── crossover-control/
-│   │   │   ├── ekg-monitor/
-│   │   │   ├── limiter-control/
-│   │   │   ├── mastering-panel/
-│   │   │   ├── privacy/
-│   │   │   ├── redirect-simulator/
+│   │   │   ├── audio-dna-card/
+│   │   │   ├── pitch-workspace-panel/
+│   │   │   ├── spotify-pitch-panel/
 │   │   │   ├── rqs-uplink-dashboard/
-│   │   │   ├── stereo-control/
-│   │   │   ├── terms/
 │   │   │   └── upload-zone/
 │   │   ├── landing-page/
+│   │   ├── master-landing-page/
 │   │   ├── mix-panel/
+│   │   ├── pricing-page/
 │   │   ├── rqs-uplink-engine/
 │   │   ├── services/
-│   │   │   ├── audio-comparison.service.ts
-│   │   │   ├── auth.service.ts
-│   │   │   ├── deep-link.service.ts
-│   │   │   ├── dsp.ts
-│   │   │   ├── language.service.ts
-│   │   │   ├── mastering.service.ts
-│   │   │   └── seo.service.ts
+│   │   ├── studio/
+│   │   │   ├── module-selector.*
+│   │   │   ├── studio-auth.guard.ts
+│   │   │   ├── studio-shell.*
+│   │   │   ├── studio.routes.ts
+│   │   │   └── studio-seo.ts
 │   │   └── workspace/
 │   └── environments/
+│       ├── environment.ts
+│       ├── environment.staging.ts
+│       └── environment.prod.ts
 ├── angular.json
 ├── package.json
 └── README.md
@@ -342,12 +538,25 @@ ng serve
 npm test
 ```
 
-The script invokes `ng test`. The existence of a test command does not imply complete test coverage; effective coverage should be measured and reported separately.
+API tests:
+
+```bash
+npm run test:api
+```
 
 ### Production build
 
 ```bash
 npm run build
+```
+
+The default build script runs `scripts/rqs-build.mjs`.
+
+Explicit environment builds are also available:
+
+```bash
+npm run build:staging
+npm run build:production
 ```
 
 ### SSR runtime
@@ -358,89 +567,49 @@ npm run serve:ssr:rqs-daw
 
 This command assumes the corresponding SSR build already exists at `dist/rqs-daw/server/server.mjs`.
 
-## Backend configuration
+## Current product boundaries
 
-`DspService` reads `environment.baseUrl`.
+The current codebase provides a meaningful web music-production and release workflow, but several concepts should remain distinct:
 
-On the audited `main` branch, **`environment.ts` and `environment.prod.ts` are identical and both target the public AWS Lambda backend URL**. Local `ng serve` therefore uses the remote backend unless the configuration is changed manually.
-
-A separate development/staging configuration is recommended before broader SaaS/B2B operation.
-
-## Audit findings and hardening priorities
-
-### High priority
-
-1. **Enforce entitlements and quotas server-side**
-   - `canMaster()` and `canCreateLink()` are client-side controls.
-   - The backend must become the final authority for a SaaS product.
-
-2. **Move Uplink Dashboard state to a server-side source of truth**
-   - reads, deletion and metrics are not fully synchronized with Supabase in the audited branch.
-
-3. **Complete advanced mastering-control integration**
-   - `MasteringPanel` emits `customParams`;
-   - the main `UploadZone.processarMaster()` flow does not currently forward them.
-
-4. **Separate development, staging and production environments**
-   - development and production configuration currently point to the same remote backend.
-
-5. **Replace Setlist metadata approximations where product behavior depends on them**
-   - waveform bars are synthetic;
-   - sample-rate and bit-depth warnings currently depend on filenames.
-
-### Medium-term hardening
-
-- organization/tenant model;
-- RBAC (`owner`, `admin`, `member`);
-- server-side billing and entitlement lifecycle;
-- persistent processing-job history;
-- server-side usage accounting;
-- request/job observability and tracing;
-- server-backed Uplink analytics;
-- separate staging environment;
-- frontend/backend integration tests;
-- explicit audio-file retention and deletion policies.
-
-## SaaS / B2B readiness
-
-The current codebase demonstrates a meaningful foundation for a web-based music technology product:
-
-- authentication;
-- free/premium account state;
-- waitlist infrastructure;
-- remote backend integration;
-- S3-backed audio uploads;
-- remote audio processing;
-- A/B audio comparison;
-- stem-separation workflow;
-- setlist workflow;
-- deep-link creation;
-- SEO infrastructure;
-- SSR/prerender support.
-
-The audited `main` branch does **not** yet provide enough evidence to classify RQS Studio as a production-grade B2B SaaS platform. In particular, organization-level multi-tenancy, enterprise RBAC, server-authoritative entitlements, complete subscription lifecycle management, tenant isolation, audit logging, operational observability and tested recovery procedures still require implementation or validation.
-
-This distinction is intentional: implemented product capabilities and future SaaS requirements are documented separately rather than presented as equivalent.
+- client-side UX checks are not a substitute for backend authorization;
+- planned pricing/entitlements are not proof of an active paid subscription lifecycle;
+- PITCH produces an editorial draft and metadata suggestions, not a playlist-placement guarantee;
+- SPLIT remains a technical/roadmap surface rather than a current commercial pillar;
+- organization-level tenancy, enterprise RBAC and broader B2B operational controls are not established merely by the current frontend;
+- production readiness should be evaluated across the frontend, backend, infrastructure, observability, billing and recovery procedures together.
 
 ## Relationship to the backend
 
-This repository owns the browser-facing product experience and orchestration layer. DSP, Demucs source separation, FFmpeg rendering, S3-backed processing and Stripe webhook handling belong to the companion backend repository:
+This repository owns the browser-facing Studio experience, client orchestration, public acquisition surfaces and selected Vercel serverless workflows.
 
-`anaraquel00/rqs-daw-backend`
+The companion backend repository owns trusted audio-processing and persistence responsibilities used by the Studio, including Mastering V2, Audio Intelligence, pitch generation, setlist rendering, stem separation and related S3-backed processing.
 
-Keeping this boundary explicit makes it easier to reason about security, product responsibilities and future SaaS architecture.
+Companion repository:
+
+```text
+anaraquel00/rqs-daw-backend
+```
 
 ## Evidence policy
 
 This README follows an evidence-first documentation policy:
 
 - repository presence does not automatically mean a feature is active in every user flow;
-- UI controls are not described as backend DSP behavior unless the integration path is present;
-- client-side quota checks are not described as security controls;
-- synthetic visualizations are not described as measured audio analysis;
-- roadmap capabilities are not presented as implemented SaaS features;
+- UI controls are not described as backend DSP behavior unless the integration path exists;
+- browser-side quota displays are not described as security boundaries;
+- planned paid-plan entitlements are labeled as planned;
+- AI editorial output is not described as guaranteed platform acceptance or playlist placement;
+- roadmap capabilities are not presented as fully commercialized features;
 - performance claims should be supported by reproducible measurements before being documented as benchmarks.
 
 ## Current direction
 
-RQS Studio is being evolved from an independent web-based audio tool into a more structured SaaS product. The current engineering priorities are to preserve the working audio workflows while strengthening authorization, billing, persistence, environment separation, observability and tenant-aware product architecture.
+RQS Studio is evolving into an integrated workflow that connects **audio preparation, release intelligence, set construction and release distribution**.
+
+The current product sequence is now:
+
+```text
+MASTER → PITCH → BUILD → UPLINK
+```
+
+with PITCH adding the release-intelligence layer between audio preparation and distribution: **Audio DNA → Artist Confirmation → AI-assisted editorial pitch**.
