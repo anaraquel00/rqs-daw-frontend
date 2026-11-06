@@ -47,6 +47,7 @@ export class AuthService {
   private readonly initialAuthState = new Promise<void>((resolve) => {
     this.resolveInitialAuthState = resolve;
   });
+  private explicitLoginTracked = false;
   private readonly resumeMasteringKey = 'rqs_resume_mastering';
   private readonly authReturnPathKey = 'rqs_auth_return_path';
   private readonly allowedV2ReturnPaths = new Set([
@@ -149,15 +150,28 @@ export class AuthService {
 
     this.supabase.auth
       .onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          this.analytics.trackEvent('login', {
-            method: this.analyticsAuthMethod(session)
-          });
-        }
+        if (event === 'SIGNED_IN') this.trackExplicitLogin(callbackState, session);
 
         void this.handleSessionUpdate(session);
         this.markAuthStateResolved();
       });
+  }
+
+  private trackExplicitLogin(callback: AuthCallbackState, session: Session | null): void {
+    if (
+      this.explicitLoginTracked ||
+      !callback.present ||
+      callback.errorCode ||
+      !session?.user
+    ) {
+      return;
+    }
+
+    this.explicitLoginTracked = true;
+    this.analytics.trackEvent('login', {
+      method: this.analyticsAuthMethod(session),
+      authentication_type: 'explicit'
+    });
   }
 
   private markAuthStateResolved(): void {

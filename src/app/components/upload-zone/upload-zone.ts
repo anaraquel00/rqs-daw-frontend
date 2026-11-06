@@ -80,6 +80,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   private workspaceGeneration = 0;
   private analysisRequestedGeneration: number | null = null;
   private analysisRequestId: string | null = null;
+  private readonly trackedAnalyticsEvents = new Set<string>();
+  private uploadAttempt = 0;
+  private previewAttempt = 0;
+  private fullAttempt = 0;
+  private completedFullAttempt = 0;
   private rehydratingAnalysisId: string | null = null;
   private readonly authenticatedUploadEffect = effect(() => {
     const isAuthenticated = this.auth.isLoggedIn();
@@ -154,13 +159,19 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
   iniciarUploadS3Silencioso(file: File): void {
     if (!this.auth.isLoggedIn()) {
+      this.trackAuthRequired('upload');
       this.auth.requestSignIn('mastering');
       return;
     }
 
+    const attemptNumber = ++this.uploadAttempt;
     this.isUploadingS3 = true;
     this.masteringFeedback.set(null);
     const generation = this.workspaceGeneration;
+    this.trackMasterEvent('master_upload_started', {
+      source_format: this.analyticsSourceFormat(),
+      attempt_number: attemptNumber,
+    }, `upload:${attemptNumber}:started`);
     this.addLog(`Iniciando handshake S3 para: ${file.name}`);
 
     this.dspService.getMasteringV2PresignedUrl(file.name).subscribe({
@@ -173,6 +184,10 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
             this.isUploadingS3 = false;
             this.s3Key = s3Response.s3Key;
             this.masteringFeedback.set(null);
+            this.trackMasterEvent('master_upload_completed', {
+              source_format: this.analyticsSourceFormat(),
+              attempt_number: attemptNumber,
+            }, `upload:${attemptNumber}:terminal`);
             this.addLog(`Upload concluído! Arquivo persistido em: ${s3Response.s3Key}`);
             this.requestSourceAnalysis(file, generation);
           },
@@ -181,6 +196,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
             this.isUploadingS3 = false;
             this.masteringFeedback.set('upload_failed');
             this.analysisState.set('error');
+            this.trackMasterEvent('master_upload_failed', {
+              source_format: this.analyticsSourceFormat(),
+              attempt_number: attemptNumber,
+              failure_stage: 'transfer',
+            }, `upload:${attemptNumber}:terminal`);
             this.addLog(`❌ ERRO CRÍTICO S3: ${this.sanitizedUploadError(error, 'presigned-upload')}`);
           },
         });
@@ -190,6 +210,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
         this.isUploadingS3 = false;
         this.masteringFeedback.set('upload_failed');
         this.analysisState.set('error');
+        this.trackMasterEvent('master_upload_failed', {
+          source_format: this.analyticsSourceFormat(),
+          attempt_number: attemptNumber,
+          failure_stage: 'presign',
+        }, `upload:${attemptNumber}:terminal`);
         this.addLog(`❌ ERRO DE PROTOCOLO S3: ${this.sanitizedUploadError(error, 'presign-request')}`);
       },
     });
@@ -198,6 +223,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   processarMaster(command: MasteringProcessCommand): void {
     if (this.isProcessing || !this.selectedFile) return;
     if (!this.auth.isLoggedIn()) {
+      this.trackAuthRequired(command.preview ? 'preview' : 'full');
       this.auth.requestSignIn('mastering');
       return;
     }
@@ -208,6 +234,10 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     }
 
     if (!command.preview && !this.auth.canMaster()) {
+      this.trackMasterEvent('master_quota_exceeded', {
+        source_format: this.analyticsSourceFormat(),
+        processing_mode: 'full',
+      }, 'quota:full');
       alert(this.lang.t().LIMIT_EXCEEDED_ALERT);
       return;
     }
@@ -216,6 +246,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     this.processingMode = command.preview ? 'preview' : 'full';
     this.isProcessing = true;
     const generation = this.workspaceGeneration;
+    const attemptNumber = command.preview ? ++this.previewAttempt : ++this.fullAttempt;
     this.startEstimatedRenderProgress(command.preview);
     const formData = this.buildMasteringV2FormData(
       command.request,
@@ -224,6 +255,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     );
 
     if (command.preview) {
+      this.trackMasterEvent('master_preview_started', {
+        source_format: this.analyticsSourceFormat(),
+        processing_mode: 'preview',
+        attempt_number: attemptNumber,
+      }, `preview:${attemptNumber}:started`);
       this.addLog(
         `Mastering V2 preview: ${this.describeRequest(command.request)} | ${command.request.intensityPercent}%`,
       );
@@ -238,6 +274,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
           this.processedAudioName = 'rqs_v2_preview.wav';
           this.isFullMasterCompleted = false;
           this.audioComparison.previewStatus.set('ready');
+          this.trackMasterEvent('master_preview_completed', {
+            source_format: this.analyticsSourceFormat(),
+            processing_mode: 'preview',
+            attempt_number: attemptNumber,
+          }, `preview:${attemptNumber}:terminal`);
           this.addLog('Mastering V2 preview concluído com sucesso.');
         },
         error: (error: unknown) => {
@@ -247,20 +288,27 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
           this.processingMode = null;
           this.audioComparison.previewStatus.set('error');
           this.masteringFeedback.set('preview_failed');
-          this.analytics.trackEvent('master_failed', {
+          this.trackMasterEvent('master_preview_failed', {
             source_format: this.analyticsSourceFormat(),
-            processing_mode: 'preview'
-          });
+            processing_mode: 'preview',
+            attempt_number: attemptNumber,
+          }, `preview:${attemptNumber}:terminal`);
+          this.trackMasterEvent('master_failed', {
+            source_format: this.analyticsSourceFormat(),
+            processing_mode: 'preview',
+            attempt_number: attemptNumber,
+          }, `preview:${attemptNumber}:legacy-failed`);
           this.addLog(`❌ MASTERING V2 PREVIEW ERROR: ${this.errorMessage(error)}`);
         },
       });
       return;
     }
 
-    this.analytics.trackEvent('master_started', {
+    this.trackMasterEvent('master_started', {
       source_format: this.analyticsSourceFormat(),
-      processing_mode: 'full'
-    });
+      processing_mode: 'full',
+      attempt_number: attemptNumber,
+    }, `full:${attemptNumber}:started`);
     this.addLog(`Mastering V2 final: ${this.describeRequest(command.request)} | ${command.request.intensityPercent}%`);
     this.dspService.masterizeV2Final(formData).subscribe({
       next: (response) => {
@@ -273,12 +321,14 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
         this.processedAudioUrl = response.downloadUrl;
         this.processedAudioName = response.fileName;
         this.isFullMasterCompleted = true;
+        this.completedFullAttempt = attemptNumber;
         this.audioComparison.audioProcessed.set(true);
         this.audioComparison.processedFilename.set(response.fileName);
-        this.analytics.trackEvent('master_completed', {
+        this.trackMasterEvent('master_completed', {
           source_format: this.analyticsSourceFormat(),
-          processing_mode: 'full'
-        });
+          processing_mode: 'full',
+          attempt_number: attemptNumber,
+        }, `full:${attemptNumber}:terminal`);
         this.addLog(`Mastering V2 finalizado: ${response.fileName}`);
       },
       error: (error: unknown) => {
@@ -287,10 +337,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
         this.isProcessing = false;
         this.processingMode = null;
         this.masteringFeedback.set('full_failed');
-        this.analytics.trackEvent('master_failed', {
+        this.trackMasterEvent('master_failed', {
           source_format: this.analyticsSourceFormat(),
-          processing_mode: 'full'
-        });
+          processing_mode: 'full',
+          attempt_number: attemptNumber,
+        }, `full:${attemptNumber}:terminal`);
         this.addLog(`❌ MASTERING V2 FINAL ERROR: ${this.errorMessage(error)}`);
       },
     });
@@ -307,6 +358,18 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     this.audioComparison.processedFilename.set('');
   }
 
+  trackDownloadRequested(): void {
+    if (!this.isFullMasterCompleted || !this.processedAudioUrl || this.completedFullAttempt <= 0) {
+      return;
+    }
+
+    this.trackMasterEvent('master_download_requested', {
+      source_format: this.analyticsSourceFormat(),
+      processing_mode: 'full',
+      attempt_number: this.completedFullAttempt,
+    }, `full:${this.completedFullAttempt}:download`);
+  }
+
   ejetarFaixa(): void {
     this.workspaceGeneration += 1;
     this.releaseProcessedBlobUrl();
@@ -321,6 +384,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
     this.clearAnalysisState();
+    this.resetAnalyticsOperation();
     this.clearPersistedAnalysisPointer();
     this.audioDna = null;
     this.audioSourceId = null;
@@ -356,6 +420,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     this.isFullMasterCompleted = false;
     this.masteringFeedback.set(null);
     this.clearAnalysisState();
+    this.resetAnalyticsOperation(crypto.randomUUID());
     this.clearPersistedAnalysisPointer();
     this.audioDna = null;
     this.audioSourceId = `source-${this.workspaceGeneration}:${file.name}:${file.size}:${file.lastModified}`;
@@ -429,6 +494,10 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
           this.openAiMusicAnalyst = null;
           this.audioIntelligence = null;
           this.analysisState.set('error');
+          this.trackMasterEvent('master_analysis_failed', {
+            source_format: this.analyticsSourceFormat(),
+            failure_stage: 'generation_guard',
+          }, 'analysis:terminal');
           return;
         }
         this.analysisMetrics.set(response);
@@ -446,6 +515,9 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
           this.masteringService.initializeFromAudioDna(this.audioSourceId, response.audio_dna.master_profile);
         }
         this.analysisState.set('success');
+        this.trackMasterEvent('master_analysis_completed', {
+          source_format: this.analyticsSourceFormat(),
+        }, 'analysis:terminal');
       },
       error: (error: unknown) => {
         if (!this.isActiveWorkspace(generation)) return;
@@ -457,6 +529,12 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
         this.openAiMusicAnalyst = null;
         this.audioIntelligence = null;
         this.analysisState.set(status === 401 || status === 403 ? 'auth_required' : 'error');
+        this.trackMasterEvent('master_analysis_failed', {
+          source_format: this.analyticsSourceFormat(),
+          failure_stage: 'request',
+          http_status: Number.isFinite(status) ? status : 0,
+        }, 'analysis:terminal');
+        if (status === 401 || status === 403) this.trackAuthRequired('analysis');
       },
     });
   }
@@ -688,6 +766,40 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     if (name.endsWith('.wav')) return 'wav';
     if (name.endsWith('.mp3')) return 'mp3';
     return 'unknown';
+  }
+
+  private trackAuthRequired(flowStage: 'upload' | 'analysis' | 'preview' | 'full'): void {
+    this.trackMasterEvent('master_auth_required', {
+      source_format: this.analyticsSourceFormat(),
+      flow_stage: flowStage,
+    }, `auth-required:${flowStage}`);
+  }
+
+  private trackMasterEvent(
+    name: string,
+    params: Record<string, string | number | boolean>,
+    dedupeKey: string,
+  ): void {
+    if (this.workspace !== 'master') return;
+
+    const operationId = this.analysisRequestId ??= crypto.randomUUID();
+    const key = `${operationId}:${dedupeKey}`;
+    if (this.trackedAnalyticsEvents.has(key)) return;
+
+    this.trackedAnalyticsEvents.add(key);
+    this.analytics.trackEvent(name, {
+      operation_id: operationId,
+      ...params,
+    });
+  }
+
+  private resetAnalyticsOperation(operationId: string | null = null): void {
+    this.analysisRequestId = operationId;
+    this.trackedAnalyticsEvents.clear();
+    this.uploadAttempt = 0;
+    this.previewAttempt = 0;
+    this.fullAttempt = 0;
+    this.completedFullAttempt = 0;
   }
 
   private errorMessage(error: unknown): string {

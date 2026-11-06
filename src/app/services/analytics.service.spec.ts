@@ -81,9 +81,11 @@ describe('AnalyticsService privacy contract', () => {
 
     service.trackEvent('mastering_test', {
       atmosphere: 'thunder',
+      operation_id: '10000000-0000-4000-8000-000000000001',
       token: 'secret-token',
       email: 'private@example.com',
-      filename: 'private-track.wav'
+      filename: 'private-track.wav',
+      user_id: 'private-user-id'
     });
 
     const eventCall = gtag.calls
@@ -94,9 +96,11 @@ describe('AnalyticsService privacy contract', () => {
 
     const payload = eventCall?.[2] as Record<string, unknown>;
     expect(payload['atmosphere']).toBe('thunder');
+    expect(payload['operation_id']).toBe('10000000-0000-4000-8000-000000000001');
     expect(payload['token']).toBeUndefined();
     expect(payload['email']).toBeUndefined();
     expect(payload['filename']).toBeUndefined();
+    expect(payload['user_id']).toBeUndefined();
   });
 
   it('removes referral codes from page URLs and custom events', () => {

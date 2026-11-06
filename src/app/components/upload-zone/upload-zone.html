@@ -107,6 +107,7 @@
       *ngIf="isFullMasterCompleted"
       [href]="processedAudioUrl"
       [download]="processedAudioName"
+      (click)="trackDownloadRequested()"
       class="btn-download">
       {{ lang.t().MASTER_COMPLETED }}
     </a>

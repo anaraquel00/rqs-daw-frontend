@@ -6,6 +6,6 @@ export const environment = {
   supabasePublishableKey: 'sb_publishable_evTmfCYwvcaPKqwyfEVMGA_kYXQftOX',
   localAuthProfileBypass: false,
   analyticsMeasurementId: 'G-Z1TSQ0NV6T',
-  analyticsEnabled: true,
-  analyticsDebugMode: true,
+  analyticsEnabled: false,
+  analyticsDebugMode: false,
 };

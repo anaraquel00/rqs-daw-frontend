@@ -11,6 +11,7 @@ describe('AuthService OAuth and Magic Link', () => {
 
   const callbackHandler = () => service as unknown as {
     handleAuthCallbackReturn(callback: { present: boolean; errorCode: string | null }, session: Session | null): void;
+    trackExplicitLogin(callback: { present: boolean; errorCode: string | null }, session: Session | null): void;
   };
 
   const authenticatedSession = { user: { id: 'test-user' } } as Session;
@@ -120,6 +121,31 @@ describe('AuthService OAuth and Magic Link', () => {
       '/app/master?utm_medium=cpc&utm_term=online+mastering',
       { replaceUrl: true }
     );
+  });
+
+  it('reports login once only for a successful explicit authentication callback', () => {
+    const googleSession = {
+      user: {
+        id: 'test-user',
+        app_metadata: { provider: 'google' },
+      },
+    } as Session;
+
+    callbackHandler().trackExplicitLogin({ present: true, errorCode: null }, googleSession);
+    callbackHandler().trackExplicitLogin({ present: true, errorCode: null }, googleSession);
+
+    expect(analytics.trackEvent).toHaveBeenCalledOnceWith('login', {
+      method: 'google',
+      authentication_type: 'explicit',
+    });
+  });
+
+  it('does not report login for restored sessions, refreshes or failed callbacks', () => {
+    callbackHandler().trackExplicitLogin({ present: false, errorCode: null }, authenticatedSession);
+    callbackHandler().trackExplicitLogin({ present: true, errorCode: 'otp_expired' }, authenticatedSession);
+    callbackHandler().trackExplicitLogin({ present: true, errorCode: null }, null);
+
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('login', jasmine.anything());
   });
 
   it('uses the existing Supabase client for Magic Link with the required options', async () => {

@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { AnalyticsService } from '../../services/analytics.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
 import { AuthService } from '../../services/auth.service';
@@ -187,8 +187,14 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect((body.get('audio') as File).name).toBe(component.selectedFile!.name);
     expect(body.get('source_generation')).toBe('source-0');
     expect(body.has('s3Key')).toBeFalse();
+    const operationId = dsp.analyzeMasteringV2.calls.mostRecent().args[1];
+    expect(operationId).toMatch(/^[0-9a-f-]{36}$/i);
     expect(component.analysisState()).toBe('success');
     expect(component.analysisMetrics()).toEqual(analysis);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_analysis_completed', {
+      operation_id: operationId,
+      source_format: 'wav',
+    });
 
     TestBed.tick();
     expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
@@ -249,6 +255,19 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(component.analysisState()).toBe('success');
     expect(component.audioIntelligence).toEqual(audioIntelligenceV2);
     expect(component.openAiMusicAnalyst).toBeNull();
+  });
+
+  it('does not classify PITCH analysis as MASTER lifecycle usage', () => {
+    component.workspace = 'pitch';
+    analytics.trackEvent.calls.reset();
+    (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(
+      new File(['pitch-source'], 'pitch-source.wav', { type: 'audio/wav' }),
+    );
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(dsp.analyzeMasteringV2).toHaveBeenCalled();
+    expect(analytics.trackEvent.calls.allArgs().some(([name]) => name.startsWith('master_'))).toBeFalse();
   });
 
   it('rejects stale Audio Intelligence V2 evidence and clears the complete analysis state', () => {
@@ -335,6 +354,12 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
 
     expect(component.analysisState()).toBe('error');
     expect(component.analysisMetrics()).toBeNull();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_analysis_failed', jasmine.objectContaining({
+      operation_id: jasmine.any(String),
+      source_format: 'wav',
+      failure_stage: 'request',
+      http_status: 503,
+    }));
     expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
     expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
   });
@@ -357,7 +382,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(component.analysisMetrics()).toBeNull();
   });
 
-  it('does not consume quota, emit mastering analytics, or modify the DSP request', () => {
+  it('reports analysis without consuming quota, starting a render or modifying the DSP request', () => {
     const mastering = TestBed.inject(MasteringService);
     const before = mastering.getRequest();
     const auth = TestBed.inject(AuthService) as unknown as { canMaster: jasmine.Spy; refreshProfile: jasmine.Spy };
@@ -368,7 +393,9 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
 
     expect(canMaster).not.toHaveBeenCalled();
     expect(auth.refreshProfile).not.toHaveBeenCalled();
-    expect(analytics.trackEvent).not.toHaveBeenCalled();
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_analysis_completed').length).toBe(1);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_started').length).toBe(0);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_preview_started').length).toBe(0);
     expect(mastering.getRequest()).toEqual(before);
     expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
     expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
@@ -517,12 +544,44 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(logs).not.toContain('Credential');
     expect(logs).not.toContain('Signature');
     expect(logs).not.toContain('secret-signature');
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_upload_failed', jasmine.objectContaining({
+      operation_id: jasmine.any(String),
+      source_format: 'wav',
+      failure_stage: 'transfer',
+      attempt_number: 1,
+    }));
+  });
+
+  it('reports upload completion only after the S3 transfer succeeds and keeps one operation id', () => {
+    (component as unknown as { masteringV2DirectUpload: boolean }).masteringV2DirectUpload = false;
+    dsp.getMasteringV2PresignedUrl.and.returnValue(of({
+      uploadUrl: 'https://staging.invalid/upload',
+      s3Key: 'staging/source.wav',
+    }));
+    dsp.uploadToS3.and.returnValue(of(void 0));
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    const started = analytics.trackEvent.calls.allArgs().find(([name]) => name === 'master_upload_started');
+    const completed = analytics.trackEvent.calls.allArgs().find(([name]) => name === 'master_upload_completed');
+    expect(started?.[1]).toEqual(jasmine.objectContaining({ attempt_number: 1 }));
+    expect(completed?.[1]).toEqual(jasmine.objectContaining({ attempt_number: 1 }));
+    expect((started?.[1] as Record<string, unknown>)['operation_id'])
+      .toBe((completed?.[1] as Record<string, unknown>)['operation_id']);
+    const analysisOperationId = dsp.analyzeMasteringV2.calls.mostRecent().args[1];
+    expect((completed?.[1] as Record<string, unknown>)['operation_id']).toBe(analysisOperationId);
   });
 
   it('does not emit a protected Preview request before authentication', () => {
     component.processarMaster(command(true));
+    component.processarMaster(command(true));
 
-    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    expect(requestSignIn).toHaveBeenCalledTimes(2);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_auth_required').length).toBe(1);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_auth_required', jasmine.objectContaining({
+      operation_id: jasmine.any(String),
+      flow_stage: 'preview',
+    }));
     expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
     expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
   });
@@ -545,6 +604,34 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
 
     expect(analytics.trackEvent).not.toHaveBeenCalledWith('master_started', jasmine.anything());
     expect(analytics.trackEvent).not.toHaveBeenCalledWith('master_completed', jasmine.anything());
+    const started = analytics.trackEvent.calls.allArgs().find(([name]) => name === 'master_preview_started');
+    const completed = analytics.trackEvent.calls.allArgs().find(([name]) => name === 'master_preview_completed');
+    expect(started?.[1]).toEqual(jasmine.objectContaining({
+      operation_id: jasmine.any(String),
+      processing_mode: 'preview',
+      attempt_number: 1,
+    }));
+    expect(completed?.[1]).toEqual(jasmine.objectContaining({
+      operation_id: jasmine.any(String),
+      processing_mode: 'preview',
+      attempt_number: 1,
+    }));
+    expect((started?.[1] as Record<string, unknown>)['operation_id'])
+      .toBe((completed?.[1] as Record<string, unknown>)['operation_id']);
+  });
+
+  it('reports Preview failure without reporting completion', () => {
+    dsp.masterizeV2Preview.and.returnValue(throwError(() => ({ status: 503 })));
+    isLoggedIn.set(true);
+    TestBed.tick();
+    component.s3Key = 'staging/source.wav';
+
+    component.processarMaster(command(true));
+
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_preview_started').length).toBe(1);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_preview_failed').length).toBe(1);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_preview_completed').length).toBe(0);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_failed').length).toBe(1);
   });
 
   it('reports master_started and master_completed once for one successful Full Master', () => {
@@ -562,14 +649,57 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
 
     expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_started').length).toBe(1);
     expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_completed').length).toBe(1);
-    expect(analytics.trackEvent).toHaveBeenCalledWith('master_started', {
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_started', jasmine.objectContaining({
+      operation_id: jasmine.any(String),
       source_format: 'wav',
       processing_mode: 'full',
-    });
-    expect(analytics.trackEvent).toHaveBeenCalledWith('master_completed', {
+      attempt_number: 1,
+    }));
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_completed', jasmine.objectContaining({
+      operation_id: jasmine.any(String),
       source_format: 'wav',
       processing_mode: 'full',
-    });
+      attempt_number: 1,
+    }));
+
+    component.trackDownloadRequested();
+    component.trackDownloadRequested();
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_download_requested').length).toBe(1);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_download_requested', jasmine.objectContaining({
+      operation_id: jasmine.any(String),
+      processing_mode: 'full',
+      attempt_number: 1,
+    }));
+  });
+
+  it('reports a failed Full Master without reporting completion', () => {
+    dsp.masterizeV2Final.and.returnValue(throwError(() => ({ status: 500 })));
+    isLoggedIn.set(true);
+    TestBed.tick();
+    component.s3Key = 'staging/source.wav';
+
+    component.processarMaster(command(false));
+
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_started').length).toBe(1);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_failed').length).toBe(1);
+    expect(analytics.trackEvent.calls.allArgs().filter(([name]) => name === 'master_completed').length).toBe(0);
+  });
+
+  it('reports quota exhaustion without starting a Full Master', () => {
+    const auth = TestBed.inject(AuthService) as unknown as { canMaster: { set(value: boolean): void } };
+    auth.canMaster.set(false);
+    isLoggedIn.set(true);
+    TestBed.tick();
+    component.s3Key = 'staging/source.wav';
+    spyOn(window, 'alert');
+
+    component.processarMaster(command(false));
+
+    expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('master_quota_exceeded', jasmine.objectContaining({
+      operation_id: jasmine.any(String),
+      processing_mode: 'full',
+    }));
   });
 
   function command(preview: boolean): MasteringProcessCommand {
