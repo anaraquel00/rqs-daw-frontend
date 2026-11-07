@@ -14,11 +14,60 @@ const ALLOWED_CATEGORIES = new Set([
   'other'
 ]);
 
+function contactRuntimeMode() {
+  const dataEnvironment = String(process.env.RQS_DATA_ENVIRONMENT || '').trim().toLowerCase();
+  const vercelEnvironment = String(process.env.VERCEL_ENV || '').trim().toLowerCase();
+  const vercelTarget = String(process.env.VERCEL_TARGET_ENV || '').trim().toLowerCase();
+
+  const isProduction =
+    vercelEnvironment === 'production' &&
+    (!vercelTarget || vercelTarget === 'production') &&
+    (!dataEnvironment || dataEnvironment === 'production');
+  if (isProduction) return 'production';
+
+  const isPreview =
+    vercelEnvironment === 'preview' &&
+    (!vercelTarget || vercelTarget === 'preview') &&
+    !dataEnvironment;
+  const isStaging =
+    vercelEnvironment === 'preview' &&
+    vercelTarget === 'staging' &&
+    dataEnvironment === 'staging';
+  const isDevelopment =
+    vercelEnvironment === 'development' &&
+    (!vercelTarget || vercelTarget === 'development') &&
+    !dataEnvironment;
+
+  if (isPreview || isStaging || isDevelopment) return 'suppressed';
+  throw new Error('Invalid contact environment configuration');
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
       error: 'Method not allowed'
+    });
+  }
+
+  let runtimeMode;
+  try {
+    runtimeMode = contactRuntimeMode();
+  } catch (error) {
+    console.error(
+      '[RQS STUDIO CONTACT]',
+      error instanceof Error ? error.message : 'Invalid contact environment configuration'
+    );
+    return res.status(500).json({
+      success: false,
+      error: 'Server configuration error'
+    });
+  }
+
+  if (runtimeMode !== 'production') {
+    return res.status(503).json({
+      success: false,
+      error: 'Contact unavailable in this environment'
     });
   }
 
