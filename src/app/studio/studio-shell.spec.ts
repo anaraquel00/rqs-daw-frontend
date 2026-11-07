@@ -13,12 +13,14 @@ import { MixPanelComponent } from '../mix-panel/mix-panel';
 import { RqsUplinkEngineComponent } from '../rqs-uplink-engine/rqs-uplink-engine';
 import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/rqs-uplink-dashboard';
 import { AuthPromptComponent } from '../components/auth-prompt/auth-prompt';
+import { AccountWaitlistComponent } from './account-waitlist';
 
 @Component({ selector: 'app-upload-zone', template: '<input aria-label="Source marker" value="retained-audio">' }) class MasterStub { @Input() workspace: 'master' | 'pitch' = 'master'; }
 @Component({ selector: 'app-mix-panel', template: 'BUILD existing entry' }) class BuildStub {}
 @Component({ selector: 'app-rqs-uplink-engine', template: 'UPLINK existing entry' }) class UplinkStub {}
 @Component({ selector: 'app-rqs-uplink-dashboard', template: 'UPLINK list' }) class DashboardStub {}
 @Component({ selector: 'app-auth-prompt', template: '' }) class AuthStub {}
+@Component({ selector: 'app-account-waitlist', template: 'WAITLIST PREFERENCE' }) class AccountWaitlistStub {}
 
 describe('Studio V2 shell integration', () => {
   let harness: RouterTestingHarness;
@@ -49,8 +51,8 @@ describe('Studio V2 shell integration', () => {
       { provide: CookieConsentService, useValue: { openPreferences: jasmine.createSpy() } },
     ] });
     TestBed.overrideComponent(StudioShellComponent, {
-      remove: { imports: [UploadZoneComponent, MixPanelComponent, RqsUplinkEngineComponent, RqsUplinkDashboardComponent, AuthPromptComponent] },
-      add: { imports: [MasterStub, BuildStub, UplinkStub, DashboardStub, AuthStub] },
+      remove: { imports: [UploadZoneComponent, MixPanelComponent, RqsUplinkEngineComponent, RqsUplinkDashboardComponent, AuthPromptComponent, AccountWaitlistComponent] },
+      add: { imports: [MasterStub, BuildStub, UplinkStub, DashboardStub, AuthStub, AccountWaitlistStub] },
     });
     harness = await RouterTestingHarness.create('/app');
     document.body.appendChild(harness.fixture.nativeElement);
@@ -206,6 +208,7 @@ describe('Studio V2 shell integration', () => {
     await harness.navigateByUrl('/app/account');
     expect(harness.routeNativeElement!.textContent).toContain('RQS PRO');
     expect(harness.routeNativeElement!.textContent).toContain('test@example.invalid');
+    expect(harness.routeNativeElement!.textContent).toContain('WAITLIST PREFERENCE');
   });
   it('exposes Learn and SPLIT without creating processing or billing controls', async () => {
     for (const path of ['learn', 'split']) {

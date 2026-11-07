@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authEnvironmentForRequest, getDocument, setFirestoreAccessTokenProviderForTests } from './_referral-http.mjs';
+import { authEnvironmentForRequest, countDocuments, getDocument, hasVerifiedEmail, setFirestoreAccessTokenProviderForTests, updateDocument } from './_referral-http.mjs';
 
 process.env.GCP_FIRESTORE_DATABASE_ID = 'rqs-referral-preview';
 setFirestoreAccessTokenProviderForTests(async () => 'short-lived-test-token');
@@ -43,6 +43,54 @@ test('Firestore requests use a server-side bearer token and reject non-referral 
     await assert.rejects(() => getDocument('pro_waitlist', 'test-document'), /database is not allowed/);
   } finally {
     process.env.GCP_FIRESTORE_DATABASE_ID = 'rqs-referral-preview';
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('verified email requires both an address and a Supabase confirmation timestamp', () => {
+  assert.equal(hasVerifiedEmail({ email: 'artist@example.com', email_confirmed_at: '2026-11-01T00:00:00Z' }), true);
+  assert.equal(hasVerifiedEmail({ email: 'artist@example.com' }), false);
+  assert.equal(hasVerifiedEmail({ confirmed_at: '2026-11-01T00:00:00Z' }), false);
+});
+
+test('Firestore preference updates use an exact field mask and aggregate queries return counts only', async () => {
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  globalThis.fetch = async (url, options = {}) => {
+    requests.push({ url: String(url), options });
+    if (String(url).endsWith(':runAggregationQuery')) {
+      return { ok: true, status: 200, json: async () => [{ result: { aggregateFields: { count: { integerValue: '12' } } } }] };
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ name: `${url}`, fields: {
+        plan_interest: { stringValue: 'pro' },
+        referralCode: { stringValue: 'RQSA23456789' },
+      } }),
+    };
+  };
+  try {
+    const updated = await updateDocument('pro_waitlist', 'owner-hash', {
+      plan_interest: 'pro',
+      plan_interest_updated_at: new Date('2026-11-07T12:00:00Z'),
+    });
+    assert.equal(updated.plan_interest, 'pro');
+    const updateRequest = requests[0];
+    const updateUrl = new URL(updateRequest.url);
+    assert.deepEqual(updateUrl.searchParams.getAll('updateMask.fieldPaths'), [
+      'plan_interest',
+      'plan_interest_updated_at',
+    ]);
+    const updateBody = JSON.parse(updateRequest.options.body);
+    assert.deepEqual(Object.keys(updateBody.fields).sort(), ['plan_interest', 'plan_interest_updated_at']);
+    assert.equal(updateBody.fields.referralCode, undefined);
+
+    assert.equal(await countDocuments('pro_waitlist', 'plan_interest', 'pro'), 12);
+    const aggregateBody = JSON.parse(requests[1].options.body);
+    assert.equal(aggregateBody.structuredAggregationQuery.aggregations[0].alias, 'count');
+    assert.equal(aggregateBody.structuredAggregationQuery.structuredQuery.where.fieldFilter.field.fieldPath, 'plan_interest');
+  } finally {
     globalThis.fetch = originalFetch;
   }
 });

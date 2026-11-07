@@ -72,6 +72,7 @@
         <p class="user-email">{{ auth.session()?.user?.email }}</p>
         <p>{{ auth.isPremium() ? 'RQS PRO' : 'FREE' }}</p>
         @if (!auth.isPremium()) { <p>{{ copy().quota }}: {{ auth.remainingMasters() }}</p> }
+        <app-account-waitlist></app-account-waitlist>
         <button type="button" (click)="auth.logout()">{{ copy().signOut }}</button>
       } @else {
         <p>{{ copy().accountNotice }}</p><button type="button" (click)="auth.requestSignIn('general', 'email')">{{ lang.t().AUTH_EMAIL_CONTINUE }}</button>

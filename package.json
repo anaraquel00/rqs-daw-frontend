@@ -14,6 +14,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:api": "node --test api/*.test.mjs",
+    "test:firestore-emulator": "npx -y firebase-tools@13.35.1 emulators:exec --only firestore --project raquel-synths-platform --config firebase.test.json \"node --test api/firestore-emulator.test.mjs\"",
     "serve:ssr:rqs-daw": "node dist/rqs-daw/server/server.mjs"
   },
   "prettier": {

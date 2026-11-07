@@ -59,7 +59,7 @@ describe('PricingPageComponent waitlist analytics', () => {
   });
 
   it('reports waitlist_joined only after a successful API response', async () => {
-    spyOn(globalThis, 'fetch').and.resolveTo(new Response(
+    const request = spyOn(globalThis, 'fetch').and.resolveTo(new Response(
       JSON.stringify({ success: true }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     ));
@@ -69,6 +69,27 @@ describe('PricingPageComponent waitlist analytics', () => {
     expect(component.waitlistState()).toBe('success');
     expect(analytics.trackEvent).toHaveBeenCalledOnceWith('waitlist_joined', {
       desired_plan: 'unknown',
+    });
+    const options = request.calls.mostRecent().args[1] as RequestInit;
+    expect(JSON.parse(String(options.body))).toEqual(jasmine.objectContaining({
+      email: 'artist@example.com',
+      plan_interest: 'undecided',
+    }));
+  });
+
+  it('persists the selected canonical plan interest in the existing waitlist request', async () => {
+    (component as unknown as { desiredPlan: 'pro' }).desiredPlan = 'pro';
+    const request = spyOn(globalThis, 'fetch').and.resolveTo(new Response(
+      JSON.stringify({ success: true }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    ));
+
+    await component.joinWaitlist();
+
+    const options = request.calls.mostRecent().args[1] as RequestInit;
+    expect(JSON.parse(String(options.body)).plan_interest).toBe('pro');
+    expect(analytics.trackEvent).toHaveBeenCalledOnceWith('waitlist_joined', {
+      desired_plan: 'pro',
     });
   });
 });

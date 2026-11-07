@@ -1,4 +1,4 @@
-import { PARTICIPANT_COLLECTION, REFERRAL_CAMPAIGN, WAITLIST_COLLECTION, campaignPhase, emailFingerprint, isDisposableEmail, isReferralCode, normalizeEmail, normalizeLanguage, waitlistDocumentId } from './_referral-core.mjs';
+import { PARTICIPANT_COLLECTION, REFERRAL_CAMPAIGN, WAITLIST_COLLECTION, campaignPhase, emailFingerprint, isDisposableEmail, isReferralCode, normalizeEmail, normalizeLanguage, normalizePlanInterest, waitlistDocumentId } from './_referral-core.mjs';
 import { applyCors, createDocument, queryDocuments } from './_referral-http.mjs';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -7,10 +7,12 @@ export default async function handler(req, res) {
   if (!applyCors(req, res, 'POST, OPTIONS')) return res.status(403).json({ success: false, error: 'Origin not allowed' });
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
-  const { email, source, language, website, referralCode } = req.body || {};
+  const { email, source, language, website, referralCode, plan_interest: rawPlanInterest } = req.body || {};
   if (website) return res.status(200).json({ success: true });
   const normalizedEmail = normalizeEmail(email);
   if (!EMAIL_PATTERN.test(normalizedEmail)) return res.status(400).json({ success: false, error: email ? 'Invalid email' : 'Email is required' });
+  const planInterest = normalizePlanInterest(rawPlanInterest);
+  if (!planInterest) return res.status(400).json({ success: false, error: 'Invalid plan interest' });
 
   try {
     const attribution = await resolveAttribution(referralCode, normalizedEmail);
@@ -20,6 +22,7 @@ export default async function handler(req, res) {
       email: normalizedEmail,
       source: source ? String(source).trim() : 'studio.raquelsynths.com',
       language: normalizeLanguage(language), status: 'waiting', createdAt: now,
+      plan_interest: planInterest, plan_interest_updated_at: now,
       ...(attribution ? { referralCampaignId: REFERRAL_CAMPAIGN.id, referrerParticipantId: attribution.id, referrerUserId: attribution.referrerUserId,
         referredWaitlistId: waitlistId,
         referralCode: attribution.referralCode, referralStatus: 'waitlisted', referralCapturedAt: now } : {}),

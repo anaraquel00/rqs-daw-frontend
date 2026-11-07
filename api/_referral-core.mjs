@@ -17,9 +17,17 @@ export const REFERRAL_CAMPAIGN = Object.freeze({
 export const FIRESTORE_PROJECT_ID = 'raquel-synths-platform';
 export const WAITLIST_COLLECTION = 'pro_waitlist';
 export const PARTICIPANT_COLLECTION = 'founding_referral_participants';
+export const PLAN_INTERESTS = Object.freeze(['master', 'plus', 'pro', 'undecided']);
 
 export function normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
+}
+
+export function normalizePlanInterest(value) {
+  const normalized = value === undefined || value === null
+    ? 'undecided'
+    : String(value).trim().toLowerCase();
+  return PLAN_INTERESTS.includes(normalized) ? normalized : null;
 }
 
 export function waitlistDocumentId(email) {

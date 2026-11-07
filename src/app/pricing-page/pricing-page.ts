@@ -143,6 +143,7 @@ export class PricingPageComponent implements AfterViewInit {
           source: 'studio.raquelsynths.com/pricing',
           language: this.lang.currentLang(),
           referralCode: this.referralCode() || undefined,
+          plan_interest: this.desiredPlan === 'unknown' ? 'undecided' : this.desiredPlan,
           website: ''
         })
       });

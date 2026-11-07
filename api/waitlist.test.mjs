@@ -37,7 +37,27 @@ test('valid referral is embedded in the first waitlist write and survives a Brev
   assert.equal(result.statusCode, 200); assert.equal(result.body.referralAttributed, true);
   assert.equal(result.body.notificationSyncPending, true);
   assert.equal(waitlistWrite.fields.language.stringValue, 'fr');
+  assert.equal(waitlistWrite.fields.plan_interest.stringValue, 'undecided');
   assert.equal(waitlistWrite.fields.referrerParticipantId.stringValue, 'participant-1');
+});
+
+test('a canonical plan interest is persisted only during the create-only subscription', async () => {
+  let waitlistWrite;
+  const result = await invoke({ email: 'artist@example.com', plan_interest: 'pro' }, async (url, options = {}) => {
+    if (String(url).includes('/pro_waitlist?')) {
+      waitlistWrite = JSON.parse(options.body);
+      return response(200, firestoreDocument('pro_waitlist', 'waitlist-1', {}));
+    }
+    if (String(url).includes('api.brevo.com')) return response(200);
+    throw new Error(`Unexpected URL ${url}`);
+  });
+  assert.equal(result.statusCode, 200);
+  assert.equal(waitlistWrite.fields.plan_interest.stringValue, 'pro');
+
+  const invalid = await invoke({ email: 'artist@example.com', plan_interest: 'enterprise' }, async () => {
+    throw new Error('invalid input must not reach external systems');
+  });
+  assert.equal(invalid.statusCode, 400);
 });
 
 test('invalid, self and disposable referrals do not create attribution', async () => {
