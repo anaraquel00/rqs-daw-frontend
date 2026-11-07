@@ -12,7 +12,6 @@ insert into auth.users (
   role,
   email,
   encrypted_password,
-  email_confirmed_at,
   raw_app_meta_data,
   raw_user_meta_data,
   created_at,
@@ -25,7 +24,6 @@ insert into auth.users (
     'authenticated',
     'owner@example.invalid',
     '',
-    now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{}'::jsonb,
     now(),
@@ -38,7 +36,6 @@ insert into auth.users (
     'authenticated',
     'other@example.invalid',
     '',
-    now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{}'::jsonb,
     now(),
@@ -51,7 +48,6 @@ insert into auth.users (
     'authenticated',
     'inactive@example.invalid',
     '',
-    now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{}'::jsonb,
     now(),
@@ -106,6 +102,11 @@ select pg_catalog.set_config(
   '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated"}',
   true
 );
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-4000-8000-000000000001',
+  true
+);
 select results_eq(
   $$select user_id from public.studio_admin_memberships order by user_id$$,
   $$values ('00000000-0000-4000-8000-000000000001'::uuid)$$,
@@ -115,6 +116,11 @@ select results_eq(
 select pg_catalog.set_config(
   'request.jwt.claims',
   '{"sub":"00000000-0000-4000-8000-000000000003","role":"authenticated"}',
+  true
+);
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-4000-8000-000000000003',
   true
 );
 select is_empty(
@@ -136,6 +142,11 @@ set local role authenticated;
 select pg_catalog.set_config(
   'request.jwt.claims',
   '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated"}',
+  true
+);
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-4000-8000-000000000001',
   true
 );
 select throws_ok(
