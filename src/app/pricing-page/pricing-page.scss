@@ -55,6 +55,8 @@ tbody th { color: #d8e3e7; min-width: 155px; } td { color: #8d9ba3; }
 .waitlist-row button { border: 1px solid #37dce6; background: rgba(50, 219, 230, .12); color: #63edf2; border-radius: 7px; padding: 0 18px; font: 800 .68rem ui-monospace, monospace; letter-spacing: .08em; cursor: pointer; }
 .waitlist-row button:disabled { opacity: .55; cursor: default; }
 .form-state { margin: 10px 0 0 !important; font-size: .78rem; }.form-state.success { color: #58ddb0; }.form-state.error { color: #ff8282; }
+.form-state.already-joined p { margin: 0; }
+.form-state.already-joined a { display: inline-block; margin-top: 7px; color: #63edf2; font: 800 .7rem ui-monospace, monospace; letter-spacing: .06em; }
 .faq { padding-bottom: 100px; }
 .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 details { border: 1px solid #17242b; border-radius: 10px; padding: 17px 19px; background: #080d11; }
@@ -184,5 +186,7 @@ app-footer { display: block; width: 100%; padding: 0 30px 30px; padding-inline: 
   .waitlist-row button:disabled { color: #fff; opacity: .62; }
 
   .form-state.success { color: var(--studio-success-text); }
+  .form-state.already-joined { color: var(--studio-text-secondary); }
+  .form-state.already-joined a { color: var(--studio-cyan-strong); }
   .form-state.error { color: var(--studio-error-text); }
 }

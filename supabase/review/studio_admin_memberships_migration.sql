@@ -3,7 +3,18 @@
 
 begin;
 
-create table if not exists public.studio_admin_memberships (
+do $preflight$
+begin
+  if to_regclass('public.studio_admin_memberships') is not null then
+    raise exception using
+      errcode = '42P07',
+      message = 'STUDIO_ADMIN_MEMBERSHIPS_ALREADY_EXISTS',
+      detail = 'Refuse to accept an existing table without an explicit schema audit.';
+  end if;
+end;
+$preflight$;
+
+create table public.studio_admin_memberships (
   user_id uuid primary key references auth.users(id) on delete cascade,
   role text not null check (role in ('commercial_admin')),
   active boolean not null default true,
@@ -18,8 +29,6 @@ revoke all on table public.studio_admin_memberships from anon, authenticated;
 grant select on table public.studio_admin_memberships to authenticated;
 grant select, insert, update, delete on table public.studio_admin_memberships to service_role;
 
-drop policy if exists "studio admins can read own active membership"
-  on public.studio_admin_memberships;
 create policy "studio admins can read own active membership"
   on public.studio_admin_memberships
   for select

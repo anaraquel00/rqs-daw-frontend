@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { ViewportScroller } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { AnalyticsService } from '../services/analytics.service';
+import { AuthService } from '../services/auth.service';
 import { LanguageService } from '../services/language.service';
 import { SeoService } from '../services/seo.service';
 import { ThemeService } from '../services/theme.service';
@@ -18,6 +19,7 @@ describe('PricingPageComponent waitlist analytics', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: AnalyticsService, useValue: analytics },
+        { provide: AuthService, useValue: { isLoggedIn: signal(true) } },
         {
           provide: LanguageService,
           useValue: {
@@ -46,7 +48,7 @@ describe('PricingPageComponent waitlist analytics', () => {
     component.waitlistEmail = 'artist@example.com';
   });
 
-  it('does not report waitlist_joined when the API rejects the subscription', async () => {
+  it('does not report waitlist_joined after an HTTP error', async () => {
     spyOn(globalThis, 'fetch').and.resolveTo(new Response(
       JSON.stringify({ success: false }),
       { status: 500, headers: { 'Content-Type': 'application/json' } },
@@ -58,9 +60,21 @@ describe('PricingPageComponent waitlist analytics', () => {
     expect(analytics.trackEvent).not.toHaveBeenCalledWith('waitlist_joined', jasmine.anything());
   });
 
-  it('reports waitlist_joined only after a successful API response', async () => {
+  it('does not report waitlist_joined when persistence reports failure', async () => {
+    spyOn(globalThis, 'fetch').and.resolveTo(new Response(
+      JSON.stringify({ success: false, error: 'persistence failed' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    ));
+
+    await component.joinWaitlist();
+
+    expect(component.waitlistState()).toBe('error');
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('waitlist_joined', jasmine.anything());
+  });
+
+  it('reports waitlist_joined only after a newly persisted subscription', async () => {
     const request = spyOn(globalThis, 'fetch').and.resolveTo(new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, alreadyJoined: false }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     ));
 
@@ -77,10 +91,23 @@ describe('PricingPageComponent waitlist analytics', () => {
     }));
   });
 
+  it('shows an already-joined state without reporting a duplicate conversion', async () => {
+    spyOn(globalThis, 'fetch').and.resolveTo(new Response(
+      JSON.stringify({ success: true, alreadyJoined: true }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    ));
+
+    await component.joinWaitlist();
+
+    expect(component.waitlistState()).toBe('already-joined');
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('waitlist_joined', jasmine.anything());
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('referral_waitlist_joined');
+  });
+
   it('persists the selected canonical plan interest in the existing waitlist request', async () => {
     (component as unknown as { desiredPlan: 'pro' }).desiredPlan = 'pro';
     const request = spyOn(globalThis, 'fetch').and.resolveTo(new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, alreadyJoined: false }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     ));
 

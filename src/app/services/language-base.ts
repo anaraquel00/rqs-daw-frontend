@@ -438,7 +438,7 @@ export const PT_TRANSLATIONS = {
     features: "DIREÇÃO DE RECURSOS", publicBeta: "BETA PÚBLICO", plannedAccess: "ACESSO PLANEJADO NOS PLANOS PAGOS", currentBetaAccess: "ACESSO ATUAL NO BETA",
     taxes: "Tributos aplicáveis, quando houver, serão informados antes da compra quando os planos pagos forem disponibilizados.", compareTitle: "BETA ATUAL VS. ACESSO PLANEJADO", compareIntro: "O acesso do Public Beta permanece separado da proposta de empacotamento dos planos pagos. Nenhum entitlement pago está ativo hoje.",
     feature: "Recurso", price: "Preço", fullMasters: "Full Masters", preview: "Preview", ab: "Comparação A/B", setlist: "Setlist Engine", uplink: "RQS Uplink", stems: "Separação de Stems", availableBeta: "Disponível durante o Public Beta", planned: "planejado",
-    waitlistTitle: "RECEBA O AVISO DE LANÇAMENTO.", waitlistIntro: "Use a waitlist já existente do RQS para receber avisos de disponibilidade. A preferência de plano ainda não é registrada.", emailLabel: "E-mail", emailPlaceholder: "voce@exemplo.com", sending: "ENTRANDO...", waitlistSuccess: "Você entrou na waitlist de lançamento do RQS.", waitlistError: "Não foi possível adicionar este e-mail à waitlist agora.", faqTitle: "FAQ",
+    waitlistTitle: "RECEBA O AVISO DE LANÇAMENTO.", waitlistIntro: "Entre na waitlist do RQS e registre o plano que você considera para o lançamento.", emailLabel: "E-mail", emailPlaceholder: "voce@exemplo.com", sending: "ENTRANDO...", waitlistSuccess: "Você entrou na waitlist de lançamento do RQS.", waitlistAlreadyJoined: "Você já está inscrito. Nenhuma preferência existente foi alterada.", managePreference: "ALTERAR PREFERÊNCIA NA CONTA", waitlistError: "Não foi possível adicionar este e-mail à waitlist agora.", faqTitle: "FAQ",
     freeTagline: "Explore o sistema.", masterTagline: "Finalize suas faixas.", plusTagline: "Construa seu workflow.", proTagline: "Use o Studio completo.", freeCurrentAccess: "ACESSO ATUAL DO BETA",
     freeItem1: "3 Full Masters no total", freeItem2: "Preview: comportamento atual do beta", freeItem3: "Comparação A/B onde já suportada", freeItem4: "Setlist, Uplink e Stems disponíveis durante o Public Beta",
     masterItem1: "Workflow MASTER", masterItem2: "Ferramentas de masterização", masterItem3: "Comparação A/B onde já suportada", plusItem1: "Tudo do MASTER", plusItem2: "BUILD / Setlist Engine", plusItem3: "DEPLOY / RQS Uplink", proItem1: "Tudo do PLUS", proItem2: "SPLIT / Separação de Stems", proItem3: "Workflow MASTER / SPLIT / BUILD / DEPLOY",
@@ -608,16 +608,25 @@ export const PT_TRANSLATIONS = {
   "Limite gratuito atingido",
 
 PRO_WAITLIST_NOTE:
-  "Entre na lista de lançamento do RQS PRO e seja avisado quando o plano estiver disponível.",
+  "Escolha entre MASTER, PLUS e PRO para registrar seu interesse nos planos de lançamento.",
+
+WAITLIST_PLAN_PROMPT:
+  "Selecione o plano que você considera:",
 
 PRO_WAITLIST_CTA:
-  "[ 🔔 ENTRAR NA LISTA DE LANÇAMENTO ]",
+  "[ 🔔 REGISTRAR INTERESSE ]",
 
 PRO_WAITLIST_JOINING:
   "[ SINCRONIZANDO... ]",
 
 PRO_WAITLIST_SUCCESS:
-  "Você está na lista de lançamento do RQS PRO.",
+  "Seu interesse foi registrado para o plano",
+
+WAITLIST_ALREADY_JOINED:
+  "Você já está inscrito. Altere sua preferência na sua conta.",
+
+WAITLIST_MANAGE_CTA:
+  "GERENCIAR PREFERÊNCIA",
 
 PRO_WAITLIST_ERROR:
   "Não foi possível entrar na lista agora. Tente novamente."
@@ -714,7 +723,7 @@ export const EN_TRANSLATIONS = {
   LANDING_PRO_STATUS: "LAUNCH PREVIEW",
   LANDING_PRO_CTA: "VIEW PRICING // PREVIEW",
   PRICING: {
-    eyebrow: "PUBLIC BETA // LAUNCH PRICING PREVIEW", title: "PRICING BUILT FOR INDEPENDENT ARTISTS.", subtitle: "Start free. Upgrade when RQS Studio becomes part of your workflow.", inactive: "Paid subscriptions are not active yet. Join the waitlist to be notified when plans become available.", previewLabel: "PLANNED LAUNCH PRICING", monthly: "/ month", openStudio: "OPEN RQS STUDIO", joinWaitlist: "JOIN WAITLIST", features: "FEATURE DIRECTION", publicBeta: "PUBLIC BETA", plannedAccess: "PLANNED PAID-PLAN ACCESS", currentBetaAccess: "CURRENT BETA ACCESS", taxes: "Taxes, where applicable, will be shown before purchase when paid plans become available.", compareTitle: "CURRENT BETA VS. PLANNED ACCESS", compareIntro: "Public Beta access remains separate from proposed paid-plan packaging. No paid entitlement is active today.", feature: "Feature", price: "Price", fullMasters: "Full Masters", preview: "Preview", ab: "A/B comparison", setlist: "Setlist Engine", uplink: "RQS Uplink", stems: "Stem Separation", availableBeta: "Available during Public Beta", planned: "planned", waitlistTitle: "GET LAUNCH NOTIFIED.", waitlistIntro: "Use the existing RQS waitlist to receive launch availability updates. Plan preference is not recorded yet.", emailLabel: "Email", emailPlaceholder: "you@example.com", sending: "JOINING...", waitlistSuccess: "You are on the RQS launch waitlist.", waitlistError: "We could not add this email to the waitlist right now.", faqTitle: "FAQ", freeTagline: "Explore the system.", masterTagline: "Finish your tracks.", plusTagline: "Build your workflow.", proTagline: "Run the full Studio.", freeCurrentAccess: "CURRENT BETA ACCESS", freeItem1: "3 Full Masters total", freeItem2: "Preview: current beta behavior", freeItem3: "A/B comparison where currently supported", freeItem4: "Setlist, Uplink and Stems available during Public Beta", masterItem1: "MASTER workflow", masterItem2: "Mastering tools", masterItem3: "A/B comparison where currently supported", plusItem1: "Everything in MASTER", plusItem2: "BUILD / Setlist Engine", plusItem3: "DEPLOY / RQS Uplink", proItem1: "Everything in PLUS", proItem2: "SPLIT / Stem Separation", proItem3: "MASTER / SPLIT / BUILD / DEPLOY workflow", independentArtists: "FOR INDEPENDENT ARTISTS", fullStudio: "FULL STUDIO", waitlistEyebrow: "WAITLIST // NO CHECKOUT", infoEyebrow: "RQS STUDIO // INFO",
+    eyebrow: "PUBLIC BETA // LAUNCH PRICING PREVIEW", title: "PRICING BUILT FOR INDEPENDENT ARTISTS.", subtitle: "Start free. Upgrade when RQS Studio becomes part of your workflow.", inactive: "Paid subscriptions are not active yet. Join the waitlist to be notified when plans become available.", previewLabel: "PLANNED LAUNCH PRICING", monthly: "/ month", openStudio: "OPEN RQS STUDIO", joinWaitlist: "JOIN WAITLIST", features: "FEATURE DIRECTION", publicBeta: "PUBLIC BETA", plannedAccess: "PLANNED PAID-PLAN ACCESS", currentBetaAccess: "CURRENT BETA ACCESS", taxes: "Taxes, where applicable, will be shown before purchase when paid plans become available.", compareTitle: "CURRENT BETA VS. PLANNED ACCESS", compareIntro: "Public Beta access remains separate from proposed paid-plan packaging. No paid entitlement is active today.", feature: "Feature", price: "Price", fullMasters: "Full Masters", preview: "Preview", ab: "A/B comparison", setlist: "Setlist Engine", uplink: "RQS Uplink", stems: "Stem Separation", availableBeta: "Available during Public Beta", planned: "planned", waitlistTitle: "GET LAUNCH NOTIFIED.", waitlistIntro: "Join the RQS waitlist and record the launch plan you are considering.", emailLabel: "Email", emailPlaceholder: "you@example.com", sending: "JOINING...", waitlistSuccess: "You are on the RQS launch waitlist.", waitlistAlreadyJoined: "You are already registered. No existing preference was changed.", managePreference: "CHANGE PREFERENCE IN ACCOUNT", waitlistError: "We could not add this email to the waitlist right now.", faqTitle: "FAQ", freeTagline: "Explore the system.", masterTagline: "Finish your tracks.", plusTagline: "Build your workflow.", proTagline: "Run the full Studio.", freeCurrentAccess: "CURRENT BETA ACCESS", freeItem1: "3 Full Masters total", freeItem2: "Preview: current beta behavior", freeItem3: "A/B comparison where currently supported", freeItem4: "Setlist, Uplink and Stems available during Public Beta", masterItem1: "MASTER workflow", masterItem2: "Mastering tools", masterItem3: "A/B comparison where currently supported", plusItem1: "Everything in MASTER", plusItem2: "BUILD / Setlist Engine", plusItem3: "DEPLOY / RQS Uplink", proItem1: "Everything in PLUS", proItem2: "SPLIT / Stem Separation", proItem3: "MASTER / SPLIT / BUILD / DEPLOY workflow", independentArtists: "FOR INDEPENDENT ARTISTS", fullStudio: "FULL STUDIO", waitlistEyebrow: "WAITLIST // NO CHECKOUT", infoEyebrow: "RQS STUDIO // INFO",
     faq: [
       { q: "Can I use RQS Studio for free?", a: "Yes. RQS Studio is currently in Public Beta. The Free experience includes the current beta mastering allowance, while several Studio modules remain available during the beta." },
       { q: "Are paid subscriptions active?", a: "No. Paid subscriptions, checkout and commercial entitlements are not active. The paid cards on this page are launch pricing previews only." },
@@ -882,16 +891,25 @@ export const EN_TRANSLATIONS = {
   "Free limit reached",
 
   PRO_WAITLIST_NOTE:
-  "Join the RQS PRO launch list and get notified when the plan becomes available.",
+  "Choose MASTER, PLUS or PRO to record your interest in a launch plan.",
+
+  WAITLIST_PLAN_PROMPT:
+  "Select the plan you are considering:",
 
   PRO_WAITLIST_CTA:
-  "[ 🔔 JOIN THE LAUNCH LIST ]",
+  "[ 🔔 RECORD INTEREST ]",
 
   PRO_WAITLIST_JOINING:
   "[ SYNCHRONIZING... ]",
 
   PRO_WAITLIST_SUCCESS:
-  "You are on the RQS PRO launch list.",
+  "Your interest was recorded for the plan",
+
+  WAITLIST_ALREADY_JOINED:
+  "You are already registered. Change your preference in your account.",
+
+  WAITLIST_MANAGE_CTA:
+  "MANAGE PREFERENCE",
 
   PRO_WAITLIST_ERROR:
   "Unable to join the list right now. Please try again."
@@ -990,7 +1008,7 @@ export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   LANDING_PRO_STATUS: "PODGLĄD PREMIERY",
   LANDING_PRO_CTA: "ZOBACZ CENY // PODGLĄD",
   PRICING: {
-    eyebrow: "PUBLICZNA BETA // PODGLĄD CEN PREMIEROWYCH", title: "CENNIK DLA ARTYSTÓW NIEZALEŻNYCH.", subtitle: "Zacznij za darmo. Przejdź na wyższy plan, gdy RQS Studio stanie się częścią Twojego workflow.", inactive: "Płatne subskrypcje nie są jeszcze aktywne. Dołącz do listy oczekujących, aby otrzymać informację o uruchomieniu planów.", previewLabel: "PLANOWANE CENY PREMIEROWE", monthly: "/ miesiąc", openStudio: "OTWÓRZ RQS STUDIO", joinWaitlist: "DOŁĄCZ DO LISTY", features: "KIERUNEK FUNKCJI", publicBeta: "PUBLICZNA BETA", plannedAccess: "PLANOWANY DOSTĘP W PŁATNYCH PLANACH", currentBetaAccess: "OBECNY DOSTĘP W BETA", taxes: "Podatki, jeśli będą miały zastosowanie, zostaną pokazane przed zakupem, gdy płatne plany staną się dostępne.", compareTitle: "OBECNA BETA VS. PLANOWANY DOSTĘP", compareIntro: "Dostęp w Public Beta pozostaje oddzielony od planowanego podziału funkcji w płatnych planach. Obecnie żadne płatne uprawnienia nie są aktywne.", feature: "Funkcja", price: "Cena", fullMasters: "Pełne mastery", preview: "Preview", ab: "Porównanie A/B", setlist: "Setlist Engine", uplink: "RQS Uplink", stems: "Separacja stemów", availableBeta: "Dostępne podczas Public Beta", planned: "planowane", waitlistTitle: "OTRZYMAJ POWIADOMIENIE O PREMIERZE.", waitlistIntro: "Skorzystaj z istniejącej listy oczekujących RQS, aby otrzymywać informacje o dostępności. Preferencja planu nie jest jeszcze zapisywana.", emailLabel: "E-mail", emailPlaceholder: "ty@example.com", sending: "DODAWANIE...", waitlistSuccess: "Jesteś na liście oczekujących na premierę RQS.", waitlistError: "Nie udało się teraz dodać tego adresu e-mail do listy.", faqTitle: "FAQ", freeTagline: "Poznaj system.", masterTagline: "Dokończ swoje utwory.", plusTagline: "Zbuduj swój workflow.", proTagline: "Korzystaj z pełnego Studio.", freeCurrentAccess: "OBECNY DOSTĘP W BETA", freeItem1: "Łącznie 3 pełne mastery", freeItem2: "Preview: obecne działanie wersji beta", freeItem3: "Porównanie A/B tam, gdzie jest obecnie obsługiwane", freeItem4: "Setlist, Uplink i Stems dostępne podczas Public Beta", masterItem1: "Workflow MASTER", masterItem2: "Narzędzia masteringowe", masterItem3: "Porównanie A/B tam, gdzie jest obecnie obsługiwane", plusItem1: "Wszystko z MASTER", plusItem2: "BUILD / Setlist Engine", plusItem3: "DEPLOY / RQS Uplink", proItem1: "Wszystko z PLUS", proItem2: "SPLIT / Separacja stemów", proItem3: "Workflow MASTER / SPLIT / BUILD / DEPLOY", independentArtists: "DLA NIEZALEŻNYCH ARTYSTÓW", fullStudio: "PEŁNE STUDIO", waitlistEyebrow: "LISTA OCZEKUJĄCYCH // BEZ CHECKOUTU", infoEyebrow: "RQS STUDIO // INFORMACJE",
+    eyebrow: "PUBLICZNA BETA // PODGLĄD CEN PREMIEROWYCH", title: "CENNIK DLA ARTYSTÓW NIEZALEŻNYCH.", subtitle: "Zacznij za darmo. Przejdź na wyższy plan, gdy RQS Studio stanie się częścią Twojego workflow.", inactive: "Płatne subskrypcje nie są jeszcze aktywne. Dołącz do listy oczekujących, aby otrzymać informację o uruchomieniu planów.", previewLabel: "PLANOWANE CENY PREMIEROWE", monthly: "/ miesiąc", openStudio: "OTWÓRZ RQS STUDIO", joinWaitlist: "DOŁĄCZ DO LISTY", features: "KIERUNEK FUNKCJI", publicBeta: "PUBLICZNA BETA", plannedAccess: "PLANOWANY DOSTĘP W PŁATNYCH PLANACH", currentBetaAccess: "OBECNY DOSTĘP W BETA", taxes: "Podatki, jeśli będą miały zastosowanie, zostaną pokazane przed zakupem, gdy płatne plany staną się dostępne.", compareTitle: "OBECNA BETA VS. PLANOWANY DOSTĘP", compareIntro: "Dostęp w Public Beta pozostaje oddzielony od planowanego podziału funkcji w płatnych planach. Obecnie żadne płatne uprawnienia nie są aktywne.", feature: "Funkcja", price: "Cena", fullMasters: "Pełne mastery", preview: "Preview", ab: "Porównanie A/B", setlist: "Setlist Engine", uplink: "RQS Uplink", stems: "Separacja stemów", availableBeta: "Dostępne podczas Public Beta", planned: "planowane", waitlistTitle: "OTRZYMAJ POWIADOMIENIE O PREMIERZE.", waitlistIntro: "Dołącz do listy oczekujących RQS i zapisz plan, który rozważasz na premierę.", emailLabel: "E-mail", emailPlaceholder: "ty@example.com", sending: "DODAWANIE...", waitlistSuccess: "Jesteś na liście oczekujących na premierę RQS.", waitlistAlreadyJoined: "Jesteś już na liście. Istniejąca preferencja nie została zmieniona.", managePreference: "ZMIEŃ PREFERENCJĘ NA KONCIE", waitlistError: "Nie udało się teraz dodać tego adresu e-mail do listy.", faqTitle: "FAQ", freeTagline: "Poznaj system.", masterTagline: "Dokończ swoje utwory.", plusTagline: "Zbuduj swój workflow.", proTagline: "Korzystaj z pełnego Studio.", freeCurrentAccess: "OBECNY DOSTĘP W BETA", freeItem1: "Łącznie 3 pełne mastery", freeItem2: "Preview: obecne działanie wersji beta", freeItem3: "Porównanie A/B tam, gdzie jest obecnie obsługiwane", freeItem4: "Setlist, Uplink i Stems dostępne podczas Public Beta", masterItem1: "Workflow MASTER", masterItem2: "Narzędzia masteringowe", masterItem3: "Porównanie A/B tam, gdzie jest obecnie obsługiwane", plusItem1: "Wszystko z MASTER", plusItem2: "BUILD / Setlist Engine", plusItem3: "DEPLOY / RQS Uplink", proItem1: "Wszystko z PLUS", proItem2: "SPLIT / Separacja stemów", proItem3: "Workflow MASTER / SPLIT / BUILD / DEPLOY", independentArtists: "DLA NIEZALEŻNYCH ARTYSTÓW", fullStudio: "PEŁNE STUDIO", waitlistEyebrow: "LISTA OCZEKUJĄCYCH // BEZ CHECKOUTU", infoEyebrow: "RQS STUDIO // INFORMACJE",
     faq: [
       { q: "Czy mogę korzystać z RQS Studio za darmo?", a: "Tak. RQS Studio jest obecnie w Public Beta. Plan Free obejmuje aktualny limit masteringu w wersji beta, a kilka modułów Studio pozostaje dostępnych podczas testów." },
       { q: "Czy płatne subskrypcje są aktywne?", a: "Nie. Płatne subskrypcje, checkout i komercyjne uprawnienia nie są aktywne. Płatne karty na tej stronie są wyłącznie podglądem cen premierowych." },
@@ -1137,9 +1155,12 @@ HERO_TITLE: 'NADAJ SWOJEJ MUZYCE GOTOWE BRZMIENIE.',
   UPLINK_CREATE_FAILED: 'Nie udało się teraz utworzyć linku. Spróbuj ponownie.',
   UPLINK_LOAD_FAILED: 'Nie udało się teraz wczytać linków. Spróbuj ponownie.',
   MASTER_LIMIT_REACHED: 'Osiągnięto bezpłatny limit',
-  PRO_WAITLIST_NOTE: 'Dołącz do listy startowej RQS PRO i otrzymaj powiadomienie, gdy plan będzie dostępny.',
-  PRO_WAITLIST_CTA: '[ 🔔 DOŁĄCZ DO LISTY STARTOWEJ ]',
+  PRO_WAITLIST_NOTE: 'Wybierz MASTER, PLUS lub PRO, aby zapisać zainteresowanie planem premierowym.',
+  WAITLIST_PLAN_PROMPT: 'Wybierz plan, który rozważasz:',
+  PRO_WAITLIST_CTA: '[ 🔔 ZAPISZ ZAINTERESOWANIE ]',
   PRO_WAITLIST_JOINING: '[ SYNCHRONIZACJA... ]',
-  PRO_WAITLIST_SUCCESS: 'Jesteś na liście startowej RQS PRO.',
+  PRO_WAITLIST_SUCCESS: 'Zapisano zainteresowanie planem',
+  WAITLIST_ALREADY_JOINED: 'Jesteś już na liście. Zmień preferencję na swoim koncie.',
+  WAITLIST_MANAGE_CTA: 'ZARZĄDZAJ PREFERENCJĄ',
   PRO_WAITLIST_ERROR: 'Nie udało się teraz dołączyć do listy. Spróbuj ponownie.',
 };

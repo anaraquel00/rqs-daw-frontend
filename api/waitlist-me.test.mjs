@@ -24,7 +24,7 @@ function response(status, body = {}) {
   return { ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) };
 }
 
-async function invoke(method, body, fetchImpl) {
+async function invoke(method, body, fetchImpl, headers = { authorization: 'Bearer verified-user' }) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = fetchImpl;
   const result = { statusCode: 0, body: null };
@@ -35,7 +35,7 @@ async function invoke(method, body, fetchImpl) {
     end() {},
   };
   try {
-    await handler({ method, headers: { authorization: 'Bearer verified-user' }, body }, res);
+    await handler({ method, headers, body }, res);
     return result;
   } finally {
     globalThis.fetch = originalFetch;
@@ -44,6 +44,18 @@ async function invoke(method, body, fetchImpl) {
 
 test.afterEach(() => {
   setAuthenticatedRequestContextProviderForTests(null);
+});
+
+test('a request without authentication receives 401 and never reaches Firestore', async () => {
+  setAuthenticatedRequestContextProviderForTests(async () => null);
+  let called = false;
+  const result = await invoke('GET', {}, async () => {
+    called = true;
+    return response(500);
+  }, {});
+
+  assert.equal(result.statusCode, 401);
+  assert.equal(called, false);
 });
 
 test('verified ownership is derived exclusively from the authenticated normalized email', async () => {

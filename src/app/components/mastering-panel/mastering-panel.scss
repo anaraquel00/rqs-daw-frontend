@@ -522,6 +522,24 @@
   line-height: 1.5;
 }
 
+.waitlist-plan-selection { margin-bottom: 12px; }
+
+.waitlist-plan-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.waitlist-plan-options .btn-pro-waitlist {
+  padding: 9px 8px;
+  font-size: 11px;
+}
+
+.waitlist-plan-options .selected {
+  background: #00f0ff;
+  color: #000;
+}
+
 .btn-pro-waitlist {
   width: 100%;
   padding: 12px 16px;
@@ -554,6 +572,8 @@
   background: rgba(0, 255, 140, 0.05);
   font-size: 12px;
 }
+
+.waitlist-existing a { display: inline-block; margin-top: 7px; color: #00f0ff; font-weight: 800; }
 
 .waitlist-error {
   margin-top: 10px;
@@ -776,7 +796,9 @@
   .pro-limit-header h4 { color: var(--studio-text); }
   .pro-limit-header p { color: var(--studio-text-secondary); }
   .btn-pro-waitlist { border-color: var(--studio-cyan-strong); background: var(--studio-cyan-soft); color: var(--studio-cyan-strong); }
+  .waitlist-plan-options .selected { background: var(--studio-cyan-strong); color: #fff; }
   .waitlist-success { border-color: var(--studio-success-border); background: var(--studio-success-bg); color: var(--studio-success-text); }
+  .waitlist-existing a { color: var(--studio-cyan-strong); }
   .waitlist-error { border-color: var(--studio-error-border); background: var(--studio-error-bg); color: var(--studio-error-text); }
   .progress-step { border-color: var(--studio-border); color: var(--studio-text-secondary); background: var(--studio-card); }
   .progress-step.done { border-color: var(--studio-success-border); color: var(--studio-success-text); background: var(--studio-success-bg); }

@@ -166,7 +166,14 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
         },
         {
           provide: AuthService,
-          useValue: { canMaster, isLoggedIn, isPremium, remainingMasters, requestSignIn },
+          useValue: {
+            canMaster,
+            isLoggedIn,
+            isPremium,
+            remainingMasters,
+            requestSignIn,
+            session: () => ({ user: { email: 'artist@example.com' } }),
+          },
         },
       ],
     });
@@ -419,6 +426,48 @@ it('sends the selected source start with the Preview command', () => {
 
     isPremium.set(true);
     expect(panel.shouldShowProLimitCard()).toBeFalse();
+  });
+
+  it('requires an explicit launch plan before submitting the exhausted-plan waitlist CTA', async () => {
+    const request = spyOn(globalThis, 'fetch');
+
+    await panel.joinPlanWaitlist();
+
+    expect(request).not.toHaveBeenCalled();
+    expect(panel.waitlistError).toBeTrue();
+    expect(panel.selectedWaitlistPlan()).toBeNull();
+  });
+
+  it('persists exactly the launch plan selected in the exhausted-plan CTA', async () => {
+    panel.selectWaitlistPlan('plus');
+    const request = spyOn(globalThis, 'fetch').and.resolveTo(new Response(
+      JSON.stringify({ success: true, alreadyJoined: false }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    ));
+
+    await panel.joinPlanWaitlist();
+
+    const options = request.calls.mostRecent().args[1] as RequestInit;
+    expect(JSON.parse(String(options.body))).toEqual(jasmine.objectContaining({
+      email: 'artist@example.com',
+      plan_interest: 'plus',
+    }));
+    expect(panel.joinedWaitlist).toBeTrue();
+    expect(panel.waitlistAlreadyJoined).toBeFalse();
+  });
+
+  it('does not claim a selected plan was saved for an existing waitlist entry', async () => {
+    panel.selectWaitlistPlan('master');
+    spyOn(globalThis, 'fetch').and.resolveTo(new Response(
+      JSON.stringify({ success: true, alreadyJoined: true }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    ));
+
+    await panel.joinPlanWaitlist();
+
+    expect(panel.joinedWaitlist).toBeFalse();
+    expect(panel.waitlistAlreadyJoined).toBeTrue();
+    expect(panel.waitlistError).toBeFalse();
   });
 
   it('invalidates stale results and resets audition when the Preview range moves', () => {

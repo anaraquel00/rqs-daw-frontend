@@ -25,7 +25,7 @@ function adminContext(role = 'commercial_admin', active = true) {
   };
 }
 
-async function invoke(handler, fetchImpl = globalThis.fetch) {
+async function invoke(handler, fetchImpl = globalThis.fetch, headers = { authorization: 'Bearer admin' }) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = fetchImpl;
   const result = { statusCode: 0, body: null };
@@ -36,7 +36,7 @@ async function invoke(handler, fetchImpl = globalThis.fetch) {
     end() {},
   };
   try {
-    await handler({ method: 'GET', headers: { authorization: 'Bearer admin' } }, res);
+    await handler({ method: 'GET', headers }, res);
     return result;
   } finally {
     globalThis.fetch = originalFetch;
@@ -44,6 +44,14 @@ async function invoke(handler, fetchImpl = globalThis.fetch) {
 }
 
 test.afterEach(() => setAuthenticatedRequestContextProviderForTests(null));
+
+test('anonymous requests cannot establish a commercial admin session', async () => {
+  setAuthenticatedRequestContextProviderForTests(async () => null);
+  const result = await invoke(sessionHandler, globalThis.fetch, {});
+
+  assert.equal(result.statusCode, 403);
+  assert.equal(result.body.admin, false);
+});
 
 test('commercial admin session is authorized separately from paid-plan roles', async () => {
   setAuthenticatedRequestContextProviderForTests(async () => adminContext());
@@ -96,12 +104,36 @@ test('non-admin requests cannot reach Firestore aggregations', async () => {
   assert.equal(firestoreCalled, false);
 });
 
+test('an inactive commercial membership cannot reach Firestore aggregations', async () => {
+  setAuthenticatedRequestContextProviderForTests(async () => adminContext('commercial_admin', false));
+  let firestoreCalled = false;
+  const result = await invoke(summaryHandler, async () => {
+    firestoreCalled = true;
+    return response(500);
+  });
+
+  assert.equal(result.statusCode, 403);
+  assert.equal(firestoreCalled, false);
+});
+
 test('proposed Supabase migration enforces RLS and grants clients read-only own membership', async () => {
   const sql = await readFile(new URL('../supabase/review/studio_admin_memberships_migration.sql', import.meta.url), 'utf8');
+  const rlsTests = await readFile(new URL('../supabase/review/studio_admin_memberships_tests.sql', import.meta.url), 'utf8');
+  assert.doesNotMatch(sql, /create table if not exists/i);
+  assert.match(sql, /STUDIO_ADMIN_MEMBERSHIPS_ALREADY_EXISTS/);
   assert.match(sql, /enable row level security/i);
   assert.match(sql, /force row level security/i);
   assert.match(sql, /grant select on table public\.studio_admin_memberships to authenticated/i);
+  assert.match(sql, /grant select, insert, update, delete on table public\.studio_admin_memberships to service_role/i);
   assert.doesNotMatch(sql, /grant\s+(insert|update|delete)[^;]*authenticated/i);
   assert.match(sql, /\(select auth\.uid\(\)\) = user_id and active = true/i);
   assert.match(sql, /check \(role in \('commercial_admin'\)\)/i);
+  assert.match(rlsTests, /insert into auth\.users/i);
+  assert.match(rlsTests, /an authenticated user sees only their own active membership/i);
+  assert.match(rlsTests, /an inactive membership is not visible/i);
+  assert.match(rlsTests, /anonymous access is rejected/i);
+  assert.match(rlsTests, /service_role has explicit CRUD grants/i);
+  for (const operation of ['insert', 'update', 'delete']) {
+    assert.match(rlsTests, new RegExp(`authenticated cannot ${operation} memberships`, 'i'));
+  }
 });
