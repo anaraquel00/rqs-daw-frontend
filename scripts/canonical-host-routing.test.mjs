@@ -63,6 +63,17 @@ test('unmatched go paths still reach the existing Supabase resolver', async () =
   }]);
 });
 
+test('admin route is excluded from indexing at the edge', async () => {
+  const vercelConfig = JSON.parse(await readProjectFile('vercel.json'));
+  const adminHeader = vercelConfig.headers?.find((entry) => entry.source === '/admin');
+
+  assert.ok(adminHeader, '/admin must have an explicit edge noindex header');
+  assert.deepEqual(adminHeader.headers, [{
+    key: 'X-Robots-Tag',
+    value: 'noindex, nofollow, noarchive',
+  }]);
+});
+
 test('reserved Uplink slugs cover router namespaces and infrastructure paths', async () => {
   const [{ paths, studioSurfaces }, migrationSource] = await Promise.all([
     actualStudioRoutes(),

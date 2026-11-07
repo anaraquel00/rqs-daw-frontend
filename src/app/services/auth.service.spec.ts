@@ -93,6 +93,20 @@ describe('AuthService OAuth and Magic Link', () => {
     });
   });
 
+  it('preserves the guarded Commercial Admin return path through OAuth', async () => {
+    const signIn = spyOn(service.getSupabaseClient().auth, 'signInWithOAuth')
+      .and.resolveTo({ data: {}, error: null } as never);
+
+    service.requestSignInForPath('/admin', 'providers');
+    await service.loginWithProvider('google');
+
+    expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBe('/admin');
+    expect(signIn).toHaveBeenCalledOnceWith({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/admin` },
+    });
+  });
+
   it('preserves allowlisted paid-traffic attribution through OAuth return', async () => {
     window.history.replaceState({}, '', '/app/master?gclid=click-123&utm_source=google&utm_campaign=master-search&access_token=secret');
     const signIn = spyOn(service.getSupabaseClient().auth, 'signInWithOAuth').and.resolveTo({ data: {}, error: null } as never);

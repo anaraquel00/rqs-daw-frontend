@@ -1,0 +1,24 @@
+<main class="admin-shell">
+  <a routerLink="/app">← {{ copy().back }}</a>
+  <header>
+    <span>{{ copy().eyebrow }}</span>
+    <h1>{{ copy().title }}</h1>
+    <p>{{ copy().description }}</p>
+  </header>
+
+  @if (loading()) {
+    <p aria-live="polite">…</p>
+  } @else if (failed()) {
+    <p class="error" role="alert">{{ copy().error }}</p>
+  } @else if (summary(); as data) {
+    <section class="stats" aria-label="Waitlist plan interest">
+      <article><span>{{ copy().total }}</span><strong>{{ data.total }}</strong></article>
+      <article><span>MASTER</span><strong>{{ data.master }}</strong></article>
+      <article><span>PLUS</span><strong>{{ data.plus }}</strong></article>
+      <article><span>PRO</span><strong>{{ data.pro }}</strong></article>
+      <article><span>{{ copy().undecided }}</span><strong>{{ data.undecided }}</strong></article>
+      <article><span>{{ copy().legacy }}</span><strong>{{ data.legacy_unset }}</strong></article>
+    </section>
+    <p class="generated">{{ copy().generated }}: {{ data.generated_at }}</p>
+  }
+</main>
