@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import handler from './waitlist/me.js';
 import { waitlistDocumentId } from './_referral-core.mjs';
 import { setAuthenticatedRequestContextProviderForTests, setFirestoreAccessTokenProviderForTests } from './_referral-http.mjs';
+import { configureReferralTestEnvironment } from './_referral-test-environment.mjs';
 
-process.env.GCP_FIRESTORE_DATABASE_ID = 'rqs-referral-preview';
+configureReferralTestEnvironment('production');
 setFirestoreAccessTokenProviderForTests(async () => 'short-lived-test-token');
 
 const verifiedUser = {

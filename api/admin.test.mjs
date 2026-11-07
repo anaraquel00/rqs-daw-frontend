@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises';
 import sessionHandler from './admin/session.js';
 import summaryHandler from './admin/waitlist/summary.js';
 import { setAuthenticatedRequestContextProviderForTests, setFirestoreAccessTokenProviderForTests } from './_referral-http.mjs';
+import { configureReferralTestEnvironment } from './_referral-test-environment.mjs';
 
-process.env.GCP_FIRESTORE_DATABASE_ID = 'rqs-referral-preview';
+configureReferralTestEnvironment('production');
 setFirestoreAccessTokenProviderForTests(async () => 'short-lived-test-token');
 
 function response(status, body = {}) {

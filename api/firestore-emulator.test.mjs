@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDocument, countDocuments, getDocument, updateDocument } from './_referral-http.mjs';
+import { configureReferralTestEnvironment } from './_referral-test-environment.mjs';
 
-process.env.GCP_FIRESTORE_DATABASE_ID = 'rqs-referral-preview';
+configureReferralTestEnvironment('production');
 
 const emulatorTest = process.env.FIRESTORE_EMULATOR_HOST ? test : test.skip;
 

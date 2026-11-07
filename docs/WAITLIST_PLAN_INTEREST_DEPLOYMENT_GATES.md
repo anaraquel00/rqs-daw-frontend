@@ -81,6 +81,19 @@ Proposta de código posterior:
   `founding_referral_participants`;
 - o emulador só é permitido com `NODE_TEST_CONTEXT`.
 
+A implementação local usa `RQS_DATA_ENVIRONMENT` como seletor server-only e valida o conjunto
+completo antes de solicitar credenciais OIDC ou executar uma operação:
+
+```text
+staging    -> rqs-referral-staging / rqs-referral-staging provider e service account
+production -> rqs-referral-preview / rqs-referral-preview provider e service account
+```
+
+Também são validados o project ID `raquel-synths-platform`, project number, audience derivada do
+provider, `VERCEL_TARGET_ENV` e `VERCEL_ENV`. A compatibilidade temporária com a configuração
+Production publicada aceita ausência de `RQS_DATA_ENVIRONMENT` somente quando o contexto Vercel é
+inequivocamente `production`; Preview/Staging sem a variável falha fechado.
+
 Testes obrigatórios devem rejeitar: variável ausente, ambiente desconhecido, `(default)`, database
 Production em Staging, database Staging em Production e collection fora da allowlist.
 
@@ -94,6 +107,13 @@ Escolher uma das opções, sem fallback automático:
 No modo `noop`, a API registra explicitamente que a notificação foi suprimida sem chamar Brevo. Se
 o ambiente for Staging e o modo/lista de teste não estiver configurado, a integração deve falhar
 antes da inscrição, nunca reutilizar `BREVO_WAITLIST_LIST_ID` de Production.
+
+A implementação local restringe `noop` a Staging e `brevo` a Production. O modo Production sem a
+nova variável preserva temporariamente o comportamento publicado (`brevo`), mas exige chave e list
+ID completos antes da escrita Firestore. `noop`, valores desconhecidos e configuração incompleta
+falham antes da inscrição. O endpoint `/api/contact` não compartilha esse seletor: sem sua própria
+configuração Brevo ele retorna erro antes de qualquer escrita ou chamada externa, evitando que um
+Preview herde implicitamente o modo da waitlist.
 
 ## Gate 6 — variáveis Vercel restritas à branch
 
