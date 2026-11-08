@@ -28,7 +28,14 @@
     <p class="eyebrow">{{ copy().eyebrow }}</p>
     <h1>{{ copy().title }}</h1>
     <p class="hero-subtitle">{{ copy().subtitle }}</p>
-    <div class="beta-notice">{{ copy().inactive }}</div>
+    <div class="beta-notice">
+      <div class="beta-notice-title">
+        <span class="beta-notice-icon" aria-hidden="true">📅</span>
+        <strong>{{ copy().launchBannerTitle }}</strong>
+      </div>
+      <p class="beta-notice-body">{{ copy().launchBannerBody }}</p>
+      <p class="beta-notice-support">{{ copy().launchBannerSupport }}</p>
+    </div>
 
     <div class="currency-control" aria-label="Pricing currency">
       <span>CURRENCY</span>
