@@ -22,7 +22,7 @@ export const routes: Routes = [
   },
   {
     path: 'studio/pitch',
-    redirectTo: 'pitch',
+    redirectTo: 'app/pitch',
     pathMatch: 'full'
   },
   {
@@ -56,7 +56,8 @@ export const routes: Routes = [
   },
   {
     path: 'pitch',
-    loadChildren: () => import('./studio/studio.routes').then(m => m.PITCH_ROUTES)
+    redirectTo: 'app/pitch',
+    pathMatch: 'full'
   },
   {
     path: 'admin',

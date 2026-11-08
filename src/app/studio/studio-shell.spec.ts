@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { StudioShellComponent } from './studio-shell';
-import { PITCH_ROUTES, STUDIO_ROUTES } from './studio.routes';
+import { STUDIO_ROUTES } from './studio.routes';
 import { AuthService } from '../services/auth.service';
 import { LanguageService } from '../services/language.service';
 import { CookieConsentService } from '../services/cookie-consent.service';
@@ -37,7 +37,10 @@ describe('Studio V2 shell integration', () => {
     requestSignIn.calls.reset();
     requestSignInForPath.calls.reset();
     TestBed.configureTestingModule({ providers: [
-      provideRouter([{ path: 'app', children: STUDIO_ROUTES }, { path: 'pitch', children: PITCH_ROUTES }]),
+      provideRouter([
+        { path: 'app', children: STUDIO_ROUTES },
+        { path: 'pitch', redirectTo: 'app/pitch', pathMatch: 'full' },
+      ]),
       { provide: AuthService, useValue: {
         session,
         isLoggedIn,
@@ -97,24 +100,28 @@ describe('Studio V2 shell integration', () => {
     expect(root.querySelector('footer')).not.toBeNull();
     expect(root.querySelector('app-upload-zone')).toBeNull();
   });
-  it('uses canonical /app links plus the first-class /pitch route throughout the shell', () => {
+  it('uses canonical /app links for all four operational modules', () => {
     const links = Array.from(harness.routeNativeElement!.querySelectorAll('a[href]')) as HTMLAnchorElement[];
-    const internalStudioLinks = links.map(link => link.getAttribute('href')).filter(path => path?.startsWith('/app'));
-    expect(internalStudioLinks.length).toBeGreaterThan(0);
-    expect(links.some(link => link.getAttribute('href') === '/pitch')).toBeTrue();
-    expect(links.some(link => link.getAttribute('href')?.startsWith('/studio'))).toBeFalse();
+    const hrefs = links.map(link => link.getAttribute('href'));
+
+    for (const path of ['/app/master', '/app/pitch', '/app/build', '/app/uplink']) {
+      expect(hrefs).withContext(path).toContain(path);
+    }
+
+    expect(hrefs).not.toContain('/pitch');
+    expect(hrefs.some(path => path?.startsWith('/studio'))).toBeFalse();
   });
   it('opens each module through the selector and retains only one visible workspace', async () => {
     for (const name of ['master', 'pitch', 'build', 'uplink']) {
       await harness.navigateByUrl('/app');
       (harness.routeNativeElement!.querySelector(`#module-${name}`) as HTMLAnchorElement).click();
       await harness.fixture.whenStable(); harness.detectChanges();
-      expect(TestBed.inject(Router).url).toBe(name === 'pitch' ? '/pitch' : `/app/${name}`);
+      expect(TestBed.inject(Router).url).toBe(`/app/${name}`);
       expect(harness.routeNativeElement!.querySelectorAll('section:not([hidden])').length).toBe(1);
       expect(harness.routeNativeElement!.querySelector(`section[aria-label="${name.toUpperCase()}"]`)).not.toBeNull();
     }
   });
-  it('renders the first-class PITCH route with the dedicated upload workspace', async () => {
+  it('renders canonical /app/pitch and keeps the legacy /pitch alias compatible', async () => {
     await harness.navigateByUrl('/pitch?analysis=00000000-0000-4000-8000-000000000040');
     harness.detectChanges();
 
@@ -124,7 +131,8 @@ describe('Studio V2 shell integration', () => {
 
     expect(pitchSection).not.toBeNull();
     expect(upload?.workspace).toBe('pitch');
-    expect(TestBed.inject(Router).url).toContain('/pitch?analysis=');
+    expect(TestBed.inject(Router).url).toContain('/app/pitch');
+    expect(TestBed.inject(Router).url).toContain('analysis=00000000-0000-4000-8000-000000000040');
   });
   it('preserves the MASTER instance and local input across selector and BUILD navigation', async () => {
     await harness.navigateByUrl('/app/master');
@@ -138,17 +146,49 @@ describe('Studio V2 shell integration', () => {
     expect(harness.routeNativeElement!.querySelector('input')).toBe(source);
     expect(source.value).toBe('user-selected-file');
   });
+
+  it('preserves the same MASTER instance across PITCH, BUILD and UPLINK navigation', async () => {
+    await harness.navigateByUrl('/app/master');
+
+    const source = harness.routeNativeElement!.querySelector(
+      'section[aria-label="MASTER"] input'
+    ) as HTMLInputElement;
+
+    source.value = 'persistent-master-audio';
+
+    for (const module of ['pitch', 'build', 'uplink']) {
+      await harness.navigateByUrl(`/app/${module}`);
+      harness.detectChanges();
+
+      expect(source.closest('section')!.hidden)
+        .withContext(module)
+        .toBeTrue();
+      expect(source.closest('section')!.hasAttribute('inert'))
+        .withContext(module)
+        .toBeTrue();
+    }
+
+    await harness.navigateByUrl('/app/master');
+    harness.detectChanges();
+
+    const restored = harness.routeNativeElement!.querySelector(
+      'section[aria-label="MASTER"] input'
+    ) as HTMLInputElement;
+
+    expect(restored).toBe(source);
+    expect(restored.value).toBe('persistent-master-audio');
+  });
   it('keeps PITCH protected for unauthenticated users', async () => {
     session.set(null);
     harness.detectChanges();
 
-    await harness.navigateByUrl('/pitch');
+    await harness.navigateByUrl('/app/pitch');
     harness.detectChanges();
 
     expect(TestBed.inject(Router).url).toBe('/app');
     expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).toBeNull();
     expect(harness.routeNativeElement!.querySelector('input[type=file]')).toBeNull();
-    expect(requestSignInForPath).toHaveBeenCalledWith('/pitch', 'providers');
+    expect(requestSignInForPath).toHaveBeenCalledWith('/app/pitch', 'providers');
   });
 
   it('lets unauthenticated users enter MASTER without opening Auth UX', async () => {
@@ -165,7 +205,7 @@ describe('Studio V2 shell integration', () => {
     expect(requestSignIn).not.toHaveBeenCalled();
   });
   it('removes PITCH immediately and redirects when the active session signs out', async () => {
-    await harness.navigateByUrl('/pitch');
+    await harness.navigateByUrl('/app/pitch');
     harness.detectChanges();
     expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).not.toBeNull();
 
@@ -179,14 +219,14 @@ describe('Studio V2 shell integration', () => {
   });
   it('allows PITCH again after authentication is restored', async () => {
     session.set(null);
-    await harness.navigateByUrl('/pitch');
+    await harness.navigateByUrl('/app/pitch');
     expect(TestBed.inject(Router).url).toBe('/app');
 
     session.set({ user: { id: 'owner-a', email: 'owner@example.invalid' } });
     harness.detectChanges();
-    await harness.navigateByUrl('/pitch');
+    await harness.navigateByUrl('/app/pitch');
     harness.detectChanges();
-    expect(TestBed.inject(Router).url).toBe('/pitch');
+    expect(TestBed.inject(Router).url).toBe('/app/pitch');
     expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).not.toBeNull();
   });
   it('clears retained engine views at a user-to-user identity boundary', async () => {

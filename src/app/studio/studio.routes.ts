@@ -23,17 +23,3 @@ export const STUDIO_ROUTES: Routes = [{
   ],
 }];
 
-export const PITCH_ROUTES: Routes = [{
-  path: '', component: StudioShellComponent,
-  children: [
-    {
-      path: '',
-      pathMatch: 'full',
-      component: StudioRouteSurface,
-      data: { surface: 'pitch' },
-      title: 'RQS Studio — PITCH',
-      canActivate: [studioAuthGuard],
-    },
-    { path: '**', redirectTo: '' },
-  ],
-}];

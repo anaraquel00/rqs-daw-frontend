@@ -133,7 +133,7 @@
       <h3>{{ pitchHandoff().title }}</h3>
       <p>{{ pitchHandoff().body }}</p>
     </div>
-    <a [routerLink]="['/pitch']" [queryParams]="{ analysis: analysisId }">{{ pitchHandoff().cta }}</a>
+    <a [routerLink]="['/app/pitch']" [queryParams]="{ analysis: analysisId }">{{ pitchHandoff().cta }}</a>
   </section>
 
   <ng-container *ngIf="originalFile">

@@ -18,9 +18,7 @@ export function studioSeoConfig(surface: StudioSurface, currentLang: UiLanguage)
   const isFr = currentLang === 'fr';
   const url = surface === 'home'
     ? APP_URL
-    : surface === 'pitch'
-      ? 'https://studio.raquelsynths.com/pitch'
-      : APP_URL + '/' + surface;
+    : APP_URL + '/' + surface;
 
   if (surface === 'home') {
     const title = isPt
