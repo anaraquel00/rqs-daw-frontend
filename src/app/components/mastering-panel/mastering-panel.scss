@@ -1183,6 +1183,26 @@
   text-align: right;
 }
 
+.master-section-disclosure > summary .section-chevron {
+  flex: 0 0 auto;
+  width: 1em;
+  color: currentColor;
+  font-size: .9em;
+  line-height: 1;
+}
+
+.master-section-disclosure > summary .section-chevron::before {
+  content: '▶';
+}
+
+.master-section-disclosure[open] > summary .section-chevron::before {
+  content: '▼';
+}
+
+.master-section-disclosure > summary > small {
+  margin-left: auto;
+}
+
 .master-section-disclosure[open] > summary {
   margin-bottom: 12px;
   border-bottom: 1px solid rgba(0, 240, 255, 0.08);

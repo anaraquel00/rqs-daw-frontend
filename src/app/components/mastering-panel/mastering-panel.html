@@ -106,9 +106,9 @@
 
   <details
     class="master-section-disclosure track-summary-disclosure"
-    *ngIf="analysisState !== 'empty' || audioDna"
-    open>
+    *ngIf="analysisState !== 'empty' || audioDna">
     <summary id="track-summary-title">
+      <span class="section-chevron" aria-hidden="true"></span>
       <span *ngIf="lang.currentLang() === 'en'">TRACK SUMMARY</span>
       <span *ngIf="lang.currentLang() === 'pt'">RESUMO DA FAIXA</span>
       <span *ngIf="lang.currentLang() === 'pl'">PODSUMOWANIE UTWORU</span>
@@ -197,8 +197,9 @@
 
   <hr class="cyber-divider">
 
-  <details class="master-section-disclosure controls-disclosure" open>
+  <details class="master-section-disclosure controls-disclosure">
     <summary id="master-controls-title">
+      <span class="section-chevron" aria-hidden="true"></span>
       <span *ngIf="lang.currentLang() === 'en'">MASTER CONTROLS</span>
       <span *ngIf="lang.currentLang() === 'pt'">CONTROLES DE MASTER</span>
       <span *ngIf="lang.currentLang() === 'pl'">STEROWANIE MASTEREM</span>
