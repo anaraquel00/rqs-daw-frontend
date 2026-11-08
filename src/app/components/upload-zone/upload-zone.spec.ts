@@ -84,6 +84,13 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
   };
 
   beforeEach(() => {
+    userId.set('owner-a');
+
+    localStorage.removeItem('rqs:lastMasterSource:owner-a');
+    localStorage.removeItem('rqs:lastMasterSource:owner-b');
+    localStorage.removeItem('rqs:lastAnalysisId:owner-a');
+    localStorage.removeItem('rqs:lastAnalysisId:owner-b');
+
     isLoggedIn.set(false);
     requestSignIn = jasmine.createSpy('requestSignIn');
     resetAll = jasmine.createSpy('resetAll');
@@ -134,6 +141,88 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     component = TestBed.runInInjectionContext(() => new UploadZoneComponent());
     TestBed.tick();
     component.selectedFile = new File(['audio'], 'track.wav', { type: 'audio/wav' });
+  });
+
+  it('rehydrates an uploaded S3 source after reload without persisting the File or a signed URL', () => {
+    const pointer = {
+      version: 1,
+      s3Key: 'uploads/owner-a/restored-track.wav',
+      fileName: 'restored-track.wav',
+      analysisId: null,
+    };
+
+    localStorage.setItem(
+      'rqs:lastMasterSource:owner-a',
+      JSON.stringify(pointer),
+    );
+
+    component.selectedFile = null;
+    component.s3Key = null;
+    component.restoredSourceName = null;
+
+    (component as unknown as { masteringV2DirectUpload: boolean })
+      .masteringV2DirectUpload = false;
+
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    (component as unknown as {
+      restorePersistedSourceIfPresent(): void;
+    }).restorePersistedSourceIfPresent();
+
+    expect(component.selectedFile).toBeNull();
+    expect(component.s3Key as string | null)
+      .toBe('uploads/owner-a/restored-track.wav');
+    expect(component.restoredSourceName as string | null)
+      .toBe('restored-track.wav');
+
+    const persisted = localStorage.getItem('rqs:lastMasterSource:owner-a') ?? '';
+
+    expect(persisted).not.toContain('X-Amz-');
+    expect(persisted).not.toContain('https://');
+    expect(persisted).not.toContain('data:audio');
+    expect(persisted).not.toContain('blob:');
+  });
+
+  it('continues Preview processing from the restored S3 source after reload', () => {
+    localStorage.setItem(
+      'rqs:lastMasterSource:owner-a',
+      JSON.stringify({
+        version: 1,
+        s3Key: 'uploads/owner-a/restored-track.wav',
+        fileName: 'restored-track.wav',
+        analysisId: null,
+      }),
+    );
+
+    component.selectedFile = null;
+    component.s3Key = null;
+
+    (component as unknown as { masteringV2DirectUpload: boolean })
+      .masteringV2DirectUpload = false;
+
+    dsp.masterizeV2Preview.and.returnValue(
+      of(new Blob(['preview'], { type: 'audio/wav' })),
+    );
+
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    (component as unknown as {
+      restorePersistedSourceIfPresent(): void;
+    }).restorePersistedSourceIfPresent();
+
+    expect(component.s3Key as string | null)
+      .toBe('uploads/owner-a/restored-track.wav');
+
+    component.processarMaster(command(true));
+
+    expect(dsp.masterizeV2Preview).toHaveBeenCalledTimes(1);
+
+    const body = dsp.masterizeV2Preview.calls.mostRecent().args[0] as FormData;
+
+    expect(body.get('s3Key')).toBe('uploads/owner-a/restored-track.wav');
+    expect(body.has('audio')).toBeFalse();
   });
 
   it('rehydrates a persisted analysis after reload without invoking GPT Audio analysis', () => {
@@ -415,6 +504,16 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
   });
 
   it('clears the complete local workspace on the logout transition', () => {
+    localStorage.setItem(
+      'rqs:lastMasterSource:owner-a',
+      JSON.stringify({
+        version: 1,
+        s3Key: 'uploads/owner-a/track.wav',
+        fileName: 'track.wav',
+        analysisId: null,
+      }),
+    );
+
     isLoggedIn.set(true);
     TestBed.tick();
     component.s3Key = 'staging/key.wav';
@@ -438,9 +537,31 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(component.isProcessing).toBeFalse();
     expect(component.isUploadingS3).toBeFalse();
     expect(component.systemLogs).toEqual([]);
+    expect(localStorage.getItem('rqs:lastMasterSource:owner-a')).toBeNull();
     expect(resetAll).toHaveBeenCalled();
     expect(audioProcessed()).toBeFalse();
     expect(processedFilename()).toBe('');
+  });
+
+  it('removes the persisted source pointer when the user ejects the track', () => {
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    localStorage.setItem(
+      'rqs:lastMasterSource:owner-a',
+      JSON.stringify({
+        version: 1,
+        s3Key: 'uploads/owner-a/eject.wav',
+        fileName: 'eject.wav',
+        analysisId: null,
+      }),
+    );
+
+    component.ejetarFaixa();
+
+    expect(localStorage.getItem('rqs:lastMasterSource:owner-a')).toBeNull();
+    expect(component.s3Key).toBeNull();
+    expect(component.restoredSourceName).toBeNull();
   });
 
   it('keeps repeated anonymous state and cleanup idempotent', () => {
