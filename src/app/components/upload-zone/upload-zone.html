@@ -53,6 +53,7 @@
     [isUploading]="isUploadingS3"
     [sourceReady]="masteringV2DirectUpload || !!s3Key"
     [sourcePlaybackReady]="sourcePlaybackReady()"
+    [waveformPeaks]="restoredWaveformPeaks"
     [processingMode]="processingMode"
     [feedbackMessage]="masteringFeedbackMessage()"
     [masteredAudioUrl]="processedAudioUrl"
@@ -69,6 +70,7 @@
     [persistedConfirmedAt]="persistedConfirmedAt"
     [persistedPitchResult]="persistedPitchResult"
     (processMaster)="processarMaster($event)"
+    (waveformPeaksReady)="rememberWaveformPeaks($event)"
     (configChanged)="invalidateMasteringResult()">
   </app-mastering-panel>
 

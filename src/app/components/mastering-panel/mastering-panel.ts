@@ -107,6 +107,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() isUploading = false;
   @Input() sourceReady = false;
   @Input() sourcePlaybackReady = false;
+  @Input() waveformPeaks: readonly number[] = [];
   @Input() processingMode: 'preview' | 'full' | null = null;
   @Input() feedbackMessage: string | null = null;
   @Input() masteredAudioUrl: string | null = null;
@@ -124,6 +125,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() persistedPitchResult: SpotifyPitchResponse | null = null;
 
   @Output() processMaster = new EventEmitter<MasteringProcessCommand>();
+  @Output() waveformPeaksReady = new EventEmitter<number[]>();
   @Output() configChanged = new EventEmitter<void>();
 
   readonly destination = this.masteringService.destination;

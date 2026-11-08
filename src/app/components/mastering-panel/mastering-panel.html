@@ -36,12 +36,14 @@
     <div class="scrubber-container">
       <app-preview-waveform
         [file]="originalFile"
+        [restoredPeaks]="waveformPeaks"
         [duration]="audioComparison.duration()"
         [currentTime]="audioComparison.currentTime()"
         [previewStart]="audioComparison.previewStart()"
         [previewEnd]="audioComparison.previewEnd()"
         [disabled]="isProcessing"
         (rangeStartChange)="onPreviewRangeStartChange($event)"
+        (peaksReady)="waveformPeaksReady.emit($event)"
         (seekTo)="onWaveformSeek($event)">
       </app-preview-waveform>
       <p class="preview-relative-note">

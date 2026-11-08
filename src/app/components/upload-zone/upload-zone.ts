@@ -32,6 +32,7 @@ interface PersistedMasterSourcePointer {
   s3Key: string;
   fileName: string;
   analysisId: string | null;
+  waveformPeaks?: number[];
 }
 
 @Component({
@@ -60,6 +61,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   isDragging = false;
   selectedFile: File | null = null;
   restoredSourceName: string | null = null;
+  restoredWaveformPeaks: number[] = [];
   isProcessing = false;
   processedAudioUrl: string | null = null;
   processedAudioName = '';
@@ -411,6 +413,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
     this.selectedFile = null;
     this.restoredSourceName = null;
+    this.restoredWaveformPeaks = [];
 
     this.processedAudioUrl = null;
     this.processedAudioName = '';
@@ -466,6 +469,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     this.clearPersistedSourcePointer();
     this.selectedFile = file;
     this.restoredSourceName = file.name;
+    this.restoredWaveformPeaks = [];
     this.processedAudioUrl = null;
     this.processedAudioName = '';
     this.s3Key = null;
@@ -656,8 +660,13 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
           this.persistedConfirmedAt = restored.confirmed_at;
           this.persistedPitchResult = restored.pitch_result;
           this.audioSourceId = `analysis:${restored.analysis_id}`;
+          this.masteringService.beginAudioSource(this.audioSourceId);
+
           if (this.audioDna?.status === 'available' && this.audioDna.master_profile) {
-            this.masteringService.initializeFromAudioDna(this.audioSourceId, this.audioDna.master_profile);
+            this.masteringService.initializeFromAudioDna(
+              this.audioSourceId,
+              this.audioDna.master_profile,
+            );
           }
           this.analysisState.set('success');
           this.analysisRestored.set(true);
@@ -791,6 +800,23 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
       });
   }
 
+  rememberWaveformPeaks(peaks: readonly number[]): void {
+    if (!Array.isArray(peaks) || peaks.length < 64 || peaks.length > 1200) {
+      return;
+    }
+
+    const normalized = peaks.map(value =>
+      Math.round(
+        Math.max(0, Math.min(1, Number(value))) * 10000,
+      ) / 10000,
+    );
+
+    if (!normalized.every(Number.isFinite)) return;
+
+    this.restoredWaveformPeaks = normalized;
+    this.persistSourcePointer();
+  }
+
   private persistSourcePointer(analysisId: string | null = this.analysisId): void {
     if (this.masteringV2DirectUpload || !this.s3Key || typeof localStorage === 'undefined') {
       return;
@@ -807,6 +833,9 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
       s3Key: this.s3Key,
       fileName,
       analysisId: analysisId ?? null,
+      waveformPeaks: this.restoredWaveformPeaks.length > 0
+        ? this.restoredWaveformPeaks
+        : undefined,
     };
 
     localStorage.setItem(
@@ -860,6 +889,22 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
       this.s3Key = parsed.s3Key!;
       this.restoredSourceName = parsed.fileName!;
+
+      const waveformPeaks =
+        Array.isArray(parsed.waveformPeaks)
+        && parsed.waveformPeaks.length >= 64
+        && parsed.waveformPeaks.length <= 1200
+        && parsed.waveformPeaks.every(
+          value =>
+            typeof value === 'number'
+            && Number.isFinite(value)
+            && value >= 0
+            && value <= 1,
+        )
+          ? parsed.waveformPeaks
+          : [];
+
+      this.restoredWaveformPeaks = [...waveformPeaks];
 
       if (
         parsed.analysisId
