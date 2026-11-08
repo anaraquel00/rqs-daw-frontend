@@ -37,6 +37,8 @@
         <span>|</span>
         <button type="button" [class.active]="currency() === 'USD'" (click)="setCurrency('USD')">USD</button>
         <span>|</span>
+        <button type="button" [class.active]="currency() === 'EUR'" (click)="setCurrency('EUR')">EUR</button>
+        <span>|</span>
         <button type="button" [class.active]="currency() === 'PLN'" (click)="setCurrency('PLN')">PLN</button>
       </div>
     </div>
