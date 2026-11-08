@@ -60,9 +60,9 @@ describe('RQS Studio SEO configuration', () => {
   it('marks every operational workspace noindex, follow except account', () => {
     for (const route of appRoutes) {
       const config = studioSeoConfig(route, 'en');
-      expect(config.url).toBe(route === 'pitch'
-        ? 'https://studio.raquelsynths.com/pitch'
-        : 'https://studio.raquelsynths.com/app/' + route);
+      expect(config.url).toBe(
+        'https://studio.raquelsynths.com/app/' + route,
+      );
       expect(config.robots).toBe(route === 'account' ? 'noindex, nofollow' : 'noindex, follow');
       expect(config.jsonLd).toBeUndefined();
     }

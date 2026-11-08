@@ -27,6 +27,14 @@ import { PitchWorkspacePanelComponent } from '../pitch-workspace-panel/pitch-wor
 
 type MasteringFeedback = 'invalid_format' | 'upload_failed' | 'source_preparing' | 'preview_failed' | 'full_failed';
 
+interface PersistedMasterSourcePointer {
+  version: 1;
+  s3Key: string;
+  fileName: string;
+  analysisId: string | null;
+  waveformPeaks?: number[];
+}
+
 @Component({
   selector: 'app-upload-zone',
   standalone: true,
@@ -52,6 +60,8 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
   isDragging = false;
   selectedFile: File | null = null;
+  restoredSourceName: string | null = null;
+  restoredWaveformPeaks: number[] = [];
   isProcessing = false;
   processedAudioUrl: string | null = null;
   processedAudioName = '';
@@ -72,6 +82,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   persistedConfirmedAt: string | null = null;
   persistedPitchResult: SpotifyPitchResponse | null = null;
   readonly analysisRestored = signal(false);
+  readonly sourcePlaybackReady = signal(false);
   renderProgressPercent = 0;
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
@@ -86,17 +97,23 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   private fullAttempt = 0;
   private completedFullAttempt = 0;
   private rehydratingAnalysisId: string | null = null;
+  private rehydratingPlaybackS3Key: string | null = null;
+  private hydratedPlaybackS3Key: string | null = null;
+
   private readonly authenticatedUploadEffect = effect(() => {
     const isAuthenticated = this.auth.isLoggedIn();
     const userId = this.auth.session()?.user.id ?? null;
 
     if (this.previousUserId !== null && userId !== this.previousUserId) {
-      this.ejetarFaixa();
+      const previousUserId = this.previousUserId;
+      this.ejetarFaixa(previousUserId);
     }
     this.previousUserId = userId;
 
     if (!isAuthenticated) return;
 
+    this.restorePersistedSourceIfPresent();
+    this.restorePersistedSourcePlaybackIfPresent();
     this.restorePersistedAnalysisIfPresent();
 
     if (this.selectedFile && this.masteringV2DirectUpload) {
@@ -115,6 +132,9 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   });
 
   ngOnInit(): void {
+    this.restorePersistedSourceIfPresent();
+    this.restorePersistedSourcePlaybackIfPresent();
+
     this.route?.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.restorePersistedAnalysisIfPresent());
@@ -183,6 +203,8 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
             if (!this.isActiveWorkspace(generation)) return;
             this.isUploadingS3 = false;
             this.s3Key = s3Response.s3Key;
+            this.restoredSourceName = file.name;
+            this.persistSourcePointer();
             this.masteringFeedback.set(null);
             this.trackMasterEvent('master_upload_completed', {
               source_format: this.analyticsSourceFormat(),
@@ -221,7 +243,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   }
 
   processarMaster(command: MasteringProcessCommand): void {
-    if (this.isProcessing || !this.selectedFile) return;
+    const sourceAvailable = this.masteringV2DirectUpload
+      ? this.selectedFile !== null
+      : this.s3Key !== null;
+
+    if (this.isProcessing || !sourceAvailable) return;
     if (!this.auth.isLoggedIn()) {
       this.trackAuthRequired(command.preview ? 'preview' : 'full');
       this.auth.requestSignIn('mastering');
@@ -370,27 +396,56 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     }, `full:${this.completedFullAttempt}:download`);
   }
 
-  ejetarFaixa(): void {
+  ejetarFaixa(ownerUserId?: string): void {
+    const pointerOwnerId =
+      ownerUserId
+      ?? this.auth.session()?.user.id
+      ?? this.previousUserId
+      ?? null;
+
+    if (pointerOwnerId && typeof localStorage !== 'undefined') {
+      localStorage.removeItem(this.analysisPointerKey(pointerOwnerId));
+      localStorage.removeItem(this.sourcePointerKey(pointerOwnerId));
+    }
+
     this.workspaceGeneration += 1;
     this.releaseProcessedBlobUrl();
+
     this.selectedFile = null;
+    this.restoredSourceName = null;
+    this.restoredWaveformPeaks = [];
+
     this.processedAudioUrl = null;
     this.processedAudioName = '';
     this.s3Key = null;
+
+    this.sourcePlaybackReady.set(false);
+    this.rehydratingPlaybackS3Key = null;
+    this.hydratedPlaybackS3Key = null;
+
     this.isProcessing = false;
     this.processingMode = null;
     this.isUploadingS3 = false;
+
     this.systemLogs = [];
     this.isFullMasterCompleted = false;
+
     this.masteringFeedback.set(null);
+
     this.clearAnalysisState();
     this.resetAnalyticsOperation();
-    this.clearPersistedAnalysisPointer();
+
+    this.analysisId = null;
+    this.rehydratingAnalysisId = null;
+
     this.audioDna = null;
     this.audioSourceId = null;
+
     this.masteringService.clearAudioDnaSource();
     this.masteringService.resetPreviewStartSeconds();
+
     this.stopEstimatedRenderProgress();
+
     this.audioComparison.resetAll('UPLOAD_ZONE_EJECT_TRACK');
     this.audioComparison.audioProcessed.set(false);
     this.audioComparison.processedFilename.set('');
@@ -411,10 +466,18 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
     this.workspaceGeneration += 1;
     this.releaseProcessedBlobUrl();
+    this.clearPersistedSourcePointer();
     this.selectedFile = file;
+    this.restoredSourceName = file.name;
+    this.restoredWaveformPeaks = [];
     this.processedAudioUrl = null;
     this.processedAudioName = '';
     this.s3Key = null;
+
+    this.sourcePlaybackReady.set(false);
+    this.rehydratingPlaybackS3Key = null;
+    this.hydratedPlaybackS3Key = null;
+
     this.isProcessing = false;
     this.processingMode = null;
     this.isFullMasterCompleted = false;
@@ -597,8 +660,13 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
           this.persistedConfirmedAt = restored.confirmed_at;
           this.persistedPitchResult = restored.pitch_result;
           this.audioSourceId = `analysis:${restored.analysis_id}`;
+          this.masteringService.beginAudioSource(this.audioSourceId);
+
           if (this.audioDna?.status === 'available' && this.audioDna.master_profile) {
-            this.masteringService.initializeFromAudioDna(this.audioSourceId, this.audioDna.master_profile);
+            this.masteringService.initializeFromAudioDna(
+              this.audioSourceId,
+              this.audioDna.master_profile,
+            );
           }
           this.analysisState.set('success');
           this.analysisRestored.set(true);
@@ -618,6 +686,8 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     if (userId && typeof localStorage !== 'undefined') {
       localStorage.setItem(this.analysisPointerKey(userId), id);
     }
+
+    this.persistSourcePointer(id);
     if (!this.router || !this.route) return;
     void this.router.navigate([], {
       relativeTo: this.route,
@@ -627,8 +697,8 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     });
   }
 
-  private clearPersistedAnalysisPointer(): void {
-    const userId = this.auth.session()?.user.id;
+  private clearPersistedAnalysisPointer(ownerUserId?: string): void {
+    const userId = ownerUserId ?? this.auth.session()?.user.id;
     if (userId && typeof localStorage !== 'undefined') {
       localStorage.removeItem(this.analysisPointerKey(userId));
     }
@@ -645,6 +715,218 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
   private analysisPointerKey(userId: string): string {
     return `rqs:lastAnalysisId:${userId}`;
+  }
+
+  private sourcePointerKey(userId: string): string {
+    return `rqs:lastMasterSource:${userId}`;
+  }
+
+  private restorePersistedSourcePlaybackIfPresent(): void {
+    if (
+      this.workspace !== 'master'
+      || this.masteringV2DirectUpload
+      || this.selectedFile
+      || !this.auth.isLoggedIn()
+      || !this.s3Key
+    ) {
+      return;
+    }
+
+    const s3Key = this.s3Key;
+
+    if (
+      this.hydratedPlaybackS3Key === s3Key
+      || this.rehydratingPlaybackS3Key === s3Key
+    ) {
+      return;
+    }
+
+    const generation = this.workspaceGeneration;
+
+    this.rehydratingPlaybackS3Key = s3Key;
+    this.sourcePlaybackReady.set(false);
+
+    this.dspService
+      .getMasteringV2SourcePlaybackUrl(s3Key)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: response => {
+          if (this.rehydratingPlaybackS3Key === s3Key) {
+            this.rehydratingPlaybackS3Key = null;
+          }
+
+          if (
+            !this.isActiveWorkspace(generation)
+            || this.s3Key !== s3Key
+          ) {
+            return;
+          }
+
+          this.hydratedPlaybackS3Key = s3Key;
+
+          this.audioComparison.setOriginalSrc(
+            response.playbackUrl,
+            this.masteringService.previewStartSeconds(),
+            'UPLOAD_ZONE_RESTORED_S3_PLAYBACK',
+          );
+
+          this.sourcePlaybackReady.set(true);
+        },
+        error: (error: unknown) => {
+          if (this.rehydratingPlaybackS3Key === s3Key) {
+            this.rehydratingPlaybackS3Key = null;
+          }
+
+          if (this.s3Key !== s3Key) return;
+
+          this.hydratedPlaybackS3Key = null;
+          this.sourcePlaybackReady.set(false);
+
+          const status =
+            typeof error === 'object'
+            && error !== null
+            && 'status' in error
+              ? Number((error as { status?: unknown }).status)
+              : 0;
+
+          this.addLog(
+            `⚠ SOURCE PLAYBACK RESTORE FAILED: status=${
+              Number.isFinite(status) && status > 0
+                ? status
+                : 'unknown'
+            }`,
+          );
+        },
+      });
+  }
+
+  rememberWaveformPeaks(peaks: readonly number[]): void {
+    if (!Array.isArray(peaks) || peaks.length < 64 || peaks.length > 1200) {
+      return;
+    }
+
+    const normalized = peaks.map(value =>
+      Math.round(
+        Math.max(0, Math.min(1, Number(value))) * 10000,
+      ) / 10000,
+    );
+
+    if (!normalized.every(Number.isFinite)) return;
+
+    this.restoredWaveformPeaks = normalized;
+    this.persistSourcePointer();
+  }
+
+  private persistSourcePointer(analysisId: string | null = this.analysisId): void {
+    if (this.masteringV2DirectUpload || !this.s3Key || typeof localStorage === 'undefined') {
+      return;
+    }
+
+    const userId = this.auth.session()?.user.id;
+    if (!userId) return;
+
+    const fileName = this.selectedFile?.name ?? this.restoredSourceName;
+    if (!fileName) return;
+
+    const pointer: PersistedMasterSourcePointer = {
+      version: 1,
+      s3Key: this.s3Key,
+      fileName,
+      analysisId: analysisId ?? null,
+      waveformPeaks: this.restoredWaveformPeaks.length > 0
+        ? this.restoredWaveformPeaks
+        : undefined,
+    };
+
+    localStorage.setItem(
+      this.sourcePointerKey(userId),
+      JSON.stringify(pointer),
+    );
+  }
+
+  private restorePersistedSourceIfPresent(): void {
+    if (
+      this.masteringV2DirectUpload
+      || this.selectedFile
+      || this.s3Key
+      || typeof localStorage === 'undefined'
+    ) {
+      return;
+    }
+
+    const userId = this.auth.session()?.user.id;
+    if (!userId) return;
+
+    const raw = localStorage.getItem(this.sourcePointerKey(userId));
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw) as Partial<PersistedMasterSourcePointer>;
+
+      const valid =
+        parsed.version === 1
+        && typeof parsed.s3Key === 'string'
+        && parsed.s3Key.length > 0
+        && parsed.s3Key.length <= 1024
+        && !parsed.s3Key.includes('\n')
+        && !parsed.s3Key.includes('\r')
+        && typeof parsed.fileName === 'string'
+        && parsed.fileName.length > 0
+        && parsed.fileName.length <= 512
+        && (
+          parsed.analysisId === null
+          || parsed.analysisId === undefined
+          || (
+            typeof parsed.analysisId === 'string'
+            && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(parsed.analysisId)
+          )
+        );
+
+      if (!valid) {
+        localStorage.removeItem(this.sourcePointerKey(userId));
+        return;
+      }
+
+      this.s3Key = parsed.s3Key!;
+      this.restoredSourceName = parsed.fileName!;
+
+      const waveformPeaks =
+        Array.isArray(parsed.waveformPeaks)
+        && parsed.waveformPeaks.length >= 64
+        && parsed.waveformPeaks.length <= 1200
+        && parsed.waveformPeaks.every(
+          value =>
+            typeof value === 'number'
+            && Number.isFinite(value)
+            && value >= 0
+            && value <= 1,
+        )
+          ? parsed.waveformPeaks
+          : [];
+
+      this.restoredWaveformPeaks = [...waveformPeaks];
+
+      if (
+        parsed.analysisId
+        && !localStorage.getItem(this.analysisPointerKey(userId))
+      ) {
+        localStorage.setItem(
+          this.analysisPointerKey(userId),
+          parsed.analysisId,
+        );
+      }
+    } catch {
+      localStorage.removeItem(this.sourcePointerKey(userId));
+    }
+  }
+
+  private clearPersistedSourcePointer(ownerUserId?: string): void {
+    if (typeof localStorage === 'undefined') return;
+
+    const userId = ownerUserId ?? this.auth.session()?.user.id ?? null;
+    if (!userId) return;
+
+    localStorage.removeItem(this.sourcePointerKey(userId));
   }
 
   private buildMasteringV2FormData(
@@ -762,7 +1044,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   }
 
   private analyticsSourceFormat(): 'wav' | 'mp3' | 'unknown' {
-    const name = this.selectedFile?.name.toLowerCase() || '';
+    const name = (
+      this.selectedFile?.name
+      ?? this.restoredSourceName
+      ?? ''
+    ).toLowerCase();
     if (name.endsWith('.wav')) return 'wav';
     if (name.endsWith('.mp3')) return 'mp3';
     return 'unknown';

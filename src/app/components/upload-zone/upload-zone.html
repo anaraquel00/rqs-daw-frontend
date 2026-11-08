@@ -26,13 +26,15 @@
        (click)="fileInput.click()"
        [class.active]="isDragging">
     <div class="icon-container"><span class="cyber-icon">🎧</span></div>
-    <p class="drop-text" *ngIf="!selectedFile">
+    <p class="drop-text" *ngIf="!selectedFile && !restoredSourceName">
       <strong *ngIf="workspace === 'pitch'">NOVA FAIXA</strong>
       <br *ngIf="workspace === 'pitch'">
       {{ lang.t().DROP_PROMPT }}<br>
       <span style="font-size: 12px; color: #00f0ff; opacity: 0.8;">{{ lang.t().OR_CLICK }}</span>
     </p>
-    <p class="drop-text file-ready" *ngIf="selectedFile">💿 {{ selectedFile.name }} {{ lang.t().FILE_INTERCEPTED }}</p>
+    <p class="drop-text file-ready" *ngIf="selectedFile || restoredSourceName">
+      💿 {{ selectedFile?.name || restoredSourceName }} {{ lang.t().FILE_INTERCEPTED }}
+    </p>
     <input type="file" #fileInput accept=".wav, .mp3" (change)="onFileSelect($event)" style="display: none;">
   </div>
 
@@ -45,11 +47,13 @@
   </div>
 
   <app-mastering-panel
-    *ngIf="workspace === 'master' && (selectedFile || analysisState() === 'success')"
+    *ngIf="workspace === 'master' && (selectedFile || !!s3Key || analysisState() === 'success')"
     [originalFile]="selectedFile"
     [isProcessing]="isProcessing || isUploadingS3"
     [isUploading]="isUploadingS3"
     [sourceReady]="masteringV2DirectUpload || !!s3Key"
+    [sourcePlaybackReady]="sourcePlaybackReady()"
+    [waveformPeaks]="restoredWaveformPeaks"
     [processingMode]="processingMode"
     [feedbackMessage]="masteringFeedbackMessage()"
     [masteredAudioUrl]="processedAudioUrl"
@@ -66,6 +70,7 @@
     [persistedConfirmedAt]="persistedConfirmedAt"
     [persistedPitchResult]="persistedPitchResult"
     (processMaster)="processarMaster($event)"
+    (waveformPeaksReady)="rememberWaveformPeaks($event)"
     (configChanged)="invalidateMasteringResult()">
   </app-mastering-panel>
 

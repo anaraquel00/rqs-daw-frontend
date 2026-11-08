@@ -23,6 +23,7 @@ import { isPlatformBrowser } from '@angular/common';
 export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDestroy {
   private static readonly peakCache = new WeakMap<File, number[]>();
   @Input() file: File | null = null;
+  @Input() restoredPeaks: readonly number[] | null = null;
   @Input() duration = 0;
   @Input() currentTime = 0;
   @Input() previewStart = 0;
@@ -31,6 +32,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   @Input() compact = false;
 
   @Output() rangeStartChange = new EventEmitter<number>();
+  @Output() peaksReady = new EventEmitter<number[]>();
   @Output() seekTo = new EventEmitter<number>();
 
   @ViewChild('waveformHost') private waveformHost?: ElementRef<HTMLDivElement>;
@@ -57,7 +59,10 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.viewReady) return;
-    if (changes['file']) {
+    if (
+      changes['file']
+      || (!this.file && changes['restoredPeaks'])
+    ) {
       void this.loadWaveform();
       return;
     }
@@ -140,8 +145,26 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   private async loadWaveform(): Promise<void> {
-    if (!this.viewReady || !isPlatformBrowser(this.platformId) || !this.file) {
-      this.peaks = [];
+    if (!this.viewReady || !isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    if (!this.file) {
+      const restored =
+        Array.isArray(this.restoredPeaks)
+        && this.restoredPeaks.length >= 64
+        && this.restoredPeaks.length <= 1200
+        && this.restoredPeaks.every(
+          value =>
+            typeof value === 'number'
+            && Number.isFinite(value)
+            && value >= 0
+            && value <= 1,
+        )
+          ? this.restoredPeaks
+          : [];
+
+      this.peaks = [...restored];
       this.drawWaveform();
       return;
     }
@@ -149,6 +172,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
     const cached = PreviewWaveformComponent.peakCache.get(this.file);
     if (cached) {
       this.peaks = cached;
+      this.peaksReady.emit([...cached]);
       this.drawWaveform();
       return;
     }
@@ -162,8 +186,11 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
       const bytes = await this.file.arrayBuffer();
       const buffer = await context.decodeAudioData(bytes.slice(0));
       if (token !== this.decodeToken) return;
-      this.peaks = this.buildPeaks(buffer, 900);
+      this.peaks = this.buildPeaks(buffer, 900).map(
+        value => Math.round(value * 10000) / 10000,
+      );
       PreviewWaveformComponent.peakCache.set(this.file, this.peaks);
+      this.peaksReady.emit([...this.peaks]);
     } catch (error) {
       if (token === this.decodeToken) {
         this.peaks = [];

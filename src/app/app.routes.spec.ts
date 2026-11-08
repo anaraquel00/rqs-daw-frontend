@@ -8,7 +8,7 @@ describe('V2 canonical app routes', () => {
   const expectedRedirects: Record<string, string> = {
     studio: 'app',
     'studio/master': 'app/master',
-    'studio/pitch': 'pitch',
+    'studio/pitch': 'app/pitch',
     'studio/build': 'app/build',
     'studio/uplink': 'app/uplink',
     'studio/split': 'app/split',
@@ -37,10 +37,11 @@ describe('V2 canonical app routes', () => {
     }
   });
 
-  it('exposes /pitch as a first-class workspace with query-string compatible client rendering', async () => {
+  it('keeps /pitch as a compatibility alias for canonical /app/pitch', () => {
     const pitch = routes.find(route => route.path === 'pitch')!;
-    const children = await (pitch.loadChildren as () => Promise<Routes>)();
-    expect(children[0].children?.[0].data?.['surface']).toBe('pitch');
+
+    expect(pitch.redirectTo).toBe('app/pitch');
+    expect(pitch.pathMatch).toBe('full');
     expect(serverRoutes.find(route => route.path === 'pitch')?.renderMode).toBe(RenderMode.Client);
   });
 

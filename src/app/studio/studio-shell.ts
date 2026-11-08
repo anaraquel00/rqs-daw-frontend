@@ -73,7 +73,7 @@ export class StudioShellComponent {
   }
 
   moduleRoute(module: typeof this.modules[number]): string {
-    return module === 'pitch' ? '/pitch' : `/app/${module}`;
+    return `/app/${module}`;
   }
 
   private syncSurface(): void {

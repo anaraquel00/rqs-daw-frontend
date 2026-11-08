@@ -152,7 +152,7 @@ describe('Studio MASTER full-width integration', () => {
     const handoff = root().querySelector('.pitch-handoff a') as HTMLAnchorElement;
     expect(root().querySelector('app-spotify-pitch-panel')).toBeNull();
     expect(handoff.textContent).toContain('PREPARE SPOTIFY PITCH');
-    expect(handoff.getAttribute('href')).toBe('/pitch?analysis=00000000-0000-4000-8000-000000000040');
+    expect(handoff.getAttribute('href')).toBe('/app/pitch?analysis=00000000-0000-4000-8000-000000000040');
     expect(dsp.analyzeMasteringV2).toHaveBeenCalledTimes(1);
   });
   it('localizes the MASTER to PITCH handoff in all supported languages', async () => {
@@ -197,7 +197,7 @@ describe('Studio MASTER full-width integration', () => {
       expect(handoff.textContent).toContain(item.body);
       expect(link.textContent).toContain(item.cta);
       expect(link.getAttribute('href'))
-        .toBe('/pitch?analysis=00000000-0000-4000-8000-000000000040');
+        .toBe('/app/pitch?analysis=00000000-0000-4000-8000-000000000040');
     }
   });
 
