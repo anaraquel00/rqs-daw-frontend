@@ -490,6 +490,36 @@ it('sends the selected source start with the Preview command', () => {
     expect(panel.autoUiState()).toBe('loading');
   });
 
+  it('keeps Preview operational after reload when the server source is restored without a local File', () => {
+    const fixture = TestBed.createComponent(MasteringPanelComponent);
+    const instance = fixture.componentInstance;
+
+    instance.originalFile = null;
+    instance.sourceReady = true;
+    instance.analysisState = 'success';
+    instance.analysisMetrics = metrics;
+
+    fixture.detectChanges();
+
+    expect(instance.canGeneratePreview()).toBeTrue();
+
+    const previewButton = fixture.nativeElement.querySelector(
+      '.action-buttons .btn-secondary'
+    ) as HTMLButtonElement | null;
+
+    expect(previewButton).not.toBeNull();
+    expect(previewButton?.disabled).toBeFalse();
+
+    const emitted: boolean[] = [];
+    instance.processMaster.subscribe(command => emitted.push(command.preview));
+
+    previewButton!.click();
+
+    expect(emitted).toEqual([true]);
+
+    fixture.destroy();
+  });
+
   it('does not create a new source generation while rehydrating without an uploaded file', () => {
     panel.originalFile = null;
     panel.analysisState = 'success';

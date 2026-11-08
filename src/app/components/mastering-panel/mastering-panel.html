@@ -136,7 +136,7 @@
     <a [routerLink]="['/app/pitch']" [queryParams]="{ analysis: analysisId }">{{ pitchHandoff().cta }}</a>
   </section>
 
-  <ng-container *ngIf="originalFile">
+  <ng-container *ngIf="originalFile || sourceReady">
   <div class="mastering-help-toolbar">
     <button class="guide-button" type="button" (click)="toggleGuide()">
       ⓘ {{ education().help }} · {{ education().guideTitle }}
