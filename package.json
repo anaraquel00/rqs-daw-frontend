@@ -8,6 +8,7 @@
     "build": "node scripts/rqs-build.mjs",
     "build:production": "ng build --configuration production",
     "build:staging": "ng build --configuration staging",
+    "test:build-target": "node scripts/rqs-build-target.test.mjs",
     "test:seo": "node scripts/seo-static-check.mjs",
     "test:seo:build": "node scripts/seo-build-check.mjs",
     "test:host-containment": "node --test scripts/canonical-host-routing.test.mjs",
