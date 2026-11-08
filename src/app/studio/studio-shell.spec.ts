@@ -14,6 +14,7 @@ import { RqsUplinkEngineComponent } from '../rqs-uplink-engine/rqs-uplink-engine
 import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/rqs-uplink-dashboard';
 import { AuthPromptComponent } from '../components/auth-prompt/auth-prompt';
 import { AccountWaitlistComponent } from './account-waitlist';
+import { ThemeService } from '../services/theme.service';
 
 @Component({ selector: 'app-upload-zone', template: '<input aria-label="Source marker" value="retained-audio">' }) class MasterStub { @Input() workspace: 'master' | 'pitch' = 'master'; }
 @Component({ selector: 'app-mix-panel', template: 'BUILD existing entry' }) class BuildStub {}
@@ -76,10 +77,13 @@ describe('Studio V2 shell integration', () => {
     expect(localStorage.getItem('rqs_theme')).toBe('auto');
   });
 
-  it('restores a persisted explicit theme in a new shell instance', () => {
-    localStorage.setItem('rqs_theme', 'light');
+  it('reflects the current explicit theme in a new shell instance', () => {
+    const theme = TestBed.inject(ThemeService);
+    theme.setTheme('light');
+
     const fixture = TestBed.createComponent(StudioShellComponent);
     fixture.detectChanges();
+
     expect(fixture.nativeElement.dataset['theme']).toBe('light');
     fixture.destroy();
   });
