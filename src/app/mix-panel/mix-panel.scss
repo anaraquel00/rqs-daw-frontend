@@ -719,6 +719,14 @@ $text-muted: #8b949e;
   }
 }
 
+.build-upgrade-card {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(255, 0, 85, .32);
+  border-radius: 9px;
+  background: rgba(255, 0, 85, .05);
+}
+
 @keyframes borderPulse {
   from { border-color: rgba(255, 0, 85, 0.15); }
   to { border-color: rgba(255, 0, 85, 0.4); }

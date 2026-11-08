@@ -24,6 +24,7 @@ import { AuthService } from '../services/auth.service';
 import { AudioComparisonService } from '../services/audio-comparison.service';
 import { AnalyticsService } from '../services/analytics.service';
 import { PreviewWaveformComponent } from '../components/mastering-panel/preview-waveform';
+import { PlanUpgradeCtaComponent } from '../components/plan-upgrade-cta/plan-upgrade-cta';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -142,7 +143,7 @@ const TRANSITION_COPY = {
 @Component({
   selector: 'app-mix-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, PreviewWaveformComponent],
+  imports: [CommonModule, FormsModule, PreviewWaveformComponent, PlanUpgradeCtaComponent],
   templateUrl: './mix-panel.html',
   styleUrls: ['./mix-panel.scss'],
 })
@@ -169,6 +170,7 @@ export class MixPanelComponent implements OnDestroy {
   isProcessing = false;
   mixSuccess = false;
   setlistError: string | null = null;
+  readonly pricingUpgradeRequired = signal(false);
   setlistName = 'THE_BLUEPRINT_SESSIONS_Vol_XYZ';
 
   activeCurve: SetlistCurve = 'equal-power';
@@ -339,7 +341,7 @@ export class MixPanelComponent implements OnDestroy {
     return this.auth.userRole() === 'premium' ? 8 : 3;
   }
 
-  private trackLimitSelectionMessage(): string {
+  trackLimitSelectionMessage(): string {
     return this.localCopy('trackLimitSelection').replace('{max}', String(this.maxTrackCount()));
   }
 
@@ -354,9 +356,9 @@ export class MixPanelComponent implements OnDestroy {
     });
     this.tracks = [...this.tracks];
     this.stopTransitionPreview();
-    this.setlistError = validFiles.length > acceptedFiles.length
-      ? this.trackLimitSelectionMessage()
-      : null;
+    const planLimitReached = validFiles.length > acceptedFiles.length;
+    this.pricingUpgradeRequired.set(planLimitReached);
+    this.setlistError = planLimitReached ? this.trackLimitSelectionMessage() : null;
   }
 
   onVignetteSelect(event: Event): void {
@@ -652,6 +654,10 @@ export class MixPanelComponent implements OnDestroy {
       : this.localCopy('serverError');
   }
 
+  private isPlanLimitError(error: unknown): boolean {
+    return (error as { error?: { code?: unknown } })?.error?.code === 'SETLIST_PLAN_LIMIT_EXCEEDED';
+  }
+
   igniteSetlist(): void {
     if (!this.hasAuthenticatedBuildSession()) return;
     this.cancelActiveRender();
@@ -681,6 +687,7 @@ export class MixPanelComponent implements OnDestroy {
     this.isProcessing = true;
     this.mixSuccess = false;
     this.setlistError = null;
+    this.pricingUpgradeRequired.set(false);
     this.stopTransitionPreview();
     const subscription = this.dspService.generateMixS3(payload).subscribe({
       next: (response) => {
@@ -707,6 +714,7 @@ export class MixPanelComponent implements OnDestroy {
         if (!this.isCurrentRender(attempt, userId)) return;
         this.activeRenderSubscription = null;
         this.isProcessing = false;
+        this.pricingUpgradeRequired.set(this.isPlanLimitError(error));
         this.setlistError = this.renderErrorMessage(error);
       },
     });

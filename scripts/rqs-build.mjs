@@ -2,12 +2,13 @@ import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const target = String(process.env.RQS_BUILD_TARGET || 'production').trim().toLowerCase();
-const allowedTargets = new Set(['production', 'staging']);
+import { resolveBuildTarget } from './rqs-build-target.mjs';
 
-if (!allowedTargets.has(target)) {
-  console.error(`Invalid RQS_BUILD_TARGET: ${target}`);
-  console.error('Allowed values: production, staging');
+let target;
+try {
+  target = resolveBuildTarget();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
   process.exit(2);
 }
 

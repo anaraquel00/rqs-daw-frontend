@@ -3,7 +3,21 @@ import { getVercelOidcToken } from '@vercel/oidc';
 import { ExternalAccountClient } from 'google-auth-library';
 import { FIRESTORE_PROJECT_ID } from './_referral-core.mjs';
 
-const REFERRAL_DATABASE_ID = 'rqs-referral-preview';
+const GCP_PROJECT_NUMBER = '913434953773';
+const REFERRAL_ENVIRONMENTS = Object.freeze({
+  production: Object.freeze({
+    databaseId: 'rqs-referral-preview',
+    providerId: 'rqs-referral-preview',
+    serviceAccountEmail: 'rqs-referral-preview@raquel-synths-platform.iam.gserviceaccount.com',
+    vercelTarget: 'production',
+  }),
+  staging: Object.freeze({
+    databaseId: 'rqs-referral-staging',
+    providerId: 'rqs-referral-staging',
+    serviceAccountEmail: 'rqs-referral-staging@raquel-synths-platform.iam.gserviceaccount.com',
+    vercelTarget: 'staging',
+  }),
+});
 const REFERRAL_COLLECTIONS = new Set(['pro_waitlist', 'founding_referral_participants']);
 const AUTH_ENVIRONMENTS = Object.freeze({
   production: {
@@ -29,15 +43,39 @@ export function applyCors(req, res, methods = 'GET, POST, OPTIONS') {
 }
 
 export async function authenticateRequest(req) {
+  return (await authenticateRequestContext(req))?.user ?? null;
+}
+
+export async function authenticateRequestContext(req) {
+  return authenticateRequestContextProvider(req);
+}
+
+async function defaultAuthenticateRequestContext(req) {
   const authorization = String(req.headers.authorization || '');
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
   if (!token) return null;
 
   const environment = authEnvironmentForRequest(req, token);
   const { url, key } = AUTH_ENVIRONMENTS[environment];
-  const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const client = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
   const { data, error } = await client.auth.getUser(token);
-  return error || !data.user?.id || !data.user.email ? null : data.user;
+  return error || !data.user?.id || !data.user.email
+    ? null
+    : { user: data.user, client, environment };
+}
+
+let authenticateRequestContextProvider = defaultAuthenticateRequestContext;
+
+export function setAuthenticatedRequestContextProviderForTests(provider) {
+  if (!process.env.NODE_TEST_CONTEXT) throw new Error('Test-only authentication override');
+  authenticateRequestContextProvider = provider ?? defaultAuthenticateRequestContext;
+}
+
+export function hasVerifiedEmail(user) {
+  return Boolean(user?.email && (user.email_confirmed_at || user.confirmed_at));
 }
 
 export function authEnvironmentForRequest(req, token) {
@@ -63,6 +101,7 @@ function tokenIssuer(token) {
 }
 
 let firestoreAuthClient;
+let firestoreAuthClientSignature = '';
 let firestoreAccessTokenProvider = async () => {
   const client = getFirestoreAuthClient();
   const credentials = await client.getAccessToken();
@@ -71,30 +110,97 @@ let firestoreAccessTokenProvider = async () => {
 };
 
 function getFirestoreAuthClient() {
-  if (firestoreAuthClient) return firestoreAuthClient;
+  const configuration = referralEnvironmentConfiguration();
+  const signature = [
+    configuration.environment,
+    configuration.providerResource,
+    configuration.serviceAccountEmail,
+  ].join('|');
+  if (firestoreAuthClient && firestoreAuthClientSignature === signature) return firestoreAuthClient;
 
+  firestoreAuthClient = ExternalAccountClient.fromJSON({
+    type: 'external_account',
+    audience: configuration.providerResource,
+    subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+    token_url: 'https://sts.googleapis.com/v1/token',
+    service_account_impersonation_url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${configuration.serviceAccountEmail}:generateAccessToken`,
+    subject_token_supplier: {
+      getSubjectToken: () => getVercelOidcToken({ audience: configuration.oidcAudience }),
+    },
+  });
+  if (!firestoreAuthClient) throw new Error('Google external account client unavailable');
+  firestoreAuthClientSignature = signature;
+  return firestoreAuthClient;
+}
+
+export function referralEnvironmentConfiguration() {
+  const environment = referralDataEnvironment();
+  const expected = REFERRAL_ENVIRONMENTS[environment];
   const projectId = requiredEnvironment('GCP_PROJECT_ID');
   const projectNumber = requiredEnvironment('GCP_PROJECT_NUMBER');
   const poolId = requiredEnvironment('GCP_WORKLOAD_IDENTITY_POOL_ID');
   const providerId = requiredEnvironment('GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID');
   const serviceAccountEmail = requiredEnvironment('GCP_SERVICE_ACCOUNT_EMAIL');
+  const databaseId = requiredEnvironment('GCP_FIRESTORE_DATABASE_ID');
   const oidcAudience = requiredEnvironment('GCP_AUDIENCE');
   const providerResource = `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${poolId}/providers/${providerId}`;
-  if (projectId !== FIRESTORE_PROJECT_ID) throw new Error('Configured GCP project does not match Firestore project');
-  if (oidcAudience !== `https:${providerResource}`) throw new Error('Configured GCP audience does not match provider');
 
-  firestoreAuthClient = ExternalAccountClient.fromJSON({
-    type: 'external_account',
-    audience: providerResource,
-    subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
-    token_url: 'https://sts.googleapis.com/v1/token',
-    service_account_impersonation_url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${serviceAccountEmail}:generateAccessToken`,
-    subject_token_supplier: {
-      getSubjectToken: () => getVercelOidcToken({ audience: oidcAudience }),
-    },
+  if (projectId !== FIRESTORE_PROJECT_ID) {
+    throw new Error('Configured GCP project does not match Firestore project');
+  }
+  if (projectNumber !== GCP_PROJECT_NUMBER) {
+    throw new Error('Configured GCP project number does not match Firestore project');
+  }
+  if (databaseId !== expected.databaseId) {
+    throw new Error('Configured Firestore database does not match data environment');
+  }
+  if (providerId !== expected.providerId) {
+    throw new Error('Configured GCP provider does not match data environment');
+  }
+  if (serviceAccountEmail !== expected.serviceAccountEmail) {
+    throw new Error('Configured GCP service account does not match data environment');
+  }
+  if (oidcAudience !== `https:${providerResource}`) {
+    throw new Error('Configured GCP audience does not match provider');
+  }
+
+  return Object.freeze({
+    environment,
+    databaseId,
+    oidcAudience,
+    providerResource,
+    serviceAccountEmail,
   });
-  if (!firestoreAuthClient) throw new Error('Google external account client unavailable');
-  return firestoreAuthClient;
+}
+
+function referralDataEnvironment() {
+  const configuredEnvironment = String(process.env.RQS_DATA_ENVIRONMENT || '').trim().toLowerCase();
+  const vercelEnvironment = String(process.env.VERCEL_ENV || '').trim().toLowerCase();
+  const vercelTarget = String(process.env.VERCEL_TARGET_ENV || '').trim().toLowerCase();
+  let environment = configuredEnvironment;
+
+  // Compatibility with the currently published Production configuration. This is intentionally
+  // derived from Vercel's Production context, never from a database name or identity value.
+  if (!environment && vercelEnvironment === 'production' && (!vercelTarget || vercelTarget === 'production')) {
+    environment = 'production';
+  }
+  if (!Object.hasOwn(REFERRAL_ENVIRONMENTS, environment)) {
+    throw new Error(configuredEnvironment
+      ? 'Unknown RQS data environment'
+      : 'Missing server environment: RQS_DATA_ENVIRONMENT');
+  }
+
+  const expectedTarget = REFERRAL_ENVIRONMENTS[environment].vercelTarget;
+  if (vercelTarget && vercelTarget !== expectedTarget) {
+    throw new Error('Configured Vercel target does not match data environment');
+  }
+  if (environment === 'production' && vercelEnvironment && vercelEnvironment !== 'production') {
+    throw new Error('Configured Vercel environment does not match Production data environment');
+  }
+  if (environment === 'staging' && vercelEnvironment && vercelEnvironment !== 'preview') {
+    throw new Error('Configured Vercel environment does not match Staging data environment');
+  }
+  return environment;
 }
 
 function requiredEnvironment(name) {
@@ -108,15 +214,22 @@ function assertReferralCollection(collection) {
 }
 
 function firestoreRoot() {
-  const databaseId = requiredEnvironment('GCP_FIRESTORE_DATABASE_ID');
-  if (databaseId !== REFERRAL_DATABASE_ID) throw new Error('Configured Firestore database is not allowed');
+  const { databaseId } = referralEnvironmentConfiguration();
+  const emulatorHost = process.env.NODE_TEST_CONTEXT
+    ? String(process.env.FIRESTORE_EMULATOR_HOST || '').trim()
+    : '';
+  if (emulatorHost) {
+    return `http://${emulatorHost}/v1/projects/${FIRESTORE_PROJECT_ID}/databases/${databaseId}/documents`;
+  }
   return `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/${databaseId}/documents`;
 }
 
 async function firestoreFetch(url, options = {}) {
-  const accessToken = await firestoreAccessTokenProvider();
   const headers = new Headers(options.headers || {});
-  headers.set('Authorization', `Bearer ${accessToken}`);
+  if (!(process.env.NODE_TEST_CONTEXT && process.env.FIRESTORE_EMULATOR_HOST)) {
+    const accessToken = await firestoreAccessTokenProvider();
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  }
   return fetch(url, { ...options, headers });
 }
 
@@ -144,6 +257,25 @@ export async function createDocument(collection, id, values) {
   return { created: true, document: decodeDocument(await response.json()) };
 }
 
+export async function updateDocument(collection, id, values) {
+  assertReferralCollection(collection);
+  const fields = Object.keys(values);
+  if (fields.length === 0) throw new Error('Firestore update requires at least one field');
+  const query = new URLSearchParams({ 'currentDocument.exists': 'true' });
+  for (const field of fields) query.append('updateMask.fieldPaths', field);
+  const response = await firestoreFetch(
+    `${firestoreRoot()}/${collection}/${encodeURIComponent(id)}?${query.toString()}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: encodeFields(values) }),
+    },
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Firestore update failed (${response.status}): ${await response.text()}`);
+  return decodeDocument(await response.json());
+}
+
 export async function queryDocuments(collection, field, value) {
   assertReferralCollection(collection);
   const response = await firestoreFetch(`${firestoreRoot()}:runQuery`, {
@@ -154,6 +286,28 @@ export async function queryDocuments(collection, field, value) {
   });
   if (!response.ok) throw new Error(`Firestore query failed (${response.status}): ${await response.text()}`);
   return (await response.json()).flatMap(row => row.document ? [decodeDocument(row.document)] : []);
+}
+
+export async function countDocuments(collection, field, value) {
+  assertReferralCollection(collection);
+  const structuredQuery = { from: [{ collectionId: collection }] };
+  if (field !== undefined) {
+    structuredQuery.where = { fieldFilter: {
+      field: { fieldPath: field }, op: 'EQUAL', value: encodeValue(value),
+    } };
+  }
+  const response = await firestoreFetch(`${firestoreRoot()}:runAggregationQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ structuredAggregationQuery: {
+      structuredQuery,
+      aggregations: [{ alias: 'count', count: {} }],
+    } }),
+  });
+  if (!response.ok) throw new Error(`Firestore aggregation failed (${response.status}): ${await response.text()}`);
+  const rows = await response.json();
+  const encoded = rows.find(row => row.result?.aggregateFields?.count)?.result?.aggregateFields?.count;
+  return Number(encoded?.integerValue ?? encoded?.doubleValue ?? 0);
 }
 
 function encodeFields(values) {

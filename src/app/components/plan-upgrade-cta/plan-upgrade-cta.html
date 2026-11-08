@@ -1,0 +1,13 @@
+<div class="plan-upgrade-cta" [attr.data-source]="source" [attr.data-intent]="intent">
+  <div>
+    <h4>{{ intent === 'quota' ? lang.tr().PLAN_UPGRADE_QUOTA_TITLE : lang.tr().PLAN_UPGRADE_FEATURE_TITLE }}</h4>
+    <p>{{ lang.tr().PLAN_UPGRADE_BODY }}</p>
+  </div>
+  <a
+    data-testid="plan-upgrade-link"
+    [routerLink]="['/pricing']"
+    [queryParams]="{ from: source, intent: intent }"
+    (click)="trackClick()">
+    {{ lang.tr().PLAN_UPGRADE_CTA }}
+  </a>
+</div>

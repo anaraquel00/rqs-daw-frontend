@@ -15,7 +15,7 @@ const expected = [
 ];
 
 assert.deepEqual(urls, expected, 'sitemap must contain exactly the public discovery/trust URLs');
-for (const path of ['/app/master', '/app/split', '/app/build', '/app/uplink', '/app/learn', '/app/account', '/pitch', '/legacy']) {
+for (const path of ['/app/master', '/app/split', '/app/build', '/app/uplink', '/app/learn', '/app/account', '/pitch', '/legacy', '/admin']) {
   assert.equal(urls.includes('https://studio.raquelsynths.com' + path), false, 'sitemap must exclude ' + path);
 }
 

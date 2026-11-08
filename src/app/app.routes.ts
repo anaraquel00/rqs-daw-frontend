@@ -59,6 +59,10 @@ export const routes: Routes = [
     loadChildren: () => import('./studio/studio.routes').then(m => m.PITCH_ROUTES)
   },
   {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
+  },
+  {
     path: 'master/online',
     component: MasterLandingPageComponent,
     title: 'RQS MASTER | Masterização Online para Música'

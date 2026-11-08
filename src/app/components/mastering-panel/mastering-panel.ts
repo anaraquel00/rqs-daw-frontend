@@ -49,6 +49,7 @@ import { PreviewWaveformComponent } from './preview-waveform';
 import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
 import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
 import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
+import { PlanUpgradeCtaComponent } from '../plan-upgrade-cta/plan-upgrade-cta';
 
 const PITCH_HANDOFF_COPY = {
   en: {
@@ -87,6 +88,7 @@ const PITCH_HANDOFF_COPY = {
     AnalyzerSimpleComponent,
     DeliveryAutoComponent,
     AudioDnaCardComponent,
+    PlanUpgradeCtaComponent,
     RouterLink,
   ],
   templateUrl: './mastering-panel.html',
@@ -99,9 +101,6 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   private readonly dspService = inject(DspService);
   private readonly masteringService = inject(MasteringService);
   private readonly platformId = inject(PLATFORM_ID);
-  joiningWaitlist = false;
-  joinedWaitlist = false;
-  waitlistError = false;
 
   @Input() originalFile: File | null = null;
   @Input() isProcessing = false;
@@ -578,40 +577,6 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
       this.audioComparison.seek(this.audioComparison.previewStart() + value);
     } else {
       this.audioComparison.seek(value);
-    }
-  }
-
-  async joinProWaitlist(): Promise<void> {
-    const email = this.auth.session()?.user?.email;
-    if (!email) {
-      this.waitlistError = true;
-      return;
-    }
-
-    this.joiningWaitlist = true;
-    this.waitlistError = false;
-
-    try {
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          source: 'studio.raquelsynths.com',
-          language: this.lang.currentLang(),
-          website: '',
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        this.waitlistError = true;
-        return;
-      }
-      this.joinedWaitlist = true;
-    } catch {
-      this.waitlistError = true;
-    } finally {
-      this.joiningWaitlist = false;
     }
   }
 

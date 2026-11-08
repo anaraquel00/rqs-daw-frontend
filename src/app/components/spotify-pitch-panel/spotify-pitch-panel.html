@@ -245,7 +245,7 @@
         <span>{{ quotaMessage() }}</span>
       </div>
       @if (quota()?.spotify_pitch?.can_generate === false) {
-        <a href="/pricing#waitlist">{{ copy().joinWaitlist }}</a>
+        <app-plan-upgrade-cta source="pitch" intent="quota" />
       }
     </aside>
   </ng-template>

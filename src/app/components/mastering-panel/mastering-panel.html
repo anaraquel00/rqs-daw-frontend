@@ -344,27 +344,7 @@
   <div
     class="pro-limit-card"
     *ngIf="shouldShowProLimitCard()">
-    <div class="pro-limit-header">
-      <span class="pro-limit-icon">💎</span>
-      <div>
-        <h4>{{ lang.tr().MASTER_LIMIT_REACHED }}</h4>
-        <p>{{ lang.tr().PRO_WAITLIST_NOTE }}</p>
-      </div>
-    </div>
-    <button
-      *ngIf="!joinedWaitlist"
-      type="button"
-      class="btn-pro-waitlist"
-      (click)="joinProWaitlist()"
-      [disabled]="joiningWaitlist">
-      {{ joiningWaitlist ? lang.tr().PRO_WAITLIST_JOINING : lang.tr().PRO_WAITLIST_CTA }}
-    </button>
-    <div *ngIf="joinedWaitlist" class="waitlist-success">
-      ✅ {{ lang.tr().PRO_WAITLIST_SUCCESS }}
-    </div>
-    <div *ngIf="waitlistError" class="waitlist-error">
-      ⚠️ {{ lang.tr().PRO_WAITLIST_ERROR }}
-    </div>
+    <app-plan-upgrade-cta source="master" intent="quota" />
   </div>
 
   <div class="render-status" [class.blocked]="!requestReady()">

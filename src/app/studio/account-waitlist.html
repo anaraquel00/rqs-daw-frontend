@@ -1,0 +1,46 @@
+<section class="account-waitlist" aria-labelledby="account-waitlist-title">
+  <span class="eyebrow">{{ copy().eyebrow }}</span>
+  <h2 id="account-waitlist-title">{{ copy().title }}</h2>
+
+  @if (state() === 'loading') {
+    <p aria-live="polite">…</p>
+  } @else if (state() === 'missing') {
+    <p>{{ copy().missing }}</p>
+    <a routerLink="/pricing" fragment="waitlist">{{ copy().join }} →</a>
+  } @else if (state() === 'error') {
+    <p class="error" role="alert">{{ copy().error }}</p>
+  } @else {
+    <p>{{ copy().intro }}</p>
+    <fieldset>
+      <legend class="sr-only">{{ copy().title }}</legend>
+      @for (option of options; track option.value) {
+        <label [class.selected]="selected() === option.value">
+          <input
+            type="radio"
+            name="plan-interest"
+            [value]="option.value"
+            [checked]="selected() === option.value"
+            (change)="select(option.value)"
+          >
+          <span>{{ option.label }}</span>
+        </label>
+      }
+      <label [class.selected]="selected() === 'undecided'">
+        <input
+          type="radio"
+          name="plan-interest"
+          value="undecided"
+          [checked]="selected() === 'undecided'"
+          (change)="select('undecided')"
+        >
+        <span>{{ copy().undecided }}</span>
+      </label>
+    </fieldset>
+    <div class="actions">
+      <button type="button" (click)="save()" [disabled]="saving() || !dirty()">
+        {{ saving() ? copy().saving : copy().save }}
+      </button>
+      @if (saved()) { <span class="success" role="status">{{ copy().saved }}</span> }
+    </div>
+  }
+</section>

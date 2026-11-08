@@ -1,5 +1,6 @@
 import { SimpleChange, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { MasteringPanelComponent } from './mastering-panel';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
@@ -7,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
+import { AnalyticsService } from '../../services/analytics.service';
 import {
   MasteringAutoRecommendation,
   MasteringAutoRecommendationRequest,
@@ -144,7 +146,9 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
     TestBed.configureTestingModule({
       imports: [MasteringPanelComponent],
       providers: [
+        provideRouter([]),
         MasteringService,
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy('trackEvent') } },
         {
           provide: DspService,
           useValue: {
@@ -166,7 +170,14 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
         },
         {
           provide: AuthService,
-          useValue: { canMaster, isLoggedIn, isPremium, remainingMasters, requestSignIn },
+          useValue: {
+            canMaster,
+            isLoggedIn,
+            isPremium,
+            remainingMasters,
+            requestSignIn,
+            session: () => ({ user: { email: 'artist@example.com' } }),
+          },
         },
       ],
     });
@@ -409,7 +420,7 @@ it('sends the selected source start with the Preview command', () => {
     expect(panel.shouldShowFullMasterAction()).toBeFalse();
   });
 
-  it('shows the Final Beta waitlist card only for an exhausted Free plan', () => {
+  it('shows the pricing CTA card only for an exhausted Free plan', () => {
     isPremium.set(false);
     remainingMasters.set(1);
     expect(panel.shouldShowProLimitCard()).toBeFalse();
@@ -419,6 +430,22 @@ it('sends the selected source start with the Preview command', () => {
 
     isPremium.set(true);
     expect(panel.shouldShowProLimitCard()).toBeFalse();
+  });
+
+  it('routes an exhausted Free user to pricing without an in-module plan selector', () => {
+    remainingMasters.set(0);
+    const fixture = TestBed.createComponent(MasteringPanelComponent);
+    fixture.componentInstance.originalFile = new File(['audio'], 'source.wav', { type: 'audio/wav' });
+    fixture.detectChanges();
+
+    const card = fixture.nativeElement.querySelector('.pro-limit-card') as HTMLElement;
+    const link = card.querySelector('[data-testid="plan-upgrade-link"]') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/pricing?from=master&intent=quota');
+    expect(card.querySelector('.waitlist-plan-options')).toBeNull();
+    expect(card.querySelector('.btn-pro-waitlist')).toBeNull();
+    expect(card.textContent).not.toContain('MASTER PLUS PRO');
+
+    fixture.destroy();
   });
 
   it('invalidates stale results and resets audition when the Preview range moves', () => {

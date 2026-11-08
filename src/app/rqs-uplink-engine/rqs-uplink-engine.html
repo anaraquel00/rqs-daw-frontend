@@ -3,10 +3,16 @@
     <h1>{{ lang.tr().UPLINK_PAGE_TITLE }}</h1>
     <p>{{ lang.tr().UPLINK_PAGE_DESC }}</p>
   </div>
-  <button class="create-toggle" type="button" [disabled]="creating()" [attr.aria-expanded]="createOpen()" aria-controls="uplink-create-form" (click)="toggleCreate()">
+  <button class="create-toggle" type="button" [disabled]="creating() || limitReached()" [attr.aria-expanded]="createOpen()" aria-controls="uplink-create-form" (click)="toggleCreate()">
     {{ createOpen() ? lang.tr().UPLINK_HIDE_CREATE : lang.tr().UPLINK_CREATE_LINK }}
   </button>
 </header>
+
+@if (limitReached()) {
+  <div class="uplink-upgrade-card">
+    <app-plan-upgrade-cta source="uplink" intent="quota" />
+  </div>
+}
 
 <div class="rqs-linktwin-panel" id="uplink-create-form" [hidden]="!createOpen()">
   <h2>{{ lang.tr().UPLINK_CREATE_LINK }}</h2>
@@ -32,7 +38,7 @@
     <input id="uplink-custom-slug" type="text" [ngModel]="customSlug()" (ngModelChange)="customSlug.set($event)" placeholder="factory-reset">
   </div>
 
-  <button class="create-submit" type="button" [disabled]="creating()" (click)="compileLink()">{{ lang.tr().UPLINK_CREATE_LINK }}</button>
+  <button class="create-submit" type="button" [disabled]="creating() || limitReached()" (click)="compileLink()">{{ lang.tr().UPLINK_CREATE_LINK }}</button>
 
   @if (errorMessage()) {
     <p class="error-banner" role="alert">{{ errorMessage() }}</p>

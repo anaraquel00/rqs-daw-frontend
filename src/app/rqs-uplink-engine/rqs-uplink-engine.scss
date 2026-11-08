@@ -114,6 +114,17 @@
   }
 }
 
+.uplink-upgrade-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  padding: 14px;
+  border: 1px solid rgba(183, 67, 141, .42);
+  border-radius: 10px;
+  background: rgba(183, 67, 141, .07);
+}
+
 @media (max-width: 600px) {
   .uplink-page-header { align-items: start; }
   .create-toggle { max-width: 100%; }

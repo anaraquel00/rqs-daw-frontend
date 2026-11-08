@@ -7,10 +7,12 @@ import { Footer } from '../footer/footer';
 import { LanguageService, UiLanguage } from '../services/language.service';
 import { SeoConfig, SeoService } from '../services/seo.service';
 import { AnalyticsService } from '../services/analytics.service';
+import { AuthService } from '../services/auth.service';
 import { StudioThemePreference, ThemeService } from '../services/theme.service';
 import { RqsPlan } from '../services/mastering-types';
 import { plannedEntitlementLine } from '../services/plan-entitlements';
 import { isValidReferralCode } from '../services/founding-referral';
+import { parsePricingUpgradeContext } from '../services/pricing-upgrade-context';
 
 type PricingCurrency = 'BRL' | 'USD' | 'PLN';
 
@@ -75,9 +77,11 @@ export class PricingPageComponent implements AfterViewInit {
   readonly currency = signal<PricingCurrency>('USD');
   readonly copy = computed(() => this.lang.tr().PRICING);
   readonly prices = computed(() => PRICING[this.currency()]);
-  readonly waitlistState = signal<'idle' | 'sending' | 'success' | 'error'>('idle');
+  readonly waitlistState = signal<'idle' | 'sending' | 'success' | 'already-joined' | 'error'>('idle');
+  readonly auth = inject(AuthService);
   private readonly viewportScroller = inject(ViewportScroller);
   private readonly route = inject(ActivatedRoute);
+  readonly upgradeContext = parsePricingUpgradeContext(this.route.snapshot.queryParamMap);
   private readonly referralCode = computed(() => {
     const value = this.route.snapshot.queryParamMap.get('ref')?.trim().toUpperCase() ?? '';
     return isValidReferralCode(value) ? value : '';
@@ -143,19 +147,32 @@ export class PricingPageComponent implements AfterViewInit {
           source: 'studio.raquelsynths.com/pricing',
           language: this.lang.currentLang(),
           referralCode: this.referralCode() || undefined,
+          plan_interest: this.desiredPlan === 'unknown' ? 'undecided' : this.desiredPlan,
           website: ''
         })
       });
       const result = await response.json();
-      const success = response.ok && result?.success;
-      this.waitlistState.set(success ? 'success' : 'error');
+      if (!response.ok || result?.success !== true) {
+        this.waitlistState.set('error');
+        return;
+      }
 
-      if (success) {
+      if (result.alreadyJoined === true) {
+        this.waitlistState.set('already-joined');
+        return;
+      }
+
+      if (result.alreadyJoined === false) {
+        this.waitlistState.set('success');
         this.analytics.trackEvent('waitlist_joined', {
-          desired_plan: this.desiredPlan
+          desired_plan: this.desiredPlan,
+          ...this.upgradeAnalyticsContext(),
         });
         if (result?.referralAttributed) this.analytics.trackEvent('referral_waitlist_joined');
+        return;
       }
+
+      this.waitlistState.set('error');
     } catch {
       this.waitlistState.set('error');
     }
@@ -165,7 +182,8 @@ export class PricingPageComponent implements AfterViewInit {
     this.desiredPlan = plan;
     this.analytics.trackEvent('pricing_plan_interest', {
       plan,
-      currency: this.currency()
+      currency: this.currency(),
+      ...this.upgradeAnalyticsContext(),
     });
 
     const target = document.getElementById('waitlist');
@@ -177,5 +195,11 @@ export class PricingPageComponent implements AfterViewInit {
     if (language === 'pt') return 'BRL';
     if (language === 'pl') return 'PLN';
     return 'USD';
+  }
+
+  private upgradeAnalyticsContext(): Record<string, string> {
+    return this.upgradeContext
+      ? { source_module: this.upgradeContext.source, intent: this.upgradeContext.intent }
+      : {};
   }
 }

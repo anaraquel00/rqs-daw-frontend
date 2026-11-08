@@ -139,11 +139,15 @@
       <label for="pricing-waitlist-email">{{ copy().emailLabel }}</label>
       <div class="waitlist-row">
         <input id="pricing-waitlist-email" name="email" type="email" required autocomplete="email" [(ngModel)]="waitlistEmail" [placeholder]="copy().emailPlaceholder">
-        <button type="submit" [disabled]="waitlistState() === 'sending' || waitlistState() === 'success'">
+        <button type="submit" [disabled]="waitlistState() === 'sending' || waitlistState() === 'success' || waitlistState() === 'already-joined'">
           {{ waitlistState() === 'sending' ? copy().sending : copy().joinWaitlist }}
         </button>
       </div>
       <p class="form-state success" *ngIf="waitlistState() === 'success'">{{ copy().waitlistSuccess }}</p>
+      <div class="form-state already-joined" *ngIf="waitlistState() === 'already-joined'">
+        <p>{{ copy().waitlistAlreadyJoined }}</p>
+        <a *ngIf="auth.isLoggedIn()" routerLink="/app/account">{{ copy().managePreference }} →</a>
+      </div>
       <p class="form-state error" *ngIf="waitlistState() === 'error'">{{ copy().waitlistError }}</p>
     </form>
   </section>

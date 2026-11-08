@@ -16,11 +16,13 @@ import { STUDIO_COPY } from './studio-copy';
 import { SeoService } from '../services/seo.service';
 import { StudioSurface, studioSeoConfig } from './studio-seo';
 import { FoundingReferralBannerComponent } from './founding-referral-banner';
+import { AccountWaitlistComponent } from './account-waitlist';
 
 @Component({
   selector: 'app-studio-shell', standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, UploadZoneComponent, MixPanelComponent,
-    RqsUplinkEngineComponent, RqsUplinkDashboardComponent, AuthPromptComponent, StudioFooterComponent, ModuleSelectorComponent, FoundingReferralBannerComponent],
+    RqsUplinkEngineComponent, RqsUplinkDashboardComponent, AuthPromptComponent, StudioFooterComponent,
+    ModuleSelectorComponent, FoundingReferralBannerComponent, AccountWaitlistComponent],
   templateUrl: './studio-shell.html', styleUrl: './studio-shell.scss',
   host: { '[attr.data-theme]': 'resolvedTheme()' },
 })

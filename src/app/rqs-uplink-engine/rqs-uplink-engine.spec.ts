@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { AnalyticsService } from '../services/analytics.service';
 import { DeepLinkService } from '../services/deep-link.service';
 import { LanguageService } from '../services/language.service';
@@ -12,7 +13,8 @@ describe('RqsUplinkEngineComponent', () => {
     await TestBed.configureTestingModule({
       imports: [RqsUplinkEngineComponent],
       providers: [
-        { provide: DeepLinkService, useValue: { detectPlatform: () => null, sessionEpoch: signal(0), compileAndRegisterLink: create } },
+        provideRouter([]),
+        { provide: DeepLinkService, useValue: { detectPlatform: () => null, sessionEpoch: signal(0), limitReached: signal(false), compileAndRegisterLink: create } },
         { provide: LanguageService, useValue: { tr: () => EN_TRANSLATIONS } },
         { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } }
       ]
@@ -38,12 +40,14 @@ describe('RqsUplinkEngineComponent', () => {
     const deepLinkService = {
       detectPlatform: () => null,
       sessionEpoch: signal(0),
+      limitReached: signal(false),
       compileAndRegisterLink: jasmine.createSpy().and.rejectWith(new Error('internal detail'))
     };
 
     await TestBed.configureTestingModule({
       imports: [RqsUplinkEngineComponent],
       providers: [
+        provideRouter([]),
         { provide: DeepLinkService, useValue: deepLinkService },
         { provide: LanguageService, useValue: { tr: () => ({ UPLINK_CREATE_FAILED: 'CREATE_FAILED' }) } },
         { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } }
@@ -65,12 +69,14 @@ describe('RqsUplinkEngineComponent', () => {
     const deepLinkService = {
       detectPlatform: () => null,
       sessionEpoch,
+      limitReached: signal(false),
       compileAndRegisterLink: jasmine.createSpy().and.returnValues(createA.promise, createB.promise)
     };
 
     await TestBed.configureTestingModule({
       imports: [RqsUplinkEngineComponent],
       providers: [
+        provideRouter([]),
         { provide: DeepLinkService, useValue: deepLinkService },
         { provide: LanguageService, useValue: { tr: () => ({ UPLINK_CREATE_FAILED: 'CREATE_FAILED' }) } },
         { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } }
@@ -98,6 +104,33 @@ describe('RqsUplinkEngineComponent', () => {
 
     expect(component.compiledLink()).toBe('https://go.raquelsynths.com/owner-b');
     expect(component.creating()).toBeFalse();
+  });
+
+  it('routes the real Free active-link quota to pricing with quota intent', async () => {
+    await TestBed.configureTestingModule({
+      imports: [RqsUplinkEngineComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: DeepLinkService,
+          useValue: {
+            detectPlatform: () => null,
+            sessionEpoch: signal(0),
+            limitReached: signal(true),
+            compileAndRegisterLink: jasmine.createSpy(),
+          },
+        },
+        { provide: LanguageService, useValue: { tr: () => EN_TRANSLATIONS } },
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(RqsUplinkEngineComponent);
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('.uplink-upgrade-card [data-testid="plan-upgrade-link"]') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/pricing?from=uplink&intent=quota');
+    expect((fixture.nativeElement.querySelector('.create-toggle') as HTMLButtonElement).disabled).toBeTrue();
   });
 });
 
