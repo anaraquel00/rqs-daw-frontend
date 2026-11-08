@@ -341,7 +341,7 @@ export class MixPanelComponent implements OnDestroy {
     return this.auth.userRole() === 'premium' ? 8 : 3;
   }
 
-  private trackLimitSelectionMessage(): string {
+  trackLimitSelectionMessage(): string {
     return this.localCopy('trackLimitSelection').replace('{max}', String(this.maxTrackCount()));
   }
 

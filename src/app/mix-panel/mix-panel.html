@@ -277,7 +277,7 @@
 
   @if (setlistError) {
     <div class="validation-panel" role="alert">
-      <p class="status-item error">{{ setlistError }}</p>
+      <p class="status-item error">{{ pricingUpgradeRequired() ? trackLimitSelectionMessage() : setlistError }}</p>
     </div>
   }
 
