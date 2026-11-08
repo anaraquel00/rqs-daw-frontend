@@ -119,4 +119,20 @@ describe('PricingPageComponent waitlist analytics', () => {
       desired_plan: 'pro',
     });
   });
+
+  it('carries a validated module context into pricing interest analytics without changing plan selection', () => {
+    (component as unknown as { upgradeContext: { source: 'pitch'; intent: 'quota' } }).upgradeContext = {
+      source: 'pitch',
+      intent: 'quota',
+    };
+
+    component.scrollToWaitlist('plus');
+
+    expect(analytics.trackEvent).toHaveBeenCalledOnceWith('pricing_plan_interest', {
+      plan: 'plus',
+      currency: 'USD',
+      source_module: 'pitch',
+      intent: 'quota',
+    });
+  });
 });

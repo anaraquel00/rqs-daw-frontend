@@ -417,13 +417,9 @@ export const FR_TRANSLATIONS: typeof PT_TRANSLATIONS = {
   UPLINK_CREATE_FAILED: 'Impossible de créer le lien pour le moment. Réessayez.',
   UPLINK_LOAD_FAILED: 'Impossible de charger vos liens pour le moment. Réessayez.',
 
-  MASTER_LIMIT_REACHED: 'Limite gratuite atteinte',
-  PRO_WAITLIST_NOTE: 'Choisissez MASTER, PLUS ou PRO pour enregistrer votre intérêt pour une offre de lancement.',
-  WAITLIST_PLAN_PROMPT: 'Sélectionnez l’offre que vous envisagez :',
-  PRO_WAITLIST_CTA: '[ 🔔 ENREGISTRER MON INTÉRÊT ]',
-  PRO_WAITLIST_JOINING: '[ SYNCHRONISATION... ]',
-  PRO_WAITLIST_SUCCESS: 'Votre intérêt a été enregistré pour l’offre',
-  WAITLIST_ALREADY_JOINED: 'Vous êtes déjà inscrit. Modifiez votre préférence dans votre compte.',
-  WAITLIST_MANAGE_CTA: 'GÉRER LA PRÉFÉRENCE',
-  PRO_WAITLIST_ERROR: 'Impossible de rejoindre la liste pour le moment. Réessayez plus tard.',
+  PLAN_UPGRADE_QUOTA_TITLE: 'Limite gratuite atteinte',
+  PLAN_UPGRADE_FEATURE_TITLE: 'Fonctionnalité du forfait',
+  PLAN_UPGRADE_BODY: 'Continuez à utiliser RQS Studio après la bêta.',
+  PLAN_UPGRADE_CTA: 'VOIR LES OFFRES ET FONCTIONNALITÉS',
+
 };

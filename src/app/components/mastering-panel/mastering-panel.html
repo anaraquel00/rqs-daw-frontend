@@ -344,45 +344,7 @@
   <div
     class="pro-limit-card"
     *ngIf="shouldShowProLimitCard()">
-    <div class="pro-limit-header">
-      <span class="pro-limit-icon">◎</span>
-      <div>
-        <h4>{{ lang.tr().MASTER_LIMIT_REACHED }}</h4>
-        <p>{{ lang.tr().PRO_WAITLIST_NOTE }}</p>
-      </div>
-    </div>
-    <div class="waitlist-plan-selection" *ngIf="!joinedWaitlist && !waitlistAlreadyJoined">
-      <p>{{ lang.tr().WAITLIST_PLAN_PROMPT }}</p>
-      <div class="waitlist-plan-options">
-        <button
-          *ngFor="let plan of waitlistPlanOptions"
-          type="button"
-          class="btn-pro-waitlist"
-          [class.selected]="selectedWaitlistPlan() === plan"
-          [attr.aria-pressed]="selectedWaitlistPlan() === plan"
-          (click)="selectWaitlistPlan(plan)">
-          {{ plan.toUpperCase() }}
-        </button>
-      </div>
-    </div>
-    <button
-      *ngIf="!joinedWaitlist && !waitlistAlreadyJoined"
-      type="button"
-      class="btn-pro-waitlist"
-      (click)="joinPlanWaitlist()"
-      [disabled]="joiningWaitlist || !selectedWaitlistPlan()">
-      {{ joiningWaitlist ? lang.tr().PRO_WAITLIST_JOINING : lang.tr().PRO_WAITLIST_CTA }}
-    </button>
-    <div *ngIf="joinedWaitlist" class="waitlist-success">
-      ✅ {{ lang.tr().PRO_WAITLIST_SUCCESS }} {{ selectedWaitlistPlan()?.toUpperCase() }}.
-    </div>
-    <div *ngIf="waitlistAlreadyJoined" class="waitlist-success waitlist-existing">
-      <p>{{ lang.tr().WAITLIST_ALREADY_JOINED }}</p>
-      <a routerLink="/app/account">{{ lang.tr().WAITLIST_MANAGE_CTA }} →</a>
-    </div>
-    <div *ngIf="waitlistError" class="waitlist-error">
-      ⚠️ {{ lang.tr().PRO_WAITLIST_ERROR }}
-    </div>
+    <app-plan-upgrade-cta source="master" intent="quota" />
   </div>
 
   <div class="render-status" [class.blocked]="!requestReady()">

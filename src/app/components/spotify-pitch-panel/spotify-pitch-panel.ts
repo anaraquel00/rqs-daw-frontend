@@ -13,6 +13,7 @@ import {
   SpotifyPitchCollaboratorRole, SpotifyPitchEvidence, SpotifyPitchEvidenceSource,
   SpotifyPitchPromotionChannel, SpotifyPitchQuotaResponse, SpotifyPitchRequest, SpotifyPitchResponse,
 } from '../../services/mastering-types';
+import { PlanUpgradeCtaComponent } from '../plan-upgrade-cta/plan-upgrade-cta';
 
 type V2SoundCategory = 'genre_family' | 'subgenres' | 'moods' | 'instruments' | 'vocals' | 'production_elements';
 
@@ -33,7 +34,7 @@ interface PitchCopy {
   copyPitch: string; copied: string; regenerate: string; evidenceUsed: string; unavailable: string;
   aiDetected: string; artistFinal: string; genreLimit: string; draftStatus: string; reviewMicrocopy: string;
   timingRecommended: string; timingReleaseRadar: string;
-  quotaRemaining: string; quotaReached: string; quotaUnavailable: string; joinWaitlist: string;
+  quotaRemaining: string; quotaReached: string; quotaUnavailable: string;
   promotionLabels: Record<SpotifyPitchPromotionChannel, string>;
   roleLabels: Record<SpotifyPitchCollaboratorRole, string>;
   sourceLabels: Record<SpotifyPitchEvidenceSource, string>;
@@ -103,7 +104,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     reviewMicrocopy: 'Use this as an editorial draft and make the final adjustment in your own artistic voice before submitting.',
     unavailable: 'Pitch generation is temporarily unavailable. Your analysis and mastering remain active.',
     quotaRemaining: 'You have {remaining} of {limit} AI Spotify Pitches remaining.',
-    quotaReached: 'You have reached your AI Spotify Pitch limit.', quotaUnavailable: 'Pitch quota is temporarily unavailable.', joinWaitlist: 'GO TO WAITLIST',
+    quotaReached: 'You have reached your AI Spotify Pitch limit.', quotaUnavailable: 'Pitch quota is temporarily unavailable.',
     timingRecommended: 'Recommended: submit your pitch around 14+ days in advance.',
     timingReleaseRadar: 'For Release Radar eligibility, Spotify states at least 7 days before release.',
     promotionLabels: EN_PROMOTION_LABELS,
@@ -145,7 +146,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     reviewMicrocopy: 'Use esta versão como base editorial e faça o ajuste final com sua voz artística antes do envio.',
     unavailable: 'A geração do pitch está indisponível. Sua análise e masterização continuam ativas.',
     quotaRemaining: 'Você tem {remaining} de {limit} AI Spotify Pitches restantes.',
-    quotaReached: 'Você atingiu o limite de AI Spotify Pitches.', quotaUnavailable: 'A cota de pitches está temporariamente indisponível.', joinWaitlist: 'IR PARA WAITLIST',
+    quotaReached: 'Você atingiu o limite de AI Spotify Pitches.', quotaUnavailable: 'A cota de pitches está temporariamente indisponível.',
     timingRecommended: 'Recomendado: envie seu pitch com cerca de 14+ dias de antecedência.',
     timingReleaseRadar: 'Para benefício do Release Radar, o Spotify informa pelo menos 7 dias antes do lançamento.',
     promotionLabels: PT_PROMOTION_LABELS,
@@ -188,7 +189,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     reviewMicrocopy: 'Potraktuj tę wersję jako szkic redakcyjny i przed wysłaniem nadaj jej ostatecznie swój artystyczny głos.',
     unavailable: 'Generowanie pitchu jest chwilowo niedostępne. Analiza i mastering pozostają aktywne.',
     quotaRemaining: 'Pozostało {remaining} z {limit} AI Spotify Pitches.',
-    quotaReached: 'Osiągnięto limit AI Spotify Pitch.', quotaUnavailable: 'Limit pitchy jest chwilowo niedostępny.', joinWaitlist: 'PRZEJDŹ DO LISTY',
+    quotaReached: 'Osiągnięto limit AI Spotify Pitch.', quotaUnavailable: 'Limit pitchy jest chwilowo niedostępny.',
     timingRecommended: 'Zalecenie: wyślij pitch około 14+ dni przed premierą.',
     timingReleaseRadar: 'Aby skorzystać z Release Radar, Spotify wskazuje co najmniej 7 dni przed premierą.',
     promotionLabels: PL_PROMOTION_LABELS,
@@ -231,7 +232,7 @@ const COPY: Record<'en' | 'pt' | 'pl' | 'fr', PitchCopy> = {
     reviewMicrocopy: 'Utilisez cette version comme base éditoriale et apportez la touche finale avec votre propre voix artistique avant l’envoi.',
     unavailable: 'La génération du pitch est momentanément indisponible. L’analyse et le mastering restent actifs.',
     quotaRemaining: 'Il vous reste {remaining} AI Spotify Pitches sur {limit}.',
-    quotaReached: 'Vous avez atteint votre limite d’AI Spotify Pitches.', quotaUnavailable: 'Le quota de pitches est momentanément indisponible.', joinWaitlist: 'ALLER À LA LISTE D’ATTENTE',
+    quotaReached: 'Vous avez atteint votre limite d’AI Spotify Pitches.', quotaUnavailable: 'Le quota de pitches est momentanément indisponible.',
     timingRecommended: 'Recommandé : envoyez votre pitch environ 14+ jours à l’avance.',
     timingReleaseRadar: 'Pour bénéficier de Release Radar, Spotify indique au moins 7 jours avant la sortie.',
     promotionLabels: FR_PROMOTION_LABELS,
@@ -277,7 +278,7 @@ const EVIDENCE_TYPE_LABELS: Record<'en' | 'pt' | 'pl' | 'fr', Record<string, str
   },
 };
 
-@Component({ selector: 'app-spotify-pitch-panel', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './spotify-pitch-panel.html', styleUrls: ['./spotify-pitch-panel.scss'] })
+@Component({ selector: 'app-spotify-pitch-panel', standalone: true, imports: [CommonModule, FormsModule, PlanUpgradeCtaComponent], templateUrl: './spotify-pitch-panel.html', styleUrls: ['./spotify-pitch-panel.scss'] })
 export class SpotifyPitchPanelComponent implements OnChanges, OnInit {
   private readonly dsp = inject(DspService);
   private readonly destroyRef = inject(DestroyRef);

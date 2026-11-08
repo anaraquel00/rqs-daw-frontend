@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed, tick } from '@angular/core/testing';
 import { By, SafeUrl } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 import { MixPanelComponent, RQSTrack } from './mix-panel';
 import {
@@ -48,6 +49,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     TestBed.configureTestingModule({
       imports: [MixPanelComponent],
       providers: [
+        provideRouter([]),
         {
           provide: DspService,
           useValue: { generateMixS3, getSetlistPresignedUrl, uploadToS3 },
@@ -393,6 +395,9 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.tracks.length).toBe(3);
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
+    fixture.detectChanges();
+    const pricingLink = fixture.nativeElement.querySelector('.build-upgrade-card [data-testid="plan-upgrade-link"]') as HTMLAnchorElement;
+    expect(pricingLink.getAttribute('href')).toBe('/pricing?from=build&intent=upgrade');
   });
 
   it('keeps anonymous track selection local and opens auth without presign or upload', () => {
@@ -489,6 +494,10 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
 
     expect(component.setlistError).toBe(component.localCopy('trackLimitServer'));
     expect(component.setlistError).not.toContain('PRIVATE_DETAIL');
+    expect(component.pricingUpgradeRequired()).toBeTrue();
+    fixture.detectChanges();
+    const pricingLink = fixture.nativeElement.querySelector('.build-upgrade-card [data-testid="plan-upgrade-link"]') as HTMLAnchorElement;
+    expect(pricingLink.getAttribute('href')).toBe('/pricing?from=build&intent=upgrade');
   });
 
   it('cancels an active render on logout and ignores a delayed success', fakeAsync(() => {

@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { DeepLinkService } from '../services/deep-link.service';
 import { LanguageService } from '../services/language.service';
 import { AnalyticsService } from '../services/analytics.service';
+import { PlanUpgradeCtaComponent } from '../components/plan-upgrade-cta/plan-upgrade-cta';
 
 @Component({
   selector: 'app-rqs-uplink-engine',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PlanUpgradeCtaComponent],
   templateUrl: './rqs-uplink-engine.html',
   styleUrls: ['./rqs-uplink-engine.scss']
 })
@@ -23,6 +24,7 @@ export class RqsUplinkEngineComponent {
   copied = signal<boolean>(false);
   creating = signal<boolean>(false);
   readonly createOpen = signal(false);
+  readonly limitReached = this.deepLinkService.limitReached;
 
   detectedPlatform = computed(() => {
     return this.deepLinkService.detectPlatform(this.targetUrl());

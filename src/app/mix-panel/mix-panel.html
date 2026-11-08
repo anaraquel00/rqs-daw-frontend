@@ -281,6 +281,12 @@
     </div>
   }
 
+  @if (pricingUpgradeRequired()) {
+    <div class="build-upgrade-card">
+      <app-plan-upgrade-cta source="build" intent="upgrade" />
+    </div>
+  }
+
   <button
     type="button"
     class="btn-primary ignite-btn"

@@ -1,5 +1,6 @@
 import { SimpleChange, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { MasteringPanelComponent } from './mastering-panel';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
@@ -7,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { DspService } from '../../services/dsp';
 import { LanguageService } from '../../services/language.service';
 import { MasteringService } from '../../services/mastering.service';
+import { AnalyticsService } from '../../services/analytics.service';
 import {
   MasteringAutoRecommendation,
   MasteringAutoRecommendationRequest,
@@ -144,7 +146,9 @@ describe('MasteringPanelComponent V2 request gate and guidance', () => {
     TestBed.configureTestingModule({
       imports: [MasteringPanelComponent],
       providers: [
+        provideRouter([]),
         MasteringService,
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy('trackEvent') } },
         {
           provide: DspService,
           useValue: {
@@ -416,7 +420,7 @@ it('sends the selected source start with the Preview command', () => {
     expect(panel.shouldShowFullMasterAction()).toBeFalse();
   });
 
-  it('shows the Final Beta waitlist card only for an exhausted Free plan', () => {
+  it('shows the pricing CTA card only for an exhausted Free plan', () => {
     isPremium.set(false);
     remainingMasters.set(1);
     expect(panel.shouldShowProLimitCard()).toBeFalse();
@@ -428,46 +432,20 @@ it('sends the selected source start with the Preview command', () => {
     expect(panel.shouldShowProLimitCard()).toBeFalse();
   });
 
-  it('requires an explicit launch plan before submitting the exhausted-plan waitlist CTA', async () => {
-    const request = spyOn(globalThis, 'fetch');
+  it('routes an exhausted Free user to pricing without an in-module plan selector', () => {
+    remainingMasters.set(0);
+    const fixture = TestBed.createComponent(MasteringPanelComponent);
+    fixture.componentInstance.originalFile = new File(['audio'], 'source.wav', { type: 'audio/wav' });
+    fixture.detectChanges();
 
-    await panel.joinPlanWaitlist();
+    const card = fixture.nativeElement.querySelector('.pro-limit-card') as HTMLElement;
+    const link = card.querySelector('[data-testid="plan-upgrade-link"]') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/pricing?from=master&intent=quota');
+    expect(card.querySelector('.waitlist-plan-options')).toBeNull();
+    expect(card.querySelector('.btn-pro-waitlist')).toBeNull();
+    expect(card.textContent).not.toContain('MASTER PLUS PRO');
 
-    expect(request).not.toHaveBeenCalled();
-    expect(panel.waitlistError).toBeTrue();
-    expect(panel.selectedWaitlistPlan()).toBeNull();
-  });
-
-  it('persists exactly the launch plan selected in the exhausted-plan CTA', async () => {
-    panel.selectWaitlistPlan('plus');
-    const request = spyOn(globalThis, 'fetch').and.resolveTo(new Response(
-      JSON.stringify({ success: true, alreadyJoined: false }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
-    ));
-
-    await panel.joinPlanWaitlist();
-
-    const options = request.calls.mostRecent().args[1] as RequestInit;
-    expect(JSON.parse(String(options.body))).toEqual(jasmine.objectContaining({
-      email: 'artist@example.com',
-      plan_interest: 'plus',
-    }));
-    expect(panel.joinedWaitlist).toBeTrue();
-    expect(panel.waitlistAlreadyJoined).toBeFalse();
-  });
-
-  it('does not claim a selected plan was saved for an existing waitlist entry', async () => {
-    panel.selectWaitlistPlan('master');
-    spyOn(globalThis, 'fetch').and.resolveTo(new Response(
-      JSON.stringify({ success: true, alreadyJoined: true }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
-    ));
-
-    await panel.joinPlanWaitlist();
-
-    expect(panel.joinedWaitlist).toBeFalse();
-    expect(panel.waitlistAlreadyJoined).toBeTrue();
-    expect(panel.waitlistError).toBeFalse();
+    fixture.destroy();
   });
 
   it('invalidates stale results and resets audition when the Preview range moves', () => {

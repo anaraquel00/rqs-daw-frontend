@@ -604,32 +604,11 @@ export const PT_TRANSLATIONS = {
   UPLINK_CREATE_FAILED: 'Não foi possível criar o link agora. Tente novamente.',
   UPLINK_LOAD_FAILED: 'Não foi possível carregar seus links agora. Tente novamente.',
 
-  MASTER_LIMIT_REACHED:
-  "Limite gratuito atingido",
+  PLAN_UPGRADE_QUOTA_TITLE: 'Limite gratuito atingido',
+  PLAN_UPGRADE_FEATURE_TITLE: 'Recurso do plano',
+  PLAN_UPGRADE_BODY: 'Continue usando o RQS Studio após o Beta.',
+  PLAN_UPGRADE_CTA: 'VER PLANOS E RECURSOS',
 
-PRO_WAITLIST_NOTE:
-  "Escolha entre MASTER, PLUS e PRO para registrar seu interesse nos planos de lançamento.",
-
-WAITLIST_PLAN_PROMPT:
-  "Selecione o plano que você considera:",
-
-PRO_WAITLIST_CTA:
-  "[ 🔔 REGISTRAR INTERESSE ]",
-
-PRO_WAITLIST_JOINING:
-  "[ SINCRONIZANDO... ]",
-
-PRO_WAITLIST_SUCCESS:
-  "Seu interesse foi registrado para o plano",
-
-WAITLIST_ALREADY_JOINED:
-  "Você já está inscrito. Altere sua preferência na sua conta.",
-
-WAITLIST_MANAGE_CTA:
-  "GERENCIAR PREFERÊNCIA",
-
-PRO_WAITLIST_ERROR:
-  "Não foi possível entrar na lista agora. Tente novamente."
 };
 
 // Objeto de traduções em INGLÊS (🟢 CORRIGIDO: $9.90 alterado para $8.00!)
@@ -887,32 +866,11 @@ export const EN_TRANSLATIONS = {
   UPLINK_CREATE_FAILED: 'The link could not be created right now. Try again.',
   UPLINK_LOAD_FAILED: 'Your links could not be loaded right now. Try again.',
 
-  MASTER_LIMIT_REACHED:
-  "Free limit reached",
+  PLAN_UPGRADE_QUOTA_TITLE: 'Free limit reached',
+  PLAN_UPGRADE_FEATURE_TITLE: 'Plan feature',
+  PLAN_UPGRADE_BODY: 'Keep using RQS Studio after the Beta.',
+  PLAN_UPGRADE_CTA: 'VIEW PLANS AND FEATURES',
 
-  PRO_WAITLIST_NOTE:
-  "Choose MASTER, PLUS or PRO to record your interest in a launch plan.",
-
-  WAITLIST_PLAN_PROMPT:
-  "Select the plan you are considering:",
-
-  PRO_WAITLIST_CTA:
-  "[ 🔔 RECORD INTEREST ]",
-
-  PRO_WAITLIST_JOINING:
-  "[ SYNCHRONIZING... ]",
-
-  PRO_WAITLIST_SUCCESS:
-  "Your interest was recorded for the plan",
-
-  WAITLIST_ALREADY_JOINED:
-  "You are already registered. Change your preference in your account.",
-
-  WAITLIST_MANAGE_CTA:
-  "MANAGE PREFERENCE",
-
-  PRO_WAITLIST_ERROR:
-  "Unable to join the list right now. Please try again."
 };
 
 export const PL_TRANSLATIONS: typeof PT_TRANSLATIONS = {
@@ -1154,13 +1112,8 @@ HERO_TITLE: 'NADAJ SWOJEJ MUZYCE GOTOWE BRZMIENIE.',
   UPLINK_SLUG_TAKEN: 'Ten niestandardowy adres jest już używany.',
   UPLINK_CREATE_FAILED: 'Nie udało się teraz utworzyć linku. Spróbuj ponownie.',
   UPLINK_LOAD_FAILED: 'Nie udało się teraz wczytać linków. Spróbuj ponownie.',
-  MASTER_LIMIT_REACHED: 'Osiągnięto bezpłatny limit',
-  PRO_WAITLIST_NOTE: 'Wybierz MASTER, PLUS lub PRO, aby zapisać zainteresowanie planem premierowym.',
-  WAITLIST_PLAN_PROMPT: 'Wybierz plan, który rozważasz:',
-  PRO_WAITLIST_CTA: '[ 🔔 ZAPISZ ZAINTERESOWANIE ]',
-  PRO_WAITLIST_JOINING: '[ SYNCHRONIZACJA... ]',
-  PRO_WAITLIST_SUCCESS: 'Zapisano zainteresowanie planem',
-  WAITLIST_ALREADY_JOINED: 'Jesteś już na liście. Zmień preferencję na swoim koncie.',
-  WAITLIST_MANAGE_CTA: 'ZARZĄDZAJ PREFERENCJĄ',
-  PRO_WAITLIST_ERROR: 'Nie udało się teraz dołączyć do listy. Spróbuj ponownie.',
+  PLAN_UPGRADE_QUOTA_TITLE: 'Osiągnięto bezpłatny limit',
+  PLAN_UPGRADE_FEATURE_TITLE: 'Funkcja planu',
+  PLAN_UPGRADE_BODY: 'Korzystaj z RQS Studio również po zakończeniu wersji Beta.',
+  PLAN_UPGRADE_CTA: 'ZOBACZ PLANY I FUNKCJE',
 };

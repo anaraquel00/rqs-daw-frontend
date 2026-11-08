@@ -49,9 +49,7 @@ import { PreviewWaveformComponent } from './preview-waveform';
 import { AnalyzerSimpleComponent } from '../analyzer-simple/analyzer-simple';
 import { DeliveryAutoComponent, DeliveryAutoUiState } from '../delivery-auto/delivery-auto';
 import { AudioDnaCardComponent } from '../audio-dna-card/audio-dna-card';
-import { PlanInterest } from '../../services/waitlist-preference.service';
-
-type LaunchPlanInterest = Exclude<PlanInterest, 'undecided'>;
+import { PlanUpgradeCtaComponent } from '../plan-upgrade-cta/plan-upgrade-cta';
 
 const PITCH_HANDOFF_COPY = {
   en: {
@@ -90,6 +88,7 @@ const PITCH_HANDOFF_COPY = {
     AnalyzerSimpleComponent,
     DeliveryAutoComponent,
     AudioDnaCardComponent,
+    PlanUpgradeCtaComponent,
     RouterLink,
   ],
   templateUrl: './mastering-panel.html',
@@ -102,12 +101,6 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   private readonly dspService = inject(DspService);
   private readonly masteringService = inject(MasteringService);
   private readonly platformId = inject(PLATFORM_ID);
-  joiningWaitlist = false;
-  joinedWaitlist = false;
-  waitlistAlreadyJoined = false;
-  waitlistError = false;
-  readonly selectedWaitlistPlan = signal<LaunchPlanInterest | null>(null);
-  readonly waitlistPlanOptions: readonly LaunchPlanInterest[] = ['master', 'plus', 'pro'];
 
   @Input() originalFile: File | null = null;
   @Input() isProcessing = false;
@@ -584,58 +577,6 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
       this.audioComparison.seek(this.audioComparison.previewStart() + value);
     } else {
       this.audioComparison.seek(value);
-    }
-  }
-
-  selectWaitlistPlan(plan: LaunchPlanInterest): void {
-    this.selectedWaitlistPlan.set(plan);
-    this.joinedWaitlist = false;
-    this.waitlistAlreadyJoined = false;
-    this.waitlistError = false;
-  }
-
-  async joinPlanWaitlist(): Promise<void> {
-    const email = this.auth.session()?.user?.email;
-    const planInterest = this.selectedWaitlistPlan();
-    if (!email || !planInterest) {
-      this.waitlistError = true;
-      return;
-    }
-
-    this.joiningWaitlist = true;
-    this.waitlistAlreadyJoined = false;
-    this.waitlistError = false;
-
-    try {
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          source: 'studio.raquelsynths.com',
-          language: this.lang.currentLang(),
-          plan_interest: planInterest,
-          website: '',
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok || result?.success !== true) {
-        this.waitlistError = true;
-        return;
-      }
-      if (result.alreadyJoined === true) {
-        this.waitlistAlreadyJoined = true;
-        return;
-      }
-      if (result.alreadyJoined === false) {
-        this.joinedWaitlist = true;
-        return;
-      }
-      this.waitlistError = true;
-    } catch {
-      this.waitlistError = true;
-    } finally {
-      this.joiningWaitlist = false;
     }
   }
 

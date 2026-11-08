@@ -1,8 +1,16 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { DspService } from '../../services/dsp';
-import { LanguageService } from '../../services/language.service';
+import { AnalyticsService } from '../../services/analytics.service';
+import {
+  EN_TRANSLATIONS,
+  FR_TRANSLATIONS,
+  LanguageService,
+  PL_TRANSLATIONS,
+  PT_TRANSLATIONS,
+} from '../../services/language.service';
 import {
   AudioDnaPayload,
   AudioIntelligenceV2Payload,
@@ -133,8 +141,16 @@ describe('SpotifyPitchPanelComponent', () => {
     await TestBed.configureTestingModule({
       imports: [SpotifyPitchPanelComponent],
       providers: [
+        provideRouter([]),
         { provide: DspService, useValue: dsp },
-        { provide: LanguageService, useValue: { currentLang } },
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy('trackEvent') } },
+        {
+          provide: LanguageService,
+          useValue: {
+            currentLang,
+            tr: () => ({ en: EN_TRANSLATIONS, pt: PT_TRANSLATIONS, pl: PL_TRANSLATIONS, fr: FR_TRANSLATIONS })[currentLang()],
+          },
+        },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(SpotifyPitchPanelComponent);
@@ -189,9 +205,9 @@ describe('SpotifyPitchPanelComponent', () => {
     expect(generate.disabled).toBeTrue();
     expect(fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"]').textContent)
       .toContain('You have reached your AI Spotify Pitch limit.');
-    const waitlistLink = fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"] a') as HTMLAnchorElement;
-    expect(waitlistLink.textContent).toContain('GO TO WAITLIST');
-    expect(waitlistLink.getAttribute('href')).toBe('/pricing#waitlist');
+    const pricingLink = fixture.nativeElement.querySelector('[data-testid="spotify-pitch-quota"] [data-testid="plan-upgrade-link"]') as HTMLAnchorElement;
+    expect(pricingLink.textContent).toContain('VIEW PLANS AND FEATURES');
+    expect(pricingLink.getAttribute('href')).toBe('/pricing?from=pitch&intent=quota');
     component.generatePitch();
     expect(dsp.generateSpotifyPitch).not.toHaveBeenCalled();
   });

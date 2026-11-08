@@ -12,6 +12,7 @@ import { StudioThemePreference, ThemeService } from '../services/theme.service';
 import { RqsPlan } from '../services/mastering-types';
 import { plannedEntitlementLine } from '../services/plan-entitlements';
 import { isValidReferralCode } from '../services/founding-referral';
+import { parsePricingUpgradeContext } from '../services/pricing-upgrade-context';
 
 type PricingCurrency = 'BRL' | 'USD' | 'PLN';
 
@@ -80,6 +81,7 @@ export class PricingPageComponent implements AfterViewInit {
   readonly auth = inject(AuthService);
   private readonly viewportScroller = inject(ViewportScroller);
   private readonly route = inject(ActivatedRoute);
+  readonly upgradeContext = parsePricingUpgradeContext(this.route.snapshot.queryParamMap);
   private readonly referralCode = computed(() => {
     const value = this.route.snapshot.queryParamMap.get('ref')?.trim().toUpperCase() ?? '';
     return isValidReferralCode(value) ? value : '';
@@ -163,7 +165,8 @@ export class PricingPageComponent implements AfterViewInit {
       if (result.alreadyJoined === false) {
         this.waitlistState.set('success');
         this.analytics.trackEvent('waitlist_joined', {
-          desired_plan: this.desiredPlan
+          desired_plan: this.desiredPlan,
+          ...this.upgradeAnalyticsContext(),
         });
         if (result?.referralAttributed) this.analytics.trackEvent('referral_waitlist_joined');
         return;
@@ -179,7 +182,8 @@ export class PricingPageComponent implements AfterViewInit {
     this.desiredPlan = plan;
     this.analytics.trackEvent('pricing_plan_interest', {
       plan,
-      currency: this.currency()
+      currency: this.currency(),
+      ...this.upgradeAnalyticsContext(),
     });
 
     const target = document.getElementById('waitlist');
@@ -191,5 +195,11 @@ export class PricingPageComponent implements AfterViewInit {
     if (language === 'pt') return 'BRL';
     if (language === 'pl') return 'PLN';
     return 'USD';
+  }
+
+  private upgradeAnalyticsContext(): Record<string, string> {
+    return this.upgradeContext
+      ? { source_module: this.upgradeContext.source, intent: this.upgradeContext.intent }
+      : {};
   }
 }
