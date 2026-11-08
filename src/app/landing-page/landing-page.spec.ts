@@ -33,6 +33,7 @@ describe('LandingPageComponent', () => {
 
     fixture = TestBed.createComponent(LandingPageComponent);
     language = TestBed.inject(LanguageService);
+    language.setLanguage('en');
     fixture.detectChanges();
   });
 

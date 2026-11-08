@@ -3,9 +3,17 @@ import { LanguageService } from './language.service';
 
 describe('LanguageService', () => {
   let service: LanguageService;
+  let browserLanguagesSpy: jasmine.Spy;
 
   beforeEach(() => {
     window.localStorage.removeItem('rqs_language');
+
+    browserLanguagesSpy = spyOnProperty(
+      window.navigator,
+      'languages',
+      'get',
+    ).and.returnValue(['en-US']);
+
     TestBed.configureTestingModule({});
     service = TestBed.inject(LanguageService);
   });
@@ -32,8 +40,19 @@ describe('LanguageService', () => {
     service.setLanguage('pl');
     expect(window.localStorage.getItem('rqs_language')).toBe('pl');
   });
-it('defaults to English when there is no explicit stored language choice', () => {
-  expect(window.localStorage.getItem('rqs_language')).toBeNull();
-  expect(service.currentLang()).toBe('en');
-});
+  it('uses English when the browser locale is English and there is no explicit stored language choice', () => {
+    expect(window.localStorage.getItem('rqs_language')).toBeNull();
+    expect(service.currentLang()).toBe('en');
+  });
+
+  it('detects Brazilian Portuguese from the browser locale when there is no explicit stored language choice', () => {
+    browserLanguagesSpy.and.returnValue(['pt-BR']);
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(LanguageService);
+
+    expect(window.localStorage.getItem('rqs_language')).toBeNull();
+    expect(service.currentLang()).toBe('pt');
+  });
 });
