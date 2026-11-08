@@ -13,7 +13,47 @@
 .eyebrow, .section-heading > span { color: #42dce8; font: 700 .72rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .18em; }
 h1 { max-width: 900px; margin: 18px auto 16px; font-size: clamp(2.35rem, 6vw, 5.6rem); line-height: .96; letter-spacing: -.055em; }
 .hero-subtitle { max-width: 660px; margin: 0 auto; color: #9eabb4; font-size: clamp(1rem, 2vw, 1.25rem); line-height: 1.65; }
-.beta-notice { max-width: 780px; margin: 28px auto 0; padding: 14px 18px; border: 1px solid rgba(77, 216, 228, .22); background: rgba(8, 20, 24, .74); color: #c6d4da; border-radius: 10px; font-size: .92rem; }
+.beta-notice {
+  max-width: 980px;
+  margin: 28px auto 0;
+  padding: 20px 24px;
+  border: 1px solid rgba(77, 216, 228, .28);
+  background: rgba(8, 20, 24, .74);
+  color: #dce7ea;
+  border-radius: 14px;
+}
+
+.beta-notice-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.beta-notice-title strong {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  font-weight: 750;
+  letter-spacing: -.01em;
+}
+
+.beta-notice-icon {
+  color: #42dce8;
+  line-height: 1;
+}
+
+.beta-notice-body {
+  margin: 0;
+  font-size: .96rem;
+  line-height: 1.55;
+}
+
+.beta-notice-support {
+  margin: 8px 0 0;
+  color: #91a0a9;
+  font-size: .84rem;
+  line-height: 1.5;
+}
 .currency-control { margin-top: 28px; display: inline-flex; align-items: center; gap: 16px; border: 1px solid #1c2a31; background: #091015; padding: 9px 13px; border-radius: 999px; }
 .currency-control > span { color: #61717b; font: 700 .62rem ui-monospace, monospace; letter-spacing: .15em; }
 .plans { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
@@ -120,7 +160,15 @@ app-footer { display: block; width: 100%; padding: 0 30px 30px; padding-inline: 
   .beta-notice {
     border-color: var(--studio-border-strong);
     background: var(--studio-cyan-soft);
+    color: var(--studio-text);
+  }
+
+  .beta-notice-icon {
     color: var(--studio-cyan-strong);
+  }
+
+  .beta-notice-support {
+    color: var(--studio-text-secondary);
   }
 
   .currency-control,

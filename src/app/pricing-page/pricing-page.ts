@@ -14,11 +14,12 @@ import { plannedEntitlementLine } from '../services/plan-entitlements';
 import { isValidReferralCode } from '../services/founding-referral';
 import { parsePricingUpgradeContext } from '../services/pricing-upgrade-context';
 
-type PricingCurrency = 'BRL' | 'USD' | 'PLN';
+type PricingCurrency = 'BRL' | 'USD' | 'EUR' | 'PLN';
 
 const PRICING = {
   BRL: { free: 0, master: 24.90, plus: 39.90, pro: 59.90 },
   USD: { free: 0, master: 4.99, plus: 7.99, pro: 11.99 },
+  EUR: { free: 0, master: 4.99, plus: 7.99, pro: 11.99 },
   PLN: { free: 0, master: 19.99, plus: 29.99, pro: 44.99 }
 } as const;
 
@@ -120,7 +121,11 @@ export class PricingPageComponent implements AfterViewInit {
   formatPrice(plan: keyof typeof PRICING.BRL): string {
     const value = this.prices()[plan];
     const currency = this.currency();
-    const locale = currency === 'BRL' ? 'pt-BR' : currency === 'PLN' ? 'pl-PL' : 'en-US';
+    const locale =
+      currency === 'BRL' ? 'pt-BR'
+      : currency === 'PLN' ? 'pl-PL'
+      : currency === 'EUR' ? 'fr-FR'
+      : 'en-US';
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
@@ -194,6 +199,7 @@ export class PricingPageComponent implements AfterViewInit {
   private defaultCurrency(language: UiLanguage): PricingCurrency {
     if (language === 'pt') return 'BRL';
     if (language === 'pl') return 'PLN';
+    if (language === 'fr') return 'EUR';
     return 'USD';
   }
 

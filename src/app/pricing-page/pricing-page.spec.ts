@@ -135,4 +135,28 @@ describe('PricingPageComponent waitlist analytics', () => {
       intent: 'quota',
     });
   });
+
+  it('supports EUR pricing and reports EUR in pricing interest analytics', () => {
+    component.setCurrency('EUR');
+
+    expect(component.currency()).toBe('EUR');
+    expect(component.formatPrice('master')).toContain('€');
+
+    component.scrollToWaitlist('master');
+
+    expect(analytics.trackEvent).toHaveBeenCalledOnceWith('pricing_plan_interest', {
+      plan: 'master',
+      currency: 'EUR',
+    });
+  });
+
+  it('uses EUR as the default currency for the French interface', () => {
+    const defaultCurrency = (
+      component as unknown as {
+        defaultCurrency(language: 'pt' | 'en' | 'pl' | 'fr'): string;
+      }
+    ).defaultCurrency('fr');
+
+    expect(defaultCurrency).toBe('EUR');
+  });
 });
