@@ -47,11 +47,12 @@
   </div>
 
   <app-mastering-panel
-    *ngIf="workspace === 'master' && (selectedFile || analysisState() === 'success')"
+    *ngIf="workspace === 'master' && (selectedFile || !!s3Key || analysisState() === 'success')"
     [originalFile]="selectedFile"
     [isProcessing]="isProcessing || isUploadingS3"
     [isUploading]="isUploadingS3"
     [sourceReady]="masteringV2DirectUpload || !!s3Key"
+    [sourcePlaybackReady]="sourcePlaybackReady()"
     [processingMode]="processingMode"
     [feedbackMessage]="masteringFeedbackMessage()"
     [masteredAudioUrl]="processedAudioUrl"

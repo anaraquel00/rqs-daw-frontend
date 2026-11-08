@@ -208,6 +208,29 @@ describe('DspService Mastering V2 transport', () => {
     });
   });
 
+  it('requests a temporary authenticated playback URL for an owned Mastering V2 source', () => {
+    service
+      .getMasteringV2SourcePlaybackUrl('uploads/user-id/track.wav')
+      .subscribe();
+
+    const request = http.expectOne(
+      `${environment.baseUrl}/mastering/v2/source-playback-url`,
+    );
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      s3Key: 'uploads/user-id/track.wav',
+    });
+    expect(
+      request.request.headers.get('Authorization'),
+    ).toBe(`Bearer ${accessToken}`);
+
+    request.flush({
+      playbackUrl: 'https://s3.example.test/signed-playback',
+      expiresInSeconds: 3600,
+    });
+  });
+
   it('does not attach the Supabase bearer token to the signed S3 PUT', () => {
     const file = new File(['audio'], 'track.wav', { type: 'audio/wav' });
     service.uploadToS3('https://s3.example.test/signed-upload', file).subscribe();

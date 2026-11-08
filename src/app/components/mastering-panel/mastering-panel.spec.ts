@@ -490,6 +490,30 @@ it('sends the selected source start with the Preview command', () => {
     expect(panel.autoUiState()).toBe('loading');
   });
 
+  it('shows the original playback console after reload when the S3 source is hydrated', () => {
+    const fixture = TestBed.createComponent(
+      MasteringPanelComponent,
+    );
+    const instance = fixture.componentInstance;
+
+    instance.originalFile = null;
+    instance.sourceReady = true;
+    instance.sourcePlaybackReady = true;
+    instance.analysisState = 'success';
+    instance.analysisMetrics = metrics;
+
+    fixture.detectChanges();
+
+    const console =
+      fixture.nativeElement.querySelector(
+        '.player-section.custom-audio-console',
+      ) as HTMLElement | null;
+
+    expect(console).not.toBeNull();
+
+    fixture.destroy();
+  });
+
   it('keeps Preview operational after reload when the server source is restored without a local File', () => {
     const fixture = TestBed.createComponent(MasteringPanelComponent);
     const instance = fixture.componentInstance;

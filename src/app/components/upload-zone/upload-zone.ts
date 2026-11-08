@@ -80,6 +80,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   persistedConfirmedAt: string | null = null;
   persistedPitchResult: SpotifyPitchResponse | null = null;
   readonly analysisRestored = signal(false);
+  readonly sourcePlaybackReady = signal(false);
   renderProgressPercent = 0;
   private renderProgressPreview = false;
   private renderProgressStartedAt = 0;
@@ -94,6 +95,9 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   private fullAttempt = 0;
   private completedFullAttempt = 0;
   private rehydratingAnalysisId: string | null = null;
+  private rehydratingPlaybackS3Key: string | null = null;
+  private hydratedPlaybackS3Key: string | null = null;
+
   private readonly authenticatedUploadEffect = effect(() => {
     const isAuthenticated = this.auth.isLoggedIn();
     const userId = this.auth.session()?.user.id ?? null;
@@ -107,6 +111,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     if (!isAuthenticated) return;
 
     this.restorePersistedSourceIfPresent();
+    this.restorePersistedSourcePlaybackIfPresent();
     this.restorePersistedAnalysisIfPresent();
 
     if (this.selectedFile && this.masteringV2DirectUpload) {
@@ -126,6 +131,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
   ngOnInit(): void {
     this.restorePersistedSourceIfPresent();
+    this.restorePersistedSourcePlaybackIfPresent();
 
     this.route?.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -410,6 +416,10 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     this.processedAudioName = '';
     this.s3Key = null;
 
+    this.sourcePlaybackReady.set(false);
+    this.rehydratingPlaybackS3Key = null;
+    this.hydratedPlaybackS3Key = null;
+
     this.isProcessing = false;
     this.processingMode = null;
     this.isUploadingS3 = false;
@@ -459,6 +469,11 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     this.processedAudioUrl = null;
     this.processedAudioName = '';
     this.s3Key = null;
+
+    this.sourcePlaybackReady.set(false);
+    this.rehydratingPlaybackS3Key = null;
+    this.hydratedPlaybackS3Key = null;
+
     this.isProcessing = false;
     this.processingMode = null;
     this.isFullMasterCompleted = false;
@@ -695,6 +710,85 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
   private sourcePointerKey(userId: string): string {
     return `rqs:lastMasterSource:${userId}`;
+  }
+
+  private restorePersistedSourcePlaybackIfPresent(): void {
+    if (
+      this.workspace !== 'master'
+      || this.masteringV2DirectUpload
+      || this.selectedFile
+      || !this.auth.isLoggedIn()
+      || !this.s3Key
+    ) {
+      return;
+    }
+
+    const s3Key = this.s3Key;
+
+    if (
+      this.hydratedPlaybackS3Key === s3Key
+      || this.rehydratingPlaybackS3Key === s3Key
+    ) {
+      return;
+    }
+
+    const generation = this.workspaceGeneration;
+
+    this.rehydratingPlaybackS3Key = s3Key;
+    this.sourcePlaybackReady.set(false);
+
+    this.dspService
+      .getMasteringV2SourcePlaybackUrl(s3Key)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: response => {
+          if (this.rehydratingPlaybackS3Key === s3Key) {
+            this.rehydratingPlaybackS3Key = null;
+          }
+
+          if (
+            !this.isActiveWorkspace(generation)
+            || this.s3Key !== s3Key
+          ) {
+            return;
+          }
+
+          this.hydratedPlaybackS3Key = s3Key;
+
+          this.audioComparison.setOriginalSrc(
+            response.playbackUrl,
+            this.masteringService.previewStartSeconds(),
+            'UPLOAD_ZONE_RESTORED_S3_PLAYBACK',
+          );
+
+          this.sourcePlaybackReady.set(true);
+        },
+        error: (error: unknown) => {
+          if (this.rehydratingPlaybackS3Key === s3Key) {
+            this.rehydratingPlaybackS3Key = null;
+          }
+
+          if (this.s3Key !== s3Key) return;
+
+          this.hydratedPlaybackS3Key = null;
+          this.sourcePlaybackReady.set(false);
+
+          const status =
+            typeof error === 'object'
+            && error !== null
+            && 'status' in error
+              ? Number((error as { status?: unknown }).status)
+              : 0;
+
+          this.addLog(
+            `⚠ SOURCE PLAYBACK RESTORE FAILED: status=${
+              Number.isFinite(status) && status > 0
+                ? status
+                : 'unknown'
+            }`,
+          );
+        },
+      });
   }
 
   private persistSourcePointer(analysisId: string | null = this.analysisId): void {

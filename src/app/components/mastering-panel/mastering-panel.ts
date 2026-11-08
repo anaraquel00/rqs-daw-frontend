@@ -106,6 +106,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() isProcessing = false;
   @Input() isUploading = false;
   @Input() sourceReady = false;
+  @Input() sourcePlaybackReady = false;
   @Input() processingMode: 'preview' | 'full' | null = null;
   @Input() feedbackMessage: string | null = null;
   @Input() masteredAudioUrl: string | null = null;

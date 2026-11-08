@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of, Subject, throwError } from 'rxjs';
+import { NEVER, of, Subject, throwError } from 'rxjs';
 import { AnalyticsService } from '../../services/analytics.service';
 import { AudioComparisonService } from '../../services/audio-comparison.service';
 import { AuthService } from '../../services/auth.service';
@@ -23,6 +23,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
   let dsp: jasmine.SpyObj<DspService>;
   let resetAll: jasmine.Spy;
   let clearMasterSrc: jasmine.Spy;
+  let setOriginalSrc: jasmine.Spy;
   let analytics: jasmine.SpyObj<AnalyticsService>;
   const previewStatus = signal<'not-generated' | 'processing' | 'ready' | 'error'>('not-generated');
   const audioProcessed = signal(false);
@@ -95,11 +96,13 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     requestSignIn = jasmine.createSpy('requestSignIn');
     resetAll = jasmine.createSpy('resetAll');
     clearMasterSrc = jasmine.createSpy('clearMasterSrc');
+    setOriginalSrc = jasmine.createSpy('setOriginalSrc');
     previewStatus.set('not-generated');
     audioProcessed.set(false);
     processedFilename.set('');
     dsp = jasmine.createSpyObj<DspService>('DspService', [
       'getMasteringV2PresignedUrl',
+      'getMasteringV2SourcePlaybackUrl',
       'uploadToS3',
       'analyzeMasteringV2',
       'getMasteringV2Analysis',
@@ -132,6 +135,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
             processedFilename,
             resetAll,
             clearMasterSrc,
+            setOriginalSrc,
           },
         },
         { provide: AnalyticsService, useValue: analytics },
@@ -163,6 +167,8 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     (component as unknown as { masteringV2DirectUpload: boolean })
       .masteringV2DirectUpload = false;
 
+    dsp.getMasteringV2SourcePlaybackUrl.and.returnValue(NEVER);
+
     isLoggedIn.set(true);
     TestBed.tick();
 
@@ -182,6 +188,61 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(persisted).not.toContain('https://');
     expect(persisted).not.toContain('data:audio');
     expect(persisted).not.toContain('blob:');
+  });
+
+  it('rehydrates original playback from a temporary URL without persisting that URL', () => {
+    localStorage.setItem(
+      'rqs:lastMasterSource:owner-a',
+      JSON.stringify({
+        version: 1,
+        s3Key: 'uploads/owner-a/restored-track.wav',
+        fileName: 'restored-track.wav',
+        analysisId: null,
+      }),
+    );
+
+    component.selectedFile = null;
+    component.s3Key = null;
+    component.restoredSourceName = null;
+
+    (component as unknown as { masteringV2DirectUpload: boolean })
+      .masteringV2DirectUpload = false;
+
+    dsp.getMasteringV2SourcePlaybackUrl.and.returnValue(
+      of({
+        playbackUrl:
+          'https://s3.example.test/restored-source.wav?X-Amz-Signature=test',
+        expiresInSeconds: 3600,
+      }),
+    );
+
+    isLoggedIn.set(true);
+    TestBed.tick();
+
+    expect(
+      dsp.getMasteringV2SourcePlaybackUrl,
+    ).toHaveBeenCalledWith(
+      'uploads/owner-a/restored-track.wav',
+    );
+
+    expect(setOriginalSrc).toHaveBeenCalledTimes(1);
+
+    const args = setOriginalSrc.calls.mostRecent().args;
+
+    expect(args[0]).toBe(
+      'https://s3.example.test/restored-source.wav?X-Amz-Signature=test',
+    );
+    expect(args[2]).toBe(
+      'UPLOAD_ZONE_RESTORED_S3_PLAYBACK',
+    );
+
+    expect(component.sourcePlaybackReady()).toBeTrue();
+
+    const persisted =
+      localStorage.getItem('rqs:lastMasterSource:owner-a') ?? '';
+
+    expect(persisted).not.toContain('https://');
+    expect(persisted).not.toContain('X-Amz-');
   });
 
   it('continues Preview processing from the restored S3 source after reload', () => {
@@ -204,6 +265,8 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     dsp.masterizeV2Preview.and.returnValue(
       of(new Blob(['preview'], { type: 'audio/wav' })),
     );
+
+    dsp.getMasteringV2SourcePlaybackUrl.and.returnValue(NEVER);
 
     isLoggedIn.set(true);
     TestBed.tick();

@@ -1,5 +1,5 @@
 <div class="mastering-board" *ngIf="originalFile || analysisState === 'success'">
-  <ng-container *ngIf="originalFile">
+  <ng-container *ngIf="originalFile || sourcePlaybackReady">
   <nav class="mastering-progress" [attr.aria-label]="lang.t().MASTERING_PROGRESS_ARIA">
     <div class="progress-step done">
       <span>1</span><strong>{{ lang.t().MASTERING_STEP_UPLOAD }}</strong>

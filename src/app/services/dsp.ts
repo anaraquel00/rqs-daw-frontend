@@ -197,6 +197,16 @@ export class DspService {
     });
   }
 
+  getMasteringV2SourcePlaybackUrl(
+    s3Key: string,
+  ): Observable<{ playbackUrl: string; expiresInSeconds: number }> {
+    return this.http.post<{ playbackUrl: string; expiresInSeconds: number }>(
+      `${this.baseUrl}/mastering/v2/source-playback-url`,
+      { s3Key },
+      { headers: this.masteringV2Headers() },
+    );
+  }
+
   uploadToS3(uploadUrl: string, file: File): Observable<unknown> {
     const fileName = file.name.toLowerCase();
     const contentType = fileName.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav';
