@@ -104,15 +104,28 @@
   </app-analyzer-simple>
   </ng-container>
 
-  <app-audio-dna-card
-    *ngIf="analysisState !== 'empty' || audioDna"
-    [audioDna]="audioDna"
-    [audioIntelligence]="audioIntelligence"
-    [openAiMusicAnalyst]="openAiMusicAnalyst"
-    [state]="analysisState"
-    [target]="activeTarget()"
-    (resetRecommendation)="resetToAudioDna()">
-  </app-audio-dna-card>
+  <details
+    class="master-section-disclosure track-summary-disclosure"
+    *ngIf="analysisState !== 'empty' || audioDna">
+    <summary id="track-summary-title">
+      <span class="section-chevron" aria-hidden="true"></span>
+      <span *ngIf="lang.currentLang() === 'en'">TRACK SUMMARY</span>
+      <span *ngIf="lang.currentLang() === 'pt'">RESUMO DA FAIXA</span>
+      <span *ngIf="lang.currentLang() === 'pl'">PODSUMOWANIE UTWORU</span>
+      <span *ngIf="lang.currentLang() === 'fr'">RÉSUMÉ DU TITRE</span>
+      <small>RQS Audio DNA</small>
+    </summary>
+
+    <app-audio-dna-card
+      [audioDna]="audioDna"
+      [audioIntelligence]="audioIntelligence"
+      [openAiMusicAnalyst]="openAiMusicAnalyst"
+      [state]="analysisState"
+      [target]="activeTarget()"
+      [showTrackSummaryHeading]="false"
+      (resetRecommendation)="resetToAudioDna()">
+    </app-audio-dna-card>
+  </details>
 
   <section class="pitch-handoff" *ngIf="capabilities()?.features?.spotify_pitch_enabled === true && analysisState === 'success' && analysisId">
     <div>
@@ -184,13 +197,17 @@
 
   <hr class="cyber-divider">
 
-  <section class="controls-section" aria-labelledby="master-controls-title">
-    <h3 id="master-controls-title" class="master-controls-title">
+  <details class="master-section-disclosure controls-disclosure">
+    <summary id="master-controls-title">
+      <span class="section-chevron" aria-hidden="true"></span>
       <span *ngIf="lang.currentLang() === 'en'">MASTER CONTROLS</span>
       <span *ngIf="lang.currentLang() === 'pt'">CONTROLES DE MASTER</span>
       <span *ngIf="lang.currentLang() === 'pl'">STEROWANIE MASTEREM</span>
       <span *ngIf="lang.currentLang() === 'fr'">CONTRÔLES DU MASTER</span>
-    </h3>
+      <small>MASTER V2 / DSP</small>
+    </summary>
+
+    <section class="controls-section" aria-labelledby="master-controls-title">
     <div class="control-group">
       <div class="control-title-row">
         <h4>{{ education().controls.destination.title }}</h4>
@@ -325,7 +342,8 @@
         (applyRequestedLufs)="applyAutoRequestedLufs()">
       </app-delivery-auto>
     </details>
-  </section>
+    </section>
+  </details>
 
   <div class="config-invalidated" *ngIf="configInvalidatedResult()">
     ⚠

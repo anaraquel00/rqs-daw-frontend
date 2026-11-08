@@ -6,7 +6,9 @@
       <div class="dna-state unavailable"><strong>{{ copy().unavailableTitle }}</strong><span>{{ copy().unavailableBody }}</span></div>
     } @else if (audioDna?.music; as music) {
       <section class="track-summary" aria-labelledby="track-summary-title">
-        <h3 id="track-summary-title">{{ copy().trackSummary }}</h3>
+        @if (showTrackSummaryHeading) {
+          <h3 id="track-summary-title">{{ copy().trackSummary }}</h3>
+        }
         <div class="track-summary-grid">
           <div class="track-tempo">
             <strong>{{ music.bpm.value ?? '—' }}{{ music.bpm.value !== null ? ' BPM' : '' }}</strong>
@@ -137,6 +139,7 @@
 } @else if (state === 'success' && audioDna?.music; as music) {
   <details class="technical-details">
     <summary>
+      <span class="section-chevron" aria-hidden="true"></span>
       <span>{{ copy().technicalDetails }}</span>
       <small>{{ copy().technicalAnalysis }}</small>
     </summary>

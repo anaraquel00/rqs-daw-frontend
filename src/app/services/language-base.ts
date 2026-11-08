@@ -60,9 +60,9 @@ export const PT_DICT = {
   FREQUENCY_SPECTRUM: "Análise de Espectro de Frequência",
   PHASE_CORRELATION: "Correlação de Fase & Imagem Estéreo",
 
-  LIMIT_EXCEEDED_ALERT: "Limite de masterizações gratuitas esgotado (3 de 3 consumidas). Faça o upgrade para o plano RQS PRO para obter masterizações de arquivos ilimitadas!",
+  LIMIT_EXCEEDED_ALERT: "Limite de masterizações gratuitas esgotado (3 de 3 consumidas). Veja os planos e recursos disponíveis para continuar após o Beta.",
   FREE_USAGE_LABEL: "Masterizações gratuitas restantes",
-  PRO_USAGE_LABEL: "Plano: RQS PRO (Ilimitado)",
+  PRO_USAGE_LABEL: "Plano: RQS PRO",
 
 FOOTER_TAGLINE: "Reator de inteligência acústica e engenharia DSP para música eletrônica e industrial.",
 FOOTER_TELEMETRY: "INFORMAÇÕES DO SISTEMA",
@@ -182,9 +182,9 @@ export const EN_DICT: typeof PT_DICT = {
   FREQUENCY_SPECTRUM: "Frequency Spectrum Analysis",
   PHASE_CORRELATION: "Phase Correlation & Stereo Imaging",
 
-  LIMIT_EXCEEDED_ALERT: "Free mastering limit reached (3 of 3 used). Upgrade to the RQS PRO plan for unlimited high-resolution wav mastering!",
+  LIMIT_EXCEEDED_ALERT: "Free mastering limit reached (3 of 3 used). View the available plans and features to continue after the Beta.",
   FREE_USAGE_LABEL: "Free masterings remaining",
-  PRO_USAGE_LABEL: "Plan: RQS PRO (Unlimited)",
+  PRO_USAGE_LABEL: "Plan: RQS PRO",
 
   FOOTER_TAGLINE: "Acoustic intelligence and DSP engineering reactor for electronic and industrial music.",
   FOOTER_TELEMETRY: "SYSTEM INFO",
@@ -285,9 +285,9 @@ export const PL_DICT: typeof PT_DICT = {
   SIGNAL_ACTIVE: 'SYGNAŁ AUDIO AKTYWNY',
   FREQUENCY_SPECTRUM: 'Widmo częstotliwości',
   PHASE_CORRELATION: 'Korelacja fazy i obraz stereo',
-  LIMIT_EXCEEDED_ALERT: 'Wykorzystano limit bezpłatnych masteringów (3/3). Plan RQS PRO odblokowuje nielimitowane mastery.',
+  LIMIT_EXCEEDED_ALERT: 'Wykorzystano limit bezpłatnych masteringów (3/3). Zobacz dostępne plany i funkcje, aby kontynuować po zakończeniu wersji beta.',
   FREE_USAGE_LABEL: 'Pozostałe bezpłatne mastery',
-  PRO_USAGE_LABEL: 'Plan: RQS PRO (bez limitu)',
+  PRO_USAGE_LABEL: 'Plan: RQS PRO',
   FOOTER_TAGLINE: 'Inteligentny mastering i narzędzia DSP dla twórców muzyki.',
   FOOTER_TELEMETRY: 'INFORMACJE SYSTEMOWE',
   FOOTER_NODE: 'Region przetwarzania audio',

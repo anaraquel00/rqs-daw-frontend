@@ -1144,3 +1144,119 @@
   .pitch-handoff { align-items: stretch; flex-direction: column; padding: 20px 16px; }
   .pitch-handoff a { text-align: center; }
 }
+/* RQS_MASTER_SECTION_DISCLOSURES_20261108 */
+
+/* RQS_MASTER_SECTION_DISCLOSURES_20261108 */
+
+.master-section-disclosure {
+  min-width: 0;
+  margin: 18px 0;
+  padding: 0 16px 16px;
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(
+    145deg,
+    rgba(0, 240, 255, 0.035),
+    rgba(0, 0, 0, 0.28)
+  );
+  box-sizing: border-box;
+  font-family: monospace;
+}
+
+.master-section-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  cursor: pointer;
+  color: #00f0ff;
+  font-weight: 800;
+  letter-spacing: .8px;
+  overflow-wrap: anywhere;
+}
+
+.master-section-disclosure > summary small {
+  color: #68777c;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-align: right;
+}
+
+.master-section-disclosure > summary .section-chevron {
+  flex: 0 0 auto;
+  width: 1em;
+  color: currentColor;
+  font-size: .9em;
+  line-height: 1;
+}
+
+.master-section-disclosure > summary .section-chevron::before {
+  content: '▶';
+}
+
+.master-section-disclosure[open] > summary .section-chevron::before {
+  content: '▼';
+}
+
+.master-section-disclosure > summary > small {
+  margin-left: auto;
+}
+
+.master-section-disclosure[open] > summary {
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.08);
+}
+
+.master-section-disclosure app-audio-dna-card {
+  display: block;
+  margin: 0;
+}
+
+.controls-disclosure .controls-section {
+  padding-top: 4px;
+}
+
+.master-section-disclosure > summary:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 680px) {
+  .master-section-disclosure {
+    padding-inline: 12px;
+  }
+
+  .master-section-disclosure > summary {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 60px;
+  }
+
+  .master-section-disclosure > summary small {
+    text-align: left;
+  }
+}
+
+:host-context(app-studio-shell[data-theme='light'] .studio-master) {
+  .master-section-disclosure {
+    border-color: var(--studio-border);
+    background: var(--studio-card);
+    color: var(--studio-text);
+  }
+
+  .master-section-disclosure > summary {
+    color: var(--studio-cyan-strong);
+  }
+
+  .master-section-disclosure > summary small {
+    color: var(--studio-text-secondary);
+  }
+
+  .master-section-disclosure[open] > summary {
+    border-bottom-color: var(--studio-border);
+  }
+}
+

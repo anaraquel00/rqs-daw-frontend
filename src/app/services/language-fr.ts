@@ -54,7 +54,7 @@ export const FR_DICT: typeof PT_DICT = {
   FREQUENCY_SPECTRUM: 'Analyse du spectre de fréquences',
   PHASE_CORRELATION: 'Corrélation de phase et image stéréo',
 
-  LIMIT_EXCEEDED_ALERT: 'Limite de masterings gratuits atteinte (3 sur 3 utilisés). Passez à RQS PRO lorsque le plan sera disponible pour augmenter vos possibilités de mastering.',
+  LIMIT_EXCEEDED_ALERT: 'Limite de masterings gratuits atteinte (3 sur 3 utilisés). Consultez les offres et fonctionnalités disponibles pour continuer après la bêta.',
   FREE_USAGE_LABEL: 'Masterings gratuits restants',
   PRO_USAGE_LABEL: 'Plan : RQS PRO',
 

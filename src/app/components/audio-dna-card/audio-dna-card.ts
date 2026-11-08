@@ -194,6 +194,7 @@ export class AudioDnaCardComponent {
   @Input() openAiMusicAnalyst: OpenAiMusicAnalystPayload | null = null;
   @Input() state: MasteringAnalysisState = 'empty';
   @Input() mode: 'summary' | 'technical' = 'summary';
+  @Input() showTrackSummaryHeading = true;
   @Input() workspaceMode: 'master' | 'pitch' = 'master';
   @Input() target: MasteringDeliveryTargetCapabilities | null = null;
   @Output() resetRecommendation = new EventEmitter<void>();

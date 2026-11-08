@@ -135,6 +135,26 @@ dd { margin: 5px 0 0; color: #fff; overflow-wrap: anywhere; }
   overflow-wrap: anywhere;
 }
 .technical-details > summary small { color: #68777c; font-weight: 400; letter-spacing: 0; text-align: right; }
+
+.technical-details > summary .section-chevron {
+  flex: 0 0 auto;
+  width: 1em;
+  color: currentColor;
+  font-size: .9em;
+  line-height: 1;
+}
+
+.technical-details > summary .section-chevron::before {
+  content: '▶';
+}
+
+.technical-details[open] > summary .section-chevron::before {
+  content: '▼';
+}
+
+.technical-details > summary > small {
+  margin-left: auto;
+}
 .dna-heading { margin-top: 8px; }
 .dna-heading > span { color: #00f0ff; font-size: clamp(14px, 2vw, 17px); font-weight: 700; letter-spacing: 1.4px; }
 .dna-heading p { margin: 6px 0 0; color: #8b949e; font-size: 10px; line-height: 1.55; }
