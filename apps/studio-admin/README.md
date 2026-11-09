@@ -41,12 +41,12 @@ Configurar no projeto Vercel administrativo, com valores separados por ambiente:
 Não é necessário `SUPABASE_SERVICE_ROLE_KEY`, service-account JSON ou Firebase private key.
 Firestore usa Vercel OIDC + Workload Identity Federation com token temporário.
 
-O Admin datastore e a fonte Referral são namespaces independentes. O primeiro pode permanecer
-vazio na Phase 1. `pro_waitlist` e `founding_referral_participants` continuam pertencendo ao
-Referral e são consultados somente por aggregations read-only. A identidade federada deve receber
-permissão administrativa estritamente necessária no database Admin e apenas
-`datastore.entities.get`/`datastore.entities.list` no database Referral, com IAM Conditions por
-database.
+O Admin datastore e a fonte Referral são namespaces independentes. Na Phase 1, o database
+`rqs-studio-admin-staging` permanece como boundary sem acesso: `reads = 0`, `writes = 0` e
+`IAM grants = 0`. `pro_waitlist` e `founding_referral_participants` continuam pertencendo ao
+Referral e são consultados somente por aggregations read-only. A identidade federada recebe apenas
+`datastore.entities.get`/`datastore.entities.list` no database `rqs-referral-staging`, com IAM
+Condition restrita a esse database.
 
 Os endpoints de dados da Phase 1 aceitam exclusivamente `VERCEL_ENV=preview`,
 `RQS_ADMIN_DATA_ENVIRONMENT=staging` e os dois database IDs de Staging acima. Production permanece
