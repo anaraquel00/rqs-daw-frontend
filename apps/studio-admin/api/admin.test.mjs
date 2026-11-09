@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import authConfigHandler from './auth/config.js';
 import meHandler from './admin/me.js';
 import overviewHandler from './admin/overview.js';
 import summaryHandler from './admin/waitlist/summary.js';
@@ -11,6 +12,7 @@ import {
   referralFirestoreConfiguration,
   setReferralCountProviderForTests,
 } from './_firestore-referral.mjs';
+import { gcpOidcConfiguration } from './_gcp-oidc.mjs';
 
 process.env.NODE_TEST_CONTEXT = '1';
 
@@ -74,6 +76,26 @@ test('active owner receives only the sanitized identity contract', async () => {
   const result = await invoke(meHandler);
   assert.equal(result.status, 200);
   assert.deepEqual(result.body, { authenticated: true, role: 'owner' });
+  assert.equal(result.headers.get('Cache-Control'), 'no-store');
+  assert.equal(result.headers.get('X-Robots-Tag'), 'noindex, nofollow, noarchive');
+});
+
+test('/api/auth/config fails closed when Supabase server configuration is missing', async () => {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  try {
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_PUBLISHABLE_KEY;
+
+    const result = await invoke(authConfigHandler, { authorization: '' });
+    assert.equal(result.status, 503);
+    assert.deepEqual(result.body, { error: 'Authentication unavailable' });
+  } finally {
+    if (supabaseUrl === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = supabaseUrl;
+    if (publishableKey === undefined) delete process.env.SUPABASE_PUBLISHABLE_KEY;
+    else process.env.SUPABASE_PUBLISHABLE_KEY = publishableKey;
+  }
 });
 
 test('operator and analyst roles are reserved but denied in Phase 1', async () => {
@@ -132,6 +154,26 @@ test('Phase 1 rejects non-Preview and non-Staging execution contexts', () => {
   assert.throws(() => referralFirestoreConfiguration(), /must use the staging data environment/);
 });
 
+test('Google WIF configuration fails closed when a required provider setting is missing', () => {
+  const projectNumber = process.env.GCP_PROJECT_NUMBER;
+  const poolId = process.env.GCP_WORKLOAD_IDENTITY_POOL_ID;
+  const providerId = process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID;
+  try {
+    process.env.GCP_PROJECT_NUMBER = '913434953773';
+    process.env.GCP_WORKLOAD_IDENTITY_POOL_ID = 'rqs-vercel-preview';
+    delete process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID;
+
+    assert.throws(
+      () => gcpOidcConfiguration(),
+      /Missing server environment: GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID/,
+    );
+  } finally {
+    restoreEnvironment('GCP_PROJECT_NUMBER', projectNumber);
+    restoreEnvironment('GCP_WORKLOAD_IDENTITY_POOL_ID', poolId);
+    restoreEnvironment('GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID', providerId);
+  }
+});
+
 test('Admin datastore and Referral source remain distinct', () => {
   const { admin, referral } = assertFirestoreDataIsolation();
   assert.notEqual(admin.databaseId, referral.databaseId);
@@ -165,4 +207,9 @@ function assertPrivacy(body) {
   for (const forbidden of ['email', 'access_token', 'refresh_token', 'private_key', 'authorization', 'user_id', 'signed_url']) {
     assert.equal(serialized.includes(forbidden), false, `response exposes ${forbidden}`);
   }
+}
+
+function restoreEnvironment(name, value) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
 }

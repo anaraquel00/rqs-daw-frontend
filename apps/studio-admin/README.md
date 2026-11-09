@@ -16,6 +16,12 @@ Criar um segundo projeto Vercel conectado ao mesmo repositório GitHub com:
 Não executar `vercel deploy`, `vercel --prod` ou promoção manual. Preview é produzido
 exclusivamente pela Git Integration ao fazer push da branch.
 
+O gate inicial de Preview usa o projeto `rqs-studio-admin`
+(`prj_JbgOtjerk4bclrPnEnr7gJywP4tJ`) no team `raquelsynths-projects`. As variáveis GCP,
+Firestore e Supabase são configuradas somente no target Preview. `ADMIN_ALLOWED_ORIGINS` deve ser
+adicionado apenas depois que a Git Integration gerar a origem exata do primeiro Preview; wildcard
+e domínios Vercel genéricos permanecem proibidos.
+
 ## Environment variables
 
 Configurar no projeto Vercel administrativo, com valores separados por ambiente:
