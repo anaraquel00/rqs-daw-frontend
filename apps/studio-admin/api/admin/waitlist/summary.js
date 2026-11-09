@@ -1,5 +1,6 @@
 import { authorizeOwner } from '../../_auth.mjs';
-import { countDocuments } from '../../_firestore.mjs';
+import { assertFirestoreDataIsolation } from '../../_firestore-isolation.mjs';
+import { countReferralDocuments } from '../../_firestore-referral.mjs';
 import { completeRequest, prepareRequest } from '../../_http.mjs';
 
 export default async function handler(req, res) {
@@ -14,12 +15,13 @@ export default async function handler(req, res) {
     if (authorization.status !== 200) {
       return respond(res, context, authorization.status, { error: 'Administrative access required' }, authorization.userId);
     }
+    assertFirestoreDataIsolation();
     const [total, master, plus, pro, undecided] = await Promise.all([
-      countDocuments('pro_waitlist'),
-      countDocuments('pro_waitlist', 'plan_interest', 'master'),
-      countDocuments('pro_waitlist', 'plan_interest', 'plus'),
-      countDocuments('pro_waitlist', 'plan_interest', 'pro'),
-      countDocuments('pro_waitlist', 'plan_interest', 'undecided'),
+      countReferralDocuments('pro_waitlist'),
+      countReferralDocuments('pro_waitlist', 'plan_interest', 'master'),
+      countReferralDocuments('pro_waitlist', 'plan_interest', 'plus'),
+      countReferralDocuments('pro_waitlist', 'plan_interest', 'pro'),
+      countReferralDocuments('pro_waitlist', 'plan_interest', 'undecided'),
     ]);
     const unknown = Math.max(0, total - master - plus - pro - undecided);
     return respond(res, context, 200, {

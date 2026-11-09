@@ -41,10 +41,31 @@ test('membership migration defines dedicated RBAC roles and no commercial plan r
   assert.doesNotMatch(migration, /commercial_admin|premium|master|plus|pro/);
 });
 
-test('Preview Firestore access fails closed against the production database', async () => {
-  const firestore = await read('api/_firestore.mjs');
-  assert.match(firestore, /vercelEnvironment === 'preview'/);
-  assert.match(firestore, /rqs-referral-preview/);
-  assert.match(firestore, /rqs-referral-staging/);
-  assert.match(firestore, /databaseId !== expectedDatabase/);
+test('Admin and Referral Firestore namespaces are structurally isolated', async () => {
+  const [admin, referral, isolation, overview, summary] = await Promise.all([
+    read('api/_firestore-admin.mjs'),
+    read('api/_firestore-referral.mjs'),
+    read('api/_firestore-isolation.mjs'),
+    read('api/admin/overview.js'),
+    read('api/admin/waitlist/summary.js'),
+  ]);
+
+  assert.match(admin, /GCP_ADMIN_FIRESTORE_DATABASE_ID/);
+  assert.match(admin, /rqs-studio-admin-staging/);
+  assert.doesNotMatch(admin, /pro_waitlist|founding_referral_participants|rqs-referral/);
+  assert.match(referral, /GCP_REFERRAL_FIRESTORE_DATABASE_ID/);
+  assert.match(referral, /countReferralDocuments/);
+  assert.match(referral, /pro_waitlist/);
+  assert.match(referral, /founding_referral_participants/);
+  assert.doesNotMatch(referral, /rqs-studio-admin/);
+  assert.match(isolation, /admin\.databaseId === referral\.databaseId/);
+  assert.match(overview, /countReferralDocuments/);
+  assert.match(summary, /countReferralDocuments/);
+});
+
+test('Phase 1 data access is fail-closed to Preview and Staging', async () => {
+  const environment = await read('api/_firestore-environment.mjs');
+  assert.match(environment, /vercelEnvironment !== 'preview'/);
+  assert.match(environment, /dataEnvironment !== 'staging'/);
+  assert.doesNotMatch(environment, /production.*rqs-referral|rqs-referral.*production/i);
 });

@@ -29,10 +29,24 @@ Configurar no projeto Vercel administrativo, com valores separados por ambiente:
 - `GCP_WORKLOAD_IDENTITY_POOL_ID`
 - `GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID`
 - `GCP_SERVICE_ACCOUNT_EMAIL`
-- `GCP_FIRESTORE_DATABASE_ID`
+- `GCP_ADMIN_FIRESTORE_DATABASE_ID` (`rqs-studio-admin-staging` em Preview)
+- `GCP_REFERRAL_FIRESTORE_DATABASE_ID` (`rqs-referral-staging` em Preview)
 
 Não é necessário `SUPABASE_SERVICE_ROLE_KEY`, service-account JSON ou Firebase private key.
 Firestore usa Vercel OIDC + Workload Identity Federation com token temporário.
+
+O Admin datastore e a fonte Referral são namespaces independentes. O primeiro pode permanecer
+vazio na Phase 1. `pro_waitlist` e `founding_referral_participants` continuam pertencendo ao
+Referral e são consultados somente por aggregations read-only. A identidade federada deve receber
+permissão administrativa estritamente necessária no database Admin e apenas
+`datastore.entities.get`/`datastore.entities.list` no database Referral, com IAM Conditions por
+database.
+
+Os endpoints de dados da Phase 1 aceitam exclusivamente `VERCEL_ENV=preview`,
+`RQS_ADMIN_DATA_ENVIRONMENT=staging` e os dois database IDs de Staging acima. Production permanece
+fail-closed até um rollout explicitamente autorizado. O datastore futuro do Admin é
+`rqs-studio-admin-production`; o nome da fonte Referral Production não é inferido nem configurado
+neste patch.
 
 ## Supabase review gate
 

@@ -4,9 +4,24 @@ import meHandler from './admin/me.js';
 import overviewHandler from './admin/overview.js';
 import summaryHandler from './admin/waitlist/summary.js';
 import { setAdminContextProviderForTests } from './_auth.mjs';
-import { setCountProviderForTests } from './_firestore.mjs';
+import { adminFirestoreConfiguration } from './_firestore-admin.mjs';
+import { assertFirestoreDataIsolation } from './_firestore-isolation.mjs';
+import {
+  countReferralDocuments,
+  referralFirestoreConfiguration,
+  setReferralCountProviderForTests,
+} from './_firestore-referral.mjs';
 
 process.env.NODE_TEST_CONTEXT = '1';
+
+function configurePreviewDataSources() {
+  process.env.VERCEL_ENV = 'preview';
+  process.env.RQS_ADMIN_DATA_ENVIRONMENT = 'staging';
+  process.env.GCP_ADMIN_FIRESTORE_DATABASE_ID = 'rqs-studio-admin-staging';
+  process.env.GCP_REFERRAL_FIRESTORE_DATABASE_ID = 'rqs-referral-staging';
+}
+
+configurePreviewDataSources();
 
 function membershipContext(role = 'owner', active = true) {
   const query = {
@@ -35,8 +50,9 @@ async function invoke(handler, { method = 'GET', origin, authorization = 'Bearer
 
 test.afterEach(() => {
   setAdminContextProviderForTests(null);
-  setCountProviderForTests(null);
+  setReferralCountProviderForTests(null);
   delete process.env.ADMIN_ALLOWED_ORIGINS;
+  configurePreviewDataSources();
 });
 
 test('unauthenticated request is denied by /api/admin/me', async () => {
@@ -69,7 +85,7 @@ test('operator and analyst roles are reserved but denied in Phase 1', async () =
 
 test('/api/admin/overview returns real aggregate fields only', async () => {
   setAdminContextProviderForTests(async () => membershipContext());
-  setCountProviderForTests(async collection => collection === 'pro_waitlist' ? 123 : 17);
+  setReferralCountProviderForTests(async collection => collection === 'pro_waitlist' ? 123 : 17);
   const result = await invoke(overviewHandler);
   assert.equal(result.status, 200);
   assert.equal(result.body.waitlistTotal, 123);
@@ -81,7 +97,7 @@ test('/api/admin/overview returns real aggregate fields only', async () => {
 test('/api/admin/waitlist/summary aggregates known fields and legacy unknown', async () => {
   setAdminContextProviderForTests(async () => membershipContext());
   const values = new Map([['total', 100], ['master', 22], ['plus', 14], ['pro', 31], ['undecided', 8]]);
-  setCountProviderForTests(async (_collection, _field, value) => values.get(value ?? 'total'));
+  setReferralCountProviderForTests(async (_collection, _field, value) => values.get(value ?? 'total'));
   const result = await invoke(summaryHandler);
   assert.equal(result.status, 200);
   assert.deepEqual(result.body.byPlanInterest, { master: 22, plus: 14, pro: 31, undecided: 8, unknown: 25 });
@@ -91,8 +107,47 @@ test('/api/admin/waitlist/summary aggregates known fields and legacy unknown', a
 test('Firestore is never called before owner authorization', async () => {
   setAdminContextProviderForTests(async () => membershipContext(null));
   let called = false;
-  setCountProviderForTests(async () => { called = true; return 0; });
+  setReferralCountProviderForTests(async () => { called = true; return 0; });
   assert.equal((await invoke(summaryHandler)).status, 403);
+  assert.equal(called, false);
+});
+
+test('Preview accepts only the dedicated Admin staging datastore', () => {
+  assert.deepEqual(adminFirestoreConfiguration(), { databaseId: 'rqs-studio-admin-staging' });
+  process.env.GCP_ADMIN_FIRESTORE_DATABASE_ID = 'rqs-studio-admin-production';
+  assert.throws(() => adminFirestoreConfiguration(), /dedicated Admin staging database/);
+});
+
+test('Preview accepts only the audited Referral staging source', () => {
+  assert.deepEqual(referralFirestoreConfiguration(), { databaseId: 'rqs-referral-staging' });
+  process.env.GCP_REFERRAL_FIRESTORE_DATABASE_ID = 'unaudited-referral-production';
+  assert.throws(() => referralFirestoreConfiguration(), /audited Referral staging source/);
+});
+
+test('Phase 1 rejects non-Preview and non-Staging execution contexts', () => {
+  process.env.VERCEL_ENV = 'production';
+  assert.throws(() => adminFirestoreConfiguration(), /restricted to Vercel Preview/);
+  process.env.VERCEL_ENV = 'preview';
+  process.env.RQS_ADMIN_DATA_ENVIRONMENT = 'production';
+  assert.throws(() => referralFirestoreConfiguration(), /must use the staging data environment/);
+});
+
+test('Admin datastore and Referral source remain distinct', () => {
+  const { admin, referral } = assertFirestoreDataIsolation();
+  assert.notEqual(admin.databaseId, referral.databaseId);
+
+  process.env.GCP_ADMIN_FIRESTORE_DATABASE_ID = 'rqs-referral-staging';
+  assert.throws(() => assertFirestoreDataIsolation(), /dedicated Admin staging database/);
+
+  configurePreviewDataSources();
+  process.env.GCP_REFERRAL_FIRESTORE_DATABASE_ID = 'rqs-studio-admin-staging';
+  assert.throws(() => assertFirestoreDataIsolation(), /audited Referral staging source/);
+});
+
+test('Referral collection allowlist is enforced before the provider is invoked', async () => {
+  let called = false;
+  setReferralCountProviderForTests(async () => { called = true; return 0; });
+  assert.throws(() => countReferralDocuments('admin_audit_events'), /Referral collection is not allowed/);
   assert.equal(called, false);
 });
 
