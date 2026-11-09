@@ -1,14 +1,23 @@
-import { requireAdminPreviewEnvironment, requiredEnvironment } from './_firestore-environment.mjs';
+import {
+  adminEnvironmentConfiguration,
+  requiredEnvironment,
+} from './_firestore-environment.mjs';
 
 export const ADMIN_STAGING_DATABASE_ID = 'rqs-studio-admin-staging';
+export const ADMIN_PRODUCTION_DATABASE_ID = 'rqs-studio-admin-prod';
 
 export function adminFirestoreConfiguration() {
-  requireAdminPreviewEnvironment();
+  const environment = adminEnvironmentConfiguration();
   const databaseId = requiredEnvironment('GCP_ADMIN_FIRESTORE_DATABASE_ID');
 
-  if (databaseId !== ADMIN_STAGING_DATABASE_ID) {
-    throw new Error('Studio Admin Preview must use the dedicated Admin staging database');
+  if (databaseId !== environment.adminDatabaseId) {
+    throw new Error(
+      `Configured Admin Firestore database does not match ${environment.dataEnvironment} environment`,
+    );
   }
 
-  return { databaseId };
+  return {
+    databaseId,
+    dataEnvironment: environment.dataEnvironment,
+  };
 }
