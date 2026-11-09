@@ -3,12 +3,6 @@
 
   "redirects": [
     {
-      "has": [{ "type": "host", "value": "studio.raquelsynths.com" }],
-      "source": "/admin",
-      "destination": "https://studio-admin.raquelsynths.com/",
-      "permanent": false
-    },
-    {
       "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
       "source": "/",
       "destination": "https://studio.raquelsynths.com/",
@@ -108,12 +102,6 @@
       "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
       "source": "/app/account",
       "destination": "https://studio.raquelsynths.com/app/account",
-      "permanent": true
-    },
-    {
-      "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
-      "source": "/admin",
-      "destination": "https://studio-admin.raquelsynths.com/",
       "permanent": true
     },
     {

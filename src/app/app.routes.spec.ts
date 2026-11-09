@@ -67,4 +67,13 @@ describe('V2 canonical app routes', () => {
       .toBe(RenderMode.Prerender);
   });
 
+  it('treats /admin as an ordinary nonexistent public route', () => {
+    expect(routes.some(route => route.path === 'admin')).toBeFalse();
+    expect(serverRoutes.some(route => route.path === 'admin')).toBeFalse();
+    expect(routes.at(-1)).toEqual(jasmine.objectContaining({
+      path: '**',
+      redirectTo: '',
+    }));
+  });
+
 });
