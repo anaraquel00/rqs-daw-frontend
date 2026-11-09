@@ -3,6 +3,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/rqs-studio-admin/browser",
   "framework": "angular",
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "feat/studio-admin-foundation": true
+    }
+  },
   "rewrites": [
     { "source": "/login", "destination": "/index.html" },
     { "source": "/forbidden", "destination": "/index.html" },
