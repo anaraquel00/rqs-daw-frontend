@@ -1,4 +1,4 @@
-# Waitlist plan interest and Commercial Admin — isolated deployment gates
+# Waitlist plan interest and RQS Studio Admin — isolated deployment gates
 
 Este documento é uma proposta para revisão. Nenhum recurso, secret, binding, migration ou
 deployment descrito abaixo foi criado ou alterado.
@@ -148,8 +148,8 @@ Somente depois dos gates anteriores, criar um deployment Preview sem aliases pú
 2. inscrição existente permanece create-only e não gera nova conversão;
 3. `/app/account` atualiza somente `plan_interest` e seu timestamp;
 4. referral original permanece inalterado;
-5. `/admin` exige membership ativa e responde somente agregados;
-6. `/admin` mantém `noindex`, não aparece no sitemap e permanece no host canônico;
+5. `studio-admin.raquelsynths.com` exige membership `owner` ativa e responde somente agregados;
+6. toda rota do app administrativo mantém `noindex`, `nofollow` e canonical no hostname isolado;
 7. PT-BR, EN, PL e FR continuam completos.
 
 ## Rollback por dependência

@@ -60,10 +60,6 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'admin',
-    loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES)
-  },
-  {
     path: 'master/online',
     component: MasterLandingPageComponent,
     title: 'RQS MASTER | Masterização Online para Música'

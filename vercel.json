@@ -3,6 +3,12 @@
 
   "redirects": [
     {
+      "has": [{ "type": "host", "value": "studio.raquelsynths.com" }],
+      "source": "/admin",
+      "destination": "https://studio-admin.raquelsynths.com/",
+      "permanent": false
+    },
+    {
       "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
       "source": "/",
       "destination": "https://studio.raquelsynths.com/",
@@ -107,7 +113,7 @@
     {
       "has": [{ "type": "host", "value": "go.raquelsynths.com" }],
       "source": "/admin",
-      "destination": "https://studio.raquelsynths.com/admin",
+      "destination": "https://studio-admin.raquelsynths.com/",
       "permanent": true
     },
     {
@@ -187,15 +193,6 @@
       "source": "/privacidade",
       "destination": "https://studio.raquelsynths.com/privacidade",
       "permanent": true
-    }
-  ],
-
-  "headers": [
-    {
-      "source": "/admin",
-      "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
-      ]
     }
   ],
 

@@ -39,7 +39,8 @@ test('go host redirects every actual Studio route with exact permanent rules', a
     readProjectFile('vercel.json'),
   ]);
   const vercelConfig = JSON.parse(vercelSource);
-  const redirects = vercelConfig.redirects ?? [];
+  const redirects = (vercelConfig.redirects ?? []).filter((redirect) =>
+    redirect.source !== '/admin' && redirect.has?.some(condition => condition.value === uplinkHost));
   const redirectSources = new Set(redirects.map((redirect) => redirect.source));
 
   assert.deepEqual(redirectSources, paths);
@@ -63,15 +64,13 @@ test('unmatched go paths still reach the existing Supabase resolver', async () =
   }]);
 });
 
-test('admin route is excluded from indexing at the edge', async () => {
+test('legacy Studio admin path leaves the public runtime surface', async () => {
   const vercelConfig = JSON.parse(await readProjectFile('vercel.json'));
-  const adminHeader = vercelConfig.headers?.find((entry) => entry.source === '/admin');
-
-  assert.ok(adminHeader, '/admin must have an explicit edge noindex header');
-  assert.deepEqual(adminHeader.headers, [{
-    key: 'X-Robots-Tag',
-    value: 'noindex, nofollow, noarchive',
-  }]);
+  const adminRedirect = vercelConfig.redirects.find((entry) =>
+    entry.source === '/admin' && entry.has?.some(condition => condition.value === 'studio.raquelsynths.com'));
+  assert.ok(adminRedirect, '/admin must redirect out of the public Studio app');
+  assert.equal(adminRedirect.destination, 'https://studio-admin.raquelsynths.com/');
+  assert.equal(adminRedirect.permanent, false);
 });
 
 test('reserved Uplink slugs cover router namespaces and infrastructure paths', async () => {

@@ -21,7 +21,7 @@ for (const path of ['/app/master', '/app/split', '/app/build', '/app/uplink', '/
 
 const selector = fs.readFileSync('src/app/studio/module-selector.ts', 'utf8');
 assert.match(selector, /id: 'master'[\s\S]*id: 'pitch'[\s\S]*id: 'build'[\s\S]*id: 'uplink'/);
-assert.match(selector, /id: 'pitch'[\s\S]*route: '\/pitch'[\s\S]*AI RELEASE INTELLIGENCE/);
+assert.match(selector, /id: 'pitch'[\s\S]*route: '\/app\/pitch'[\s\S]*AI RELEASE INTELLIGENCE/);
 assert.doesNotMatch(selector, /id: 'split'/);
 assert.doesNotMatch(selector, /Direct uplink to streaming services|worldwide deployment|DISTRIBUTION ENGINE/);
 assert.match(selector, /smart music link[\s\S]*streaming destinations/);
