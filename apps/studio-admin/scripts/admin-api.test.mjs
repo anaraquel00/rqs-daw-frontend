@@ -1,18 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import authConfigHandler from './auth/config.js';
-import meHandler from './admin/me.js';
-import overviewHandler from './admin/overview.js';
-import summaryHandler from './admin/waitlist/summary.js';
-import { setAdminContextProviderForTests } from './_auth.mjs';
-import { adminFirestoreConfiguration } from './_firestore-admin.mjs';
-import { assertFirestoreDataIsolation } from './_firestore-isolation.mjs';
+import authConfigHandler from '../api/auth/config.js';
+import meHandler from '../api/admin/me.js';
+import overviewHandler from '../api/admin/overview.js';
+import summaryHandler from '../api/admin/waitlist/summary.js';
+import { setAdminContextProviderForTests } from '../api/_auth.mjs';
+import { adminFirestoreConfiguration } from '../api/_firestore-admin.mjs';
+import { assertFirestoreDataIsolation } from '../api/_firestore-isolation.mjs';
 import {
   countReferralDocuments,
   referralFirestoreConfiguration,
   setReferralCountProviderForTests,
-} from './_firestore-referral.mjs';
-import { gcpOidcConfiguration } from './_gcp-oidc.mjs';
+} from '../api/_firestore-referral.mjs';
+import { gcpOidcConfiguration } from '../api/_gcp-oidc.mjs';
 
 process.env.NODE_TEST_CONTEXT = '1';
 

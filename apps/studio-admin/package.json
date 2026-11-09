@@ -7,7 +7,7 @@
     "start": "ng serve",
     "build": "ng build --configuration production",
     "test": "ng test --watch=false --browsers=ChromeHeadless",
-    "test:api": "node --test api/admin.test.mjs",
+    "test:api": "node --test scripts/admin-api.test.mjs",
     "test:security": "node --test scripts/security-contract.test.mjs"
   },
   "dependencies": {
