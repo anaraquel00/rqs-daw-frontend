@@ -6,14 +6,15 @@
   "git": {
     "deploymentEnabled": {
       "**": false,
-      "feat/studio-admin-foundation": true
+      "feat/studio-admin-phase2-readonly-intelligence": true
     }
   },
   "rewrites": [
     { "source": "/login", "destination": "/index.html" },
     { "source": "/forbidden", "destination": "/index.html" },
     { "source": "/unavailable", "destination": "/index.html" },
-    { "source": "/waitlist", "destination": "/index.html" }
+    { "source": "/waitlist", "destination": "/index.html" },
+    { "source": "/referrals", "destination": "/index.html" }
   ],
   "headers": [
     {

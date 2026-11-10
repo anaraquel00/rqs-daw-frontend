@@ -118,10 +118,15 @@ test('Studio Admin uses an explicit two-environment fail-closed contract', async
   );
 });
 
-test('Production Git auto-deploy remains blocked', async () => {
+test('Phase 2 preview branch is the only Git deployment branch', async () => {
   const vercel = await read('vercel.json');
 
   assert.match(
+    vercel,
+    /"feat\/studio-admin-phase2-readonly-intelligence"\s*:\s*true/,
+  );
+
+  assert.doesNotMatch(
     vercel,
     /"feat\/studio-admin-foundation"\s*:\s*true/,
   );
@@ -134,6 +139,11 @@ test('Production Git auto-deploy remains blocked', async () => {
   assert.match(
     vercel,
     /"\*\*"\s*:\s*false/,
+  );
+
+  assert.match(
+    vercel,
+    /"source"\s*:\s*"\/referrals"/,
   );
 });
 
