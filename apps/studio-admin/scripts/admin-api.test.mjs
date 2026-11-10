@@ -700,7 +700,7 @@ test('referral summary remains aggregate-only', async () => {
 test('referral records exclude referrer identity and fingerprint', async () => {
   setAdminContextProviderForTests(async () => membershipContext());
 
-  const participantId = 'a'.repeat(64);
+  const participantId = ' founding-participant-legacy-01 ';
   const prefix =
     'projects/raquel-synths-platform/databases/rqs-referral-staging/documents/founding_referral_participants/';
 

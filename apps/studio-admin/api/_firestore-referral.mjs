@@ -191,8 +191,11 @@ export async function referralSummary() {
 }
 
 export async function referralCountsForParticipant(participantId) {
-  const id = String(participantId || '').trim();
-  if (!/^[a-f0-9]{64}$/i.test(id)) {
+  const id = typeof participantId === 'string' ? participantId : '';
+
+  // Firestore document IDs are opaque identifiers. Preserve the exact value
+  // returned by Firestore instead of assuming a hash format or normalizing it.
+  if (!id || Buffer.byteLength(id, 'utf8') > 1500 || id.includes('/')) {
     throw new TypeError('Invalid participant document id');
   }
 
