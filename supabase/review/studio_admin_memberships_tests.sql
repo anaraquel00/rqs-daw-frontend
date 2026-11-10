@@ -55,9 +55,9 @@ insert into auth.users (
   );
 
 insert into public.studio_admin_memberships (user_id, role, active) values
-  ('00000000-0000-4000-8000-000000000001', 'commercial_admin', true),
-  ('00000000-0000-4000-8000-000000000002', 'commercial_admin', true),
-  ('00000000-0000-4000-8000-000000000003', 'commercial_admin', false);
+  ('00000000-0000-4000-8000-000000000001', 'owner', true),
+  ('00000000-0000-4000-8000-000000000002', 'analyst', true),
+  ('00000000-0000-4000-8000-000000000003', 'owner', false);
 
 select ok(
   (select relrowsecurity and relforcerowsecurity
@@ -150,7 +150,7 @@ select pg_catalog.set_config(
   true
 );
 select throws_ok(
-  $$insert into public.studio_admin_memberships (user_id, role) values ('00000000-0000-4000-8000-000000000001', 'commercial_admin')$$,
+  $$insert into public.studio_admin_memberships (user_id, role) values ('00000000-0000-4000-8000-000000000001', 'owner')$$,
   '42501',
   null,
   'authenticated cannot insert memberships'
@@ -173,7 +173,7 @@ select throws_ok(
   $$insert into public.studio_admin_memberships (user_id, role) values ('00000000-0000-4000-8000-000000000001', 'premium')$$,
   '23514',
   null,
-  'paid-plan roles cannot become commercial admin memberships'
+  'paid-plan roles cannot become Studio admin memberships'
 );
 
 select * from finish();

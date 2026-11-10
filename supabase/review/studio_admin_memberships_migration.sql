@@ -1,5 +1,5 @@
 -- REVIEW ONLY — do not apply without a separate Supabase migration gate.
--- Commercial administration is independent from paid-plan entitlements.
+-- RQS Studio administration is independent from paid-plan entitlements.
 
 begin;
 
@@ -16,7 +16,7 @@ $preflight$;
 
 create table public.studio_admin_memberships (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  role text not null check (role in ('commercial_admin')),
+  role text not null check (role in ('owner', 'operator', 'analyst')),
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

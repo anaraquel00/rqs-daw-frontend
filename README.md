@@ -35,6 +35,10 @@ The application currently exposes:
 
 The landing page, terms and privacy routes are configured for prerendering. The `/app` workspace is explicitly client-rendered because it depends heavily on browser APIs including Web Audio, `localStorage`, `navigator.clipboard`, `Audio`, `URL.createObjectURL` and OAuth flows.
 
+The public Studio has no `/admin` route, Admin API or navigation entry. Administrative access is
+isolated in the independent `apps/studio-admin` application, whose sole canonical production host is
+`studio-admin.raquelsynths.com`; public hosts do not redirect or rewrite `/admin` to that application.
+
 ## Workspace architecture
 
 The workspace combines four main product areas:

@@ -60,7 +60,6 @@ export class AuthService {
     '/app/split',
     '/app/learn',
     '/app/account',
-    '/admin',
   ]);
   private readonly allowedAttributionParams = new Set([
     'gclid',

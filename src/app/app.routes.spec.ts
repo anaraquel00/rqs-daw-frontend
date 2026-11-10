@@ -67,11 +67,13 @@ describe('V2 canonical app routes', () => {
       .toBe(RenderMode.Prerender);
   });
 
-  it('keeps the commercial admin lazy, guarded and client-rendered', async () => {
-    const admin = routes.find(route => route.path === 'admin')!;
-    const children = await (admin.loadChildren as () => Promise<Routes>)();
-    expect(children[0].canActivate?.length).toBe(1);
-    expect(children[0].loadComponent).toBeDefined();
-    expect(serverRoutes.find(route => route.path === 'admin')?.renderMode).toBe(RenderMode.Client);
+  it('treats /admin as an ordinary nonexistent public route', () => {
+    expect(routes.some(route => route.path === 'admin')).toBeFalse();
+    expect(serverRoutes.some(route => route.path === 'admin')).toBeFalse();
+    expect(routes.at(-1)).toEqual(jasmine.objectContaining({
+      path: '**',
+      redirectTo: '',
+    }));
   });
+
 });

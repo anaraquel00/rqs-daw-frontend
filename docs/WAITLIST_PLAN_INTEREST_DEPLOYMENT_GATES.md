@@ -1,4 +1,4 @@
-# Waitlist plan interest and Commercial Admin — isolated deployment gates
+# Waitlist plan interest and RQS Studio Admin — isolated deployment gates
 
 Este documento é uma proposta para revisão. Nenhum recurso, secret, binding, migration ou
 deployment descrito abaixo foi criado ou alterado.
@@ -30,32 +30,44 @@ Procedimento proposto:
 A migration recusa qualquer tabela `studio_admin_memberships` preexistente. Uma tabela existente
 exige auditoria explícita de schema; ela nunca é aceita por `if not exists`.
 
-## Gate 2 — Firestore exclusivo de Staging
+## Gate 2 — datastores isolados de Staging
 
-Proposta de recurso, ainda não provisionada:
+Datastore administrativo proposto, ainda não provisionado:
+
+```text
+project:  raquel-synths-platform
+database: rqs-studio-admin-staging
+```
+
+O database pode começar vazio. Nenhuma collection artificial, documento Referral ou fixture deve
+ser copiada apenas para materializar uso.
+
+A fonte externa read-only permanece separada:
 
 ```text
 project:  raquel-synths-platform
 database: rqs-referral-staging
+collections: pro_waitlist, founding_referral_participants
 ```
 
-O database deve começar vazio e conter somente fixtures sintéticas `.invalid`. Nenhum documento
-de `rqs-referral-preview` ou `(default)` pode ser copiado.
+Essas collections continuam pertencendo ao sistema Referral/Waitlist e não são migradas para o
+datastore administrativo.
 
-## Gate 3 — identidade IAM exclusiva
+## Gate 3 — autorização IAM separável por database
 
-Proposta, ainda não provisionada:
+A federação Vercel OIDC + Google Workload Identity Federation pode ser reutilizada, mas os grants
+devem permanecer distinguíveis por database. Proposta, ainda não provisionada:
 
 ```text
-service account: rqs-referral-staging@raquel-synths-platform.iam.gserviceaccount.com
-custom role:     RqsReferralStagingFirestoreAccess
-permissions:     datastore.entities.create
-                 datastore.entities.get
-                 datastore.entities.list
-                 datastore.entities.update
+Admin database:    rqs-studio-admin-staging
+Admin permissions: somente o acesso administrativo necessário ao backoffice
+
+Referral database:    rqs-referral-staging
+Referral permissions: datastore.entities.get
+                      datastore.entities.list
 ```
 
-O binding deve usar igualdade exata:
+Os bindings devem usar igualdade exata no respectivo database. O binding Referral, por exemplo:
 
 ```text
 resource.type == "firestore.googleapis.com/Database" &&
@@ -64,38 +76,37 @@ resource.name == "projects/raquel-synths-platform/databases/rqs-referral-staging
 
 O subject de `roles/iam.workloadIdentityUser` deve aceitar somente Preview/Staging. Antes de definir
 a condition, o gate deve inspecionar as claims reais do token Vercel e fixar o claim exato da branch
-ou custom environment; não se deve adivinhar o nome do claim nem usar wildcard. O subject Production
-não pode impersonar essa service account.
+ou custom environment; não se deve adivinhar o nome do claim nem usar wildcard. Phase 1 não recebe
+permissão de escrita na fonte Referral.
 
-## Gate 4 — configuração Firestore fail-closed
+## Gate 4 — configuração Firestore fail-closed e source-aware
 
-Proposta de código posterior:
+O runtime administrativo exige:
 
-- uma variável server-only identifica o ambiente de dados (`staging` ou `production`);
-- uma allowlist imutável mapeia `staging -> rqs-referral-staging` e
-  `production -> rqs-referral-preview` enquanto esse for o database Production aprovado;
-- `GCP_FIRESTORE_DATABASE_ID` precisa coincidir exatamente com o database permitido;
+- `VERCEL_ENV=preview` e `RQS_ADMIN_DATA_ENVIRONMENT=staging`;
+- `GCP_ADMIN_FIRESTORE_DATABASE_ID=rqs-studio-admin-staging`;
+- `GCP_REFERRAL_FIRESTORE_DATABASE_ID=rqs-referral-staging`;
+- módulos e funções distintos para Admin e Referral;
 - combinação ausente, desconhecida ou cruzada interrompe a requisição antes de obter token;
 - `(default)` permanece proibido;
-- a allowlist de collections permanece limitada a `pro_waitlist` e
-  `founding_referral_participants`;
+- a allowlist de `pro_waitlist` e `founding_referral_participants` existe somente no módulo Referral;
 - o emulador só é permitido com `NODE_TEST_CONTEXT`.
 
-A implementação local usa `RQS_DATA_ENVIRONMENT` como seletor server-only e valida o conjunto
-completo antes de solicitar credenciais OIDC ou executar uma operação:
+A implementação valida o conjunto completo antes de solicitar credenciais OIDC ou executar uma
+aggregation:
 
 ```text
-staging    -> rqs-referral-staging / rqs-referral-staging provider e service account
-production -> rqs-referral-preview / rqs-referral-preview provider e service account
+Admin datastore  -> rqs-studio-admin-staging
+Referral source  -> rqs-referral-staging (read-only)
 ```
 
-Também são validados o project ID `raquel-synths-platform`, project number, audience derivada do
-provider, `VERCEL_TARGET_ENV` e `VERCEL_ENV`. A compatibilidade temporária com a configuração
-Production publicada aceita ausência de `RQS_DATA_ENVIRONMENT` somente quando o contexto Vercel é
-inequivocamente `production`; Preview/Staging sem a variável falha fechado.
+O datastore futuro do Admin será `rqs-studio-admin-production`, mas não é configurado neste gate.
+A fonte Referral Production exige identificação e auditoria separadas; seu nome não é inferido.
+Qualquer combinação Production permanece bloqueada na Phase 1.
 
-Testes obrigatórios devem rejeitar: variável ausente, ambiente desconhecido, `(default)`, database
-Production em Staging, database Staging em Production e collection fora da allowlist.
+Testes obrigatórios devem rejeitar: variável ausente, ambiente desconhecido, `(default)`, qualquer
+database Production em Preview, datastores Admin/Referral iguais e collection fora da allowlist
+Referral.
 
 ## Gate 5 — Brevo sem dados comerciais
 
@@ -122,7 +133,8 @@ restritos à branch aprovada. Nenhum valor Production deve ser copiado. Antes do
 somente metadados das variáveis e comprovar:
 
 - branch correta;
-- database `rqs-referral-staging`;
+- Admin database `rqs-studio-admin-staging`;
+- Referral database `rqs-referral-staging`;
 - service account exclusiva;
 - audience/provider exclusivos ou condition Preview-only;
 - lista Brevo de teste ou modo `noop`;
@@ -132,10 +144,10 @@ somente metadados das variáveis e comprovar:
 
 Antes do smoke de aplicação:
 
-1. a identidade Staging cria, lê, lista e atualiza fixtures somente em `rqs-referral-staging`;
-2. a mesma identidade recebe negação em `rqs-referral-preview` e `(default)`;
-3. a identidade Production recebe negação em `rqs-referral-staging`;
-4. o código rejeita database cruzado antes da autenticação GCP;
+1. o runtime reconhece `rqs-studio-admin-staging` como datastore Admin, mesmo vazio;
+2. a identidade Staging agrega somente as collections permitidas em `rqs-referral-staging`;
+3. a mesma identidade recebe negação de escrita em `rqs-referral-staging` e negação em `(default)`;
+4. o código rejeita database cruzado ou Production antes da autenticação GCP;
 5. o teste do emulador preserva os campos de Founding Referral;
 6. o dashboard retorna somente contagens agregadas e nenhum campo de documento;
 7. a configuração Brevo não alcança a lista comercial.
@@ -148,8 +160,8 @@ Somente depois dos gates anteriores, criar um deployment Preview sem aliases pú
 2. inscrição existente permanece create-only e não gera nova conversão;
 3. `/app/account` atualiza somente `plan_interest` e seu timestamp;
 4. referral original permanece inalterado;
-5. `/admin` exige membership ativa e responde somente agregados;
-6. `/admin` mantém `noindex`, não aparece no sitemap e permanece no host canônico;
+5. `studio-admin.raquelsynths.com` exige membership `owner` ativa e responde somente agregados;
+6. toda rota do app administrativo mantém `noindex`, `nofollow` e canonical no hostname isolado;
 7. PT-BR, EN, PL e FR continuam completos.
 
 ## Rollback por dependência
@@ -158,10 +170,10 @@ Somente depois dos gates anteriores, criar um deployment Preview sem aliases pú
 - **Supabase local:** destruir a stack descartável sem backup.
 - **Supabase Staging futuro:** remover a membership bootstrap pelo UUID exato; remover a tabela
   somente se vazia e sem dependências.
-- **IAM:** remover o binding e desabilitar a service account exclusiva; não alterar a identidade
-  Production.
-- **Firestore Staging:** bloquear acesso antes de considerar exclusão do database; nunca tocar em
-  `rqs-referral-preview` ou `(default)`.
+- **IAM:** remover somente os bindings Preview por database; não alterar identidades Production.
+- **Admin Firestore Staging:** bloquear acesso antes de considerar exclusão do database vazio.
+- **Referral Firestore Staging:** remover somente o grant read-only do Admin; não alterar ou copiar
+  as collections de Referral e nunca tocar em `(default)`.
 - **Vercel:** remover somente os IDs de variáveis branch-scoped criados no gate.
 - **Brevo:** remover a lista de teste ou desativar o modo de integração; nenhum contato comercial é
   afetado.

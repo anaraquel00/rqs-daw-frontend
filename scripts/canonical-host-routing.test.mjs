@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const rootUrl = new URL('../', import.meta.url);
@@ -7,6 +7,8 @@ const canonicalOrigin = 'https://studio.raquelsynths.com';
 const uplinkHost = 'go.raquelsynths.com';
 
 const readProjectFile = async (path) => readFile(new URL(path, rootUrl), 'utf8');
+const projectPathExists = async (path) =>
+  access(new URL(path, rootUrl)).then(() => true, () => false);
 
 const extractQuotedValues = (source) => [...source.matchAll(/'([^']*)'/g)].map((match) => match[1]);
 
@@ -39,7 +41,8 @@ test('go host redirects every actual Studio route with exact permanent rules', a
     readProjectFile('vercel.json'),
   ]);
   const vercelConfig = JSON.parse(vercelSource);
-  const redirects = vercelConfig.redirects ?? [];
+  const redirects = (vercelConfig.redirects ?? []).filter((redirect) =>
+    redirect.has?.some(condition => condition.value === uplinkHost));
   const redirectSources = new Set(redirects.map((redirect) => redirect.source));
 
   assert.deepEqual(redirectSources, paths);
@@ -63,15 +66,39 @@ test('unmatched go paths still reach the existing Supabase resolver', async () =
   }]);
 });
 
-test('admin route is excluded from indexing at the edge', async () => {
+test('public hosts expose no special redirect or rewrite for /admin', async () => {
   const vercelConfig = JSON.parse(await readProjectFile('vercel.json'));
-  const adminHeader = vercelConfig.headers?.find((entry) => entry.source === '/admin');
+  const publicHosts = new Set(['studio.raquelsynths.com', uplinkHost]);
+  const adminRedirects = (vercelConfig.redirects ?? []).filter((entry) =>
+    entry.source === '/admin' && entry.has?.some(condition => publicHosts.has(condition.value)));
+  const adminRewrites = (vercelConfig.rewrites ?? []).filter((entry) => entry.source === '/admin');
 
-  assert.ok(adminHeader, '/admin must have an explicit edge noindex header');
-  assert.deepEqual(adminHeader.headers, [{
-    key: 'X-Robots-Tag',
-    value: 'noindex, nofollow, noarchive',
-  }]);
+  assert.deepEqual(adminRedirects, [], '/admin must not have a public-host redirect');
+  assert.deepEqual(adminRewrites, [], '/admin must not have a dedicated public rewrite');
+  assert.equal(JSON.stringify(vercelConfig).includes('studio-admin.raquelsynths.com'), false);
+});
+
+test('legacy Admin implementation is absent from the public application', async () => {
+  const legacyPaths = [
+    'api/_admin-auth.mjs',
+    'api/admin.test.mjs',
+    'api/admin/session.js',
+    'api/admin/waitlist/summary.js',
+    'src/app/admin/admin-auth.guard.spec.ts',
+    'src/app/admin/admin-auth.guard.ts',
+    'src/app/admin/admin-dashboard.html',
+    'src/app/admin/admin-dashboard.scss',
+    'src/app/admin/admin-dashboard.spec.ts',
+    'src/app/admin/admin-dashboard.ts',
+    'src/app/admin/admin-session.service.ts',
+    'src/app/admin/admin.routes.ts',
+  ];
+
+  for (const path of legacyPaths) {
+    assert.equal(await projectPathExists(path), false, `${path} must remain absent`);
+  }
+  assert.equal(await projectPathExists('api/admin'), false, 'public /api/admin must remain absent');
+  assert.equal(await projectPathExists('src/app/admin'), false, 'public Angular Admin must remain absent');
 });
 
 test('reserved Uplink slugs cover router namespaces and infrastructure paths', async () => {

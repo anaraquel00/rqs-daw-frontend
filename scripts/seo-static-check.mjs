@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const sitemap = fs.readFileSync('public/sitemap.xml', 'utf8');
+const robots = fs.readFileSync('public/robots.txt', 'utf8');
 const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
 const expected = [
   'https://studio.raquelsynths.com/',
@@ -18,10 +19,12 @@ assert.deepEqual(urls, expected, 'sitemap must contain exactly the public discov
 for (const path of ['/app/master', '/app/split', '/app/build', '/app/uplink', '/app/learn', '/app/account', '/pitch', '/legacy', '/admin']) {
   assert.equal(urls.includes('https://studio.raquelsynths.com' + path), false, 'sitemap must exclude ' + path);
 }
+assert.doesNotMatch(sitemap, /studio-admin\.raquelsynths\.com|\/admin(?:<|\/)/);
+assert.doesNotMatch(robots, /studio-admin\.raquelsynths\.com|\/admin(?:\s|$)/m);
 
 const selector = fs.readFileSync('src/app/studio/module-selector.ts', 'utf8');
 assert.match(selector, /id: 'master'[\s\S]*id: 'pitch'[\s\S]*id: 'build'[\s\S]*id: 'uplink'/);
-assert.match(selector, /id: 'pitch'[\s\S]*route: '\/pitch'[\s\S]*AI RELEASE INTELLIGENCE/);
+assert.match(selector, /id: 'pitch'[\s\S]*route: '\/app\/pitch'[\s\S]*AI RELEASE INTELLIGENCE/);
 assert.doesNotMatch(selector, /id: 'split'/);
 assert.doesNotMatch(selector, /Direct uplink to streaming services|worldwide deployment|DISTRIBUTION ENGINE/);
 assert.match(selector, /smart music link[\s\S]*streaming destinations/);
