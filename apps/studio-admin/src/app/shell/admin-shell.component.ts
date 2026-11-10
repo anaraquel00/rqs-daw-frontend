@@ -20,6 +20,7 @@ import { AdminAuthService } from '../core/admin-auth.service';
         <p class="nav-label">CONTROL ROOM</p>
         <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="active">OVERVIEW</a>
         <a routerLink="/waitlist" routerLinkActive="active">WAITLIST</a>
+        <a routerLink="/referrals" routerLinkActive="active">REFERRALS</a>
         <div class="sidebar-spacer"></div>
         <button type="button" (click)="logout()" [disabled]="signingOut()">SIGN OUT</button>
       </aside>
@@ -27,7 +28,7 @@ import { AdminAuthService } from '../core/admin-auth.service';
       <footer>
         <span>{{ environment }}</span>
         <span>ROLE: {{ role() }}</span>
-        <span>VERSION: PHASE 1</span>
+        <span>VERSION: PHASE 2</span>
       </footer>
     </div>
   `,

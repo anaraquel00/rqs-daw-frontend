@@ -118,10 +118,15 @@ test('Studio Admin uses an explicit two-environment fail-closed contract', async
   );
 });
 
-test('Production Git auto-deploy remains blocked', async () => {
+test('Phase 2 preview branch is the only Git deployment branch', async () => {
   const vercel = await read('vercel.json');
 
   assert.match(
+    vercel,
+    /"feat\/studio-admin-phase2-readonly-intelligence"\s*:\s*true/,
+  );
+
+  assert.doesNotMatch(
     vercel,
     /"feat\/studio-admin-foundation"\s*:\s*true/,
   );
@@ -134,6 +139,11 @@ test('Production Git auto-deploy remains blocked', async () => {
   assert.match(
     vercel,
     /"\*\*"\s*:\s*false/,
+  );
+
+  assert.match(
+    vercel,
+    /"source"\s*:\s*"\/referrals"/,
   );
 });
 
@@ -159,4 +169,58 @@ test('GCP identity is validated before OIDC token exchange', async () => {
     oidc,
     /GOOGLE_APPLICATION_CREDENTIALS|private_key|client_email/,
   );
+});
+
+
+test('Phase 2 record endpoints stay read-only and contain no privileged credential path', async () => {
+  const [referral, waitlistRecords, referralSummary, referralRecords] =
+    await Promise.all([
+      read('api/_firestore-referral.mjs'),
+      read('api/admin/waitlist/records.js'),
+      read('api/admin/referrals/summary.js'),
+      read('api/admin/referrals/records.js'),
+    ]);
+
+  const phase2 = [
+    referral,
+    waitlistRecords,
+    referralSummary,
+    referralRecords,
+  ].join('\n');
+
+  assert.match(referral, /runQuery/);
+  assert.match(referral, /runAggregationQuery/);
+  assert.match(referral, /PAGE_SIZE_MAX\s*=\s*50/);
+  assert.match(referral, /fieldPath:\s*'__name__'/);
+  assert.match(referral, /validateCursorToken/);
+
+  assert.doesNotMatch(
+    phase2,
+    /createDocument|updateDocument|deleteDocument|method:\s*['"]PATCH['"]|method:\s*['"]DELETE['"]/,
+  );
+
+  assert.doesNotMatch(
+    phase2,
+    /SUPABASE_SERVICE_ROLE_KEY|GOOGLE_APPLICATION_CREDENTIALS|private_key|client_email/,
+  );
+
+  assert.match(waitlistRecords, /req\.method !== 'GET'/);
+  assert.match(referralSummary, /req\.method !== 'GET'/);
+  assert.match(referralRecords, /req\.method !== 'GET'/);
+});
+
+test('Phase 2 browser payload projections exclude sensitive referral identity fields', async () => {
+  const referral = await read('api/_firestore-referral.mjs');
+
+  const participantProjection = referral.match(
+    /const PARTICIPANT_PROJECTION = \[(.*?)\];/s,
+  )?.[1] ?? '';
+
+  assert.doesNotMatch(
+    participantProjection,
+    /referrerUserId|emailFingerprint/,
+  );
+
+  assert.match(referral, /maskedEmail/);
+  assert.match(referral, /maskedReferralCode/);
 });

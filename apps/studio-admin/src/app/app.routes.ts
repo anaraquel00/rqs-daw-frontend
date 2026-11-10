@@ -32,6 +32,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/waitlist.component').then(module => module.WaitlistComponent),
         title: 'Waitlist | RQS Studio Admin',
       },
+      {
+        path: 'referrals',
+        loadComponent: () => import('./pages/referrals.component').then(module => module.ReferralsComponent),
+        title: 'Referrals | RQS Studio Admin',
+      },
     ],
   },
   { path: '**', redirectTo: '' },

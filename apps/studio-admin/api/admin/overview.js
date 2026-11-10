@@ -1,6 +1,9 @@
 import { authorizeOwner } from '../_auth.mjs';
 import { assertFirestoreDataIsolation } from '../_firestore-isolation.mjs';
-import { countReferralDocuments } from '../_firestore-referral.mjs';
+import {
+  countReferralDocuments,
+  referralSummary,
+} from '../_firestore-referral.mjs';
 import { completeRequest, prepareRequest } from '../_http.mjs';
 
 export default async function handler(req, res) {
@@ -13,21 +16,83 @@ export default async function handler(req, res) {
   try {
     authorization = await authorizeOwner(req);
     if (authorization.status !== 200) {
-      return respond(res, context, authorization.status, { error: 'Administrative access required' }, authorization.userId);
+      return respond(
+        res,
+        context,
+        authorization.status,
+        { error: 'Administrative access required' },
+        authorization.userId,
+      );
     }
+
     assertFirestoreDataIsolation();
-    const [waitlistTotal, foundingReferralParticipants] = await Promise.all([
-      countReferralDocuments('pro_waitlist'),
-      countReferralDocuments('founding_referral_participants'),
-    ]);
-    return respond(res, context, 200, {
+
+    const [
       waitlistTotal,
-      foundingReferralParticipants,
-      systemStatus: 'operational',
-      generatedAt: new Date().toISOString(),
-    }, authorization.userId);
+      master,
+      plus,
+      pro,
+      undecided,
+      pt,
+      en,
+      pl,
+      fr,
+      referrals,
+    ] = await Promise.all([
+      countReferralDocuments('pro_waitlist'),
+      countReferralDocuments('pro_waitlist', 'plan_interest', 'master'),
+      countReferralDocuments('pro_waitlist', 'plan_interest', 'plus'),
+      countReferralDocuments('pro_waitlist', 'plan_interest', 'pro'),
+      countReferralDocuments('pro_waitlist', 'plan_interest', 'undecided'),
+      countReferralDocuments('pro_waitlist', 'language', 'pt'),
+      countReferralDocuments('pro_waitlist', 'language', 'en'),
+      countReferralDocuments('pro_waitlist', 'language', 'pl'),
+      countReferralDocuments('pro_waitlist', 'language', 'fr'),
+      referralSummary(),
+    ]);
+
+    const unknownPlanInterest = Math.max(
+      0,
+      waitlistTotal - master - plus - pro - undecided,
+    );
+    const unknownLanguage = Math.max(0, waitlistTotal - pt - en - pl - fr);
+
+    return respond(
+      res,
+      context,
+      200,
+      {
+        waitlistTotal,
+        foundingReferralParticipants: referrals.total,
+        activeFoundingReferralParticipants: referrals.active,
+        referralAttributedWaitlist: referrals.attributedWaitlist,
+        byPlanInterest: {
+          master,
+          plus,
+          pro,
+          undecided,
+          unknown: unknownPlanInterest,
+        },
+        byLanguage: {
+          pt,
+          en,
+          pl,
+          fr,
+          unknown: unknownLanguage,
+        },
+        systemStatus: 'operational',
+        generatedAt: new Date().toISOString(),
+      },
+      authorization.userId,
+    );
   } catch {
-    return respond(res, context, 503, { error: 'Admin overview unavailable' }, authorization?.userId);
+    return respond(
+      res,
+      context,
+      503,
+      { error: 'Admin overview unavailable' },
+      authorization?.userId,
+    );
   }
 }
 
