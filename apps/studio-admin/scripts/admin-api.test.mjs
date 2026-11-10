@@ -4,6 +4,9 @@ import authConfigHandler from '../api/auth/config.js';
 import meHandler from '../api/admin/me.js';
 import overviewHandler from '../api/admin/overview.js';
 import summaryHandler from '../api/admin/waitlist/summary.js';
+import waitlistRecordsHandler from '../api/admin/waitlist/records.js';
+import referralSummaryHandler from '../api/admin/referrals/summary.js';
+import referralRecordsHandler from '../api/admin/referrals/records.js';
 import { setAdminContextProviderForTests } from '../api/_auth.mjs';
 import { adminEnvironmentConfiguration } from '../api/_firestore-environment.mjs';
 import { adminFirestoreConfiguration } from '../api/_firestore-admin.mjs';
@@ -12,6 +15,7 @@ import {
   countReferralDocuments,
   referralFirestoreConfiguration,
   setReferralCountProviderForTests,
+  setReferralPageProviderForTests,
 } from '../api/_firestore-referral.mjs';
 import { gcpOidcConfiguration } from '../api/_gcp-oidc.mjs';
 
@@ -83,6 +87,7 @@ async function invoke(
     method = 'GET',
     origin,
     authorization = 'Bearer opaque-token',
+    query = {},
   } = {},
 ) {
   const result = {
@@ -93,6 +98,7 @@ async function invoke(
 
   const req = {
     method,
+    query,
     headers: {
       authorization,
       ...(origin ? { origin } : {}),
@@ -123,6 +129,7 @@ async function invoke(
 test.afterEach(() => {
   setAdminContextProviderForTests(null);
   setReferralCountProviderForTests(null);
+  setReferralPageProviderForTests(null);
   delete process.env.ADMIN_ALLOWED_ORIGINS;
   configure(STAGING);
 });
@@ -527,6 +534,301 @@ test('CORS accepts only explicit administrative origins', async () => {
     'https://rqs-admin-git-feature-team.vercel.app',
   );
 });
+
+
+test('Phase 2 records endpoints enforce owner authorization and GET only', async () => {
+  let pageCalled = false;
+  setReferralPageProviderForTests(async () => {
+    pageCalled = true;
+    return [];
+  });
+
+  setAdminContextProviderForTests(async () => null);
+  assert.equal((await invoke(waitlistRecordsHandler)).status, 401);
+  assert.equal((await invoke(referralRecordsHandler)).status, 401);
+  assert.equal((await invoke(referralSummaryHandler)).status, 401);
+  assert.equal(pageCalled, false);
+
+  setAdminContextProviderForTests(async () => membershipContext('analyst'));
+  assert.equal((await invoke(waitlistRecordsHandler)).status, 403);
+  assert.equal(pageCalled, false);
+
+  setAdminContextProviderForTests(async () => membershipContext());
+  assert.equal((await invoke(waitlistRecordsHandler, { method: 'POST' })).status, 405);
+  assert.equal((await invoke(referralRecordsHandler, { method: 'PATCH' })).status, 405);
+  assert.equal(pageCalled, false);
+});
+
+test('Phase 2 records endpoints reject invalid origins before data access', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  let pageCalled = false;
+  setReferralPageProviderForTests(async () => {
+    pageCalled = true;
+    return [];
+  });
+
+  const result = await invoke(waitlistRecordsHandler, {
+    origin: 'https://evil.example',
+  });
+
+  assert.equal(result.status, 403);
+  assert.equal(pageCalled, false);
+});
+
+test('waitlist records enforce bounded pagination and validated filters', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  let pageCalled = false;
+  setReferralPageProviderForTests(async () => {
+    pageCalled = true;
+    return [];
+  });
+
+  assert.equal(
+    (await invoke(waitlistRecordsHandler, { query: { limit: '51' } })).status,
+    400,
+  );
+  assert.equal(
+    (await invoke(waitlistRecordsHandler, { query: { limit: '0' } })).status,
+    400,
+  );
+  assert.equal(
+    (await invoke(waitlistRecordsHandler, {
+      query: { planInterest: 'enterprise' },
+    })).status,
+    400,
+  );
+  assert.equal(
+    (await invoke(waitlistRecordsHandler, {
+      query: { language: 'de' },
+    })).status,
+    400,
+  );
+  assert.equal(pageCalled, false);
+});
+
+test('opaque cursor is validated before the page provider is invoked', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  let pageCalled = false;
+  setReferralPageProviderForTests(async () => {
+    pageCalled = true;
+    return [];
+  });
+
+  const result = await invoke(waitlistRecordsHandler, {
+    query: { cursor: 'not-a-valid-cursor' },
+  });
+
+  assert.equal(result.status, 400);
+  assert.equal(pageCalled, false);
+});
+
+test('waitlist records return only masked and allowlisted operational fields', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  const prefix =
+    'projects/raquel-synths-platform/databases/rqs-referral-staging/documents/pro_waitlist/';
+
+  setReferralPageProviderForTests(async ({ collection, limit }) => {
+    assert.equal(collection, 'pro_waitlist');
+    const documents = Array.from({ length: 26 }, (_, index) => ({
+      __name: `${prefix}doc-${String(index).padStart(2, '0')}`,
+      id: `doc-${String(index).padStart(2, '0')}`,
+      email: index === 0 ? 'ana@example.com' : `person${index}@example.com`,
+      plan_interest: index === 1 ? 'legacy-plan' : 'master',
+      status: 'waiting',
+      language: index === 2 ? 'xx' : 'pt',
+      source: 'studio.raquelsynths.com',
+      createdAt: '2026-11-01T00:00:00.000Z',
+      plan_interest_updated_at: '2026-11-02T00:00:00.000Z',
+      referralCampaignId: index === 0 ? 'founding-2026' : undefined,
+      referrerParticipantId: index === 0 ? 'a'.repeat(64) : undefined,
+      referralStatus: index === 0 ? 'waitlisted' : undefined,
+      referralCapturedAt: index === 0 ? '2026-11-03T00:00:00.000Z' : undefined,
+      referrerUserId: 'MUST_NOT_LEAK',
+      emailFingerprint: 'MUST_NOT_LEAK',
+      referralCode: 'MUST_NOT_LEAK',
+    }));
+    return documents.slice(0, limit);
+  });
+
+  const result = await invoke(waitlistRecordsHandler);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.limit, 25);
+  assert.equal(result.body.records.length, 25);
+  assert.equal(typeof result.body.nextCursor, 'string');
+  assert.equal(result.body.records[0].maskedEmail, 'an***@example.com');
+  assert.equal(result.body.records[0].referralAttributed, true);
+  assert.equal(result.body.records[1].planInterest, 'unknown');
+  assert.equal(result.body.records[2].language, 'unknown');
+
+  const serialized = JSON.stringify(result.body);
+  assert.equal(serialized.includes('ana@example.com'), false);
+  assert.equal(serialized.includes('MUST_NOT_LEAK'), false);
+  assert.equal(serialized.includes('referrerUserId'), false);
+  assert.equal(serialized.includes('emailFingerprint'), false);
+  assert.equal(serialized.includes('referralCode'), false);
+});
+
+test('referral summary remains aggregate-only', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  setReferralCountProviderForTests(async (collection, field, value) => {
+    if (collection === 'founding_referral_participants' && field === undefined) return 7;
+    if (collection === 'founding_referral_participants' && field === 'status' && value === 'active') return 4;
+    if (collection === 'pro_waitlist' && field === 'referralCampaignId') return 11;
+    return 0;
+  });
+
+  const result = await invoke(referralSummaryHandler);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(
+    {
+      total: result.body.total,
+      active: result.body.active,
+      attributedWaitlist: result.body.attributedWaitlist,
+    },
+    { total: 7, active: 4, attributedWaitlist: 11 },
+  );
+  assertPrivacy(result.body);
+});
+
+test('referral records exclude referrer identity and fingerprint', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  const participantId = 'a'.repeat(64);
+  const prefix =
+    'projects/raquel-synths-platform/databases/rqs-referral-staging/documents/founding_referral_participants/';
+
+  setReferralPageProviderForTests(async ({ collection }) => {
+    assert.equal(collection, 'founding_referral_participants');
+    return [{
+      __name: `${prefix}${participantId}`,
+      id: participantId,
+      campaignId: 'founding-2026',
+      status: 'active',
+      termsVersion: '2026-10-31',
+      termsAcceptedAt: '2026-11-01T00:00:00.000Z',
+      eligibleFrom: '2026-10-31T00:00:00.000Z',
+      captureEndsAt: null,
+      createdAt: '2026-11-01T00:00:00.000Z',
+      referralCode: 'RQSABCDEFGH2',
+      referrerUserId: 'MUST_NOT_LEAK',
+      emailFingerprint: 'MUST_NOT_LEAK',
+    }];
+  });
+
+  setReferralCountProviderForTests(
+    async (collection, field, value, extra = {}) => {
+      assert.equal(collection, 'pro_waitlist');
+      assert.equal(field, 'referrerParticipantId');
+      assert.equal(value, participantId);
+      if (extra.secondaryValue === 'waitlisted') return 1;
+      if (extra.secondaryValue === 'pending_payment') return 1;
+      if (extra.secondaryValue === 'qualified') return 2;
+      return 5;
+    },
+  );
+
+  const result = await invoke(referralRecordsHandler);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.records.length, 1);
+  assert.equal(result.body.records[0].maskedReferralCode, 'RQS***H2');
+  assert.equal(result.body.records[0].referredCount, 5);
+  assert.equal(result.body.records[0].pendingCount, 2);
+  assert.equal(result.body.records[0].qualifiedCount, 2);
+  assert.equal(result.body.records[0].discountPercent, 20);
+
+  const serialized = JSON.stringify(result.body);
+  assert.equal(serialized.includes('MUST_NOT_LEAK'), false);
+  assert.equal(serialized.includes('referrerUserId'), false);
+  assert.equal(serialized.includes('emailFingerprint'), false);
+  assert.equal(serialized.includes('RQSABCDEFGH2'), false);
+});
+
+test('referral records validate filters and pagination bounds', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  let pageCalled = false;
+  setReferralPageProviderForTests(async () => {
+    pageCalled = true;
+    return [];
+  });
+
+  assert.equal(
+    (await invoke(referralRecordsHandler, {
+      query: { status: 'disabled' },
+    })).status,
+    400,
+  );
+  assert.equal(
+    (await invoke(referralRecordsHandler, {
+      query: { campaignId: '../unexpected' },
+    })).status,
+    400,
+  );
+  assert.equal(
+    (await invoke(referralRecordsHandler, {
+      query: { limit: '500' },
+    })).status,
+    400,
+  );
+
+  assert.equal(pageCalled, false);
+});
+
+test('Phase 2 overview exposes expanded aggregate intelligence only', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  setReferralCountProviderForTests(async (collection, field, value) => {
+    if (collection === 'founding_referral_participants') {
+      if (field === 'status' && value === 'active') return 2;
+      return 3;
+    }
+
+    if (field === undefined) return 20;
+    const values = new Map([
+      ['plan_interest:master', 4],
+      ['plan_interest:plus', 3],
+      ['plan_interest:pro', 5],
+      ['plan_interest:undecided', 2],
+      ['language:pt', 8],
+      ['language:en', 5],
+      ['language:pl', 2],
+      ['language:fr', 1],
+      ['referralCampaignId:founding-2026', 6],
+    ]);
+    return values.get(`${field}:${value}`) ?? 0;
+  });
+
+  const result = await invoke(overviewHandler);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body.byPlanInterest, {
+    master: 4,
+    plus: 3,
+    pro: 5,
+    undecided: 2,
+    unknown: 6,
+  });
+  assert.deepEqual(result.body.byLanguage, {
+    pt: 8,
+    en: 5,
+    pl: 2,
+    fr: 1,
+    unknown: 4,
+  });
+  assert.equal(result.body.foundingReferralParticipants, 3);
+  assert.equal(result.body.activeFoundingReferralParticipants, 2);
+  assert.equal(result.body.referralAttributedWaitlist, 6);
+  assertPrivacy(result.body);
+});
+
 
 function assertPrivacy(body) {
   const serialized = JSON.stringify(body).toLowerCase();

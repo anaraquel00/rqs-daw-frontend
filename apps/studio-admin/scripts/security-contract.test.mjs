@@ -160,3 +160,57 @@ test('GCP identity is validated before OIDC token exchange', async () => {
     /GOOGLE_APPLICATION_CREDENTIALS|private_key|client_email/,
   );
 });
+
+
+test('Phase 2 record endpoints stay read-only and contain no privileged credential path', async () => {
+  const [referral, waitlistRecords, referralSummary, referralRecords] =
+    await Promise.all([
+      read('api/_firestore-referral.mjs'),
+      read('api/admin/waitlist/records.js'),
+      read('api/admin/referrals/summary.js'),
+      read('api/admin/referrals/records.js'),
+    ]);
+
+  const phase2 = [
+    referral,
+    waitlistRecords,
+    referralSummary,
+    referralRecords,
+  ].join('\n');
+
+  assert.match(referral, /runQuery/);
+  assert.match(referral, /runAggregationQuery/);
+  assert.match(referral, /PAGE_SIZE_MAX\s*=\s*50/);
+  assert.match(referral, /fieldPath:\s*'__name__'/);
+  assert.match(referral, /validateCursorToken/);
+
+  assert.doesNotMatch(
+    phase2,
+    /createDocument|updateDocument|deleteDocument|method:\s*['"]PATCH['"]|method:\s*['"]DELETE['"]/,
+  );
+
+  assert.doesNotMatch(
+    phase2,
+    /SUPABASE_SERVICE_ROLE_KEY|GOOGLE_APPLICATION_CREDENTIALS|private_key|client_email/,
+  );
+
+  assert.match(waitlistRecords, /req\.method !== 'GET'/);
+  assert.match(referralSummary, /req\.method !== 'GET'/);
+  assert.match(referralRecords, /req\.method !== 'GET'/);
+});
+
+test('Phase 2 browser payload projections exclude sensitive referral identity fields', async () => {
+  const referral = await read('api/_firestore-referral.mjs');
+
+  const participantProjection = referral.match(
+    /const PARTICIPANT_PROJECTION = \[(.*?)\];/s,
+  )?.[1] ?? '';
+
+  assert.doesNotMatch(
+    participantProjection,
+    /referrerUserId|emailFingerprint/,
+  );
+
+  assert.match(referral, /maskedEmail/);
+  assert.match(referral, /maskedReferralCode/);
+});
