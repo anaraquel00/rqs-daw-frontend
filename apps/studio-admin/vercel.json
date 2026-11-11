@@ -4,10 +4,7 @@
   "outputDirectory": "dist/rqs-studio-admin/browser",
   "framework": "angular",
   "git": {
-    "deploymentEnabled": {
-      "**": false,
-      "feat/studio-admin-phase2-readonly-intelligence": true
-    }
+    "deploymentEnabled": false
   },
   "rewrites": [
     { "source": "/login", "destination": "/index.html" },
