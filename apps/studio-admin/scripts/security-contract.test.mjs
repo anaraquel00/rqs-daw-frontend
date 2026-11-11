@@ -152,6 +152,13 @@ test('GCP identity is validated before OIDC token exchange', async () => {
   assert.match(oidc, /gcpProviderId/);
   assert.match(oidc, /gcpServiceAccountEmail/);
   assert.match(oidc, /getVercelOidcToken/);
+  assert.match(oidc, /IdentityPoolClient/);
+  assert.match(oidc, /subject_token_supplier/);
+
+  assert.doesNotMatch(
+    oidc,
+    /ExternalAccountClient|\.fromJSON\(/,
+  );
 
   assert.doesNotMatch(
     oidc,

@@ -1,5 +1,5 @@
 import { getVercelOidcToken } from '@vercel/oidc';
-import { ExternalAccountClient } from 'google-auth-library';
+import { IdentityPoolClient } from 'google-auth-library';
 import {
   adminEnvironmentConfiguration,
   requiredEnvironment,
@@ -74,8 +74,7 @@ export async function gcpOidcAccessToken(
   ].join('|');
 
   if (!authClient || authClientSignature !== signature) {
-    authClient = ExternalAccountClient.fromJSON({
-      type: 'external_account',
+    authClient = new IdentityPoolClient({
       audience: configuration.providerResource,
       subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
       token_url: 'https://sts.googleapis.com/v1/token',
