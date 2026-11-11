@@ -118,32 +118,20 @@ test('Studio Admin uses an explicit two-environment fail-closed contract', async
   );
 });
 
-test('Phase 2 preview branch is the only Git deployment branch', async () => {
-  const vercel = await read('vercel.json');
+test('Studio Admin disables automatic Git deployments and preserves required SPA routes', async () => {
+  const vercel = JSON.parse(await read('vercel.json'));
 
-  assert.match(
-    vercel,
-    /"feat\/studio-admin-phase2-readonly-intelligence"\s*:\s*true/,
+  assert.equal(
+    vercel.git?.deploymentEnabled,
+    false,
   );
 
-  assert.doesNotMatch(
-    vercel,
-    /"feat\/studio-admin-foundation"\s*:\s*true/,
-  );
-
-  assert.doesNotMatch(
-    vercel,
-    /"main"\s*:\s*true/,
-  );
-
-  assert.match(
-    vercel,
-    /"\*\*"\s*:\s*false/,
-  );
-
-  assert.match(
-    vercel,
-    /"source"\s*:\s*"\/referrals"/,
+  assert.ok(
+    vercel.rewrites?.some(
+      rewrite =>
+        rewrite.source === '/referrals' &&
+        rewrite.destination === '/index.html',
+    ),
   );
 });
 
