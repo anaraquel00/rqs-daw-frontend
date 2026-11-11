@@ -15,6 +15,7 @@ import { RqsUplinkDashboardComponent } from '../components/rqs-uplink-dashboard/
 import { AuthPromptComponent } from '../components/auth-prompt/auth-prompt';
 import { AccountWaitlistComponent } from './account-waitlist';
 import { ThemeService } from '../services/theme.service';
+import { MasterFeedbackSurveyService } from '../services/master-feedback-survey.service';
 
 @Component({ selector: 'app-upload-zone', template: '<input aria-label="Source marker" value="retained-audio">' }) class MasterStub { @Input() workspace: 'master' | 'pitch' = 'master'; }
 @Component({ selector: 'app-mix-panel', template: 'BUILD existing entry' }) class BuildStub {}
@@ -30,12 +31,26 @@ describe('Studio V2 shell integration', () => {
   const isLoggedIn = () => !!session()?.user;
   const requestSignIn = jasmine.createSpy('requestSignIn');
   const requestSignInForPath = jasmine.createSpy('requestSignInForPath');
+  const feedbackDismissed = signal(false);
+  const feedbackTrackClick = jasmine.createSpy('feedbackTrackClick');
+  const feedbackDismissWorkspace = jasmine.createSpy('feedbackDismissWorkspace')
+    .and.callFake(() => feedbackDismissed.set(true));
+  const feedbackSurvey = {
+    surveyUrl:
+      'https://docs.google.com/forms/d/e/1FAIpQLSejrsprLW_VVIgagnRSwoZK9GO6QQ8USJfMigckmBYRZ8qOZA/viewform',
+    workspaceDismissed: feedbackDismissed,
+    trackClick: feedbackTrackClick,
+    dismissWorkspace: feedbackDismissWorkspace,
+  };
   beforeEach(async () => {
     localStorage.removeItem('rqs_theme');
     session.set({ user: { id: 'owner-a', email: 'owner@example.invalid' } });
     premium.set(false);
     requestSignIn.calls.reset();
     requestSignInForPath.calls.reset();
+    feedbackDismissed.set(false);
+    feedbackTrackClick.calls.reset();
+    feedbackDismissWorkspace.calls.reset();
     TestBed.configureTestingModule({ providers: [
       provideRouter([
         { path: 'app', children: STUDIO_ROUTES },
@@ -53,6 +68,7 @@ describe('Studio V2 shell integration', () => {
         whenAuthStateResolved: () => Promise.resolve(),
       } },
       { provide: CookieConsentService, useValue: { openPreferences: jasmine.createSpy() } },
+      { provide: MasterFeedbackSurveyService, useValue: feedbackSurvey },
     ] });
     TestBed.overrideComponent(StudioShellComponent, {
       remove: { imports: [UploadZoneComponent, MixPanelComponent, RqsUplinkEngineComponent, RqsUplinkDashboardComponent, AuthPromptComponent, AccountWaitlistComponent] },
@@ -204,6 +220,83 @@ describe('Studio V2 shell integration', () => {
     expect(requestSignInForPath).not.toHaveBeenCalled();
     expect(requestSignIn).not.toHaveBeenCalled();
   });
+  it('renders non-blocking localized MASTER feedback before the engine and allows dismissal', async () => {
+    TestBed.inject(LanguageService).setLanguage('en');
+
+    await harness.navigateByUrl('/app/master');
+    harness.detectChanges();
+
+    const section = harness.routeNativeElement!.querySelector(
+      'section[aria-label="MASTER"]'
+    ) as HTMLElement | null;
+
+    expect(section).not.toBeNull();
+
+    const banner = section!.querySelector(
+      '.master-feedback-banner'
+    ) as HTMLElement | null;
+
+    const engine = section!.querySelector(
+      'app-upload-zone'
+    ) as HTMLElement | null;
+
+    expect(banner).not.toBeNull();
+    expect(engine).not.toBeNull();
+
+    const link = banner!.querySelector(
+      '.master-feedback-cta'
+    ) as HTMLAnchorElement | null;
+
+    const dismiss = banner!.querySelector(
+      '.master-feedback-dismiss'
+    ) as HTMLButtonElement | null;
+
+    expect(link).not.toBeNull();
+    expect(dismiss).not.toBeNull();
+
+    expect(
+      Boolean(
+        banner!.compareDocumentPosition(engine!)
+        & Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBeTrue();
+
+    expect(link!.href).toBe(feedbackSurvey.surveyUrl);
+    expect(link!.target).toBe('_blank');
+    expect(link!.rel).toContain('noopener');
+    expect(link!.rel).toContain('noreferrer');
+    expect(banner!.textContent).toContain('Survey in Portuguese');
+
+    link!.addEventListener(
+      'click',
+      event => event.preventDefault(),
+      { once: true }
+    );
+
+    link!.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true
+      })
+    );
+
+    expect(feedbackTrackClick)
+      .toHaveBeenCalledOnceWith('master_workspace_header');
+
+    dismiss!.click();
+    harness.detectChanges();
+
+    expect(feedbackDismissWorkspace).toHaveBeenCalledTimes(1);
+
+    expect(
+      section!.querySelector('.master-feedback-banner')
+    ).toBeNull();
+
+    expect(
+      section!.querySelector('app-upload-zone')
+    ).toBe(engine);
+  });
+
   it('removes PITCH immediately and redirects when the active session signs out', async () => {
     await harness.navigateByUrl('/app/pitch');
     harness.detectChanges();

@@ -45,6 +45,40 @@
   @if (visited().has('master')) {
     <section class="master-workspace" [hidden]="surface() !== 'master'" [attr.inert]="surface() !== 'master' ? '' : null" aria-label="MASTER">
       <h1 class="master-title">MASTER</h1>
+
+      @if (!feedbackSurvey.workspaceDismissed()) {
+        <aside
+          class="master-feedback-banner"
+          aria-labelledby="master-workspace-feedback-title"
+        >
+          <div class="master-feedback-copy">
+            <p class="master-feedback-eyebrow">{{ copy().masterFeedbackEyebrow }}</p>
+            <h2 id="master-workspace-feedback-title">{{ copy().masterFeedbackTitle }}</h2>
+            <p>{{ copy().masterFeedbackBody }}</p>
+          </div>
+
+          <div class="master-feedback-actions">
+            <a
+              class="master-feedback-cta"
+              [href]="feedbackSurvey.surveyUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              (click)="feedbackSurvey.trackClick('master_workspace_header')"
+            >{{ copy().masterFeedbackCta }}</a>
+
+            <p class="master-feedback-meta">{{ copy().masterFeedbackMeta }}</p>
+          </div>
+
+          <button
+            type="button"
+            class="master-feedback-dismiss"
+            [attr.aria-label]="copy().masterFeedbackDismiss"
+            [attr.title]="copy().masterFeedbackDismiss"
+            (click)="feedbackSurvey.dismissWorkspace()"
+          >×</button>
+        </aside>
+      }
+
       <app-upload-zone class="studio-master"></app-upload-zone>
     </section>
   }

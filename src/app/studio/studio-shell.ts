@@ -17,6 +17,7 @@ import { SeoService } from '../services/seo.service';
 import { StudioSurface, studioSeoConfig } from './studio-seo';
 import { FoundingReferralBannerComponent } from './founding-referral-banner';
 import { AccountWaitlistComponent } from './account-waitlist';
+import { MasterFeedbackSurveyService } from '../services/master-feedback-survey.service';
 
 @Component({
   selector: 'app-studio-shell', standalone: true,
@@ -30,6 +31,7 @@ export class StudioShellComponent {
   readonly auth = inject(AuthService);
   readonly lang = inject(LanguageService);
   readonly theme = inject(ThemeService);
+  readonly feedbackSurvey = inject(MasterFeedbackSurveyService);
   readonly copy = computed(() => STUDIO_COPY[this.lang.currentLang()]);
   readonly languages = ['pt', 'en', 'pl', 'fr'] as const;
   readonly themes = this.theme.themes;
