@@ -121,6 +121,31 @@
     </div>
   </section>
 
+  <section
+    class="feedback-section shell"
+    aria-labelledby="master-feedback-title"
+  >
+    <div class="feedback-card">
+      <div class="feedback-copy">
+        <p class="eyebrow">{{ copy().feedbackEyebrow }}</p>
+        <h2 id="master-feedback-title">{{ copy().feedbackTitle }}</h2>
+        <p>{{ copy().feedbackBody }}</p>
+      </div>
+
+      <div class="feedback-actions">
+        <a
+          class="button button--secondary feedback-button"
+          [href]="feedbackSurvey.surveyUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          (click)="feedbackSurvey.trackClick('master_landing')"
+        >{{ copy().feedbackCta }}</a>
+
+        <p class="feedback-meta">{{ copy().feedbackMeta }}</p>
+      </div>
+    </div>
+  </section>
+
   <section class="free-section section shell" aria-labelledby="free-title">
     <div class="free-card">
       <div>

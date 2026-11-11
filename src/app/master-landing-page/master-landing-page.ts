@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Footer } from '../footer/footer';
 import { AnalyticsService } from '../services/analytics.service';
 import { LanguageService, UiLanguage } from '../services/language.service';
+import { MasterFeedbackSurveyService } from '../services/master-feedback-survey.service';
 import { SeoConfig, SeoService } from '../services/seo.service';
 import { StudioThemePreference, ThemeService } from '../services/theme.service';
 
@@ -26,6 +27,11 @@ type MasterLandingCopy = {
   workflowEyebrow: string;
   workflowTitle: string;
   steps: readonly { number: string; title: string; body: string }[];
+  feedbackEyebrow: string;
+  feedbackTitle: string;
+  feedbackBody: string;
+  feedbackCta: string;
+  feedbackMeta: string;
   freeEyebrow: string;
   freeTitle: string;
   freeBody: string;
@@ -61,6 +67,11 @@ const COPY: Record<'pt' | 'en', MasterLandingCopy> = {
       { number: '02', title: 'Compare o Preview', body: 'Ouça 15 segundos processados e alterne entre Original e Preview com referência clara.' },
       { number: '03', title: 'Gere o Full Master', body: 'Quando estiver pronta, processe a faixa completa e baixe o resultado final.' }
     ],
+    feedbackEyebrow: 'RQS MASTER // SUA OPINIÃO IMPORTA',
+    feedbackTitle: 'Ainda não encontrou o que procura?',
+    feedbackBody: 'Conte o que está impedindo você de experimentar o RQS MASTER. Sua opinião ajuda a melhorar nossa ferramenta.',
+    feedbackCta: 'Responder pesquisa',
+    feedbackMeta: 'Pesquisa anônima · Aproximadamente 2 minutos · Pesquisa em português',
     freeEyebrow: 'ACESSO INICIAL',
     freeTitle: 'Teste o fluxo completo sem cartão.',
     freeBody: 'A Public Beta atual inclui até 3 Full Masters para contas Free. Preview e comparação A/B ajudam você a avaliar o resultado antes de usar sua cota.',
@@ -98,6 +109,11 @@ const COPY: Record<'pt' | 'en', MasterLandingCopy> = {
       { number: '02', title: 'Compare the Preview', body: 'Hear 15 processed seconds and switch between Original and Preview with a clear reference.' },
       { number: '03', title: 'Generate the Full Master', body: 'When ready, process the complete track and download the final result.' }
     ],
+    feedbackEyebrow: 'RQS MASTER // YOUR FEEDBACK MATTERS',
+    feedbackTitle: "Still haven't found what you're looking for?",
+    feedbackBody: 'Tell us what is stopping you from trying RQS MASTER. Your feedback helps us improve the tool.',
+    feedbackCta: 'Answer survey',
+    feedbackMeta: 'Anonymous survey · About 2 minutes · Survey in Portuguese',
     freeEyebrow: 'STARTING ACCESS',
     freeTitle: 'Try the complete workflow without a card.',
     freeBody: 'The current Public Beta includes up to 3 Full Masters for Free accounts. Preview and A/B comparison help you evaluate the result before using your quota.',
@@ -177,6 +193,7 @@ export class MasterLandingPageComponent {
 
   readonly lang = inject(LanguageService);
   readonly theme = inject(ThemeService);
+  readonly feedbackSurvey = inject(MasterFeedbackSurveyService);
   readonly themes = this.theme.themes;
   readonly themePreference = this.theme.themePreference;
   readonly copy = computed(() => COPY[this.lang.currentLang() === 'pt' ? 'pt' : 'en']);
