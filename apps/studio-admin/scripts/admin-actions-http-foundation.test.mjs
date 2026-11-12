@@ -139,7 +139,7 @@ test('runtime provider can only be overridden in test context', () => {
   process.env.NODE_TEST_CONTEXT = '1';
 });
 
-test('mutation requests require an explicit allowlisted Origin', () => {
+test('mutation requests require an allowed or exact same-origin Origin', () => {
   const res = responseStub();
 
   const missing =
@@ -170,6 +170,42 @@ test('mutation requests require an explicit allowlisted Origin', () => {
   assert.equal(
     allowed.allowed,
     true,
+  );
+
+  const sameOrigin =
+    prepareAdminMutationRequest(
+      {
+        headers: {
+          origin:
+            'https://preview-deployment.vercel.app',
+          host:
+            'preview-deployment.vercel.app',
+        },
+      },
+      responseStub(),
+    );
+
+  assert.equal(
+    sameOrigin.allowed,
+    true,
+  );
+
+  const crossOrigin =
+    prepareAdminMutationRequest(
+      {
+        headers: {
+          origin:
+            'https://evil.example',
+          host:
+            'preview-deployment.vercel.app',
+        },
+      },
+      responseStub(),
+    );
+
+  assert.equal(
+    crossOrigin.allowed,
+    false,
   );
 
   const denied =
