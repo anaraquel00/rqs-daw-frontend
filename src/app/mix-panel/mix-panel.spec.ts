@@ -177,7 +177,11 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     fixture.detectChanges();
     const items = fixture.nativeElement.querySelectorAll('.track-list li');
     expect(Array.from(items).map((item: any) => item.className)).toEqual([
-      'track-item', 'transition-item', 'track-item', 'transition-item', 'track-item',
+      'track-item selected',
+      'transition-item',
+      'track-item',
+      'transition-item',
+      'track-item',
     ]);
     expect(fixture.nativeElement.querySelector('.transition-editor')).toBeNull();
     component.toggleTransition(component.transitions[0]);
@@ -357,15 +361,41 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(incoming?.end).toBe(13);
   });
 
-  it('renders BUILD V2 controls without starting additional network operations', () => {
+  it('renders one BUILD V2 inspector instead of duplicating controls on every track', () => {
     component.tracks = readyTracks(2);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('.build-v2-track-controls').length).toBe(2);
-    expect(fixture.nativeElement.querySelector('.build-v2-lab')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.build-v2-inspector').length).toBe(1);
+    expect(fixture.nativeElement.querySelector('.build-v2-workspace-head')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.build-v2-editor-grid')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.build-v2-track-controls').length).toBe(0);
+    expect(component.selectedTrack()?.id).toBe(component.tracks[0].id);
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
     expect(generateMixS3).not.toHaveBeenCalled();
+  });
+
+  it('preserves selected-track identity across a reorder', () => {
+    component.tracks = readyTracks(3);
+    const selected = component.tracks[1];
+
+    component.selectTrack(selected);
+    component.moveUp(1);
+
+    expect(component.selectedTrack()?.id).toBe(selected.id);
+    expect(component.selectedTrackIndex()).toBe(0);
+  });
+
+  it('falls back safely when the selected track is removed', () => {
+    component.tracks = readyTracks(3);
+    component.selectTrack(component.tracks[1]);
+
+    component.removeTrack(1);
+
+    expect(component.selectedTrack()).not.toBeNull();
+    expect(component.tracks.some(track => (
+      track.id === component.selectedTrack()?.id
+    ))).toBeTrue();
   });
 
   it('renders one compact non-interactive waveform for every local track', () => {

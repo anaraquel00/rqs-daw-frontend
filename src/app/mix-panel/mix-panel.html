@@ -151,21 +151,50 @@
       </div>
     </div>
 
-    <section class="build-v2-lab" aria-labelledby="build-v2-lab-title">
-      <div>
-        <h3 id="build-v2-lab-title">{{ buildV2Copy('title') }}</h3>
+    <section class="build-v2-workspace-head" aria-labelledby="build-v2-workspace-title">
+      <div class="build-v2-workspace-copy">
+        <span class="build-v2-eyebrow" id="build-v2-workspace-title">
+          {{ buildV2Copy('workspace') }}
+        </span>
+        <strong>{{ buildV2Copy('workflow') }}</strong>
         <p>{{ buildV2Copy('previewOnly') }}</p>
       </div>
-      @if (hasBuildV2Adjustments()) {
-        <button type="button" (click)="resetAllBuildV2Tracks()">{{ buildV2Copy('resetAll') }}</button>
-      }
+
+      <div class="build-v2-status">
+        <span class="build-v2-status-badge">
+          <span class="status-dot" aria-hidden="true"></span>
+          {{ buildV2Copy('previewReady') }}
+        </span>
+
+        @if (hasBuildV2Adjustments()) {
+          <button type="button" (click)="resetAllBuildV2Tracks()">
+            {{ buildV2Copy('resetAll') }}
+          </button>
+        }
+      </div>
     </section>
 
-    <div class="track-list">
-      <h3>{{ lang.tr().TIMELINE_TITLE }}</h3>
-      <ul>
+    <div class="build-v2-editor-grid">
+      <div class="track-list build-v2-timeline">
+        <div class="build-v2-timeline-title">
+          <h3>{{ buildV2Copy('timeline') }}</h3>
+          <span>{{ formatDuration(calculateEstimatedOutputDuration()) }}</span>
+        </div>
+
+        <div class="timeline-ruler" aria-hidden="true">
+          <span>00:00</span>
+          <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.25) }}</span>
+          <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.5) }}</span>
+          <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.75) }}</span>
+          <span>{{ formatDuration(calculateEstimatedOutputDuration()) }}</span>
+        </div>
+
+        <ul>
         @for (track of tracks; track track.id; let i = $index) {
-          <li class="track-item">
+          <li
+            class="track-item"
+            [class.selected]="selectedTrackId === track.id"
+            (click)="selectTrack(track)">
             <div class="track-main-row">
               <div class="track-info">
                 <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
@@ -208,6 +237,23 @@
                 [duration]="track.duration"
                 [compact]="true">
               </app-preview-waveform>
+                <div class="trim-shades" aria-hidden="true">
+                  @if (trimStartPercent(track) > 0) {
+                    <div
+                      class="trim-shade trim-start"
+                      [style.width.%]="trimStartPercent(track)">
+                    </div>
+                  }
+
+                  @if (trimEndPercent(track) < 100) {
+                    <div
+                      class="trim-shade trim-end"
+                      [style.left.%]="trimEndPercent(track)"
+                      [style.width.%]="100 - trimEndPercent(track)">
+                    </div>
+                  }
+                </div>
+
                 <div class="transition-shades" aria-hidden="true">
                   @if (incoming) {
                     <div class="transition-shade transition-in" [style.left.%]="incoming.left" [style.width.%]="incoming.width"></div>
@@ -223,44 +269,6 @@
               </div>
               <span class="waveform-truthful-state">{{ localCopy('waveformLocal') }}</span>
             </div>
-
-            @let effective = effectiveRange(track);
-            <section class="build-v2-track-controls" [class.adjusted]="track.v2.trimStartSeconds !== 0 || track.v2.trimEndSeconds !== null || track.v2.gainDb !== 0 || track.v2.pan !== 0">
-              <div class="build-v2-track-heading">
-                <strong>BUILD V2</strong>
-                <span>{{ buildV2Copy('effective') }}: {{ formatDuration(effective.duration) }}</span>
-              </div>
-              <div class="build-v2-control-grid">
-                <label>
-                  <span>{{ buildV2Copy('trimStart') }}</span>
-                  <input type="number" min="0" [max]="track.duration" step="0.1"
-                    [ngModel]="track.v2.trimStartSeconds"
-                    (ngModelChange)="updateBuildV2Track(i, { trimStartSeconds: $event })">
-                </label>
-                <label>
-                  <span>{{ buildV2Copy('trimEnd') }}</span>
-                  <input type="number" min="0" [max]="track.duration" step="0.1"
-                    [ngModel]="track.v2.trimEndSeconds ?? track.duration"
-                    (ngModelChange)="updateBuildV2Track(i, { trimEndSeconds: $event })">
-                </label>
-                <label>
-                  <span>{{ buildV2Copy('gain') }} (dB)</span>
-                  <input type="number" min="-24" max="6" step="0.5"
-                    [ngModel]="track.v2.gainDb"
-                    (ngModelChange)="updateBuildV2Track(i, { gainDb: $event })">
-                </label>
-                <label>
-                  <span>{{ buildV2Copy('pan') }}</span>
-                  <input type="range" min="-1" max="1" step="0.05"
-                    [ngModel]="track.v2.pan"
-                    (ngModelChange)="updateBuildV2Track(i, { pan: $event })">
-                  <output>{{ track.v2.pan | number:'1.2-2' }}</output>
-                </label>
-              </div>
-              @if (track.v2.trimStartSeconds !== 0 || track.v2.trimEndSeconds !== null || track.v2.gainDb !== 0 || track.v2.pan !== 0) {
-                <button type="button" class="build-v2-reset" (click)="resetBuildV2Track(i)">{{ buildV2Copy('reset') }}</button>
-              }
-            </section>
 
           </li>
           @if (transitions[i]; as transition) {
@@ -295,7 +303,120 @@
             </li>
           }
         }
-      </ul>
+        </ul>
+      </div>
+
+      <aside class="build-v2-inspector">
+        @if (selectedTrack(); as selected) {
+          @let selectedIndex = selectedTrackIndex();
+          @let selectedRange = effectiveRange(selected);
+
+          <div class="inspector-heading">
+            <span>{{ buildV2Copy('selectedTrack') }}</span>
+            <strong>[{{ selectedIndex + 1 }}] {{ selected.name }}</strong>
+          </div>
+
+          <div class="inspector-metrics">
+            <div>
+              <span>{{ buildV2Copy('source') }}</span>
+              <strong>{{ formatDuration(selected.duration) }}</strong>
+            </div>
+            <div>
+              <span>{{ buildV2Copy('effective') }}</span>
+              <strong>{{ formatDuration(selectedRange.duration) }}</strong>
+            </div>
+          </div>
+
+          <div class="build-v2-inspector-controls">
+            <label>
+              <span>{{ buildV2Copy('trimStart') }}</span>
+              <div class="inspector-input-unit">
+                <input
+                  type="number"
+                  min="0"
+                  [max]="selected.duration"
+                  step="0.1"
+                  [ngModel]="selected.v2.trimStartSeconds"
+                  (ngModelChange)="updateBuildV2Track(
+                    selectedIndex,
+                    { trimStartSeconds: $event }
+                  )">
+                <span>s</span>
+              </div>
+            </label>
+
+            <label>
+              <span>{{ buildV2Copy('trimEnd') }}</span>
+              <div class="inspector-input-unit">
+                <input
+                  type="number"
+                  min="0"
+                  [max]="selected.duration"
+                  step="0.1"
+                  [ngModel]="selected.v2.trimEndSeconds ?? selected.duration"
+                  (ngModelChange)="updateBuildV2Track(
+                    selectedIndex,
+                    { trimEndSeconds: $event }
+                  )">
+                <span>s</span>
+              </div>
+            </label>
+
+            <label>
+              <span>{{ buildV2Copy('gain') }}</span>
+              <div class="inspector-input-unit">
+                <input
+                  type="number"
+                  min="-24"
+                  max="6"
+                  step="0.5"
+                  [ngModel]="selected.v2.gainDb"
+                  (ngModelChange)="updateBuildV2Track(
+                    selectedIndex,
+                    { gainDb: $event }
+                  )">
+                <span>dB</span>
+              </div>
+            </label>
+
+            <label class="pan-control">
+              <span>{{ buildV2Copy('pan') }}</span>
+              <div class="pan-scale">
+                <span>L</span>
+                <input
+                  type="range"
+                  min="-1"
+                  max="1"
+                  step="0.05"
+                  [ngModel]="selected.v2.pan"
+                  (ngModelChange)="updateBuildV2Track(
+                    selectedIndex,
+                    { pan: $event }
+                  )">
+                <span>R</span>
+              </div>
+              <output>
+                {{ selected.v2.pan === 0
+                  ? 'C'
+                  : (selected.v2.pan | number:'1.2-2') }}
+              </output>
+            </label>
+          </div>
+
+          @if (trackHasBuildV2Adjustments(selected)) {
+            <button
+              type="button"
+              class="build-v2-reset"
+              (click)="resetBuildV2Track(selectedIndex)">
+              {{ buildV2Copy('reset') }}
+            </button>
+          }
+        } @else {
+          <div class="inspector-empty">
+            {{ buildV2Copy('selectedTrack') }}
+          </div>
+        }
+      </aside>
     </div>
 
     <div class="metadata-section">

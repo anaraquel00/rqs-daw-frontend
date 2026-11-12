@@ -154,6 +154,12 @@ const BUILD_V2_COPY = {
     reset: 'Reset V2 controls',
     resetAll: 'Reset all V2 controls',
     renderBlocked: 'BUILD V2 local adjustments are active. Reset them before using the current V1 server render.',
+    workspace: 'RQS BUILD V2',
+    workflow: 'ARRANGE · MIX · TRANSITION · BOUNCE',
+    previewReady: 'LOCAL PREVIEW READY',
+    timeline: 'SETLIST TIMELINE',
+    selectedTrack: 'SELECTED TRACK',
+    source: 'Source',
   },
   pt: {
     title: 'Laboratório de prévia BUILD V2',
@@ -166,6 +172,12 @@ const BUILD_V2_COPY = {
     reset: 'Resetar controles V2',
     resetAll: 'Resetar todos os controles V2',
     renderBlocked: 'Há ajustes locais do BUILD V2 ativos. Resete-os antes de usar o render V1 atual do servidor.',
+    workspace: 'RQS BUILD V2',
+    workflow: 'ARRANJO · MIX · TRANSIÇÃO · BOUNCE',
+    previewReady: 'PRÉVIA LOCAL PRONTA',
+    timeline: 'LINHA DO TEMPO DA SETLIST',
+    selectedTrack: 'FAIXA SELECIONADA',
+    source: 'Origem',
   },
   pl: {
     title: 'Laboratorium podglądu BUILD V2',
@@ -178,6 +190,12 @@ const BUILD_V2_COPY = {
     reset: 'Resetuj kontrolki V2',
     resetAll: 'Resetuj wszystkie kontrolki V2',
     renderBlocked: 'Lokalne ustawienia BUILD V2 są aktywne. Zresetuj je przed użyciem bieżącego renderu serwerowego V1.',
+    workspace: 'RQS BUILD V2',
+    workflow: 'ARANŻACJA · MIKS · PRZEJŚCIA · BOUNCE',
+    previewReady: 'PODGLĄD LOKALNY GOTOWY',
+    timeline: 'OŚ CZASU SETLISTY',
+    selectedTrack: 'WYBRANY UTWÓR',
+    source: 'Źródło',
   },
   fr: {
     title: 'Laboratoire de préécoute BUILD V2',
@@ -190,6 +208,12 @@ const BUILD_V2_COPY = {
     reset: 'Réinitialiser les contrôles V2',
     resetAll: 'Réinitialiser tous les contrôles V2',
     renderBlocked: 'Des réglages locaux BUILD V2 sont actifs. Réinitialisez-les avant d’utiliser le rendu serveur V1 actuel.',
+    workspace: 'RQS BUILD V2',
+    workflow: 'ARRANGEMENT · MIX · TRANSITIONS · BOUNCE',
+    previewReady: 'PRÉÉCOUTE LOCALE PRÊTE',
+    timeline: 'TIMELINE DE LA SETLIST',
+    selectedTrack: 'PISTE SÉLECTIONNÉE',
+    source: 'Source',
   },
 } as const;
 
@@ -217,6 +241,7 @@ export class MixPanelComponent implements OnDestroy {
   private readonly analytics = inject(AnalyticsService);
 
   private currentTracks: RQSTrack[] = [];
+  selectedTrackId: string | null = null;
   transitions: SetlistTransition[] = [];
   defaultDuration = 8;
   expandedTransition: string | null = null;
@@ -224,6 +249,7 @@ export class MixPanelComponent implements OnDestroy {
   set tracks(value: RQSTrack[]) {
     this.currentTracks = value;
     this.reconcileTransitions();
+    this.reconcileSelectedTrack();
   }
   vignetteEnabled = false;
   vignetteTrack: RQSTrack | null = null;
@@ -267,6 +293,48 @@ export class MixPanelComponent implements OnDestroy {
     if (!this.transitions.some(t => this.transitionKey(t) === this.expandedTransition)) {
       this.expandedTransition = null;
     }
+  }
+
+  private reconcileSelectedTrack(): void {
+    if (
+      this.selectedTrackId
+      && this.tracks.some(track => track.id === this.selectedTrackId)
+    ) {
+      return;
+    }
+
+    this.selectedTrackId = this.tracks[0]?.id ?? null;
+  }
+
+  selectTrack(track: RQSTrack): void {
+    this.selectedTrackId = track.id;
+  }
+
+  selectedTrack(): RQSTrack | null {
+    return this.tracks.find(track => track.id === this.selectedTrackId)
+      ?? this.tracks[0]
+      ?? null;
+  }
+
+  selectedTrackIndex(): number {
+    const selected = this.selectedTrack();
+    return selected
+      ? this.tracks.findIndex(track => track.id === selected.id)
+      : -1;
+  }
+
+  trackHasBuildV2Adjustments(track: RQSTrack): boolean {
+    return hasBuildV2Adjustments(track.v2, track.duration);
+  }
+
+  trimStartPercent(track: RQSTrack): number {
+    if (!Number.isFinite(track.duration) || track.duration <= 0) return 0;
+    return 100 * this.effectiveRange(track).start / track.duration;
+  }
+
+  trimEndPercent(track: RQSTrack): number {
+    if (!Number.isFinite(track.duration) || track.duration <= 0) return 100;
+    return 100 * this.effectiveRange(track).end / track.duration;
   }
 
   transitionKey(t: Pick<SetlistTransition, 'fromTrackId' | 'toTrackId'>): string {
