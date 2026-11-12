@@ -58,7 +58,8 @@ describe('BUILD V2 track state', () => {
     }, 100);
     const range = buildV2EffectiveRange(state, 100);
 
-    expect(range.duration).toBeGreaterThanOrEqual(0.1);
+    expect(range.duration).toBeGreaterThan(0);
+    expect(range.duration).toBeCloseTo(0.1, 8);
     expect(range.start).toBeLessThan(range.end);
     expect(state.gainDb).toBe(BUILD_V2_GAIN_MIN_DB);
     expect(state.pan).toBe(1);
