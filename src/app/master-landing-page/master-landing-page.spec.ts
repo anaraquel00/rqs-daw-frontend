@@ -9,7 +9,7 @@ import { MasterLandingPageComponent, masterLandingSeoConfig } from './master-lan
 describe('MasterLandingPageComponent', () => {
   const feedbackSurvey = {
     surveyUrl:
-      'https://docs.google.com/forms/d/e/1FAIpQLSejrsprLW_VVIgagnRSwoZK9GO6QQ8USJfMigckmBYRZ8qOZA/viewform',
+      'https://docs.google.com/forms/d/e/1FAIpQLScGDnx4BurVwvQbGBUvWi0j4v1L60KKKDcIeU2GYSQDDeK0AQ/viewform',
     trackClick: jasmine.createSpy('trackClick')
   };
 

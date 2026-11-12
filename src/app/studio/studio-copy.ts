@@ -21,7 +21,7 @@ export const STUDIO_COPY: Record<UiLanguage, {
     masterFeedbackTitle: 'Help improve MASTER',
     masterFeedbackBody: 'Found something difficult or have a suggestion? Tell us how we can improve your experience.',
     masterFeedbackCta: 'GIVE FEEDBACK',
-    masterFeedbackMeta: 'Anonymous survey · About 2 minutes · Survey in Portuguese',
+    masterFeedbackMeta: 'Anonymous survey · About 2 minutes · Survey in English',
     masterFeedbackDismiss: 'Dismiss feedback invitation'
   },
   pt: {
@@ -55,7 +55,7 @@ export const STUDIO_COPY: Record<UiLanguage, {
     masterFeedbackTitle: 'Pomóż ulepszyć MASTER',
     masterFeedbackBody: 'Masz trudności lub sugestie? Powiedz nam, jak możemy poprawić Twoje doświadczenie.',
     masterFeedbackCta: 'PRZEKAŻ OPINIĘ',
-    masterFeedbackMeta: 'Anonimowa ankieta · Około 2 minut · Ankieta w języku portugalskim',
+    masterFeedbackMeta: 'Anonimowa ankieta · Około 2 minut · Ankieta w języku polskim',
     masterFeedbackDismiss: 'Ukryj zaproszenie do ankiety'
   },
   fr: {
@@ -72,7 +72,7 @@ export const STUDIO_COPY: Record<UiLanguage, {
     masterFeedbackTitle: 'Aidez-nous à améliorer MASTER',
     masterFeedbackBody: 'Vous avez rencontré une difficulté ou avez une suggestion ? Dites-nous comment améliorer votre expérience.',
     masterFeedbackCta: 'DONNER MON AVIS',
-    masterFeedbackMeta: 'Questionnaire anonyme · Environ 2 minutes · Questionnaire en portugais',
+    masterFeedbackMeta: 'Questionnaire anonyme · Environ 2 minutes · Questionnaire en français',
     masterFeedbackDismiss: 'Masquer l’invitation au questionnaire'
   },
 };

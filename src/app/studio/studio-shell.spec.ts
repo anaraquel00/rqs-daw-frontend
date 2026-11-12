@@ -265,7 +265,7 @@ describe('Studio V2 shell integration', () => {
     expect(link!.target).toBe('_blank');
     expect(link!.rel).toContain('noopener');
     expect(link!.rel).toContain('noreferrer');
-    expect(banner!.textContent).toContain('Survey in Portuguese');
+    expect(banner!.textContent).toContain('Survey in English');
 
     link!.addEventListener(
       'click',
