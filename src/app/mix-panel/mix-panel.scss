@@ -472,19 +472,6 @@ $text-muted: #8b949e;
   box-shadow: 0 0 10px rgba(87, 213, 140, 0.55);
 }
 
-.build-v2-reset {
-  width: 100%;
-  margin-top: 14px;
-  padding: 8px 10px;
-  border: 1px solid rgba(255, 0, 85, 0.22);
-  border-radius: 6px;
-  background: transparent;
-  color: #ff789f;
-  font: inherit;
-  font-size: 9px;
-  cursor: pointer;
-}
-
 .trim-shades {
   position: absolute;
   inset: 0;
@@ -740,134 +727,6 @@ $text-muted: #8b949e;
     background: var(--studio-error-bg);
     color: var(--studio-error-text);
   }
-}
-
-
-/* ==========================================================
-   BUILD V2 — parameter sliders
-   ========================================================== */
-
-.parameter-control {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-
-.parameter-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-}
-
-.parameter-label-row > span:first-child {
-  color: #8796a6;
-  font-size: 9px;
-}
-
-.parameter-limit {
-  overflow: hidden;
-  color: #647484;
-  font-size: 8px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.parameter-range-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 82px;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.parameter-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  min-width: 0;
-  height: 4px;
-  margin: 14px 0;
-  border-radius: 999px;
-  outline: none;
-  background: #39434b;
-  cursor: pointer;
-}
-
-.parameter-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #00dce8;
-  border-radius: 50%;
-  background: #00dce8;
-  box-shadow: 0 0 0 3px rgba(0, 220, 232, 0.09);
-  cursor: grab;
-}
-
-.parameter-slider::-webkit-slider-thumb:active {
-  cursor: grabbing;
-  box-shadow: 0 0 0 5px rgba(0, 220, 232, 0.16);
-}
-
-.parameter-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #00dce8;
-  border-radius: 50%;
-  background: #00dce8;
-  box-shadow: 0 0 0 3px rgba(0, 220, 232, 0.09);
-  cursor: grab;
-}
-
-.parameter-slider:focus-visible {
-  box-shadow: 0 0 0 3px rgba(0, 220, 232, 0.18);
-}
-
-.parameter-number-wrap {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  overflow: hidden;
-  min-width: 0;
-  border: 1px solid #29343e;
-  border-radius: 6px;
-  background: #10161c;
-}
-
-.parameter-number {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  padding: 8px 5px 8px 8px;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: #edf3f8;
-  font: inherit;
-  font-size: 10px;
-}
-
-.parameter-number-wrap > span {
-  padding-right: 7px;
-  color: #647484;
-  font-size: 8px;
-}
-
-.pan-range-row {
-  grid-template-columns: auto minmax(0, 1fr) auto 72px;
-  gap: 7px;
-}
-
-.pan-edge {
-  color: #667686;
-  font-size: 8px;
-}
-
-.pan-number {
-  grid-template-columns: minmax(0, 1fr);
 }
 
 
@@ -1202,74 +1061,6 @@ $text-muted: #8b949e;
   margin-top: 8px;
 }
 
-.build-v2-advanced-panel {
-  margin-top: 12px;
-  padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 10px;
-  background: #090d11;
-}
-
-.advanced-panel-heading {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 18px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.advanced-panel-heading > div:first-child {
-  min-width: 0;
-}
-
-.advanced-panel-heading > div:first-child > span {
-  display: block;
-  margin-bottom: 5px;
-  color: #00dce8;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-}
-
-.advanced-panel-heading > div:first-child > strong {
-  display: block;
-  overflow: hidden;
-  color: #f0f5f8;
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.advanced-track-metrics {
-  display: flex;
-  gap: 8px;
-}
-
-.advanced-track-metrics > span {
-  min-width: 76px;
-  padding: 7px 9px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 5px;
-  color: #718090;
-  font-size: 8px;
-}
-
-.advanced-track-metrics strong {
-  display: block;
-  margin-top: 3px;
-  color: #eef4f7;
-  font-size: 10px;
-}
-
-.advanced-trim-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
-  margin-top: 14px;
-}
-
-
 /* ==========================================================
    BUILD V2 — Audacity layout tablet/mobile
    ========================================================== */
@@ -1394,33 +1185,6 @@ $text-muted: #8b949e;
     min-height: 40px;
   }
 
-  .build-v2-advanced-panel {
-    padding: 11px;
-  }
-
-  .advanced-panel-heading {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .advanced-panel-heading > div:first-child > strong {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .advanced-track-metrics {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .advanced-track-metrics > span {
-    min-width: 0;
-  }
-
-  .advanced-trim-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 15px;
-  }
 }
 
 @media (max-width: 420px) {
@@ -1633,52 +1397,6 @@ $text-muted: #8b949e;
     color: #172631;
   }
 
-  .build-v2-advanced-panel {
-    border-color: #aebfcb;
-    background: #f7f9fa;
-  }
-
-  .advanced-panel-heading {
-    border-color: #c0ccd4;
-  }
-
-  .advanced-panel-heading > div:first-child > span {
-    color: #006b78;
-  }
-
-  .advanced-panel-heading > div:first-child > strong {
-    color: #172631;
-  }
-
-  .advanced-track-metrics > span {
-    border-color: #c1ced6;
-    background: #e9eff3;
-    color: #536875;
-  }
-
-  .advanced-track-metrics strong {
-    color: #172631;
-  }
-
-  .parameter-label-row > span:first-child,
-  .parameter-limit {
-    color: #536875;
-  }
-
-  .parameter-slider {
-    background: #a8bac5;
-  }
-
-  .parameter-number-wrap {
-    border-color: #a9bbc6;
-    background: #ffffff;
-  }
-
-  .parameter-number {
-    background: #ffffff;
-    color: #172631;
-  }
-
   .parameter-number-wrap > span {
     color: #536875;
   }
@@ -1738,35 +1456,6 @@ $text-muted: #8b949e;
     min-height: 40px;
   }
 
-  .parameter-range-row {
-    grid-template-columns: minmax(0, 1fr) 76px;
-    gap: 8px;
-  }
-
-  .parameter-slider {
-    height: 5px;
-    margin: 18px 0;
-  }
-
-  .parameter-slider::-webkit-slider-thumb {
-    width: 24px;
-    height: 24px;
-  }
-
-  .parameter-slider::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
-  }
-
-  .parameter-number-wrap,
-  .parameter-number {
-    min-height: 40px;
-  }
-
-  .parameter-number {
-    font-size: 14px;
-  }
-
   .transition-editor {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1817,5 +1506,324 @@ $text-muted: #8b949e;
 
   .ignite-btn {
     min-height: 48px;
+  }
+}
+
+
+/* ==========================================================
+   BUILD V2 — inline track trim controls
+   ========================================================== */
+
+.daw-track-trim {
+  display: grid;
+  gap: 8px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.daw-trim-control {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.daw-trim-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  color: #718090;
+  font-size: 8px;
+}
+
+.daw-trim-label output {
+  color: #d9e3eb;
+  font-size: 8px;
+}
+
+.daw-trim-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.daw-trim-number {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.daw-trim-number input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 3px 5px 5px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #e5edf3;
+  font: inherit;
+  font-size: 8px;
+}
+
+.daw-trim-number span {
+  padding-right: 5px;
+  color: #657584;
+  font-size: 7px;
+}
+
+
+/* ==========================================================
+   BUILD V2 — compact modern transition editor
+   ========================================================== */
+
+.daw-transition-row {
+  font-size: 9px;
+}
+
+.daw-transition-label {
+  font-size: 8px;
+}
+
+.daw-transition-content .transition-summary {
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 9px;
+}
+
+.daw-transition-content .transition-summary > span,
+.daw-transition-content .transition-summary button {
+  font-size: 9px;
+}
+
+.daw-transition-content .transition-summary button {
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: 5px;
+}
+
+.daw-transition-editor {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.2fr)
+    minmax(150px, 0.8fr)
+    auto;
+  align-items: end;
+  gap: 10px;
+  margin-top: 9px;
+  padding: 10px;
+  border: 1px solid rgba(0, 220, 232, 0.12);
+  border-radius: 7px;
+  background: rgba(0, 220, 232, 0.025);
+  font-size: 9px;
+}
+
+.transition-parameter {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.transition-parameter > span {
+  color: #718090;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.transition-duration-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 62px;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.transition-duration-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 3px;
+  border-radius: 999px;
+  outline: 0;
+  background: #3a454f;
+}
+
+.transition-duration-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 0;
+  border-radius: 50%;
+  background: #00dce8;
+}
+
+.transition-duration-slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border: 0;
+  border-radius: 50%;
+  background: #00dce8;
+}
+
+.transition-duration-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.transition-duration-value input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 6px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #e5edf3;
+  font: inherit;
+  font-size: 9px;
+}
+
+.transition-duration-value span {
+  padding-right: 6px;
+  color: #718090;
+  font-size: 8px;
+}
+
+.daw-transition-editor select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 30px;
+  padding: 5px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  background: #10161c;
+  color: #e5edf3;
+  font: inherit;
+  font-size: 9px;
+}
+
+.transition-reset {
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  background: transparent;
+  color: #cbd5dd;
+  font: inherit;
+  font-size: 9px;
+}
+
+.transition-limits {
+  grid-column: 1 / -1;
+  color: #657584;
+  font-size: 8px;
+}
+
+
+/* ==========================================================
+   BUILD V2 — inline controls light theme
+   ========================================================== */
+
+:host-context(app-studio-shell[data-theme='light']) {
+  .daw-track-trim {
+    border-color: #c2ced6;
+  }
+
+  .daw-trim-label {
+    color: #536875;
+  }
+
+  .daw-trim-label output {
+    color: #172631;
+  }
+
+  .daw-trim-number {
+    border-color: #aebfcb;
+    background: #ffffff;
+  }
+
+  .daw-trim-number input {
+    color: #172631;
+  }
+
+  .daw-trim-number span {
+    color: #536875;
+  }
+
+  .daw-transition-editor {
+    border-color: #b7cbd2;
+    background: #f4fafb;
+  }
+
+  .transition-parameter > span,
+  .transition-limits {
+    color: #536875;
+  }
+
+  .transition-duration-slider {
+    background: #9fb1bc;
+  }
+
+  .transition-duration-value,
+  .daw-transition-editor select {
+    border-color: #9dafba;
+    background: #ffffff;
+  }
+
+  .transition-duration-value input,
+  .daw-transition-editor select {
+    color: #172631;
+  }
+
+  .transition-duration-value span {
+    color: #536875;
+  }
+
+  .transition-reset {
+    border-color: #9dafba;
+    background: #ffffff;
+    color: #172631;
+  }
+}
+
+
+/* ==========================================================
+   BUILD V2 — compact transition editor mobile
+   ========================================================== */
+
+@media (max-width: 760px) {
+  .daw-transition-editor {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .transition-reset {
+    min-height: 40px;
+  }
+
+  .daw-trim-row {
+    grid-template-columns: minmax(0, 1fr) 72px;
+  }
+
+  .daw-trim-number input {
+    min-height: 36px;
+    font-size: 11px;
   }
 }

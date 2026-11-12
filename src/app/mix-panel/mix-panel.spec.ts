@@ -380,7 +380,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(incoming?.end).toBe(13);
   });
 
-  it('renders fixed mixer controls plus one advanced editor', () => {
+  it('keeps all BUILD V2 editing controls integrated into each track', () => {
     component.tracks = readyTracks(2);
     fixture.detectChanges();
 
@@ -389,23 +389,25 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     ).toBe(2);
 
     expect(
-      fixture.nativeElement.querySelectorAll(
+      fixture.nativeElement.querySelectorAll('.daw-track-trim').length
+    ).toBe(2);
+
+    expect(
+      fixture.nativeElement.querySelector(
         '.build-v2-advanced-panel'
-      ).length
-    ).toBe(1);
+      )
+    ).toBeNull();
 
     expect(
       fixture.nativeElement.querySelector('.build-v2-daw')
     ).not.toBeNull();
-
-    expect(component.selectedTrack()?.id).toBe(component.tracks[0].id);
 
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
     expect(generateMixS3).not.toHaveBeenCalled();
   });
 
-  it('places gain and pan on every track and keeps trim in the advanced editor', () => {
+  it('places gain, pan and trim controls directly on every track', () => {
     component.tracks = readyTracks(2);
     fixture.detectChanges();
 
@@ -417,18 +419,18 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
       '.track-control-pan'
     );
 
-    const trimSliders = fixture.nativeElement.querySelectorAll(
-      '.build-v2-advanced-panel .parameter-slider'
+    const trimStartSliders = fixture.nativeElement.querySelectorAll(
+      '.track-trim-start'
     );
 
-    const trimNumbers = fixture.nativeElement.querySelectorAll(
-      '.build-v2-advanced-panel .parameter-number'
+    const trimEndSliders = fixture.nativeElement.querySelectorAll(
+      '.track-trim-end'
     );
 
     expect(gainSliders.length).toBe(2);
     expect(panSliders.length).toBe(2);
-    expect(trimSliders.length).toBe(2);
-    expect(trimNumbers.length).toBe(2);
+    expect(trimStartSliders.length).toBe(2);
+    expect(trimEndSliders.length).toBe(2);
 
     expect(gainSliders[0].getAttribute('min')).toBe('-24');
     expect(gainSliders[0].getAttribute('max')).toBe('6');

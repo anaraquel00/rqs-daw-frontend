@@ -263,6 +263,93 @@
                 </div>
               </label>
 
+              <div class="daw-track-trim">
+                <label class="daw-trim-control">
+                  <div class="daw-trim-label">
+                    <span>{{ buildV2Copy('trimStart') }}</span>
+                    <output>
+                      {{ track.v2.trimStartSeconds | number:'1.1-1' }} s
+                    </output>
+                  </div>
+
+                  <div class="daw-trim-row">
+                    <input
+                      class="track-control-slider track-trim-start"
+                      type="range"
+                      min="0"
+                      [max]="track.duration"
+                      step="0.1"
+                      [ngModel]="track.v2.trimStartSeconds"
+                      (ngModelChange)="updateBuildV2Track(
+                        i,
+                        { trimStartSeconds: $event }
+                      )">
+
+                    <div class="daw-trim-number">
+                      <input
+                        type="number"
+                        min="0"
+                        [max]="track.duration"
+                        step="0.1"
+                        [ngModel]="track.v2.trimStartSeconds"
+                        (ngModelChange)="updateBuildV2Track(
+                          i,
+                          { trimStartSeconds: $event }
+                        )">
+                      <span>s</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="daw-trim-control">
+                  <div class="daw-trim-label">
+                    <span>{{ buildV2Copy('trimEnd') }}</span>
+                    <output>
+                      {{
+                        (
+                          track.v2.trimEndSeconds
+                          ?? track.duration
+                        ) | number:'1.1-1'
+                      }} s
+                    </output>
+                  </div>
+
+                  <div class="daw-trim-row">
+                    <input
+                      class="track-control-slider track-trim-end"
+                      type="range"
+                      min="0"
+                      [max]="track.duration"
+                      step="0.1"
+                      [ngModel]="
+                        track.v2.trimEndSeconds
+                        ?? track.duration
+                      "
+                      (ngModelChange)="updateBuildV2Track(
+                        i,
+                        { trimEndSeconds: $event }
+                      )">
+
+                    <div class="daw-trim-number">
+                      <input
+                        type="number"
+                        min="0"
+                        [max]="track.duration"
+                        step="0.1"
+                        [ngModel]="
+                          track.v2.trimEndSeconds
+                          ?? track.duration
+                        "
+                        (ngModelChange)="updateBuildV2Track(
+                          i,
+                          { trimEndSeconds: $event }
+                        )">
+                      <span>s</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
               <div class="daw-track-actions">
                 <input
                   type="file"
@@ -427,29 +514,45 @@
                   expandedTransition === transitionKey(transition)
                 ) {
                   <div
-                    class="transition-editor"
+                    class="transition-editor daw-transition-editor"
                     [id]="'transition-' + transition.fromTrackId">
 
-                    <label>
-                      {{ transitionCopy('duration') }}
+                    <label class="transition-parameter">
+                      <span>{{ transitionCopy('duration') }}</span>
 
-                      <input
-                        type="number"
-                        min="0.5"
-                        max="15"
-                        step="0.5"
-                        [ngModel]="transition.duration"
-                        (ngModelChange)="editTransition(
-                          i,
-                          $event,
-                          transition.curve
-                        )">
+                      <div class="transition-duration-control">
+                        <input
+                          class="transition-duration-slider"
+                          type="range"
+                          min="0.5"
+                          max="15"
+                          step="0.5"
+                          [ngModel]="transition.duration"
+                          (ngModelChange)="editTransition(
+                            i,
+                            $event,
+                            transition.curve
+                          )">
+
+                        <div class="transition-duration-value">
+                          <input
+                            type="number"
+                            min="0.5"
+                            max="15"
+                            step="0.5"
+                            [ngModel]="transition.duration"
+                            (ngModelChange)="editTransition(
+                              i,
+                              $event,
+                              transition.curve
+                            )">
+                          <span>s</span>
+                        </div>
+                      </div>
                     </label>
 
-                    <p>{{ transitionCopy('limits') }}</p>
-
-                    <label>
-                      {{ transitionCopy('curve') }}
+                    <label class="transition-parameter">
+                      <span>{{ transitionCopy('curve') }}</span>
 
                       <select
                         [ngModel]="transition.curve"
@@ -474,9 +577,14 @@
 
                     <button
                       type="button"
+                      class="transition-reset"
                       (click)="resetTransition(i)">
                       {{ transitionCopy('reset') }}
                     </button>
+
+                    <span class="transition-limits">
+                      {{ transitionCopy('limits') }}
+                    </span>
                   </div>
                 }
               </div>
@@ -485,133 +593,6 @@
         }
       </div>
     </div>
-
-    <aside class="build-v2-advanced-panel">
-      @if (selectedTrack(); as selected) {
-        @let selectedIndex = selectedTrackIndex();
-        @let selectedRange = effectiveRange(selected);
-
-        <div class="advanced-panel-heading">
-          <div>
-            <span>{{ buildV2Copy('selectedTrack') }}</span>
-
-            <strong>
-              [{{ selectedIndex + 1 }}] {{ selected.name }}
-            </strong>
-          </div>
-
-          <div class="advanced-track-metrics">
-            <span>
-              {{ buildV2Copy('source') }}
-              <strong>{{ formatDuration(selected.duration) }}</strong>
-            </span>
-
-            <span>
-              {{ buildV2Copy('effective') }}
-              <strong>{{ formatDuration(selectedRange.duration) }}</strong>
-            </span>
-          </div>
-        </div>
-
-        <div class="advanced-trim-grid">
-
-          <label class="parameter-control">
-            <div class="parameter-label-row">
-              <span>{{ buildV2Copy('trimStart') }}</span>
-
-              <span class="parameter-limit">
-                0 → {{ formatDuration(selected.duration) }}
-              </span>
-            </div>
-
-            <div class="parameter-range-row">
-              <input
-                class="parameter-slider"
-                type="range"
-                min="0"
-                [max]="selected.duration"
-                step="0.1"
-                [ngModel]="selected.v2.trimStartSeconds"
-                (ngModelChange)="updateBuildV2Track(
-                  selectedIndex,
-                  { trimStartSeconds: $event }
-                )">
-
-              <div class="parameter-number-wrap">
-                <input
-                  class="parameter-number"
-                  type="number"
-                  min="0"
-                  [max]="selected.duration"
-                  step="0.1"
-                  [ngModel]="selected.v2.trimStartSeconds"
-                  (ngModelChange)="updateBuildV2Track(
-                    selectedIndex,
-                    { trimStartSeconds: $event }
-                  )">
-
-                <span>s</span>
-              </div>
-            </div>
-          </label>
-
-          <label class="parameter-control">
-            <div class="parameter-label-row">
-              <span>{{ buildV2Copy('trimEnd') }}</span>
-
-              <span class="parameter-limit">
-                0 → {{ formatDuration(selected.duration) }}
-              </span>
-            </div>
-
-            <div class="parameter-range-row">
-              <input
-                class="parameter-slider"
-                type="range"
-                min="0"
-                [max]="selected.duration"
-                step="0.1"
-                [ngModel]="
-                  selected.v2.trimEndSeconds
-                  ?? selected.duration
-                "
-                (ngModelChange)="updateBuildV2Track(
-                  selectedIndex,
-                  { trimEndSeconds: $event }
-                )">
-
-              <div class="parameter-number-wrap">
-                <input
-                  class="parameter-number"
-                  type="number"
-                  min="0"
-                  [max]="selected.duration"
-                  step="0.1"
-                  [ngModel]="
-                    selected.v2.trimEndSeconds
-                    ?? selected.duration
-                  "
-                  (ngModelChange)="updateBuildV2Track(
-                    selectedIndex,
-                    { trimEndSeconds: $event }
-                  )">
-
-                <span>s</span>
-              </div>
-            </div>
-          </label>
-        </div>
-
-        @if (trackHasBuildV2Adjustments(selected)) {
-          <button
-            type="button"
-            class="build-v2-reset"
-            (click)="resetBuildV2Track(selectedIndex)">
-            {{ buildV2Copy('reset') }}
-          </button>
-        }
-      }
-    </aside>
 
     <div class="metadata-section">
       <label for="exportName">{{ lang.tr().DEPLOY_LABEL }}</label>
