@@ -25,6 +25,14 @@ import { AudioComparisonService } from '../services/audio-comparison.service';
 import { AnalyticsService } from '../services/analytics.service';
 import { PreviewWaveformComponent } from '../components/mastering-panel/preview-waveform';
 import { PlanUpgradeCtaComponent } from '../components/plan-upgrade-cta/plan-upgrade-cta';
+import {
+  BuildV2TrackState,
+  buildV2EffectiveRange,
+  createBuildV2TrackState,
+  dbToLinearGain,
+  hasBuildV2Adjustments,
+  normalizeBuildV2TrackState,
+} from './build-v2-track-state';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -40,6 +48,7 @@ export interface RQSTrack {
   uploadState: SetlistUploadState;
   uploadError: string | null;
   uploadAttempt: number;
+  v2: BuildV2TrackState;
 }
 
 export interface SetlistTransition {
@@ -133,6 +142,57 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
   },
 };
 
+const BUILD_V2_COPY = {
+  en: {
+    title: 'BUILD V2 preview lab',
+    previewOnly: 'Local preview only · current server render stays V1 until the V2 engine contract is enabled.',
+    trimStart: 'Trim start',
+    trimEnd: 'Trim end',
+    gain: 'Gain',
+    pan: 'Pan',
+    effective: 'Effective clip',
+    reset: 'Reset V2 controls',
+    resetAll: 'Reset all V2 controls',
+    renderBlocked: 'BUILD V2 local adjustments are active. Reset them before using the current V1 server render.',
+  },
+  pt: {
+    title: 'Laboratório de prévia BUILD V2',
+    previewOnly: 'Somente prévia local · o render atual do servidor permanece V1 até o contrato do motor V2 ser ativado.',
+    trimStart: 'Corte inicial',
+    trimEnd: 'Corte final',
+    gain: 'Ganho',
+    pan: 'Pan',
+    effective: 'Clipe efetivo',
+    reset: 'Resetar controles V2',
+    resetAll: 'Resetar todos os controles V2',
+    renderBlocked: 'Há ajustes locais do BUILD V2 ativos. Resete-os antes de usar o render V1 atual do servidor.',
+  },
+  pl: {
+    title: 'Laboratorium podglądu BUILD V2',
+    previewOnly: 'Tylko podgląd lokalny · bieżący render serwerowy pozostaje V1 do czasu włączenia kontraktu silnika V2.',
+    trimStart: 'Początek cięcia',
+    trimEnd: 'Koniec cięcia',
+    gain: 'Wzmocnienie',
+    pan: 'Panorama',
+    effective: 'Efektywny klip',
+    reset: 'Resetuj kontrolki V2',
+    resetAll: 'Resetuj wszystkie kontrolki V2',
+    renderBlocked: 'Lokalne ustawienia BUILD V2 są aktywne. Zresetuj je przed użyciem bieżącego renderu serwerowego V1.',
+  },
+  fr: {
+    title: 'Laboratoire de préécoute BUILD V2',
+    previewOnly: 'Préécoute locale uniquement · le rendu serveur actuel reste en V1 jusqu’à l’activation du contrat du moteur V2.',
+    trimStart: 'Début du trim',
+    trimEnd: 'Fin du trim',
+    gain: 'Gain',
+    pan: 'Panoramique',
+    effective: 'Clip effectif',
+    reset: 'Réinitialiser les contrôles V2',
+    resetAll: 'Réinitialiser tous les contrôles V2',
+    renderBlocked: 'Des réglages locaux BUILD V2 sont actifs. Réinitialisez-les avant d’utiliser le rendu serveur V1 actuel.',
+  },
+} as const;
+
 const TRANSITION_COPY = {
   en: { defaults: 'Default transition', duration: 'Duration', curve: 'Curve', apply: 'Apply to all transitions', transition: 'Transition', edit: 'Edit', reset: 'Reset to default', inherited: 'Default', custom: 'Custom', limits: '0.5–15 seconds · shorter than both adjacent tracks' },
   pt: { defaults: 'Transição padrão', duration: 'Duração', curve: 'Curva', apply: 'Aplicar a todas as transições', transition: 'Transição', edit: 'Editar', reset: 'Restaurar padrão', inherited: 'Padrão', custom: 'Personalizada', limits: '0,5–15 segundos · menor que ambas as faixas adjacentes' },
@@ -183,6 +243,10 @@ export class MixPanelComponent implements OnDestroy {
   private sourceNode2: MediaElementAudioSourceNode | null = null;
   private gainNode1!: GainNode;
   private gainNode2!: GainNode;
+  private panNode1: StereoPannerNode | null = null;
+  private panNode2: StereoPannerNode | null = null;
+  private previewBaseGain1 = 1;
+  private previewBaseGain2 = 1;
   private playerElement1: HTMLAudioElement | null = null;
   private playerElement2: HTMLAudioElement | null = null;
   private previewIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -215,8 +279,9 @@ export class MixPanelComponent implements OnDestroy {
     if (!track || !transition || !Number.isFinite(track.duration) || track.duration <= 0
       || !Number.isFinite(transition.duration) || transition.duration <= 0
       || (direction === 'in' ? transition.toTrackId : transition.fromTrackId) !== track.id) return null;
-    const seconds = Math.min(track.duration, transition.duration);
-    const start = direction === 'in' ? 0 : track.duration - seconds;
+    const range = this.effectiveRange(track);
+    const seconds = Math.min(range.duration, transition.duration);
+    const start = direction === 'in' ? range.start : range.end - seconds;
     const end = start + seconds;
     const labels = {
       en: { in: 'Transition in', out: 'Transition out' },
@@ -270,7 +335,7 @@ export class MixPanelComponent implements OnDestroy {
     return !this.isProcessing && !!t && !!a && !!b
       && t.fromTrackId === a.id && t.toTrackId === b.id
       && Number.isFinite(t.duration) && t.duration >= 0.5 && t.duration <= 15
-      && t.duration < Math.min(a.duration, b.duration)
+      && t.duration < Math.min(this.effectiveRange(a).duration, this.effectiveRange(b).duration)
       && ['equal-power', 'linear', 'fast-cut'].includes(t.curve);
   }
 
@@ -294,6 +359,40 @@ export class MixPanelComponent implements OnDestroy {
     return TRANSITION_COPY[this.lang.currentLang()][key];
   }
 
+  buildV2Copy(key: keyof typeof BUILD_V2_COPY.en): string {
+    return BUILD_V2_COPY[this.lang.currentLang()][key];
+  }
+
+  effectiveRange(track: RQSTrack) {
+    return buildV2EffectiveRange(track.v2, track.duration);
+  }
+
+  hasBuildV2Adjustments(): boolean {
+    return this.tracks.some(track => hasBuildV2Adjustments(track.v2, track.duration));
+  }
+
+  updateBuildV2Track(index: number, patch: Partial<BuildV2TrackState>): void {
+    const track = this.tracks[index];
+    if (!track) return;
+    track.v2 = normalizeBuildV2TrackState({ ...track.v2, ...patch }, track.duration);
+    this.tracks = [...this.tracks];
+    this.stopTransitionPreview();
+  }
+
+  resetBuildV2Track(index: number): void {
+    const track = this.tracks[index];
+    if (!track) return;
+    track.v2 = createBuildV2TrackState();
+    this.tracks = [...this.tracks];
+    this.stopTransitionPreview();
+  }
+
+  resetAllBuildV2Tracks(): void {
+    this.tracks.forEach(track => { track.v2 = createBuildV2TrackState(); });
+    this.tracks = [...this.tracks];
+    this.stopTransitionPreview();
+  }
+
   curveLabel(curve: SetlistCurve): string {
     const copy = this.lang.tr();
     return curve === 'linear' ? copy.CURVE_LINEAR
@@ -313,10 +412,14 @@ export class MixPanelComponent implements OnDestroy {
     this.sourceNode2 = this.audioCtx.createMediaElementSource(this.playerElement2);
     this.gainNode1 = this.audioCtx.createGain();
     this.gainNode2 = this.audioCtx.createGain();
+    this.panNode1 = this.audioCtx.createStereoPanner();
+    this.panNode2 = this.audioCtx.createStereoPanner();
     this.sourceNode1.connect(this.gainNode1);
     this.sourceNode2.connect(this.gainNode2);
-    this.gainNode1.connect(this.audioCtx.destination);
-    this.gainNode2.connect(this.audioCtx.destination);
+    this.gainNode1.connect(this.panNode1);
+    this.gainNode2.connect(this.panNode2);
+    this.panNode1.connect(this.audioCtx.destination);
+    this.panNode2.connect(this.audioCtx.destination);
     return true;
   }
 
@@ -406,6 +509,7 @@ export class MixPanelComponent implements OnDestroy {
       uploadState: 'idle',
       uploadError: null,
       uploadAttempt: 0,
+      v2: createBuildV2TrackState(),
     };
     const audio = new Audio(rawUrl);
     const finish = () => {
@@ -506,6 +610,7 @@ export class MixPanelComponent implements OnDestroy {
 
   canIgniteSetlist(): boolean {
     if (this.isProcessing || this.tracks.length < 2 || this.tracks.length > this.maxTrackCount()) return false;
+    if (this.hasBuildV2Adjustments()) return false;
     if (!this.setlistName.trim()) return false;
     if (this.tracks.some((track) => track.uploadState !== 'ready' || !track.s3Key || track.duration <= 0)) {
       return false;
@@ -531,20 +636,26 @@ export class MixPanelComponent implements OnDestroy {
     this.previewingIndex = index;
     this.previewProgress.set(0);
     const fadeDuration = transition.duration;
-    const previewLead = Math.min(12, Math.max(0, track1.duration - transition.duration));
-    const previewTail = 12;
+    const range1 = this.effectiveRange(track1);
+    const range2 = this.effectiveRange(track2);
+    const previewLead = Math.min(12, Math.max(0, range1.duration - fadeDuration));
+    const previewTail = Math.min(12, Math.max(0, range2.duration - fadeDuration));
     const totalDuration = previewLead + fadeDuration + previewTail;
-    const startTimeTrack1 = Math.max(0, track1.duration - previewLead - fadeDuration);
+    const startTimeTrack1 = Math.max(range1.start, range1.end - previewLead - fadeDuration);
 
     this.playerElement1.src = track1.rawUrl;
     this.playerElement2.src = track2.rawUrl;
     this.playerElement1.currentTime = startTimeTrack1;
-    this.playerElement2.currentTime = 0;
+    this.playerElement2.currentTime = range2.start;
     await this.playerElement1.play();
     if (attempt !== this.previewAttempt) return;
 
     const now = this.audioCtx.currentTime;
-    this.gainNode1.gain.setValueAtTime(1, now);
+    this.previewBaseGain1 = dbToLinearGain(track1.v2.gainDb);
+    this.previewBaseGain2 = dbToLinearGain(track2.v2.gainDb);
+    this.panNode1?.pan.setValueAtTime(track1.v2.pan, now);
+    this.panNode2?.pan.setValueAtTime(track2.v2.pan, now);
+    this.gainNode1.gain.setValueAtTime(this.previewBaseGain1, now);
     this.gainNode2.gain.setValueAtTime(0, now);
     let progressSeconds = 0;
     const intervalMs = 100;
@@ -564,26 +675,32 @@ export class MixPanelComponent implements OnDestroy {
     if (!this.audioCtx) return;
     const now = this.audioCtx.currentTime;
     if (curve === 'linear') {
-      this.gainNode1.gain.setValueAtTime(1, now);
+      this.gainNode1.gain.setValueAtTime(this.previewBaseGain1, now);
       this.gainNode1.gain.linearRampToValueAtTime(0, now + duration);
       this.gainNode2.gain.setValueAtTime(0, now);
-      this.gainNode2.gain.linearRampToValueAtTime(1, now + duration);
+      this.gainNode2.gain.linearRampToValueAtTime(this.previewBaseGain2, now + duration);
     } else if (curve === 'equal-power') {
       const steps = 100;
       const curve1 = new Float32Array(steps);
       const curve2 = new Float32Array(steps);
       for (let index = 0; index < steps; index += 1) {
         const ratio = index / (steps - 1);
-        curve1[index] = Math.cos(ratio * Math.PI / 2);
-        curve2[index] = Math.sin(ratio * Math.PI / 2);
+        curve1[index] = Math.cos(ratio * Math.PI / 2) * this.previewBaseGain1;
+        curve2[index] = Math.sin(ratio * Math.PI / 2) * this.previewBaseGain2;
       }
       this.gainNode1.gain.setValueCurveAtTime(curve1, now, duration);
       this.gainNode2.gain.setValueCurveAtTime(curve2, now, duration);
     } else {
-      this.gainNode1.gain.setValueAtTime(1, now);
-      this.gainNode1.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.3);
-      this.gainNode2.gain.setValueAtTime(0.001, now);
-      this.gainNode2.gain.exponentialRampToValueAtTime(1, now + duration);
+      this.gainNode1.gain.setValueAtTime(this.previewBaseGain1, now);
+      this.gainNode1.gain.exponentialRampToValueAtTime(
+        Math.max(0.000001, this.previewBaseGain1 * 0.001),
+        now + duration * 0.3,
+      );
+      this.gainNode2.gain.setValueAtTime(
+        Math.max(0.000001, this.previewBaseGain2 * 0.001),
+        now,
+      );
+      this.gainNode2.gain.exponentialRampToValueAtTime(this.previewBaseGain2, now + duration);
     }
   }
 
@@ -661,6 +778,10 @@ export class MixPanelComponent implements OnDestroy {
   igniteSetlist(): void {
     if (!this.hasAuthenticatedBuildSession()) return;
     this.cancelActiveRender();
+    if (this.hasBuildV2Adjustments()) {
+      this.setlistError = this.buildV2Copy('renderBlocked');
+      return;
+    }
     if (!this.canIgniteSetlist()) {
       this.setlistError = this.localCopy('renderBlocked');
       return;

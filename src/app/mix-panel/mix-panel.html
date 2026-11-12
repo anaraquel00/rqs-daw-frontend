@@ -151,6 +151,16 @@
       </div>
     </div>
 
+    <section class="build-v2-lab" aria-labelledby="build-v2-lab-title">
+      <div>
+        <h3 id="build-v2-lab-title">{{ buildV2Copy('title') }}</h3>
+        <p>{{ buildV2Copy('previewOnly') }}</p>
+      </div>
+      @if (hasBuildV2Adjustments()) {
+        <button type="button" (click)="resetAllBuildV2Tracks()">{{ buildV2Copy('resetAll') }}</button>
+      }
+    </section>
+
     <div class="track-list">
       <h3>{{ lang.tr().TIMELINE_TITLE }}</h3>
       <ul>
@@ -213,6 +223,44 @@
               </div>
               <span class="waveform-truthful-state">{{ localCopy('waveformLocal') }}</span>
             </div>
+
+            @let effective = effectiveRange(track);
+            <section class="build-v2-track-controls" [class.adjusted]="track.v2.trimStartSeconds !== 0 || track.v2.trimEndSeconds !== null || track.v2.gainDb !== 0 || track.v2.pan !== 0">
+              <div class="build-v2-track-heading">
+                <strong>BUILD V2</strong>
+                <span>{{ buildV2Copy('effective') }}: {{ formatDuration(effective.duration) }}</span>
+              </div>
+              <div class="build-v2-control-grid">
+                <label>
+                  <span>{{ buildV2Copy('trimStart') }}</span>
+                  <input type="number" min="0" [max]="track.duration" step="0.1"
+                    [ngModel]="track.v2.trimStartSeconds"
+                    (ngModelChange)="updateBuildV2Track(i, { trimStartSeconds: $event })">
+                </label>
+                <label>
+                  <span>{{ buildV2Copy('trimEnd') }}</span>
+                  <input type="number" min="0" [max]="track.duration" step="0.1"
+                    [ngModel]="track.v2.trimEndSeconds ?? track.duration"
+                    (ngModelChange)="updateBuildV2Track(i, { trimEndSeconds: $event })">
+                </label>
+                <label>
+                  <span>{{ buildV2Copy('gain') }} (dB)</span>
+                  <input type="number" min="-24" max="6" step="0.5"
+                    [ngModel]="track.v2.gainDb"
+                    (ngModelChange)="updateBuildV2Track(i, { gainDb: $event })">
+                </label>
+                <label>
+                  <span>{{ buildV2Copy('pan') }}</span>
+                  <input type="range" min="-1" max="1" step="0.05"
+                    [ngModel]="track.v2.pan"
+                    (ngModelChange)="updateBuildV2Track(i, { pan: $event })">
+                  <output>{{ track.v2.pan | number:'1.2-2' }}</output>
+                </label>
+              </div>
+              @if (track.v2.trimStartSeconds !== 0 || track.v2.trimEndSeconds !== null || track.v2.gainDb !== 0 || track.v2.pan !== 0) {
+                <button type="button" class="build-v2-reset" (click)="resetBuildV2Track(i)">{{ buildV2Copy('reset') }}</button>
+              }
+            </section>
 
           </li>
           @if (transitions[i]; as transition) {

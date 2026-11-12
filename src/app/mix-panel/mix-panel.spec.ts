@@ -4,6 +4,7 @@ import { By, SafeUrl } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 import { MixPanelComponent, RQSTrack } from './mix-panel';
+import { createBuildV2TrackState } from './build-v2-track-state';
 import {
   DspService,
   SetlistRenderRequest,
@@ -296,6 +297,75 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     component.tracks[1].uploadState = 'ready';
     component.tracks[1].s3Key = 'uploads/user-id/setlist/track-02.wav';
     expect(component.canIgniteSetlist()).toBeTrue();
+  });
+
+  it('keeps BUILD V2 neutral by default so legacy render remains available', () => {
+    component.tracks = readyTracks(2);
+    expect(component.hasBuildV2Adjustments()).toBeFalse();
+    expect(component.canIgniteSetlist()).toBeTrue();
+  });
+
+  it('applies non-destructive BUILD V2 trim, gain and pan to the local track contract', () => {
+    component.tracks = readyTracks(2);
+    component.updateBuildV2Track(0, {
+      trimStartSeconds: 10,
+      trimEndSeconds: 50,
+      gainDb: -6,
+      pan: 0.25,
+    });
+
+    expect(component.tracks[0].v2).toEqual({
+      trimStartSeconds: 10,
+      trimEndSeconds: 50,
+      gainDb: -6,
+      pan: 0.25,
+    });
+    expect(component.effectiveRange(component.tracks[0])).toEqual({
+      start: 10,
+      end: 50,
+      duration: 40,
+    });
+    expect(component.hasBuildV2Adjustments()).toBeTrue();
+  });
+
+  it('blocks the V1 server render while BUILD V2 preview-only adjustments are active', () => {
+    component.tracks = readyTracks(2);
+    component.updateBuildV2Track(0, { gainDb: -3 });
+    spyOn(HTMLAnchorElement.prototype, 'click');
+
+    component.igniteSetlist();
+
+    expect(generateMixS3).not.toHaveBeenCalled();
+    expect(component.setlistError).toBe(component.buildV2Copy('renderBlocked'));
+
+    component.resetAllBuildV2Tracks();
+    expect(component.hasBuildV2Adjustments()).toBeFalse();
+    expect(component.canIgniteSetlist()).toBeTrue();
+  });
+
+  it('moves transition regions to the trimmed source boundaries', () => {
+    component.tracks = readyTracks(2);
+    component.updateBuildV2Track(0, { trimStartSeconds: 10, trimEndSeconds: 50 });
+    component.updateBuildV2Track(1, { trimStartSeconds: 5, trimEndSeconds: 55 });
+
+    const outgoing = component.transitionRegion(0, 'out');
+    const incoming = component.transitionRegion(1, 'in');
+
+    expect(outgoing?.start).toBe(42);
+    expect(outgoing?.end).toBe(50);
+    expect(incoming?.start).toBe(5);
+    expect(incoming?.end).toBe(13);
+  });
+
+  it('renders BUILD V2 controls without starting additional network operations', () => {
+    component.tracks = readyTracks(2);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.build-v2-track-controls').length).toBe(2);
+    expect(fixture.nativeElement.querySelector('.build-v2-lab')).not.toBeNull();
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
+    expect(generateMixS3).not.toHaveBeenCalled();
   });
 
   it('renders one compact non-interactive waveform for every local track', () => {
@@ -702,5 +772,6 @@ function track(
     uploadState,
     uploadError: null,
     uploadAttempt: 1,
+    v2: createBuildV2TrackState(),
   };
 }
