@@ -1,14 +1,17 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import {
+  AdminActionsConfig,
   AdminApiService,
   WaitlistRecord,
   WaitlistSummary,
 } from '../core/admin-api.service';
 import { AdminSeoService } from '../core/admin-seo.service';
+import { ReviewActionControlComponent } from '../components/review-action-control.component';
 
 @Component({
   selector: 'rqs-admin-waitlist',
   standalone: true,
+  imports: [ReviewActionControlComponent],
   template: `
     <section class="page-heading">
       <p>GROWTH / WAITLIST</p>
@@ -105,6 +108,9 @@ import { AdminSeoService } from '../core/admin-seo.service';
                 <th>SOURCE</th>
                 <th>REFERRAL</th>
                 <th>CREATED</th>
+                @if (actionsConfig()?.enabled) {
+                  <th>REVIEW</th>
+                }
               </tr>
             </thead>
             <tbody>
@@ -122,6 +128,15 @@ import { AdminSeoService } from '../core/admin-seo.service';
                     }
                   </td>
                   <td>{{ displayDate(record.createdAt) }}</td>
+                  @if (actionsConfig()?.enabled) {
+                    <td>
+                      <rqs-review-action-control
+                        targetKind="waitlist"
+                        [targetId]="record.id"
+                        [targetLabel]="record.maskedEmail"
+                      />
+                    </td>
+                  }
                 </tr>
               }
             </tbody>
@@ -157,12 +172,19 @@ export class WaitlistComponent implements OnInit {
   readonly language = signal('');
   readonly referralAttributed = signal('');
 
+  readonly actionsConfig =
+    signal<AdminActionsConfig | null>(null);
+
   constructor(seo: AdminSeoService) {
     seo.setCanonical('/waitlist');
   }
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.loadSummary(), this.loadRecords(null)]);
+    await Promise.all([
+      this.loadSummary(),
+      this.loadRecords(null),
+      this.loadActionsConfig(),
+    ]);
   }
 
   async applyFilters(): Promise<void> {
@@ -208,6 +230,16 @@ export class WaitlistComponent implements OnInit {
 
   displayDate(value: string | null): string {
     return value || 'UNKNOWN / LEGACY';
+  }
+
+  private async loadActionsConfig(): Promise<void> {
+    try {
+      this.actionsConfig.set(
+        await this.api.actionsConfig(),
+      );
+    } catch {
+      this.actionsConfig.set(null);
+    }
   }
 
   private async loadSummary(): Promise<void> {
