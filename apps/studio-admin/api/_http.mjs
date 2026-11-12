@@ -13,19 +13,30 @@ export function prepareRequest(req, res, methods = 'GET, OPTIONS') {
       .filter(Boolean),
   ]);
 
+  const sameOrigin =
+    isSameOriginRequest(req, origin);
+
+  const originAllowed =
+    !origin ||
+    sameOrigin ||
+    allowedOrigins.has(origin);
+
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
   res.setHeader('X-Request-Id', requestId);
   res.setHeader('Access-Control-Allow-Methods', methods);
-  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Authorization, Content-Type, X-Idempotency-Key',
+  );
 
   if (origin && allowedOrigins.has(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }
 
-  return { allowed: !origin || allowedOrigins.has(origin), requestId, startedAt: performance.now() };
+  return { allowed: originAllowed, requestId, startedAt: performance.now() };
 }
 
 export function completeRequest(context, route, status, adminUserId = null) {
@@ -37,6 +48,34 @@ export function completeRequest(context, route, status, adminUserId = null) {
     admin: adminUserId ? createHash('sha256').update(adminUserId).digest('hex').slice(0, 12) : undefined,
   };
   console.info(JSON.stringify(entry));
+}
+
+function isSameOriginRequest(
+  req,
+  origin,
+) {
+  if (!origin) return false;
+
+  const host =
+    String(
+      req.headers?.host || '',
+    )
+      .trim()
+      .toLowerCase();
+
+  if (!host) return false;
+
+  try {
+    const parsed =
+      new URL(origin);
+
+    return (
+      parsed.protocol === 'https:' &&
+      parsed.host.toLowerCase() === host
+    );
+  } catch {
+    return false;
+  }
 }
 
 function requestIdentifier(req) {

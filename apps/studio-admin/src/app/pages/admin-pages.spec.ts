@@ -17,6 +17,10 @@ describe('admin pages', () => {
     waitlistRecords: jasmine.createSpy('waitlistRecords'),
     referralSummary: jasmine.createSpy('referralSummary'),
     referralRecords: jasmine.createSpy('referralRecords'),
+    actionsConfig: jasmine.createSpy('actionsConfig'),
+    requestReviewFlag: jasmine.createSpy('requestReviewFlag'),
+    confirmAction: jasmine.createSpy('confirmAction'),
+    cancelAction: jasmine.createSpy('cancelAction'),
   };
   const seo = { setCanonical: jasmine.createSpy('setCanonical') };
 
@@ -26,6 +30,17 @@ describe('admin pages', () => {
     api.waitlistRecords.calls.reset();
     api.referralSummary.calls.reset();
     api.referralRecords.calls.reset();
+    api.actionsConfig.calls.reset();
+    api.requestReviewFlag.calls.reset();
+    api.confirmAction.calls.reset();
+    api.cancelAction.calls.reset();
+
+    api.actionsConfig.and.resolveTo({
+      enabled: false,
+      mode: 'disabled',
+      dataEnvironment: 'production',
+    });
+
     seo.setCanonical.calls.reset();
   });
 
@@ -217,6 +232,98 @@ describe('admin pages', () => {
     const protectedRoot = routes.find(route => route.path === '');
     expect(protectedRoot?.canActivate?.length).toBeGreaterThan(0);
     expect(protectedRoot?.children?.some(route => route.path === 'referrals')).toBeTrue();
+  });
+
+  it('keeps review mutation controls hidden when actions are disabled', async () => {
+    api.waitlistSummary.and.resolveTo({
+      total: 1,
+      byPlanInterest: {
+        master: 1,
+        plus: 0,
+        pro: 0,
+        undecided: 0,
+        unknown: 0,
+      },
+      generatedAt: '2026-11-11T20:00:00.000Z',
+    });
+
+    api.waitlistRecords.and.resolveTo({
+      records: [{
+        id: 'record-1',
+        maskedEmail: 'an***@example.com',
+        planInterest: 'master',
+        status: 'waiting',
+        language: 'pt',
+        source: 'studio.raquelsynths.com',
+        createdAt: '2026-11-11T20:00:00.000Z',
+        planInterestUpdatedAt: null,
+        referralAttributed: false,
+        referralStatus: 'unknown',
+        referralCapturedAt: null,
+      }],
+      nextCursor: null,
+      limit: 25,
+      filters: {},
+      generatedAt: '2026-11-11T20:00:00.000Z',
+    });
+
+    const fixture =
+      await create(WaitlistComponent);
+
+    expect(
+      fixture.nativeElement.textContent,
+    ).not.toContain(
+      'FLAG FOR REVIEW',
+    );
+  });
+
+  it('shows controlled review entry point only when staging capability is enabled', async () => {
+    api.actionsConfig.and.resolveTo({
+      enabled: true,
+      mode: 'internal-review',
+      dataEnvironment: 'staging',
+    });
+
+    api.waitlistSummary.and.resolveTo({
+      total: 1,
+      byPlanInterest: {
+        master: 1,
+        plus: 0,
+        pro: 0,
+        undecided: 0,
+        unknown: 0,
+      },
+      generatedAt: '2026-11-11T20:00:00.000Z',
+    });
+
+    api.waitlistRecords.and.resolveTo({
+      records: [{
+        id: 'record-1',
+        maskedEmail: 'an***@example.com',
+        planInterest: 'master',
+        status: 'waiting',
+        language: 'pt',
+        source: 'studio.raquelsynths.com',
+        createdAt: '2026-11-11T20:00:00.000Z',
+        planInterestUpdatedAt: null,
+        referralAttributed: false,
+        referralStatus: 'unknown',
+        referralCapturedAt: null,
+      }],
+      nextCursor: null,
+      limit: 25,
+      filters: {},
+      generatedAt: '2026-11-11T20:00:00.000Z',
+    });
+
+    const fixture =
+      await create(WaitlistComponent);
+
+    expect(
+      fixture.nativeElement.textContent,
+    ).toContain(
+      'FLAG FOR REVIEW',
+    );
   });
 
   it('renders forbidden copy without exposing RBAC internals', async () => {

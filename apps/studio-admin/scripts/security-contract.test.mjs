@@ -219,3 +219,145 @@ test('Phase 2 browser payload projections exclude sensitive referral identity fi
   assert.match(referral, /maskedEmail/);
   assert.match(referral, /maskedReferralCode/);
 });
+
+test('Phase 3 Admin action writer is isolated from Referral and contains no delete path', async () => {
+  const [
+    writer,
+    store,
+  ] = await Promise.all([
+    read('api/_firestore-admin-actions.mjs'),
+    read('api/_admin-action-store.mjs'),
+  ]);
+
+  const phase3 =
+    `${writer}\n${store}`;
+
+  assert.match(
+    writer,
+    /documents:commit/,
+  );
+
+  assert.match(
+    store,
+    /admin_action_requests/,
+  );
+
+  assert.match(
+    store,
+    /admin_review_flags/,
+  );
+
+  assert.match(
+    store,
+    /admin_audit_events/,
+  );
+
+  assert.doesNotMatch(
+    writer,
+    /pro_waitlist|founding_referral_participants/,
+  );
+
+  assert.doesNotMatch(
+    writer,
+    /GCP_REFERRAL_FIRESTORE_DATABASE_ID/,
+  );
+
+  assert.doesNotMatch(
+    phase3,
+    /deleteDocument|method:\s*['"]DELETE['"]/,
+  );
+
+  assert.match(
+    writer,
+    /currentDocument/,
+  );
+
+  assert.match(
+    writer,
+    /updateTime/,
+  );
+});
+
+test('Phase 3 mutation endpoints require owner authorization and hardened HTTP contract', async () => {
+  const [
+    request,
+    confirm,
+    cancel,
+    http,
+  ] = await Promise.all([
+    read('api/admin/actions/request.js'),
+    read('api/admin/actions/confirm.js'),
+    read('api/admin/actions/cancel.js'),
+    read('api/_admin-action-http.mjs'),
+  ]);
+
+  const endpoints =
+    `${request}\n${confirm}\n${cancel}`;
+
+  assert.match(
+    endpoints,
+    /authorizeOwner/,
+  );
+
+  assert.match(
+    endpoints,
+    /prepareAdminMutationRequest/,
+  );
+
+  assert.match(
+    endpoints,
+    /requireIdempotencyKey/,
+  );
+
+  assert.match(
+    endpoints,
+    /assertAdminActionsEnabled/,
+  );
+
+  assert.doesNotMatch(
+    endpoints,
+    /_firestore-referral|pro_waitlist|founding_referral_participants/,
+  );
+
+  assert.doesNotMatch(
+    endpoints,
+    /SUPABASE_SERVICE_ROLE_KEY|private_key|client_email/,
+  );
+
+  assert.match(
+    http,
+    /origin\.length > 0/,
+  );
+
+  assert.match(
+    http,
+    /X-IDEMPOTENCY-KEY|x-idempotency-key/i,
+  );
+});
+
+test('Phase 3 capability endpoint exposes only bounded action configuration', async () => {
+  const config =
+    await read(
+      'api/admin/actions/config.js',
+    );
+
+  assert.match(
+    config,
+    /authorizeOwner/,
+  );
+
+  assert.match(
+    config,
+    /adminActionsConfiguration/,
+  );
+
+  assert.doesNotMatch(
+    config,
+    /actorUserId|accessToken|service_role|private_key/,
+  );
+
+  assert.doesNotMatch(
+    config,
+    /createDocument|updateDocument|documents:commit/,
+  );
+});

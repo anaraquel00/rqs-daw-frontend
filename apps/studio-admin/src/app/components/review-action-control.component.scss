@@ -1,0 +1,227 @@
+:host {
+  display: block;
+  min-width: 190px;
+}
+
+button {
+  font: 700 9px/1 var(--mono);
+  letter-spacing: .09em;
+}
+
+.review-trigger,
+.action-buttons button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.review-trigger,
+.secondary {
+  background: rgba(8, 14, 21, .96);
+  color: var(--text);
+}
+
+.review-trigger:hover,
+.secondary:hover:not(:disabled) {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.primary {
+  border-color: rgba(62, 226, 255, .7) !important;
+  background: rgba(62, 226, 255, .1);
+  color: var(--cyan);
+}
+
+.primary:hover:not(:disabled) {
+  background: rgba(62, 226, 255, .16);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.action-console {
+  min-width: 310px;
+  padding: 16px;
+  border: 1px solid rgba(62, 226, 255, .35);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(13, 23, 32, .99),
+      rgba(7, 12, 18, .99)
+    );
+}
+
+.action-console header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.action-console header p {
+  margin: 0 0 5px;
+  color: var(--cyan);
+  font: 700 8px/1 var(--mono);
+  letter-spacing: .16em;
+}
+
+.action-console header strong {
+  color: var(--text);
+  font: 700 12px/1.2 var(--mono);
+}
+
+.action-console header > span {
+  color: var(--muted);
+  font: 700 8px/1 var(--mono);
+  letter-spacing: .12em;
+}
+
+.target,
+.confirmation dl {
+  margin: 14px 0 0;
+}
+
+.target div,
+.confirmation dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+dt,
+dd {
+  margin: 0;
+  font: 650 9px/1.35 var(--mono);
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  color: var(--text);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.action-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.action-fields label {
+  display: grid;
+  gap: 7px;
+}
+
+.action-fields span {
+  color: var(--muted);
+  font: 700 8px/1 var(--mono);
+  letter-spacing: .12em;
+}
+
+.action-fields select {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  background: rgba(8, 14, 21, .96);
+  color: var(--text);
+  padding: 0 9px;
+  font: 650 9px/1 var(--mono);
+}
+
+.action-fields select:focus {
+  outline: 1px solid var(--cyan);
+  outline-offset: 1px;
+}
+
+.safety-copy {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font: 550 9px/1.55 var(--mono);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.confirmation-label {
+  margin: 14px 0 0;
+  color: var(--cyan);
+  font: 700 9px/1 var(--mono);
+  letter-spacing: .14em;
+}
+
+.confirmation-warning {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgba(255, 193, 85, .35);
+  background: rgba(255, 193, 85, .04);
+}
+
+.confirmation-warning strong {
+  color: #ffd17a;
+  font: 700 9px/1 var(--mono);
+  letter-spacing: .12em;
+}
+
+.confirmation-warning span {
+  color: var(--muted);
+  font: 550 9px/1.5 var(--mono);
+}
+
+.terminal-state,
+.action-error {
+  margin-top: 14px;
+  padding: 12px;
+  font: 700 9px/1.5 var(--mono);
+}
+
+.terminal-state {
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.terminal-state.success {
+  border-color: rgba(62, 226, 255, .4);
+  color: var(--cyan);
+}
+
+.action-error {
+  border: 1px solid rgba(255, 95, 117, .45);
+  color: var(--danger);
+}
+
+@media (max-width: 620px) {
+  :host,
+  .action-console {
+    min-width: 260px;
+  }
+
+  .action-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    flex-direction: column-reverse;
+  }
+}
