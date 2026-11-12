@@ -113,7 +113,7 @@ const COPY: Record<'pt' | 'en', MasterLandingCopy> = {
     feedbackTitle: "Still haven't found what you're looking for?",
     feedbackBody: 'Tell us what is stopping you from trying RQS MASTER. Your feedback helps us improve the tool.',
     feedbackCta: 'Answer survey',
-    feedbackMeta: 'Anonymous survey · About 2 minutes · Survey in Portuguese',
+    feedbackMeta: 'Anonymous survey · About 2 minutes · Survey in your selected language',
     freeEyebrow: 'STARTING ACCESS',
     freeTitle: 'Try the complete workflow without a card.',
     freeBody: 'The current Public Beta includes up to 3 Full Masters for Free accounts. Preview and A/B comparison help you evaluate the result before using your quota.',

@@ -51,6 +51,24 @@ describe('MasterFeedbackSurveyService', () => {
     history.replaceState({}, '', '/');
   });
 
+  it('routes each supported UI language to its dedicated survey', () => {
+    const service = TestBed.inject(MasterFeedbackSurveyService);
+
+    const expected = {
+      pt: 'https://docs.google.com/forms/d/e/1FAIpQLScGDnx4BurVwvQbGBUvWi0j4v1L60KKKDcIeU2GYSQDDeK0AQ/viewform',
+      en: 'https://docs.google.com/forms/d/e/1FAIpQLSejrsprLW_VVIgagnRSwoZK9GO6QQ8USJfMigckmBYRZ8qOZA/viewform',
+      fr: 'https://docs.google.com/forms/d/e/1FAIpQLSfXARQgscMZaiZwyC9b5T3gj56VpAsuIxdlP4LP0vEmv7F-PQ/viewform',
+      pl: 'https://docs.google.com/forms/d/e/1FAIpQLSdE-dHdhrLNqtahlALt1B0ioY_7C6JtLDyyDtxaoCYEQCA0bA/viewform'
+    } as const;
+
+    for (const code of ['pt', 'en', 'fr', 'pl'] as const) {
+      language.set(code);
+      expect(service.surveyUrl)
+        .withContext(code)
+        .toBe(expected[code]);
+    }
+  });
+
   it('tracks a privacy-safe survey click for an anonymous landing visitor', () => {
     const service = TestBed.inject(MasterFeedbackSurveyService);
 
