@@ -375,6 +375,28 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(generateMixS3).not.toHaveBeenCalled();
   });
 
+  it('renders slider controls for trim start, trim end, gain and pan', () => {
+    component.tracks = readyTracks(2);
+    fixture.detectChanges();
+
+    const sliders = fixture.nativeElement.querySelectorAll(
+      '.build-v2-inspector .parameter-slider'
+    );
+    const numericInputs = fixture.nativeElement.querySelectorAll(
+      '.build-v2-inspector .parameter-number'
+    );
+
+    expect(sliders.length).toBe(4);
+    expect(numericInputs.length).toBe(4);
+
+    expect(sliders[0].getAttribute('type')).toBe('range');
+    expect(sliders[1].getAttribute('type')).toBe('range');
+    expect(sliders[2].getAttribute('min')).toBe('-24');
+    expect(sliders[2].getAttribute('max')).toBe('6');
+    expect(sliders[3].getAttribute('min')).toBe('-1');
+    expect(sliders[3].getAttribute('max')).toBe('1');
+  });
+
   it('preserves selected-track identity across a reorder', () => {
     component.tracks = readyTracks(3);
     const selected = component.tracks[1];

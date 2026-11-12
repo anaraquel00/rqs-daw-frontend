@@ -328,11 +328,19 @@
           </div>
 
           <div class="build-v2-inspector-controls">
-            <label>
-              <span>{{ buildV2Copy('trimStart') }}</span>
-              <div class="inspector-input-unit">
+
+            <label class="parameter-control">
+              <div class="parameter-label-row">
+                <span>{{ buildV2Copy('trimStart') }}</span>
+                <span class="parameter-limit">
+                  0 → {{ formatDuration(selected.duration) }}
+                </span>
+              </div>
+
+              <div class="parameter-range-row">
                 <input
-                  type="number"
+                  class="parameter-slider"
+                  type="range"
                   min="0"
                   [max]="selected.duration"
                   step="0.1"
@@ -341,15 +349,36 @@
                     selectedIndex,
                     { trimStartSeconds: $event }
                   )">
-                <span>s</span>
+
+                <div class="parameter-number-wrap">
+                  <input
+                    class="parameter-number"
+                    type="number"
+                    min="0"
+                    [max]="selected.duration"
+                    step="0.1"
+                    [ngModel]="selected.v2.trimStartSeconds"
+                    (ngModelChange)="updateBuildV2Track(
+                      selectedIndex,
+                      { trimStartSeconds: $event }
+                    )">
+                  <span>s</span>
+                </div>
               </div>
             </label>
 
-            <label>
-              <span>{{ buildV2Copy('trimEnd') }}</span>
-              <div class="inspector-input-unit">
+            <label class="parameter-control">
+              <div class="parameter-label-row">
+                <span>{{ buildV2Copy('trimEnd') }}</span>
+                <span class="parameter-limit">
+                  0 → {{ formatDuration(selected.duration) }}
+                </span>
+              </div>
+
+              <div class="parameter-range-row">
                 <input
-                  type="number"
+                  class="parameter-slider"
+                  type="range"
                   min="0"
                   [max]="selected.duration"
                   step="0.1"
@@ -358,15 +387,34 @@
                     selectedIndex,
                     { trimEndSeconds: $event }
                   )">
-                <span>s</span>
+
+                <div class="parameter-number-wrap">
+                  <input
+                    class="parameter-number"
+                    type="number"
+                    min="0"
+                    [max]="selected.duration"
+                    step="0.1"
+                    [ngModel]="selected.v2.trimEndSeconds ?? selected.duration"
+                    (ngModelChange)="updateBuildV2Track(
+                      selectedIndex,
+                      { trimEndSeconds: $event }
+                    )">
+                  <span>s</span>
+                </div>
               </div>
             </label>
 
-            <label>
-              <span>{{ buildV2Copy('gain') }}</span>
-              <div class="inspector-input-unit">
+            <label class="parameter-control">
+              <div class="parameter-label-row">
+                <span>{{ buildV2Copy('gain') }}</span>
+                <span class="parameter-limit">−24 → +6 dB</span>
+              </div>
+
+              <div class="parameter-range-row">
                 <input
-                  type="number"
+                  class="parameter-slider"
+                  type="range"
                   min="-24"
                   max="6"
                   step="0.5"
@@ -375,15 +423,39 @@
                     selectedIndex,
                     { gainDb: $event }
                   )">
-                <span>dB</span>
+
+                <div class="parameter-number-wrap">
+                  <input
+                    class="parameter-number"
+                    type="number"
+                    min="-24"
+                    max="6"
+                    step="0.5"
+                    [ngModel]="selected.v2.gainDb"
+                    (ngModelChange)="updateBuildV2Track(
+                      selectedIndex,
+                      { gainDb: $event }
+                    )">
+                  <span>dB</span>
+                </div>
               </div>
             </label>
 
-            <label class="pan-control">
-              <span>{{ buildV2Copy('pan') }}</span>
-              <div class="pan-scale">
-                <span>L</span>
+            <label class="parameter-control pan-control">
+              <div class="parameter-label-row">
+                <span>{{ buildV2Copy('pan') }}</span>
+                <span class="parameter-limit">
+                  {{ selected.v2.pan === 0
+                    ? 'C'
+                    : (selected.v2.pan | number:'1.2-2') }}
+                </span>
+              </div>
+
+              <div class="parameter-range-row pan-range-row">
+                <span class="pan-edge">L</span>
+
                 <input
+                  class="parameter-slider"
                   type="range"
                   min="-1"
                   max="1"
@@ -393,13 +465,23 @@
                     selectedIndex,
                     { pan: $event }
                   )">
-                <span>R</span>
+
+                <span class="pan-edge">R</span>
+
+                <div class="parameter-number-wrap pan-number">
+                  <input
+                    class="parameter-number"
+                    type="number"
+                    min="-1"
+                    max="1"
+                    step="0.05"
+                    [ngModel]="selected.v2.pan"
+                    (ngModelChange)="updateBuildV2Track(
+                      selectedIndex,
+                      { pan: $event }
+                    )">
+                </div>
               </div>
-              <output>
-                {{ selected.v2.pan === 0
-                  ? 'C'
-                  : (selected.v2.pan | number:'1.2-2') }}
-              </output>
             </label>
           </div>
 

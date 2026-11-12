@@ -1321,3 +1321,507 @@ $text-muted: #8b949e;
       );
   }
 }
+
+
+/* ==========================================================
+   BUILD V2 — parameter sliders
+   ========================================================== */
+
+.parameter-control {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.parameter-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.parameter-label-row > span:first-child {
+  color: #8796a6;
+  font-size: 9px;
+}
+
+.parameter-limit {
+  overflow: hidden;
+  color: #647484;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.parameter-range-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 82px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.parameter-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 4px;
+  margin: 14px 0;
+  border-radius: 999px;
+  outline: none;
+  background: #39434b;
+  cursor: pointer;
+}
+
+.parameter-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #00dce8;
+  border-radius: 50%;
+  background: #00dce8;
+  box-shadow: 0 0 0 3px rgba(0, 220, 232, 0.09);
+  cursor: grab;
+}
+
+.parameter-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  box-shadow: 0 0 0 5px rgba(0, 220, 232, 0.16);
+}
+
+.parameter-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #00dce8;
+  border-radius: 50%;
+  background: #00dce8;
+  box-shadow: 0 0 0 3px rgba(0, 220, 232, 0.09);
+  cursor: grab;
+}
+
+.parameter-slider:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 220, 232, 0.18);
+}
+
+.parameter-number-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid #29343e;
+  border-radius: 6px;
+  background: #10161c;
+}
+
+.parameter-number {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 5px 8px 8px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #edf3f8;
+  font: inherit;
+  font-size: 10px;
+}
+
+.parameter-number-wrap > span {
+  padding-right: 7px;
+  color: #647484;
+  font-size: 8px;
+}
+
+.pan-range-row {
+  grid-template-columns: auto minmax(0, 1fr) auto 72px;
+  gap: 7px;
+}
+
+.pan-edge {
+  color: #667686;
+  font-size: 8px;
+}
+
+.pan-number {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+
+/* ==========================================================
+   BUILD V2 — tablet
+   ========================================================== */
+
+@media (max-width: 900px) {
+  .build-v2-editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .build-v2-inspector {
+    position: static;
+    order: -1;
+  }
+
+  .build-v2-inspector-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+    row-gap: 14px;
+  }
+
+  .build-v2-reset {
+    max-width: 320px;
+  }
+}
+
+
+/* ==========================================================
+   BUILD V2 — phone
+   ========================================================== */
+
+@media (max-width: 640px) {
+  .mix-panel-container {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 10px;
+    overflow-x: hidden;
+  }
+
+  .build-v2-workspace-head {
+    gap: 12px;
+    margin: 16px 0 10px;
+    padding: 13px;
+    border-radius: 9px;
+  }
+
+  .build-v2-workspace-copy {
+    width: 100%;
+
+    .build-v2-eyebrow {
+      font-size: 10px;
+    }
+
+    strong {
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    p {
+      font-size: 9px;
+      line-height: 1.45;
+    }
+  }
+
+  .build-v2-status {
+    width: 100%;
+  }
+
+  .build-v2-status-badge {
+    font-size: 9px;
+    white-space: normal;
+  }
+
+  .build-v2-status button {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .build-v2-editor-grid {
+    gap: 10px;
+  }
+
+  .build-v2-inspector {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px;
+    border-radius: 9px;
+  }
+
+  .inspector-heading strong {
+    max-width: 100%;
+    font-size: 11px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .inspector-metrics {
+    margin: 10px 0 14px;
+  }
+
+  .inspector-metrics > div {
+    padding: 9px;
+  }
+
+  .build-v2-inspector-controls {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+
+  .parameter-label-row > span:first-child {
+    font-size: 11px;
+  }
+
+  .parameter-limit {
+    font-size: 9px;
+  }
+
+  .parameter-range-row {
+    grid-template-columns: minmax(0, 1fr) 76px;
+    gap: 8px;
+  }
+
+  .parameter-slider {
+    height: 5px;
+    margin: 19px 0;
+  }
+
+  .parameter-slider::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+  }
+
+  .parameter-slider::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+  }
+
+  .parameter-number-wrap {
+    min-height: 42px;
+  }
+
+  .parameter-number {
+    min-height: 42px;
+    padding: 8px 4px 8px 7px;
+    font-size: 14px;
+  }
+
+  .parameter-number-wrap > span {
+    font-size: 10px;
+  }
+
+  .pan-range-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .pan-number {
+    grid-column: 1 / -1;
+    width: 76px;
+    justify-self: end;
+  }
+
+  .build-v2-timeline {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px;
+    border-radius: 9px;
+    overflow: hidden;
+  }
+
+  .build-v2-timeline-title {
+    margin-bottom: 6px;
+
+    h3 {
+      font-size: 11px !important;
+    }
+
+    > span {
+      font-size: 10px;
+    }
+  }
+
+  .timeline-ruler {
+    padding-inline: 3px;
+    font-size: 8px;
+  }
+
+  /* Five ruler labels become too crowded below ~640px. */
+  .timeline-ruler span:nth-child(2),
+  .timeline-ruler span:nth-child(4) {
+    visibility: hidden;
+  }
+
+  .track-list ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  .track-item {
+    box-sizing: border-box;
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 7px;
+  }
+
+  .track-main-row {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .track-info {
+    width: 100%;
+  }
+
+  /* Override the old mobile typography that made BUILD cards enormous. */
+  .mix-panel-container .track-info .track-name {
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .mix-panel-container .track-meta-tag,
+  .mix-panel-container .upload-state,
+  .mix-panel-container .waveform-truthful-state,
+  .mix-panel-container .transition-region-labels {
+    font-size: 10px;
+    line-height: 1.45;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px 42px 42px;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .controls button {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 6px;
+    font-size: 11px !important;
+    white-space: normal;
+  }
+
+  .track-waveform {
+    margin-top: 10px;
+  }
+
+  .transition-region-labels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+
+  .transition-region-labels .region-in,
+  .transition-region-labels .region-out {
+    position: static;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .transition-item {
+    box-sizing: border-box;
+    width: auto;
+    margin: 0 6px 8px;
+    padding: 9px;
+  }
+
+  .transition-summary {
+    display: flex;
+    align-items: stretch;
+    gap: 7px;
+  }
+
+  .mix-panel-container .transition-summary strong {
+    flex-basis: 100%;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .transition-summary > span {
+    font-size: 10px;
+  }
+
+  .transition-summary .btn-preview-transition,
+  .transition-summary > button {
+    flex: 1 1 130px;
+    min-height: 40px;
+    font-size: 11px !important;
+  }
+
+  .transition-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .transition-editor label {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px !important;
+  }
+
+  .transition-editor input,
+  .transition-editor select,
+  .transition-editor button {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 42px;
+    font-size: 16px;
+  }
+
+  .summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .btn-group-match {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .btn-group-match button {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .default-duration {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .default-duration input {
+    width: 100%;
+  }
+
+  .metadata-section {
+    margin-top: 16px;
+  }
+
+  .ignite-btn {
+    min-height: 48px;
+  }
+}
+
+
+/* ==========================================================
+   BUILD V2 — light theme slider controls
+   ========================================================== */
+
+:host-context(app-studio-shell[data-theme='light']) {
+  .parameter-slider {
+    background: var(--studio-border-strong);
+  }
+
+  .parameter-number-wrap {
+    border-color: var(--studio-border-strong);
+    background: #ffffff;
+  }
+
+  .parameter-number {
+    background: #ffffff;
+    color: var(--studio-text);
+  }
+
+  .parameter-number-wrap > span,
+  .parameter-limit,
+  .pan-edge {
+    color: var(--studio-text-secondary);
+  }
+}
