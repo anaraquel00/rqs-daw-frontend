@@ -172,21 +172,40 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     });
   }
 
-  it('renders a separate editable transition between each pair of track cards', () => {
+  it('renders fixed track controls and one shared timeline lane per track', () => {
     component.tracks = readyTracks(3);
     fixture.detectChanges();
-    const items = fixture.nativeElement.querySelectorAll('.track-list li');
-    expect(Array.from(items).map((item: any) => item.className)).toEqual([
-      'track-item selected',
-      'transition-item',
-      'track-item',
-      'transition-item',
-      'track-item',
-    ]);
-    expect(fixture.nativeElement.querySelector('.transition-editor')).toBeNull();
+
+    expect(
+      fixture.nativeElement.querySelectorAll('.daw-track-row').length
+    ).toBe(3);
+
+    expect(
+      fixture.nativeElement.querySelectorAll('.daw-track-controls').length
+    ).toBe(3);
+
+    expect(
+      fixture.nativeElement.querySelectorAll('.daw-track-lane').length
+    ).toBe(3);
+
+    expect(
+      fixture.nativeElement.querySelectorAll('.daw-transition-row').length
+    ).toBe(2);
+
+    expect(
+      fixture.nativeElement.querySelector('.daw-track-row.selected')
+    ).not.toBeNull();
+
+    expect(
+      fixture.nativeElement.querySelector('.transition-editor')
+    ).toBeNull();
+
     component.toggleTransition(component.transitions[0]);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelectorAll('.transition-editor').length).toBe(1);
+
+    expect(
+      fixture.nativeElement.querySelectorAll('.transition-editor').length
+    ).toBe(1);
   });
 
   for (const language of ['en', 'pt', 'pl', 'fr'] as const) {
@@ -361,40 +380,81 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(incoming?.end).toBe(13);
   });
 
-  it('renders one BUILD V2 inspector instead of duplicating controls on every track', () => {
+  it('renders fixed mixer controls plus one advanced editor', () => {
     component.tracks = readyTracks(2);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('.build-v2-inspector').length).toBe(1);
-    expect(fixture.nativeElement.querySelector('.build-v2-workspace-head')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('.build-v2-editor-grid')).not.toBeNull();
-    expect(fixture.nativeElement.querySelectorAll('.build-v2-track-controls').length).toBe(0);
+    expect(
+      fixture.nativeElement.querySelectorAll('.daw-track-controls').length
+    ).toBe(2);
+
+    expect(
+      fixture.nativeElement.querySelectorAll(
+        '.build-v2-advanced-panel'
+      ).length
+    ).toBe(1);
+
+    expect(
+      fixture.nativeElement.querySelector('.build-v2-daw')
+    ).not.toBeNull();
+
     expect(component.selectedTrack()?.id).toBe(component.tracks[0].id);
+
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
     expect(generateMixS3).not.toHaveBeenCalled();
   });
 
-  it('renders slider controls for trim start, trim end, gain and pan', () => {
+  it('places gain and pan on every track and keeps trim in the advanced editor', () => {
     component.tracks = readyTracks(2);
     fixture.detectChanges();
 
-    const sliders = fixture.nativeElement.querySelectorAll(
-      '.build-v2-inspector .parameter-slider'
-    );
-    const numericInputs = fixture.nativeElement.querySelectorAll(
-      '.build-v2-inspector .parameter-number'
+    const gainSliders = fixture.nativeElement.querySelectorAll(
+      '.track-control-gain'
     );
 
-    expect(sliders.length).toBe(4);
-    expect(numericInputs.length).toBe(4);
+    const panSliders = fixture.nativeElement.querySelectorAll(
+      '.track-control-pan'
+    );
 
-    expect(sliders[0].getAttribute('type')).toBe('range');
-    expect(sliders[1].getAttribute('type')).toBe('range');
-    expect(sliders[2].getAttribute('min')).toBe('-24');
-    expect(sliders[2].getAttribute('max')).toBe('6');
-    expect(sliders[3].getAttribute('min')).toBe('-1');
-    expect(sliders[3].getAttribute('max')).toBe('1');
+    const trimSliders = fixture.nativeElement.querySelectorAll(
+      '.build-v2-advanced-panel .parameter-slider'
+    );
+
+    const trimNumbers = fixture.nativeElement.querySelectorAll(
+      '.build-v2-advanced-panel .parameter-number'
+    );
+
+    expect(gainSliders.length).toBe(2);
+    expect(panSliders.length).toBe(2);
+    expect(trimSliders.length).toBe(2);
+    expect(trimNumbers.length).toBe(2);
+
+    expect(gainSliders[0].getAttribute('min')).toBe('-24');
+    expect(gainSliders[0].getAttribute('max')).toBe('6');
+    expect(panSliders[0].getAttribute('min')).toBe('-1');
+    expect(panSliders[0].getAttribute('max')).toBe('1');
+  });
+
+  it('maps sequential tracks onto one shared setlist timeline', () => {
+    component.tracks = readyTracks(3);
+
+    expect(component.calculateEstimatedOutputDuration()).toBe(164);
+
+    expect(component.trackTimelineStartSeconds(0)).toBe(0);
+    expect(component.trackTimelineStartSeconds(1)).toBe(52);
+    expect(component.trackTimelineStartSeconds(2)).toBe(104);
+
+    expect(component.trackTimelineLeftPercent(0)).toBe(0);
+    expect(component.trackTimelineLeftPercent(1)).toBeCloseTo(
+      100 * 52 / 164,
+      6,
+    );
+
+    expect(
+      component.trackTimelineLeftPercent(2)
+      + component.trackTimelineWidthPercent(2)
+    ).toBeCloseTo(100, 6);
   });
 
   it('preserves selected-track identity across a reorder', () => {

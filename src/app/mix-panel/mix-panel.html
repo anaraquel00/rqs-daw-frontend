@@ -174,69 +174,162 @@
       </div>
     </section>
 
-    <div class="build-v2-editor-grid">
-      <div class="track-list build-v2-timeline">
-        <div class="build-v2-timeline-title">
-          <h3>{{ buildV2Copy('timeline') }}</h3>
-          <span>{{ formatDuration(calculateEstimatedOutputDuration()) }}</span>
-        </div>
+    <div class="build-v2-daw">
 
-        <div class="timeline-ruler" aria-hidden="true">
+      <div class="daw-timeline-head">
+        <div class="daw-track-column-title">TRACKS</div>
+
+        <div class="daw-ruler" aria-hidden="true">
           <span>00:00</span>
           <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.25) }}</span>
           <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.5) }}</span>
           <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.75) }}</span>
           <span>{{ formatDuration(calculateEstimatedOutputDuration()) }}</span>
         </div>
+      </div>
 
-        <ul>
+      <div class="daw-track-stack">
         @for (track of tracks; track track.id; let i = $index) {
-          <li
-            class="track-item"
+          <section
+            class="daw-track-row"
             [class.selected]="selectedTrackId === track.id"
             (click)="selectTrack(track)">
-            <div class="track-main-row">
-              <div class="track-info">
-                <span class="track-name">[{{ i + 1 }}] {{ track.name }}</span>
-                <span class="track-meta-tag">
-                  {{ localCopy('metadataUnknown') }} · {{ formatDuration(track.duration) }}
-                </span>
+
+            <aside class="daw-track-controls">
+              <div class="daw-track-title">
+                <span class="daw-track-number">{{ i + 1 }}</span>
+
+                <strong [title]="track.name">
+                  {{ track.name }}
+                </strong>
+              </div>
+
+              <div class="daw-track-state">
+                <span>{{ formatDuration(track.duration) }}</span>
+
                 <span
-                  class="upload-state"
                   [class.uploading]="track.uploadState === 'uploading'"
                   [class.ready]="track.uploadState === 'ready'"
                   [class.upload-error]="track.uploadState === 'error'">
                   {{ uploadStatus(track) }}
                 </span>
-                @if (track.uploadState === 'error') {
-                  <button type="button" class="btn-preview-transition" (click)="retryTrackUpload(i)">
-                    {{ localCopy('retry') }}
-                  </button>
-                }
               </div>
-              <div class="controls">
+
+              <label class="daw-mixer-control">
+                <div>
+                  <span>GAIN</span>
+                  <output>{{ track.v2.gainDb | number:'1.1-1' }} dB</output>
+                </div>
+
+                <input
+                  class="track-control-slider track-control-gain"
+                  type="range"
+                  min="-24"
+                  max="6"
+                  step="0.5"
+                  [ngModel]="track.v2.gainDb"
+                  (ngModelChange)="updateBuildV2Track(
+                    i,
+                    { gainDb: $event }
+                  )">
+              </label>
+
+              <label class="daw-mixer-control">
+                <div>
+                  <span>PAN</span>
+                  <output>
+                    {{ track.v2.pan === 0
+                      ? 'C'
+                      : (track.v2.pan | number:'1.2-2') }}
+                  </output>
+                </div>
+
+                <div class="daw-pan-line">
+                  <span>L</span>
+
+                  <input
+                    class="track-control-slider track-control-pan"
+                    type="range"
+                    min="-1"
+                    max="1"
+                    step="0.05"
+                    [ngModel]="track.v2.pan"
+                    (ngModelChange)="updateBuildV2Track(
+                      i,
+                      { pan: $event }
+                    )">
+
+                  <span>R</span>
+                </div>
+              </label>
+
+              <div class="daw-track-actions">
                 <input
                   type="file"
                   #replacementInput
                   accept=".wav,.mp3,audio/wav,audio/mpeg"
                   (change)="replaceTrackFile(i, $event)"
                   hidden>
-                <button type="button" (click)="replacementInput.click()">{{ localCopy('replace') }}</button>
-                <button type="button" (click)="moveUp(i)" [disabled]="i === 0">🔼</button>
-                <button type="button" (click)="moveDown(i)" [disabled]="i === tracks.length - 1">🔽</button>
-                <button type="button" class="btn-danger" (click)="removeTrack(i)">❌</button>
-              </div>
-            </div>
 
-            <div class="track-waveform">
+                <button
+                  type="button"
+                  class="replace-action"
+                  (click)="replacementInput.click()">
+                  {{ localCopy('replace') }}
+                </button>
+
+                <button
+                  type="button"
+                  (click)="moveUp(i)"
+                  [disabled]="i === 0"
+                  aria-label="Move track up">
+                  ▲
+                </button>
+
+                <button
+                  type="button"
+                  (click)="moveDown(i)"
+                  [disabled]="i === tracks.length - 1"
+                  aria-label="Move track down">
+                  ▼
+                </button>
+
+                <button
+                  type="button"
+                  class="btn-danger"
+                  (click)="removeTrack(i)"
+                  aria-label="Remove track">
+                  ×
+                </button>
+              </div>
+
+              @if (track.uploadState === 'error') {
+                <button
+                  type="button"
+                  class="daw-retry-upload"
+                  (click)="retryTrackUpload(i)">
+                  {{ localCopy('retry') }}
+                </button>
+              }
+            </aside>
+
+            <div class="daw-track-lane">
+              <div class="daw-grid-lines" aria-hidden="true"></div>
+
               @let incoming = transitionRegion(i, 'in');
               @let outgoing = transitionRegion(i, 'out');
-              <div class="transition-waveform">
-              <app-preview-waveform
-                [file]="track.file"
-                [duration]="track.duration"
-                [compact]="true">
-              </app-preview-waveform>
+
+              <div
+                class="daw-track-clip"
+                [style.left.%]="trackTimelineLeftPercent(i)"
+                [style.width.%]="trackTimelineWidthPercent(i)">
+
+                <app-preview-waveform
+                  [file]="track.file"
+                  [duration]="track.duration"
+                  [compact]="true">
+                </app-preview-waveform>
+
                 <div class="trim-shades" aria-hidden="true">
                   @if (trimStartPercent(track) > 0) {
                     <div
@@ -256,91 +349,198 @@
 
                 <div class="transition-shades" aria-hidden="true">
                   @if (incoming) {
-                    <div class="transition-shade transition-in" [style.left.%]="incoming.left" [style.width.%]="incoming.width"></div>
+                    <div
+                      class="transition-shade transition-in"
+                      [style.left.%]="incoming.left"
+                      [style.width.%]="incoming.width">
+                    </div>
                   }
-                  @if (outgoing) {
-                    <div class="transition-shade transition-out" [style.left.%]="outgoing.left" [style.width.%]="outgoing.width"></div>
-                  }
-                </div>
-              </div>
-              <div class="transition-region-labels">
-                @if (incoming) { <span class="region-in" [title]="incoming.label">{{ incoming.label }}</span> }
-                @if (outgoing) { <span class="region-out" [title]="outgoing.label">{{ outgoing.label }}</span> }
-              </div>
-              <span class="waveform-truthful-state">{{ localCopy('waveformLocal') }}</span>
-            </div>
 
-          </li>
-          @if (transitions[i]; as transition) {
-            <li class="transition-item">
-              <div class="transition-summary">
-                <strong>{{ transitionCopy('transition') }} {{ i + 1 }} → {{ i + 2 }}</strong>
-                <span>{{ transition.duration }} {{ lang.tr().SECONDS }} · {{ curveLabel(transition.curve) }}</span>
-                <span class="transition-inheritance">{{ transitionCopy(transition.usesDefault ? 'inherited' : 'custom') }}</span>
-                <button type="button" class="btn-preview-transition" (click)="previewTransition(i)"
-                  [disabled]="!canPreviewTransition(i) || previewingIndex === i">{{ lang.tr().BTN_PREVIEW_TRANSITION }}</button>
-                <button type="button" (click)="toggleTransition(transition)"
-                  [attr.aria-expanded]="expandedTransition === transitionKey(transition)"
-                  [attr.aria-controls]="'transition-' + transition.fromTrackId">{{ transitionCopy('edit') }}</button>
-              </div>
-              @if (expandedTransition === transitionKey(transition)) {
-                <div class="transition-editor" [id]="'transition-' + transition.fromTrackId">
-                  <label>{{ transitionCopy('duration') }}
-                    <input type="number" min="0.5" max="15" step="0.5" [ngModel]="transition.duration"
-                      (ngModelChange)="editTransition(i, $event, transition.curve)">
-                  </label>
-                  <p>{{ transitionCopy('limits') }}</p>
-                  <label>{{ transitionCopy('curve') }}
-                    <select [ngModel]="transition.curve" (ngModelChange)="editTransition(i, transition.duration, $event)">
-                      <option value="equal-power">{{ lang.tr().CURVE_EQUAL_POWER }}</option>
-                      <option value="linear">{{ lang.tr().CURVE_LINEAR }}</option>
-                      <option value="fast-cut">{{ lang.tr().CURVE_FAST_CUT }}</option>
-                    </select>
-                  </label>
-                  <button type="button" (click)="resetTransition(i)">{{ transitionCopy('reset') }}</button>
+                  @if (outgoing) {
+                    <div
+                      class="transition-shade transition-out"
+                      [style.left.%]="outgoing.left"
+                      [style.width.%]="outgoing.width">
+                    </div>
+                  }
                 </div>
-              }
-            </li>
+              </div>
+
+              <div class="daw-lane-meta">
+                @if (incoming) {
+                  <span class="region-in">{{ incoming.label }}</span>
+                }
+
+                @if (outgoing) {
+                  <span class="region-out">{{ outgoing.label }}</span>
+                }
+              </div>
+            </div>
+          </section>
+
+          @if (transitions[i]; as transition) {
+            <section class="daw-transition-row">
+              <div class="daw-transition-label">
+                {{ transitionCopy('transition') }} {{ i + 1 }} → {{ i + 2 }}
+              </div>
+
+              <div class="daw-transition-content">
+                <div class="transition-summary">
+                  <span>
+                    {{ transition.duration }}
+                    {{ lang.tr().SECONDS }}
+                    ·
+                    {{ curveLabel(transition.curve) }}
+                  </span>
+
+                  <span class="transition-inheritance">
+                    {{ transitionCopy(
+                      transition.usesDefault ? 'inherited' : 'custom'
+                    ) }}
+                  </span>
+
+                  <button
+                    type="button"
+                    class="btn-preview-transition"
+                    (click)="previewTransition(i)"
+                    [disabled]="
+                      !canPreviewTransition(i)
+                      || previewingIndex === i
+                    ">
+                    {{ lang.tr().BTN_PREVIEW_TRANSITION }}
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="toggleTransition(transition)"
+                    [attr.aria-expanded]="
+                      expandedTransition === transitionKey(transition)
+                    "
+                    [attr.aria-controls]="
+                      'transition-' + transition.fromTrackId
+                    ">
+                    {{ transitionCopy('edit') }}
+                  </button>
+                </div>
+
+                @if (
+                  expandedTransition === transitionKey(transition)
+                ) {
+                  <div
+                    class="transition-editor"
+                    [id]="'transition-' + transition.fromTrackId">
+
+                    <label>
+                      {{ transitionCopy('duration') }}
+
+                      <input
+                        type="number"
+                        min="0.5"
+                        max="15"
+                        step="0.5"
+                        [ngModel]="transition.duration"
+                        (ngModelChange)="editTransition(
+                          i,
+                          $event,
+                          transition.curve
+                        )">
+                    </label>
+
+                    <p>{{ transitionCopy('limits') }}</p>
+
+                    <label>
+                      {{ transitionCopy('curve') }}
+
+                      <select
+                        [ngModel]="transition.curve"
+                        (ngModelChange)="editTransition(
+                          i,
+                          transition.duration,
+                          $event
+                        )">
+                        <option value="equal-power">
+                          {{ lang.tr().CURVE_EQUAL_POWER }}
+                        </option>
+
+                        <option value="linear">
+                          {{ lang.tr().CURVE_LINEAR }}
+                        </option>
+
+                        <option value="fast-cut">
+                          {{ lang.tr().CURVE_FAST_CUT }}
+                        </option>
+                      </select>
+                    </label>
+
+                    <button
+                      type="button"
+                      (click)="resetTransition(i)">
+                      {{ transitionCopy('reset') }}
+                    </button>
+                  </div>
+                }
+              </div>
+            </section>
           }
         }
-        </ul>
       </div>
+    </div>
 
-      <aside class="build-v2-inspector">
-        @if (selectedTrack(); as selected) {
-          @let selectedIndex = selectedTrackIndex();
-          @let selectedRange = effectiveRange(selected);
+    <aside class="build-v2-advanced-panel">
+      @if (selectedTrack(); as selected) {
+        @let selectedIndex = selectedTrackIndex();
+        @let selectedRange = effectiveRange(selected);
 
-          <div class="inspector-heading">
+        <div class="advanced-panel-heading">
+          <div>
             <span>{{ buildV2Copy('selectedTrack') }}</span>
-            <strong>[{{ selectedIndex + 1 }}] {{ selected.name }}</strong>
+
+            <strong>
+              [{{ selectedIndex + 1 }}] {{ selected.name }}
+            </strong>
           </div>
 
-          <div class="inspector-metrics">
-            <div>
-              <span>{{ buildV2Copy('source') }}</span>
+          <div class="advanced-track-metrics">
+            <span>
+              {{ buildV2Copy('source') }}
               <strong>{{ formatDuration(selected.duration) }}</strong>
-            </div>
-            <div>
-              <span>{{ buildV2Copy('effective') }}</span>
+            </span>
+
+            <span>
+              {{ buildV2Copy('effective') }}
               <strong>{{ formatDuration(selectedRange.duration) }}</strong>
-            </div>
+            </span>
           </div>
+        </div>
 
-          <div class="build-v2-inspector-controls">
+        <div class="advanced-trim-grid">
 
-            <label class="parameter-control">
-              <div class="parameter-label-row">
-                <span>{{ buildV2Copy('trimStart') }}</span>
-                <span class="parameter-limit">
-                  0 → {{ formatDuration(selected.duration) }}
-                </span>
-              </div>
+          <label class="parameter-control">
+            <div class="parameter-label-row">
+              <span>{{ buildV2Copy('trimStart') }}</span>
 
-              <div class="parameter-range-row">
+              <span class="parameter-limit">
+                0 → {{ formatDuration(selected.duration) }}
+              </span>
+            </div>
+
+            <div class="parameter-range-row">
+              <input
+                class="parameter-slider"
+                type="range"
+                min="0"
+                [max]="selected.duration"
+                step="0.1"
+                [ngModel]="selected.v2.trimStartSeconds"
+                (ngModelChange)="updateBuildV2Track(
+                  selectedIndex,
+                  { trimStartSeconds: $event }
+                )">
+
+              <div class="parameter-number-wrap">
                 <input
-                  class="parameter-slider"
-                  type="range"
+                  class="parameter-number"
+                  type="number"
                   min="0"
                   [max]="selected.duration"
                   step="0.1"
@@ -350,156 +550,68 @@
                     { trimStartSeconds: $event }
                   )">
 
-                <div class="parameter-number-wrap">
-                  <input
-                    class="parameter-number"
-                    type="number"
-                    min="0"
-                    [max]="selected.duration"
-                    step="0.1"
-                    [ngModel]="selected.v2.trimStartSeconds"
-                    (ngModelChange)="updateBuildV2Track(
-                      selectedIndex,
-                      { trimStartSeconds: $event }
-                    )">
-                  <span>s</span>
-                </div>
+                <span>s</span>
               </div>
-            </label>
+            </div>
+          </label>
 
-            <label class="parameter-control">
-              <div class="parameter-label-row">
-                <span>{{ buildV2Copy('trimEnd') }}</span>
-                <span class="parameter-limit">
-                  0 → {{ formatDuration(selected.duration) }}
-                </span>
-              </div>
+          <label class="parameter-control">
+            <div class="parameter-label-row">
+              <span>{{ buildV2Copy('trimEnd') }}</span>
 
-              <div class="parameter-range-row">
+              <span class="parameter-limit">
+                0 → {{ formatDuration(selected.duration) }}
+              </span>
+            </div>
+
+            <div class="parameter-range-row">
+              <input
+                class="parameter-slider"
+                type="range"
+                min="0"
+                [max]="selected.duration"
+                step="0.1"
+                [ngModel]="
+                  selected.v2.trimEndSeconds
+                  ?? selected.duration
+                "
+                (ngModelChange)="updateBuildV2Track(
+                  selectedIndex,
+                  { trimEndSeconds: $event }
+                )">
+
+              <div class="parameter-number-wrap">
                 <input
-                  class="parameter-slider"
-                  type="range"
+                  class="parameter-number"
+                  type="number"
                   min="0"
                   [max]="selected.duration"
                   step="0.1"
-                  [ngModel]="selected.v2.trimEndSeconds ?? selected.duration"
+                  [ngModel]="
+                    selected.v2.trimEndSeconds
+                    ?? selected.duration
+                  "
                   (ngModelChange)="updateBuildV2Track(
                     selectedIndex,
                     { trimEndSeconds: $event }
                   )">
 
-                <div class="parameter-number-wrap">
-                  <input
-                    class="parameter-number"
-                    type="number"
-                    min="0"
-                    [max]="selected.duration"
-                    step="0.1"
-                    [ngModel]="selected.v2.trimEndSeconds ?? selected.duration"
-                    (ngModelChange)="updateBuildV2Track(
-                      selectedIndex,
-                      { trimEndSeconds: $event }
-                    )">
-                  <span>s</span>
-                </div>
+                <span>s</span>
               </div>
-            </label>
+            </div>
+          </label>
+        </div>
 
-            <label class="parameter-control">
-              <div class="parameter-label-row">
-                <span>{{ buildV2Copy('gain') }}</span>
-                <span class="parameter-limit">−24 → +6 dB</span>
-              </div>
-
-              <div class="parameter-range-row">
-                <input
-                  class="parameter-slider"
-                  type="range"
-                  min="-24"
-                  max="6"
-                  step="0.5"
-                  [ngModel]="selected.v2.gainDb"
-                  (ngModelChange)="updateBuildV2Track(
-                    selectedIndex,
-                    { gainDb: $event }
-                  )">
-
-                <div class="parameter-number-wrap">
-                  <input
-                    class="parameter-number"
-                    type="number"
-                    min="-24"
-                    max="6"
-                    step="0.5"
-                    [ngModel]="selected.v2.gainDb"
-                    (ngModelChange)="updateBuildV2Track(
-                      selectedIndex,
-                      { gainDb: $event }
-                    )">
-                  <span>dB</span>
-                </div>
-              </div>
-            </label>
-
-            <label class="parameter-control pan-control">
-              <div class="parameter-label-row">
-                <span>{{ buildV2Copy('pan') }}</span>
-                <span class="parameter-limit">
-                  {{ selected.v2.pan === 0
-                    ? 'C'
-                    : (selected.v2.pan | number:'1.2-2') }}
-                </span>
-              </div>
-
-              <div class="parameter-range-row pan-range-row">
-                <span class="pan-edge">L</span>
-
-                <input
-                  class="parameter-slider"
-                  type="range"
-                  min="-1"
-                  max="1"
-                  step="0.05"
-                  [ngModel]="selected.v2.pan"
-                  (ngModelChange)="updateBuildV2Track(
-                    selectedIndex,
-                    { pan: $event }
-                  )">
-
-                <span class="pan-edge">R</span>
-
-                <div class="parameter-number-wrap pan-number">
-                  <input
-                    class="parameter-number"
-                    type="number"
-                    min="-1"
-                    max="1"
-                    step="0.05"
-                    [ngModel]="selected.v2.pan"
-                    (ngModelChange)="updateBuildV2Track(
-                      selectedIndex,
-                      { pan: $event }
-                    )">
-                </div>
-              </div>
-            </label>
-          </div>
-
-          @if (trackHasBuildV2Adjustments(selected)) {
-            <button
-              type="button"
-              class="build-v2-reset"
-              (click)="resetBuildV2Track(selectedIndex)">
-              {{ buildV2Copy('reset') }}
-            </button>
-          }
-        } @else {
-          <div class="inspector-empty">
-            {{ buildV2Copy('selectedTrack') }}
-          </div>
+        @if (trackHasBuildV2Adjustments(selected)) {
+          <button
+            type="button"
+            class="build-v2-reset"
+            (click)="resetBuildV2Track(selectedIndex)">
+            {{ buildV2Copy('reset') }}
+          </button>
         }
-      </aside>
-    </div>
+      }
+    </aside>
 
     <div class="metadata-section">
       <label for="exportName">{{ lang.tr().DEPLOY_LABEL }}</label>

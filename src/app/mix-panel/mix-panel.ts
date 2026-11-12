@@ -337,6 +337,57 @@ export class MixPanelComponent implements OnDestroy {
     return 100 * this.effectiveRange(track).end / track.duration;
   }
 
+  trackTimelineStartSeconds(index: number): number {
+    if (index <= 0) return 0;
+
+    let start = 0;
+
+    for (let i = 0; i < index; i += 1) {
+      const current = this.tracks[i];
+      const next = this.tracks[i + 1];
+
+      if (!current) break;
+
+      start += Math.max(0, current.duration);
+
+      const transition = this.transitions[i];
+
+      if (transition && next) {
+        const safeOverlap = Math.min(
+          Math.max(0, transition.duration),
+          Math.max(0, current.duration),
+          Math.max(0, next.duration),
+        );
+
+        start -= safeOverlap;
+      }
+    }
+
+    return Math.max(0, start);
+  }
+
+  trackTimelineLeftPercent(index: number): number {
+    const total = this.calculateEstimatedOutputDuration();
+    if (total <= 0) return 0;
+
+    return Math.min(
+      100,
+      100 * this.trackTimelineStartSeconds(index) / total,
+    );
+  }
+
+  trackTimelineWidthPercent(index: number): number {
+    const track = this.tracks[index];
+    const total = this.calculateEstimatedOutputDuration();
+
+    if (!track || total <= 0 || track.duration <= 0) return 0;
+
+    const left = this.trackTimelineLeftPercent(index);
+    const width = 100 * track.duration / total;
+
+    return Math.max(0, Math.min(width, 100 - left));
+  }
+
   transitionKey(t: Pick<SetlistTransition, 'fromTrackId' | 'toTrackId'>): string {
     return `${t.fromTrackId}:${t.toTrackId}`;
   }

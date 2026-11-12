@@ -164,18 +164,6 @@ $text-muted: #8b949e;
   &.upload-error { color: #ff0055; }
 }
 
-.track-waveform {
-  display: grid;
-  gap: 7px;
-  margin-top: 14px;
-}
-
-.waveform-truthful-state {
-  color: #9ba6b2;
-  font-size: 11px;
-  line-height: 1.45;
-}
-
 .vignette-console {
   margin-bottom: 20px;
   padding: 12px;
@@ -343,22 +331,6 @@ $text-muted: #8b949e;
   }
 }
 
-.track-list h3 {
-  font-size: 12px;
-  color: #aeb8c4;
-  margin-bottom: 18px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.track-list ul { padding: 0; margin: 0; }
-.transition-waveform {
-  position: relative;
-  min-width: 0;
-  overflow: hidden;
-  border-radius: 6px;
-  app-preview-waveform { width: calc(100% - 2px); }
-}
 .transition-shades {
   position: absolute;
   inset: 1px;
@@ -380,31 +352,6 @@ $text-muted: #8b949e;
   border-color: #ae84e8;
   background: repeating-linear-gradient(135deg, rgba(174, 132, 232, .25) 0 2px, rgba(174, 132, 232, .10) 2px 6px);
 }
-.transition-region-labels {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 4px 12px;
-  font-size: 11px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-  span { min-width: 0; max-width: 100%; }
-  .region-in { color: #8bcdd2; }
-  .region-out { color: #c5afe3; }
-}
-.transition-item {
-  list-style: none;
-  min-width: 0;
-  margin: -2px 20px 10px;
-  padding: 8px 10px;
-  border-left: 2px solid rgba(0, 220, 232, 0.5);
-  background: rgba(0, 220, 232, 0.035);
-  border-radius: 5px;
-  color: #b8c5d2;
-  font-size: 12px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
 .transition-summary {
   display: flex;
   align-items: center;
@@ -421,7 +368,7 @@ $text-muted: #8b949e;
   margin-top: 12px;
   p { flex-basis: 100%; margin: 0; }
 }
-.transition-item button, .transition-editor select, .transition-editor input,
+.transition-editor select, .transition-editor input,
 .default-duration input {
   box-sizing: border-box;
   max-width: 100%;
@@ -439,36 +386,6 @@ $text-muted: #8b949e;
   .transition-summary strong, .transition-summary > span:first-of-type { flex-basis: 100%; }
   .transition-editor { align-items: stretch; }
   .transition-editor label { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-}
-
-.track-item {
-  list-style: none;
-  margin-bottom: 10px;
-  padding: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 8px;
-  background: #0a0e12;
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    box-shadow 120ms ease;
-
-  &:hover {
-    border-color: rgba(0, 240, 255, 0.2);
-  }
-
-  &.selected {
-    border-color: rgba(0, 225, 238, 0.5);
-    background:
-      linear-gradient(
-        135deg,
-        rgba(0, 240, 255, 0.045),
-        rgba(153, 102, 255, 0.02)
-      ),
-      #0a0e12;
-    box-shadow: inset 3px 0 0 #00dce8;
-  }
 }
 
 .build-v2-workspace-head {
@@ -555,199 +472,6 @@ $text-muted: #8b949e;
   box-shadow: 0 0 10px rgba(87, 213, 140, 0.55);
 }
 
-.build-v2-editor-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  align-items: start;
-  gap: 16px;
-}
-
-.build-v2-timeline,
-.build-v2-inspector {
-  min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  background: #070a0d;
-}
-
-.build-v2-timeline {
-  padding: 14px;
-}
-
-.build-v2-timeline-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 10px;
-
-  h3 {
-    margin: 0;
-    color: #dce5ed;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-  }
-
-  > span {
-    color: #00e7f2;
-    font-size: 11px;
-    font-weight: 700;
-  }
-}
-
-.timeline-ruler {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin: 0 2px 12px;
-  padding: 7px 8px 5px;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.16);
-  color: #647385;
-  font-size: 9px;
-
-  span {
-    position: relative;
-
-    &::after {
-      position: absolute;
-      bottom: -7px;
-      left: 50%;
-      width: 1px;
-      height: 5px;
-      background: rgba(0, 240, 255, 0.2);
-      content: '';
-    }
-  }
-}
-
-.build-v2-inspector {
-  position: sticky;
-  top: 16px;
-  padding: 16px;
-}
-
-.inspector-heading {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-
-  span {
-    color: #00e7f2;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.13em;
-  }
-
-  strong {
-    overflow: hidden;
-    color: #f4f7fa;
-    font-size: 11px;
-    line-height: 1.5;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.inspector-metrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 14px 0;
-
-  > div {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 7px;
-    background: #0c1116;
-  }
-
-  span,
-  strong {
-    display: block;
-  }
-
-  span {
-    margin-bottom: 5px;
-    color: #778798;
-    font-size: 9px;
-  }
-
-  strong {
-    color: #e8eef3;
-    font-size: 11px;
-  }
-}
-
-.build-v2-inspector-controls {
-  display: grid;
-  gap: 12px;
-
-  label {
-    display: grid;
-    gap: 6px;
-    color: #8796a6;
-    font-size: 9px;
-  }
-}
-
-.inspector-input-unit {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  overflow: hidden;
-  border: 1px solid #26313b;
-  border-radius: 6px;
-  background: #10161c;
-
-  input {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    padding: 9px 10px;
-    border: 0;
-    outline: none;
-    background: transparent;
-    color: #edf3f8;
-    font: inherit;
-  }
-
-  span {
-    padding: 0 9px;
-    color: #687888;
-    font-size: 9px;
-  }
-}
-
-.pan-control {
-  padding-top: 2px;
-}
-
-.pan-scale {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 7px;
-
-  > span {
-    color: #657686;
-    font-size: 8px;
-  }
-
-  input[type='range'] {
-    width: 100%;
-    min-width: 0;
-    accent-color: #00dce8;
-  }
-}
-
-.pan-control output {
-  color: #dbe7ef;
-  font-size: 10px;
-  text-align: center;
-}
-
 .build-v2-reset {
   width: 100%;
   margin-top: 14px;
@@ -759,13 +483,6 @@ $text-muted: #8b949e;
   font: inherit;
   font-size: 9px;
   cursor: pointer;
-}
-
-.inspector-empty {
-  padding: 28px 8px;
-  color: #667686;
-  font-size: 10px;
-  text-align: center;
 }
 
 .trim-shades {
@@ -798,101 +515,6 @@ $text-muted: #8b949e;
   border-left: 1px solid rgba(255, 195, 67, 0.7);
 }
 
-.track-main-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.track-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-
-  .track-name {
-    font-size: 13px;
-    line-height: 1.4;
-    color: #fff;
-    font-weight: bold;
-  }
-
-  .track-meta-tag {
-    font-size: 11px;
-    line-height: 1.45;
-    color: #9ba6b2;
-  }
-}
-
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-
-  button {
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-
-    &:disabled {
-      opacity: 0.2;
-      cursor: not-allowed;
-    }
-  }
-}
-
-.custom-crossfade-bridge {
-  position: relative;
-  padding-top: 18px;
-  margin-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.slider-container-mini {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 11px;
-}
-
-.cyber-slider-mini {
-  -webkit-appearance: none;
-  flex: 1;
-  height: 3px;
-  background: #111;
-  outline: none;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    background: #ff0055;
-    box-shadow: 0 0 6px #ff0055;
-    border-radius: 50%;
-    cursor: pointer;
-  }
-}
-
-.cyber-number-input-mini {
-  background: #000;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  width: 45px;
-  text-align: center;
-  font-size: 12px;
-  padding: 5px 4px;
-  border-radius: 4px;
-}
-
-.sec-label {
-  font-size: 11px;
-  color: #9ba6b2;
-}
-
 .metadata-section {
   display: flex;
   flex-direction: column;
@@ -920,56 +542,6 @@ $text-muted: #8b949e;
   }
 }
 
-@media (max-width: 640px) {
-  .mix-panel-container {
-    width: 100%;
-    padding: 16px;
-  }
-
-  .track-item {
-    padding: 15px;
-  }
-
-  .track-main-row,
-  .bridge-actions,
-  .build-v2-workspace-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .controls {
-    width: 100%;
-  }
-
-  .controls button,
-  .btn-preview-transition {
-    min-height: 36px;
-  }
-
-  .build-v2-editor-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .build-v2-inspector {
-    position: static;
-  }
-
-  .build-v2-workspace-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .build-v2-status {
-    align-items: flex-start;
-  }
-
-  .slider-container-mini {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 54px auto;
-    width: 100%;
-  }
-}
-
 /* Tone-on-tone LIGHT styling. All original DARK rules stay unchanged above. */
 :host-context(app-studio-shell[data-theme='light']) {
   .mix-panel-container {
@@ -983,9 +555,7 @@ $text-muted: #8b949e;
   .dropzone,
   .summary-card,
   .vignette-console,
-  .build-v2-workspace-head,
-  .build-v2-timeline,
-  .build-v2-inspector {
+  .build-v2-workspace-head {
     border-color: var(--studio-border-strong);
     background: var(--studio-display);
   }
@@ -1005,15 +575,9 @@ $text-muted: #8b949e;
     .highlight-cyan { color: var(--studio-cyan-strong); text-shadow: none; }
   }
   .console-label,
-  .waveform-truthful-state,
   .build-v2-workspace-copy p,
-  .build-v2-inspector-controls label,
-  .inspector-metrics span,
   .vignette-console p,
   .vignette-console span,
-  .track-list h3,
-  .track-info .track-meta-tag,
-  .sec-label,
   .metadata-section label,
   .transition-inheritance { color: var(--studio-text-secondary); }
   .btn-group-match button {
@@ -1026,37 +590,15 @@ $text-muted: #8b949e;
   .upload-state.uploading { color: var(--studio-warning-text); }
   .upload-state.ready { color: var(--studio-cyan-strong); }
   .upload-state.upload-error { color: var(--studio-error-text); }
-  .track-item {
-    border-color: var(--studio-border);
-    background: var(--studio-display);
-  }
-  .track-info .track-name,
   .transition-summary strong { color: var(--studio-text); }
-  .controls button {
-    border-color: var(--studio-border-strong);
-    background: var(--studio-card);
-    color: var(--studio-text);
-    &:disabled { opacity: .62; color: var(--studio-disabled); }
-  }
-  .custom-crossfade-bridge { border-color: var(--studio-border); }
-  .transition-item {
-    border-left-color: var(--studio-cyan);
-    background: var(--studio-cyan-soft);
-    color: var(--studio-text-secondary);
-  }
-  .transition-region-labels .region-in { color: var(--studio-cyan-strong); }
-  .transition-region-labels .region-out { color: var(--studio-violet); }
-  .transition-item button,
   .transition-editor select,
   .transition-editor input,
   .default-duration input,
-  .metadata-section .cyber-input,
-  .cyber-number-input-mini {
+  .metadata-section .cyber-input {
     border-color: var(--studio-border-strong);
     background: var(--studio-card);
     color: var(--studio-text);
   }
-  .cyber-slider-mini { background: var(--studio-border-strong); }
   .ignite-btn:disabled {
     border-color: var(--studio-border-strong) !important;
     background: var(--studio-panel) !important;
@@ -1165,9 +707,7 @@ $text-muted: #8b949e;
 }
 
 
-/* BUILD V2 — native light-theme treatment.
-   Keep waveforms as technical dark surfaces, while controls and panels
-   follow the light application shell. */
+/* BUILD V2 — light shell retained after Audacity refactor. */
 :host-context(app-studio-shell[data-theme='light']) {
   .build-v2-workspace-head {
     border-color: var(--studio-border-strong);
@@ -1202,106 +742,6 @@ $text-muted: #8b949e;
 
   .build-v2-status-badge {
     color: #16794c;
-  }
-
-  .build-v2-timeline,
-  .build-v2-inspector {
-    border-color: var(--studio-border-strong);
-    background: var(--studio-card);
-  }
-
-  .build-v2-timeline-title {
-    h3 {
-      color: var(--studio-text);
-    }
-
-    > span {
-      color: var(--studio-cyan-strong);
-    }
-  }
-
-  .timeline-ruler {
-    border-color: var(--studio-border);
-    color: var(--studio-text-secondary);
-  }
-
-  .track-item {
-    border-color: var(--studio-border);
-    background: var(--studio-display);
-
-    &:hover {
-      border-color: var(--studio-border-strong);
-    }
-
-    &.selected {
-      border-color: var(--studio-cyan);
-      background:
-        linear-gradient(
-          135deg,
-          var(--studio-cyan-soft),
-          rgba(116, 78, 190, 0.025)
-        ),
-        var(--studio-card);
-      box-shadow: inset 3px 0 0 var(--studio-cyan-strong);
-    }
-  }
-
-  .transition-item {
-    border-left-color: var(--studio-cyan);
-    background: var(--studio-cyan-soft);
-    color: var(--studio-text-secondary);
-
-    strong {
-      color: var(--studio-text);
-    }
-  }
-
-  .build-v2-inspector .inspector-heading {
-    border-color: var(--studio-border);
-
-    span {
-      color: var(--studio-cyan-strong);
-    }
-
-    strong {
-      color: var(--studio-text);
-    }
-  }
-
-  .inspector-metrics > div {
-    border-color: var(--studio-border);
-    background: var(--studio-display);
-
-    span {
-      color: var(--studio-text-secondary);
-    }
-
-    strong {
-      color: var(--studio-text);
-    }
-  }
-
-  .inspector-input-unit {
-    border-color: var(--studio-border-strong);
-    background: #ffffff;
-
-    input {
-      background: #ffffff;
-      color: var(--studio-text);
-    }
-
-    span {
-      color: var(--studio-text-secondary);
-    }
-  }
-
-  .build-v2-inspector-controls label {
-    color: var(--studio-text-secondary);
-  }
-
-  .pan-scale > span,
-  .pan-control output {
-    color: var(--studio-text-secondary);
   }
 
   .build-v2-reset {
@@ -1452,33 +892,719 @@ $text-muted: #8b949e;
 
 
 /* ==========================================================
-   BUILD V2 — tablet
+   BUILD V2 — light theme slider controls
    ========================================================== */
 
-@media (max-width: 900px) {
-  .build-v2-editor-grid {
-    grid-template-columns: minmax(0, 1fr);
+:host-context(app-studio-shell[data-theme='light']) {
+  .parameter-slider {
+    background: var(--studio-border-strong);
   }
 
-  .build-v2-inspector {
-    position: static;
-    order: -1;
+  .parameter-number-wrap {
+    border-color: var(--studio-border-strong);
+    background: #ffffff;
   }
 
-  .build-v2-inspector-controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 18px;
-    row-gap: 14px;
+  .parameter-number {
+    background: #ffffff;
+    color: var(--studio-text);
   }
 
-  .build-v2-reset {
-    max-width: 320px;
+  .parameter-number-wrap > span,
+  .parameter-limit,
+  .pan-edge {
+    color: var(--studio-text-secondary);
   }
 }
 
 
 /* ==========================================================
-   BUILD V2 — phone
+   BUILD V2 — Audacity-like shared timeline
+   ========================================================== */
+
+.build-v2-daw {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: #080b0f;
+}
+
+.daw-timeline-head {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  min-width: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.daw-track-column-title {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  color: #00e7f2;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.daw-ruler {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 10px 12px 7px;
+  color: #6e7d8c;
+  font-size: 8px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(25% - 1px),
+      rgba(0, 220, 232, 0.09) 25%
+    );
+}
+
+.daw-track-stack {
+  min-width: 0;
+}
+
+.daw-track-row {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  min-width: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.065);
+  background: #090d11;
+}
+
+.daw-track-row.selected {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 220, 232, 0.045),
+      transparent 42%
+    ),
+    #090d11;
+}
+
+.daw-track-controls {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 11px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0c1116;
+}
+
+.daw-track-row.selected .daw-track-controls {
+  box-shadow: inset 3px 0 0 #00dce8;
+}
+
+.daw-track-title {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+}
+
+.daw-track-number {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border: 1px solid rgba(0, 220, 232, 0.25);
+  border-radius: 5px;
+  color: #00dce8;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.daw-track-title strong {
+  overflow: hidden;
+  color: #f1f6fa;
+  font-size: 9px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daw-track-state {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 7px 0 10px;
+  color: #718090;
+  font-size: 8px;
+}
+
+.daw-mixer-control {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.daw-mixer-control > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #718090;
+  font-size: 8px;
+}
+
+.daw-mixer-control output {
+  color: #d9e3eb;
+}
+
+.track-control-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 3px;
+  margin: 8px 0;
+  border-radius: 999px;
+  outline: 0;
+  background: #3a454f;
+  cursor: pointer;
+}
+
+.track-control-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 0;
+  border-radius: 50%;
+  background: #00dce8;
+  box-shadow: 0 0 0 3px rgba(0, 220, 232, 0.1);
+}
+
+.track-control-slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border: 0;
+  border-radius: 50%;
+  background: #00dce8;
+}
+
+.daw-pan-line {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px !important;
+}
+
+.daw-pan-line > span {
+  color: #647484;
+  font-size: 7px;
+}
+
+.daw-track-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, 30px);
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.daw-track-actions button {
+  min-width: 0;
+  min-height: 29px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: transparent;
+  color: #d9e3eb;
+  font: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.daw-track-actions button:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.daw-retry-upload {
+  width: 100%;
+  margin-top: 7px;
+  min-height: 30px;
+  border: 1px solid rgba(255, 0, 85, 0.55);
+  border-radius: 4px;
+  background: transparent;
+  color: #ff4a7f;
+  font: inherit;
+  font-size: 8px;
+}
+
+.daw-track-lane {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 126px;
+  overflow: hidden;
+  background: #111722;
+}
+
+.daw-grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(6.25% - 1px),
+      rgba(154, 176, 193, 0.055) 6.25%
+    );
+}
+
+.daw-track-clip {
+  position: absolute;
+  top: 17px;
+  height: 68px;
+  min-width: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 220, 232, 0.32);
+  border-radius: 5px;
+  background: #18212a;
+  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.22);
+}
+
+.daw-track-row.selected .daw-track-clip {
+  border-color: rgba(0, 220, 232, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(0, 220, 232, 0.12),
+    0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.daw-track-clip app-preview-waveform {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.daw-track-clip .transition-waveform,
+.daw-track-clip app-preview-waveform {
+  min-width: 0;
+}
+
+.daw-lane-meta {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  left: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  font-size: 8px;
+}
+
+.daw-lane-meta span {
+  overflow: hidden;
+  max-width: 48%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daw-lane-meta .region-in {
+  color: #78dce3;
+}
+
+.daw-lane-meta .region-out {
+  margin-left: auto;
+  color: #c5afe3;
+  text-align: right;
+}
+
+.daw-transition-row {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  min-width: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  background: #080c10;
+}
+
+.daw-transition-label {
+  padding: 9px 11px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 2px solid #00dce8;
+  color: #00dce8;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.daw-transition-content {
+  min-width: 0;
+  padding: 7px 10px;
+  background: rgba(0, 220, 232, 0.025);
+}
+
+.daw-transition-content .transition-summary {
+  gap: 6px 10px;
+  font-size: 9px;
+}
+
+.daw-transition-content .transition-editor {
+  margin-top: 8px;
+}
+
+.build-v2-advanced-panel {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: #090d11;
+}
+
+.advanced-panel-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.advanced-panel-heading > div:first-child {
+  min-width: 0;
+}
+
+.advanced-panel-heading > div:first-child > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #00dce8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.advanced-panel-heading > div:first-child > strong {
+  display: block;
+  overflow: hidden;
+  color: #f0f5f8;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.advanced-track-metrics {
+  display: flex;
+  gap: 8px;
+}
+
+.advanced-track-metrics > span {
+  min-width: 76px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 5px;
+  color: #718090;
+  font-size: 8px;
+}
+
+.advanced-track-metrics strong {
+  display: block;
+  margin-top: 3px;
+  color: #eef4f7;
+  font-size: 10px;
+}
+
+.advanced-trim-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 14px;
+}
+
+
+/* ==========================================================
+   BUILD V2 — Audacity layout tablet/mobile
+   ========================================================== */
+
+@media (max-width: 760px) {
+  .daw-timeline-head {
+    display: block;
+  }
+
+  .daw-track-column-title {
+    display: none;
+  }
+
+  .daw-ruler {
+    padding: 8px 9px 6px;
+  }
+
+  .daw-ruler span:nth-child(2),
+  .daw-ruler span:nth-child(4) {
+    display: none;
+  }
+
+  .daw-track-row,
+  .daw-transition-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .daw-track-controls {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .daw-track-title strong {
+    font-size: 11px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .daw-track-state {
+    font-size: 9px;
+  }
+
+  .daw-mixer-control {
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .daw-mixer-control > div:first-child {
+    display: grid;
+    gap: 2px;
+  }
+
+  .daw-pan-line {
+    width: 100%;
+  }
+
+  .track-control-slider {
+    height: 5px;
+    margin: 12px 0;
+  }
+
+  .track-control-slider::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .track-control-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .daw-track-actions {
+    grid-template-columns: minmax(0, 1fr) repeat(3, 44px);
+  }
+
+  .daw-track-actions button {
+    min-height: 42px;
+    font-size: 11px;
+  }
+
+  .daw-track-lane {
+    min-height: 112px;
+  }
+
+  /* Mobile shows each waveform at useful touch width.
+     Desktop retains the true shared Setlist positioning. */
+  .daw-track-clip {
+    left: 8px !important;
+    width: calc(100% - 16px) !important;
+    top: 12px;
+    height: 64px;
+  }
+
+  .daw-lane-meta {
+    font-size: 9px;
+  }
+
+  .daw-transition-label {
+    border-right: 0;
+    padding: 8px 10px;
+  }
+
+  .daw-transition-content {
+    padding: 8px 10px 10px;
+  }
+
+  .daw-transition-content .transition-summary {
+    align-items: stretch;
+  }
+
+  .daw-transition-content .transition-summary > span {
+    flex-basis: 100%;
+  }
+
+  .daw-transition-content .transition-summary button {
+    flex: 1 1 130px;
+    min-height: 40px;
+  }
+
+  .build-v2-advanced-panel {
+    padding: 11px;
+  }
+
+  .advanced-panel-heading {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .advanced-panel-heading > div:first-child > strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .advanced-track-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .advanced-track-metrics > span {
+    min-width: 0;
+  }
+
+  .advanced-trim-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+}
+
+@media (max-width: 420px) {
+  .daw-track-controls {
+    padding: 9px;
+  }
+
+  .daw-mixer-control {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .daw-track-actions {
+    grid-template-columns: minmax(0, 1fr) repeat(3, 40px);
+  }
+
+  .daw-lane-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .daw-lane-meta span {
+    max-width: 100%;
+  }
+
+  .daw-lane-meta .region-out {
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+
+/* ==========================================================
+   BUILD V2 — Audacity layout light theme
+   ========================================================== */
+
+:host-context(app-studio-shell[data-theme='light']) {
+  .build-v2-daw,
+  .build-v2-advanced-panel {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-card);
+  }
+
+  .daw-timeline-head,
+  .daw-track-row,
+  .daw-transition-row {
+    border-color: var(--studio-border);
+  }
+
+  .daw-track-column-title,
+  .daw-track-controls,
+  .daw-transition-label {
+    border-color: var(--studio-border);
+  }
+
+  .daw-track-column-title,
+  .daw-transition-label {
+    color: var(--studio-cyan-strong);
+  }
+
+  .daw-ruler {
+    color: var(--studio-text-secondary);
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent calc(25% - 1px),
+        rgba(0, 128, 145, 0.08) 25%
+      );
+  }
+
+  .daw-track-row {
+    background: var(--studio-card);
+  }
+
+  .daw-track-row.selected {
+    background:
+      linear-gradient(
+        90deg,
+        var(--studio-cyan-soft),
+        transparent 45%
+      ),
+      var(--studio-card);
+  }
+
+  .daw-track-controls {
+    background: var(--studio-display);
+  }
+
+  .daw-track-title strong,
+  .daw-mixer-control output,
+  .advanced-panel-heading > div:first-child > strong,
+  .advanced-track-metrics strong {
+    color: var(--studio-text);
+  }
+
+  .daw-track-state,
+  .daw-mixer-control > div:first-child,
+  .advanced-track-metrics > span {
+    color: var(--studio-text-secondary);
+  }
+
+  .track-control-slider {
+    background: var(--studio-border-strong);
+  }
+
+  .daw-track-actions button {
+    border-color: var(--studio-border-strong);
+    background: var(--studio-card);
+    color: var(--studio-text);
+  }
+
+  /* Waveform area remains technical/dark in light mode. */
+  .daw-track-lane {
+    background: #303846;
+  }
+
+  .daw-track-clip {
+    background: #25303a;
+  }
+
+  .daw-transition-content {
+    background: var(--studio-cyan-soft);
+  }
+
+  .build-v2-advanced-panel {
+    background: var(--studio-card);
+  }
+
+  .advanced-panel-heading,
+  .advanced-track-metrics > span {
+    border-color: var(--studio-border);
+  }
+
+  .advanced-track-metrics > span {
+    background: var(--studio-display);
+  }
+}
+
+
+/* ==========================================================
+   BUILD V2 — consolidated mobile shell
    ========================================================== */
 
 @media (max-width: 640px) {
@@ -1491,22 +1617,19 @@ $text-muted: #8b949e;
   }
 
   .build-v2-workspace-head {
-    gap: 12px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 11px;
     margin: 16px 0 10px;
     padding: 13px;
-    border-radius: 9px;
   }
 
   .build-v2-workspace-copy {
     width: 100%;
 
-    .build-v2-eyebrow {
-      font-size: 10px;
-    }
-
     strong {
       font-size: 12px;
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
     p {
@@ -1516,6 +1639,7 @@ $text-muted: #8b949e;
   }
 
   .build-v2-status {
+    align-items: flex-start;
     width: 100%;
   }
 
@@ -1529,45 +1653,6 @@ $text-muted: #8b949e;
     min-height: 40px;
   }
 
-  .build-v2-editor-grid {
-    gap: 10px;
-  }
-
-  .build-v2-inspector {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 12px;
-    border-radius: 9px;
-  }
-
-  .inspector-heading strong {
-    max-width: 100%;
-    font-size: 11px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .inspector-metrics {
-    margin: 10px 0 14px;
-  }
-
-  .inspector-metrics > div {
-    padding: 9px;
-  }
-
-  .build-v2-inspector-controls {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 15px;
-  }
-
-  .parameter-label-row > span:first-child {
-    font-size: 11px;
-  }
-
-  .parameter-limit {
-    font-size: 9px;
-  }
-
   .parameter-range-row {
     grid-template-columns: minmax(0, 1fr) 76px;
     gap: 8px;
@@ -1575,186 +1660,37 @@ $text-muted: #8b949e;
 
   .parameter-slider {
     height: 5px;
-    margin: 19px 0;
+    margin: 18px 0;
   }
 
   .parameter-slider::-webkit-slider-thumb {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
 
   .parameter-slider::-moz-range-thumb {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
 
-  .parameter-number-wrap {
-    min-height: 42px;
+  .parameter-number-wrap,
+  .parameter-number {
+    min-height: 40px;
   }
 
   .parameter-number {
-    min-height: 42px;
-    padding: 8px 4px 8px 7px;
     font-size: 14px;
-  }
-
-  .parameter-number-wrap > span {
-    font-size: 10px;
-  }
-
-  .pan-range-row {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-
-  .pan-number {
-    grid-column: 1 / -1;
-    width: 76px;
-    justify-self: end;
-  }
-
-  .build-v2-timeline {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 8px;
-    border-radius: 9px;
-    overflow: hidden;
-  }
-
-  .build-v2-timeline-title {
-    margin-bottom: 6px;
-
-    h3 {
-      font-size: 11px !important;
-    }
-
-    > span {
-      font-size: 10px;
-    }
-  }
-
-  .timeline-ruler {
-    padding-inline: 3px;
-    font-size: 8px;
-  }
-
-  /* Five ruler labels become too crowded below ~640px. */
-  .timeline-ruler span:nth-child(2),
-  .timeline-ruler span:nth-child(4) {
-    visibility: hidden;
-  }
-
-  .track-list ul {
-    margin: 0;
-    padding: 0;
-  }
-
-  .track-item {
-    box-sizing: border-box;
-    width: 100%;
-    margin-bottom: 8px;
-    padding: 10px;
-    border-radius: 7px;
-  }
-
-  .track-main-row {
-    width: 100%;
-    gap: 10px;
-  }
-
-  .track-info {
-    width: 100%;
-  }
-
-  /* Override the old mobile typography that made BUILD cards enormous. */
-  .mix-panel-container .track-info .track-name {
-    font-size: 12px;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  .mix-panel-container .track-meta-tag,
-  .mix-panel-container .upload-state,
-  .mix-panel-container .waveform-truthful-state,
-  .mix-panel-container .transition-region-labels {
-    font-size: 10px;
-    line-height: 1.45;
-  }
-
-  .controls {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 42px 42px 42px;
-    width: 100%;
-    gap: 6px;
-  }
-
-  .controls button {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    min-height: 40px;
-    padding: 6px;
-    font-size: 11px !important;
-    white-space: normal;
-  }
-
-  .track-waveform {
-    margin-top: 10px;
-  }
-
-  .transition-region-labels {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 3px;
-  }
-
-  .transition-region-labels .region-in,
-  .transition-region-labels .region-out {
-    position: static;
-    max-width: 100%;
-    text-align: left;
-  }
-
-  .transition-item {
-    box-sizing: border-box;
-    width: auto;
-    margin: 0 6px 8px;
-    padding: 9px;
-  }
-
-  .transition-summary {
-    display: flex;
-    align-items: stretch;
-    gap: 7px;
-  }
-
-  .mix-panel-container .transition-summary strong {
-    flex-basis: 100%;
-    font-size: 12px;
-    line-height: 1.4;
-  }
-
-  .transition-summary > span {
-    font-size: 10px;
-  }
-
-  .transition-summary .btn-preview-transition,
-  .transition-summary > button {
-    flex: 1 1 130px;
-    min-height: 40px;
-    font-size: 11px !important;
   }
 
   .transition-editor {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 9px;
+    gap: 8px;
   }
 
   .transition-editor label {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 5px !important;
+    display: grid;
+    gap: 5px;
   }
 
   .transition-editor input,
@@ -1796,32 +1732,5 @@ $text-muted: #8b949e;
 
   .ignite-btn {
     min-height: 48px;
-  }
-}
-
-
-/* ==========================================================
-   BUILD V2 — light theme slider controls
-   ========================================================== */
-
-:host-context(app-studio-shell[data-theme='light']) {
-  .parameter-slider {
-    background: var(--studio-border-strong);
-  }
-
-  .parameter-number-wrap {
-    border-color: var(--studio-border-strong);
-    background: #ffffff;
-  }
-
-  .parameter-number {
-    background: #ffffff;
-    color: var(--studio-text);
-  }
-
-  .parameter-number-wrap > span,
-  .parameter-limit,
-  .pan-edge {
-    color: var(--studio-text-secondary);
   }
 }
