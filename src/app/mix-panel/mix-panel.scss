@@ -1117,8 +1117,8 @@ $text-muted: #8b949e;
   overflow: hidden;
   border: 1px solid rgba(0, 220, 232, 0.32);
   border-radius: 6px;
-  background: #18212a;
-  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.22);
+  background: transparent;
+  box-shadow: none;
 }
 
 .daw-track-row.selected .daw-track-clip {
@@ -1576,9 +1576,8 @@ $text-muted: #8b949e;
    */
   .daw-track-clip {
     border-color: #168d99;
-    background: #263641;
-    box-shadow:
-      0 2px 7px rgba(29, 48, 60, 0.16);
+    background: transparent;
+    box-shadow: none;
   }
 
   .daw-lane-meta {

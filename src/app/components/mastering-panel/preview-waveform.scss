@@ -77,9 +77,8 @@
   height: var(--rqs-waveform-compact-height, 54px);
   border-color: rgba(0, 240, 255, 0.16);
   border-radius: 6px;
-  background:
-    linear-gradient(90deg, rgba(0, 240, 255, 0.025), rgba(157, 0, 255, 0.035)),
-    rgba(0, 0, 0, 0.64);
+  background: transparent;
+  box-shadow: none;
   cursor: default;
   pointer-events: none;
 }

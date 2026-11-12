@@ -242,6 +242,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
     canvas.height = Math.floor(cssHeight * dpr);
     canvas.style.width = `${cssWidth}px`;
     canvas.style.height = `${cssHeight}px`;
+    canvas.style.background = 'transparent';
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
