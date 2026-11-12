@@ -707,31 +707,26 @@ $text-muted: #8b949e;
 }
 
 
-/* BUILD V2 — light shell retained after Audacity refactor. */
 :host-context(app-studio-shell[data-theme='light']) {
   .build-v2-workspace-head {
     border-color: var(--studio-border-strong);
-    background:
-      linear-gradient(
-        135deg,
-        rgba(0, 128, 145, 0.05),
-        rgba(116, 78, 190, 0.025)
-      ),
-      var(--studio-card);
+    background: var(--studio-card);
   }
 
-  .build-v2-workspace-copy {
-    .build-v2-eyebrow {
-      color: var(--studio-cyan-strong);
-    }
+  .build-v2-workspace-copy strong {
+    color: var(--studio-text);
+  }
 
-    strong {
-      color: var(--studio-text);
-    }
+  .build-v2-workspace-copy p {
+    color: var(--studio-text-secondary);
+  }
 
-    p {
-      color: var(--studio-text-secondary);
-    }
+  .build-v2-workspace-copy .build-v2-eyebrow {
+    color: var(--studio-cyan-strong);
+  }
+
+  .build-v2-status-badge {
+    color: #16794c;
   }
 
   .build-v2-status button {
@@ -740,25 +735,10 @@ $text-muted: #8b949e;
     color: var(--studio-text);
   }
 
-  .build-v2-status-badge {
-    color: #16794c;
-  }
-
   .build-v2-reset {
     border-color: var(--studio-error-border);
     background: var(--studio-error-bg);
     color: var(--studio-error-text);
-  }
-
-  .trim-shade {
-    background:
-      repeating-linear-gradient(
-        -45deg,
-        rgba(52, 63, 74, 0.5),
-        rgba(52, 63, 74, 0.5) 5px,
-        rgba(81, 94, 106, 0.55) 5px,
-        rgba(81, 94, 106, 0.55) 10px
-      );
   }
 }
 
@@ -888,33 +868,6 @@ $text-muted: #8b949e;
 
 .pan-number {
   grid-template-columns: minmax(0, 1fr);
-}
-
-
-/* ==========================================================
-   BUILD V2 — light theme slider controls
-   ========================================================== */
-
-:host-context(app-studio-shell[data-theme='light']) {
-  .parameter-slider {
-    background: var(--studio-border-strong);
-  }
-
-  .parameter-number-wrap {
-    border-color: var(--studio-border-strong);
-    background: #ffffff;
-  }
-
-  .parameter-number {
-    background: #ffffff;
-    color: var(--studio-text);
-  }
-
-  .parameter-number-wrap > span,
-  .parameter-limit,
-  .pan-edge {
-    color: var(--studio-text-secondary);
-  }
 }
 
 
@@ -1138,7 +1091,7 @@ $text-muted: #8b949e;
   position: relative;
   box-sizing: border-box;
   min-width: 0;
-  min-height: 126px;
+  min-height: 154px;
   overflow: hidden;
   background: #111722;
 }
@@ -1158,12 +1111,12 @@ $text-muted: #8b949e;
 
 .daw-track-clip {
   position: absolute;
-  top: 17px;
-  height: 68px;
-  min-width: 18px;
+  top: 18px;
+  height: 96px;
+  min-width: 48px;
   overflow: hidden;
   border: 1px solid rgba(0, 220, 232, 0.32);
-  border-radius: 5px;
+  border-radius: 6px;
   background: #18212a;
   box-shadow: 0 2px 9px rgba(0, 0, 0, 0.22);
 }
@@ -1179,6 +1132,7 @@ $text-muted: #8b949e;
   display: block;
   width: 100%;
   height: 100%;
+  --rqs-waveform-compact-height: 92px;
 }
 
 .daw-track-clip .transition-waveform,
@@ -1189,7 +1143,7 @@ $text-muted: #8b949e;
 .daw-lane-meta {
   position: absolute;
   right: 10px;
-  bottom: 8px;
+  bottom: 10px;
   left: 10px;
   display: flex;
   justify-content: space-between;
@@ -1398,16 +1352,20 @@ $text-muted: #8b949e;
   }
 
   .daw-track-lane {
-    min-height: 112px;
+    min-height: 136px;
   }
 
-  /* Mobile shows each waveform at useful touch width.
+  /* Mobile keeps every waveform at useful touch width.
      Desktop retains the true shared Setlist positioning. */
   .daw-track-clip {
     left: 8px !important;
     width: calc(100% - 16px) !important;
     top: 12px;
-    height: 64px;
+    height: 88px;
+  }
+
+  .daw-track-clip app-preview-waveform {
+    --rqs-waveform-compact-height: 84px;
   }
 
   .daw-lane-meta {
@@ -1497,111 +1455,239 @@ $text-muted: #8b949e;
 
 /* ==========================================================
    BUILD V2 — Audacity layout light theme
+   Tone-on-tone DAW surfaces with explicit text contrast.
    ========================================================== */
 
 :host-context(app-studio-shell[data-theme='light']) {
-  .build-v2-daw,
-  .build-v2-advanced-panel {
-    border-color: var(--studio-border-strong);
-    background: var(--studio-card);
+  .build-v2-daw {
+    border-color: #aebfcb;
+    background: #f5f8fa;
   }
 
-  .daw-timeline-head,
-  .daw-track-row,
-  .daw-transition-row {
-    border-color: var(--studio-border);
+  .daw-timeline-head {
+    border-color: #b9c8d3;
+    background: #edf3f6;
   }
 
-  .daw-track-column-title,
-  .daw-track-controls,
-  .daw-transition-label {
-    border-color: var(--studio-border);
-  }
-
-  .daw-track-column-title,
-  .daw-transition-label {
-    color: var(--studio-cyan-strong);
+  .daw-track-column-title {
+    border-color: #b9c8d3;
+    color: #006b78;
+    background: #e5eef2;
   }
 
   .daw-ruler {
-    color: var(--studio-text-secondary);
+    color: #526775;
     background:
       repeating-linear-gradient(
         90deg,
-        transparent,
-        transparent calc(25% - 1px),
-        rgba(0, 128, 145, 0.08) 25%
+        #edf3f6,
+        #edf3f6 calc(25% - 1px),
+        #cbd8df 25%
       );
   }
 
   .daw-track-row {
-    background: var(--studio-card);
+    border-color: #bccbd5;
+    background: #f7f9fa;
   }
 
   .daw-track-row.selected {
     background:
       linear-gradient(
         90deg,
-        var(--studio-cyan-soft),
-        transparent 45%
-      ),
-      var(--studio-card);
+        #dff3f5,
+        #eef7f8 38%,
+        #f7f9fa 72%
+      );
   }
 
   .daw-track-controls {
-    background: var(--studio-display);
+    border-color: #b9c8d3;
+    background: #edf2f5;
   }
 
-  .daw-track-title strong,
-  .daw-mixer-control output,
-  .advanced-panel-heading > div:first-child > strong,
-  .advanced-track-metrics strong {
-    color: var(--studio-text);
+  .daw-track-row.selected .daw-track-controls {
+    background: #e4f2f4;
+    box-shadow: inset 3px 0 0 #008b98;
   }
 
-  .daw-track-state,
-  .daw-mixer-control > div:first-child,
-  .advanced-track-metrics > span {
-    color: var(--studio-text-secondary);
+  .daw-track-number {
+    border-color: #70aeb5;
+    background: #f8fbfc;
+    color: #006b78;
+  }
+
+  .daw-track-title strong {
+    color: #172631;
+  }
+
+  .daw-track-state {
+    color: #536875;
+  }
+
+  .daw-mixer-control > div:first-child {
+    color: #445b68;
+  }
+
+  .daw-mixer-control output {
+    color: #172631;
+  }
+
+  .daw-pan-line > span {
+    color: #536875;
   }
 
   .track-control-slider {
-    background: var(--studio-border-strong);
+    background: #9eb0bc;
+  }
+
+  .track-control-slider::-webkit-slider-thumb {
+    background: #00bdcc;
+    box-shadow: 0 0 0 3px rgba(0, 139, 152, 0.12);
+  }
+
+  .track-control-slider::-moz-range-thumb {
+    background: #00bdcc;
   }
 
   .daw-track-actions button {
-    border-color: var(--studio-border-strong);
-    background: var(--studio-card);
-    color: var(--studio-text);
+    border-color: #aebfcb;
+    background: #f8fafb;
+    color: #172631;
   }
 
-  /* Waveform area remains technical/dark in light mode. */
   .daw-track-lane {
-    background: #303846;
+    background: #e2e9ee;
   }
 
+  .daw-grid-lines {
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent calc(6.25% - 1px),
+        rgba(54, 79, 94, 0.09) 6.25%
+      );
+  }
+
+  /*
+   * Waveform itself remains the technical dark surface,
+   * but the lane surrounding it is light tone-on-tone.
+   */
   .daw-track-clip {
-    background: #25303a;
+    border-color: #168d99;
+    background: #263641;
+    box-shadow:
+      0 2px 7px rgba(29, 48, 60, 0.16);
+  }
+
+  .daw-lane-meta {
+    color: #344d5b;
+  }
+
+  .daw-lane-meta .region-in {
+    color: #006f7b;
+  }
+
+  .daw-lane-meta .region-out {
+    color: #70489a;
+  }
+
+  .daw-transition-row {
+    border-color: #b7cbd2;
+    background: #eaf4f5;
+  }
+
+  .daw-transition-label {
+    border-color: #a8c4ca;
+    border-left-color: #008c99;
+    background: #dcecef;
+    color: #006b78;
   }
 
   .daw-transition-content {
-    background: var(--studio-cyan-soft);
+    background: #e8f5f6;
+    color: #172631;
+  }
+
+  .daw-transition-content .transition-summary,
+  .daw-transition-content .transition-summary > span,
+  .daw-transition-content .transition-inheritance {
+    color: #314956;
+  }
+
+  .daw-transition-content .transition-summary button {
+    border-color: #829aa7;
+    background: #f9fbfc;
+    color: #172631;
+  }
+
+  .daw-transition-content .btn-preview-transition {
+    border-color: #d92d58;
+    color: #c71949;
+  }
+
+  .transition-editor input,
+  .transition-editor select {
+    border-color: #9dafba;
+    background: #ffffff;
+    color: #172631;
   }
 
   .build-v2-advanced-panel {
-    background: var(--studio-card);
+    border-color: #aebfcb;
+    background: #f7f9fa;
   }
 
-  .advanced-panel-heading,
-  .advanced-track-metrics > span {
-    border-color: var(--studio-border);
+  .advanced-panel-heading {
+    border-color: #c0ccd4;
+  }
+
+  .advanced-panel-heading > div:first-child > span {
+    color: #006b78;
+  }
+
+  .advanced-panel-heading > div:first-child > strong {
+    color: #172631;
   }
 
   .advanced-track-metrics > span {
-    background: var(--studio-display);
+    border-color: #c1ced6;
+    background: #e9eff3;
+    color: #536875;
+  }
+
+  .advanced-track-metrics strong {
+    color: #172631;
+  }
+
+  .parameter-label-row > span:first-child,
+  .parameter-limit {
+    color: #536875;
+  }
+
+  .parameter-slider {
+    background: #a8bac5;
+  }
+
+  .parameter-number-wrap {
+    border-color: #a9bbc6;
+    background: #ffffff;
+  }
+
+  .parameter-number {
+    background: #ffffff;
+    color: #172631;
+  }
+
+  .parameter-number-wrap > span {
+    color: #536875;
   }
 }
 
+
+/* ==========================================================
+   BUILD V2 — consolidated mobile shell
 
 /* ==========================================================
    BUILD V2 — consolidated mobile shell

@@ -74,7 +74,7 @@
 }
 
 .waveform-compact {
-  height: 54px;
+  height: var(--rqs-waveform-compact-height, 54px);
   border-color: rgba(0, 240, 255, 0.16);
   border-radius: 6px;
   background:
