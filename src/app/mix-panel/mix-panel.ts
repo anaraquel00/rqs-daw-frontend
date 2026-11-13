@@ -28,10 +28,12 @@ import { PlanUpgradeCtaComponent } from '../components/plan-upgrade-cta/plan-upg
 import {
   BuildV2TrackState,
   buildV2EffectiveRange,
+  buildV2MinimumEffectiveDuration,
   createBuildV2TrackState,
   dbToLinearGain,
   hasBuildV2Adjustments,
   normalizeBuildV2TrackState,
+  normalizeBuildV2TrimForTransitions,
 } from './build-v2-track-state';
 import {
   renderBuildV2FilesOffline,
@@ -751,34 +753,169 @@ export class MixPanelComponent implements OnDestroy {
     return this.tracks.some(track => hasBuildV2Adjustments(track.v2, track.duration));
   }
 
+  private buildV2IncomingTransitionSeconds(
+    index: number,
+  ): number {
+    return index > 0
+      ? Math.max(
+          0,
+          this.transitions[index - 1]
+            ?.duration
+          ?? 0,
+        )
+      : 0;
+  }
+
+  private buildV2OutgoingTransitionSeconds(
+    index: number,
+  ): number {
+    return Math.max(
+      0,
+      this.transitions[index]
+        ?.duration
+      ?? 0,
+    );
+  }
+
+  private buildV2MinimumTrackDuration(
+    index: number,
+  ): number {
+    return buildV2MinimumEffectiveDuration(
+      this.buildV2IncomingTransitionSeconds(
+        index,
+      ),
+      this.buildV2OutgoingTransitionSeconds(
+        index,
+      ),
+    );
+  }
+
+  buildV2TrimStartMaxSeconds(
+    index: number,
+  ): number {
+    const track = this.tracks[index];
+
+    if (!track) {
+      return 0;
+    }
+
+    const end =
+      track.v2.trimEndSeconds
+      ?? track.duration;
+
+    return Math.max(
+      0,
+      end
+      - this.buildV2MinimumTrackDuration(
+        index,
+      ),
+    );
+  }
+
+  buildV2TrimEndMinSeconds(
+    index: number,
+  ): number {
+    const track = this.tracks[index];
+
+    if (!track) {
+      return 0;
+    }
+
+    return Math.min(
+      track.duration,
+      track.v2.trimStartSeconds
+      + this.buildV2MinimumTrackDuration(
+        index,
+      ),
+    );
+  }
+
+  private captureBuildV2TransportSnapshot():
+    BuildV2TransportSnapshot {
+    const current =
+      this.buildV2TransportSnapshot();
+
+    const context =
+      this.buildV2TransportAudioCtx;
+
+    if (
+      current.state === 'playing'
+      && context
+    ) {
+      const precise =
+        this.buildV2TransportClock.snapshot(
+          context.currentTime,
+        );
+
+      this.buildV2TransportSnapshot.set(
+        precise,
+      );
+
+      return precise;
+    }
+
+    return current;
+  }
+
   updateBuildV2Track(index: number, patch: Partial<BuildV2TrackState>): void {
     const track = this.tracks[index];
     if (!track) return;
 
-    const trimChanged =
+    const trimStartChanged =
       Object.prototype.hasOwnProperty.call(
         patch,
         'trimStartSeconds',
-      )
-      || Object.prototype.hasOwnProperty.call(
+      );
+
+    const trimEndChanged =
+      Object.prototype.hasOwnProperty.call(
         patch,
         'trimEndSeconds',
       );
 
-    track.v2 = normalizeBuildV2TrackState(
-      {
-        ...track.v2,
-        ...patch,
-      },
-      track.duration,
-    );
+    const trimChanged =
+      trimStartChanged || trimEndChanged;
+
+    const previousState = {
+      ...track.v2,
+    };
+
+    const transportBefore =
+      trimChanged
+        ? this.captureBuildV2TransportSnapshot()
+        : null;
+
+    const proposedState = {
+      ...track.v2,
+      ...patch,
+    };
+
+    track.v2 =
+      trimChanged
+        ? normalizeBuildV2TrimForTransitions(
+            proposedState,
+            track.duration,
+            this.buildV2IncomingTransitionSeconds(
+              index,
+            ),
+            this.buildV2OutgoingTransitionSeconds(
+              index,
+            ),
+            trimStartChanged
+              ? 'start'
+              : 'end',
+          )
+        : normalizeBuildV2TrackState(
+            proposedState,
+            track.duration,
+          );
 
     /*
      * Do not use the tracks setter here.
      *
-     * Gain/Pan must not invalidate or stop the live
-     * transport. The Angular event itself triggers the
-     * required view update.
+     * Gain/Pan stay live and Trim now performs an
+     * in-place timeline replan instead of stopping the
+     * Transport.
      */
     this.currentTracks = [
       ...this.currentTracks,
@@ -812,10 +949,22 @@ export class MixPanelComponent implements OnDestroy {
       );
     }
 
-    if (trimChanged) {
-      this.invalidateBuildV2TransportPreview(
-        false,
-      );
+    if (
+      trimChanged
+      && transportBefore
+    ) {
+      const rescheduled =
+        this.rescheduleBuildV2TransportAfterTrim(
+          transportBefore,
+        );
+
+      if (!rescheduled) {
+        track.v2 = previousState;
+
+        this.currentTracks = [
+          ...this.currentTracks,
+        ];
+      }
     }
   }
 
@@ -898,6 +1047,54 @@ export class MixPanelComponent implements OnDestroy {
     return this.buildV2UnifiedTimelineDurationSeconds();
   }
 
+  private buildV2CurrentLiveTracks():
+    BuildV2EngineTrack[] | null {
+    const decoded =
+      this.buildV2DecodedTracks;
+
+    if (!decoded) {
+      return null;
+    }
+
+    const decodedById =
+      new Map(
+        decoded.map(track => [
+          track.id,
+          track,
+        ]),
+      );
+
+    return this.tracks.map(track => {
+      const decodedTrack =
+        decodedById.get(track.id);
+
+      if (!decodedTrack) {
+        throw new Error(
+          `BUILD_V2_LIVE_BUFFER_MISSING_${track.id}`,
+        );
+      }
+
+      return {
+        id: track.id,
+        buffer: decodedTrack.buffer,
+        state: {
+          ...track.v2,
+        },
+      };
+    });
+  }
+
+  private buildV2CurrentEngineTransitions() {
+    return this.transitions.map(
+      transition => ({
+        duration:
+          transition.duration,
+        curve:
+          transition.curve,
+      }),
+    );
+  }
+
   async playBuildV2Transport(): Promise<void> {
     if (!this.canPlayBuildV2Transport()) {
       return;
@@ -959,34 +1156,14 @@ export class MixPanelComponent implements OnDestroy {
         this.buildV2DecodedTracks = decoded;
       }
 
-      const decodedById =
-        new Map(
-          decoded.map(track => [
-            track.id,
-            track,
-          ]),
+      const liveTracks =
+        this.buildV2CurrentLiveTracks();
+
+      if (!liveTracks) {
+        throw new Error(
+          'BUILD_V2_LIVE_TRACKS_UNAVAILABLE',
         );
-
-      const liveTracks:
-        BuildV2EngineTrack[] =
-        this.tracks.map(track => {
-          const decodedTrack =
-            decodedById.get(track.id);
-
-          if (!decodedTrack) {
-            throw new Error(
-              `BUILD_V2_LIVE_BUFFER_MISSING_${track.id}`,
-            );
-          }
-
-          return {
-            id: track.id,
-            buffer: decodedTrack.buffer,
-            state: {
-              ...track.v2,
-            },
-          };
-        });
+      }
 
       const engine =
         this.buildV2LiveEngine
@@ -998,14 +1175,7 @@ export class MixPanelComponent implements OnDestroy {
 
       const plan = engine.prepare(
         liveTracks,
-        this.transitions.map(
-          transition => ({
-            duration:
-              transition.duration,
-            curve:
-              transition.curve,
-          }),
-        ),
+        this.buildV2CurrentEngineTransitions(),
         context.sampleRate,
       );
 
@@ -1097,6 +1267,129 @@ export class MixPanelComponent implements OnDestroy {
     this.buildV2TransportSnapshot.set(
       this.buildV2TransportClock.stop(),
     );
+  }
+
+  private rescheduleBuildV2TransportAfterTrim(
+    previous:
+      BuildV2TransportSnapshot,
+  ): boolean {
+    const newEstimatedDuration =
+      this.calculateBuildV2TransportEstimatedDuration();
+
+    const context =
+      this.buildV2TransportAudioCtx;
+
+    const engine =
+      this.buildV2LiveEngine;
+
+    const liveTracks =
+      this.buildV2CurrentLiveTracks();
+
+    /*
+     * No decoded/live engine yet:
+     * update geometry + transport duration only.
+     */
+    if (
+      !context
+      || !engine
+      || !liveTracks
+    ) {
+      this.buildV2TransportClock.setDuration(
+        newEstimatedDuration,
+      );
+
+      const next =
+        this.buildV2TransportClock.seek(
+          Math.min(
+            previous.positionSeconds,
+            newEstimatedDuration,
+          ),
+        );
+
+      this.buildV2TransportSnapshot.set(
+        next,
+      );
+
+      return true;
+    }
+
+    try {
+      const plan = engine.prepare(
+        liveTracks,
+        this.buildV2CurrentEngineTransitions(),
+        context.sampleRate,
+      );
+
+      /*
+       * Preserve the absolute global position.
+       *
+       * Geometry before/after Trim may differ, but the
+       * setlist clock never jumps back to zero.
+       */
+      this.buildV2TransportClock.setDuration(
+        plan.outputDurationSeconds,
+      );
+
+      const position = Math.min(
+        previous.positionSeconds,
+        plan.outputDurationSeconds,
+      );
+
+      const next =
+        this.buildV2TransportClock.seek(
+          position,
+          previous.state === 'playing'
+            ? context.currentTime
+            : undefined,
+        );
+
+      this.buildV2TransportSnapshot.set(
+        next,
+      );
+
+      if (
+        previous.state === 'playing'
+        && next.state === 'playing'
+      ) {
+        engine.start(
+          next.positionSeconds,
+        );
+
+        /*
+         * The existing RAF normally remains alive.
+         * Restart defensively if a previous edge case
+         * already cleared it.
+         */
+        if (
+          this.buildV2TransportRafId
+          === null
+        ) {
+          this.startBuildV2TransportAnimation();
+        }
+      } else {
+        engine.stop();
+
+        if (
+          next.state === 'ended'
+        ) {
+          this.cancelBuildV2TransportAnimation();
+        }
+      }
+
+      return true;
+    } catch (error) {
+      /*
+       * prepare() is atomic: the currently audible
+       * sources remain alive if planning fails.
+       */
+      console.warn(
+        '[RQS BUILD V2 TRIM] '
+        + 'Live replan rejected; restoring previous state.',
+        error,
+      );
+
+      return false;
+    }
   }
 
   private invalidateBuildV2TransportPreview(

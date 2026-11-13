@@ -136,6 +136,8 @@ function makeTrack(
   duration: number,
   gainDb = 0,
   pan = 0,
+  trimStartSeconds = 0,
+  trimEndSeconds: number | null = null,
 ): BuildV2EngineTrack {
   return {
     id,
@@ -143,8 +145,8 @@ function makeTrack(
       duration,
     } as AudioBuffer,
     state: {
-      trimStartSeconds: 0,
-      trimEndSeconds: null,
+      trimStartSeconds,
+      trimEndSeconds,
       gainDb,
       pan,
     },
@@ -242,6 +244,188 @@ describe('BUILD V2 live audio engine', () => {
       duration: 9,
     });
   });
+
+  it(
+    'schedules the effective trimmed source range',
+    () => {
+      const context = new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      const plan = engine.prepare(
+        [
+          makeTrack(
+            'a',
+            10,
+            0,
+            0,
+            2,
+            8,
+          ),
+        ],
+        [],
+      );
+
+      expect(
+        plan.outputDurationSeconds,
+      ).toBeCloseTo(6, 8);
+
+      engine.start(0);
+
+      expect(
+        context.sources[0].starts[0],
+      ).toEqual({
+        when: 10,
+        offset: 2,
+        duration: 6,
+      });
+    },
+  );
+
+  it(
+    'reschedules from the same global position after Trim changes',
+    () => {
+      const context = new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+        ],
+        [],
+      );
+
+      engine.start(4);
+
+      const oldSource =
+        context.sources[0];
+
+      engine.prepare(
+        [
+          makeTrack(
+            'a',
+            10,
+            0,
+            0,
+            2,
+            8,
+          ),
+        ],
+        [],
+      );
+
+      engine.start(4);
+
+      expect(oldSource.stopCount).toBe(1);
+
+      expect(
+        context.sources.at(-1)?.starts[0],
+      ).toEqual({
+        when: 10,
+        offset: 6,
+        duration: 2,
+      });
+    },
+  );
+
+  it(
+    'moves later tracks when an earlier effective range changes',
+    () => {
+      const context = new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      const original = engine.prepare(
+        [
+          makeTrack('a', 10),
+          makeTrack('b', 10),
+        ],
+        [
+          transition(2),
+        ],
+      );
+
+      expect(
+        original.tracks[1]
+          .timelineStartSeconds,
+      ).toBe(8);
+
+      const trimmed = engine.prepare(
+        [
+          makeTrack(
+            'a',
+            10,
+            0,
+            0,
+            0,
+            8,
+          ),
+          makeTrack('b', 10),
+        ],
+        [
+          transition(2),
+        ],
+      );
+
+      expect(
+        trimmed.tracks[1]
+          .timelineStartSeconds,
+      ).toBe(6);
+    },
+  );
+
+  it(
+    'keeps current playback alive if a replan is invalid',
+    () => {
+      const context = new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+          makeTrack('b', 10),
+        ],
+        [
+          transition(2),
+        ],
+      );
+
+      engine.start(0);
+
+      const currentSource =
+        context.sources[0];
+
+      expect(() =>
+        engine.prepare(
+          [
+            makeTrack('a', 1),
+            makeTrack('b', 10),
+          ],
+          [
+            transition(2),
+          ],
+        ),
+      ).toThrow();
+
+      expect(
+        currentSource.stopCount,
+      ).toBe(0);
+    },
+  );
 
   it('updates gain immediately without rebuilding the source', () => {
     const context = new FakeContext();

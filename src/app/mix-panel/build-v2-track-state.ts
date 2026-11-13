@@ -19,6 +19,13 @@ export const BUILD_V2_MIN_CLIP_SECONDS = 0.1;
 
 const EPSILON = 0.001;
 
+const BUILD_V2_TRANSITION_GUARD_SECONDS =
+  0.01;
+
+export type BuildV2TrimEdge =
+  | 'start'
+  | 'end';
+
 export function createBuildV2TrackState(): BuildV2TrackState {
   return {
     trimStartSeconds: 0,
@@ -74,6 +81,125 @@ export function buildV2EffectiveRange(
     end,
     duration: Math.max(0, end - start),
   };
+}
+
+export function buildV2MinimumEffectiveDuration(
+  incomingTransitionSeconds: number,
+  outgoingTransitionSeconds: number,
+): number {
+  const incoming = Math.max(
+    0,
+    finiteOr(
+      incomingTransitionSeconds,
+      0,
+    ),
+  );
+
+  const outgoing = Math.max(
+    0,
+    finiteOr(
+      outgoingTransitionSeconds,
+      0,
+    ),
+  );
+
+  return Math.max(
+    BUILD_V2_MIN_CLIP_SECONDS,
+    incoming
+      + (
+        incoming > 0
+          ? BUILD_V2_TRANSITION_GUARD_SECONDS
+          : 0
+      ),
+    outgoing
+      + (
+        outgoing > 0
+          ? BUILD_V2_TRANSITION_GUARD_SECONDS
+          : 0
+      ),
+    incoming + outgoing,
+  );
+}
+
+export function normalizeBuildV2TrimForTransitions(
+  state: BuildV2TrackState,
+  sourceDurationSeconds: number,
+  incomingTransitionSeconds: number,
+  outgoingTransitionSeconds: number,
+  editedEdge: BuildV2TrimEdge,
+): BuildV2TrackState {
+  const duration = Math.max(
+    0,
+    finiteOr(
+      sourceDurationSeconds,
+      0,
+    ),
+  );
+
+  let normalized =
+    normalizeBuildV2TrackState(
+      state,
+      duration,
+    );
+
+  if (duration <= 0) {
+    return normalized;
+  }
+
+  const minimumDuration = Math.min(
+    duration,
+    buildV2MinimumEffectiveDuration(
+      incomingTransitionSeconds,
+      outgoingTransitionSeconds,
+    ),
+  );
+
+  const currentRange =
+    buildV2EffectiveRange(
+      normalized,
+      duration,
+    );
+
+  if (
+    currentRange.duration
+    >= minimumDuration - EPSILON
+  ) {
+    return normalized;
+  }
+
+  if (editedEdge === 'start') {
+    const end =
+      normalized.trimEndSeconds
+      ?? duration;
+
+    normalized =
+      normalizeBuildV2TrackState(
+        {
+          ...normalized,
+          trimStartSeconds: Math.max(
+            0,
+            end - minimumDuration,
+          ),
+        },
+        duration,
+      );
+
+    return normalized;
+  }
+
+  const nextEnd = Math.min(
+    duration,
+    normalized.trimStartSeconds
+      + minimumDuration,
+  );
+
+  return normalizeBuildV2TrackState(
+    {
+      ...normalized,
+      trimEndSeconds: nextEnd,
+    },
+    duration,
+  );
 }
 
 export function dbToLinearGain(db: number): number {

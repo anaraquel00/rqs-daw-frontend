@@ -2,10 +2,12 @@ import {
   BUILD_V2_GAIN_MAX_DB,
   BUILD_V2_GAIN_MIN_DB,
   buildV2EffectiveRange,
+  buildV2MinimumEffectiveDuration,
   createBuildV2TrackState,
   dbToLinearGain,
   hasBuildV2Adjustments,
   normalizeBuildV2TrackState,
+  normalizeBuildV2TrimForTransitions,
 } from './build-v2-track-state';
 
 describe('BUILD V2 track state', () => {
@@ -64,6 +66,88 @@ describe('BUILD V2 track state', () => {
     expect(state.gainDb).toBe(BUILD_V2_GAIN_MIN_DB);
     expect(state.pan).toBe(1);
   });
+
+  it(
+    'keeps an edge track longer than its crossfade',
+    () => {
+      expect(
+        buildV2MinimumEffectiveDuration(
+          8,
+          0,
+        ),
+      ).toBeGreaterThan(8);
+    },
+  );
+
+  it(
+    'keeps a middle track long enough for both fades',
+    () => {
+      expect(
+        buildV2MinimumEffectiveDuration(
+          8,
+          8,
+        ),
+      ).toBeCloseTo(16, 8);
+    },
+  );
+
+  it(
+    'clamps Trim In so a transition remains valid',
+    () => {
+      const state =
+        normalizeBuildV2TrimForTransitions(
+          {
+            trimStartSeconds: 95,
+            trimEndSeconds: null,
+            gainDb: 0,
+            pan: 0,
+          },
+          100,
+          8,
+          0,
+          'start',
+        );
+
+      const range =
+        buildV2EffectiveRange(
+          state,
+          100,
+        );
+
+      expect(
+        range.duration,
+      ).toBeGreaterThan(8);
+    },
+  );
+
+  it(
+    'clamps Trim Out so two adjacent fades still fit',
+    () => {
+      const state =
+        normalizeBuildV2TrimForTransitions(
+          {
+            trimStartSeconds: 10,
+            trimEndSeconds: 20,
+            gainDb: 0,
+            pan: 0,
+          },
+          100,
+          8,
+          8,
+          'end',
+        );
+
+      const range =
+        buildV2EffectiveRange(
+          state,
+          100,
+        );
+
+      expect(
+        range.duration,
+      ).toBeCloseTo(16, 8);
+    },
+  );
 
   it('converts dB to deterministic linear preview gain', () => {
     expect(dbToLinearGain(0)).toBeCloseTo(1, 8);

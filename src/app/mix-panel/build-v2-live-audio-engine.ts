@@ -32,15 +32,24 @@ export class BuildV2LiveAudioEngine {
     transitions: BuildV2EngineTransition[],
     sampleRate = this.context.sampleRate,
   ): BuildV2EnginePlan {
-    this.stop();
-
-    this.plan = planBuildV2Mix(
+    /*
+     * Build the new plan BEFORE stopping the currently
+     * audible sources.
+     *
+     * If the new Trim/transition combination is invalid,
+     * the existing playback remains untouched.
+     */
+    const nextPlan = planBuildV2Mix(
       tracks,
       transitions,
       sampleRate,
     );
 
-    return this.plan;
+    this.stop();
+
+    this.plan = nextPlan;
+
+    return nextPlan;
   }
 
   durationSeconds(): number {
