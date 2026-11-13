@@ -5,6 +5,9 @@ import type {
 import {
   BuildV2LiveAudioEngine,
 } from './build-v2-live-audio-engine';
+import type {
+  BuildV2EngineVignette,
+} from './build-v2-vignette';
 
 class FakeAudioParam {
   readonly sets: Array<{
@@ -16,6 +19,11 @@ class FakeAudioParam {
     values: Float32Array;
     start: number;
     duration: number;
+  }> = [];
+
+  readonly linearRamps: Array<{
+    value: number;
+    time: number;
   }> = [];
 
   readonly cancels: number[] = [];
@@ -45,6 +53,18 @@ class FakeAudioParam {
       values,
       start,
       duration,
+    });
+
+    return this;
+  }
+
+  linearRampToValueAtTime(
+    value: number,
+    time: number,
+  ): FakeAudioParam {
+    this.linearRamps.push({
+      value,
+      time,
     });
 
     return this;
@@ -159,6 +179,17 @@ function transition(
   return {
     duration,
     curve: 'equal-power',
+  };
+}
+
+function vignette(
+  duration = 4,
+): BuildV2EngineVignette {
+  return {
+    id: 'id-drop',
+    buffer: {
+      duration,
+    } as AudioBuffer,
   };
 }
 
@@ -688,6 +719,154 @@ describe('BUILD V2 live audio engine', () => {
         0.25,
         2,
       );
+    },
+  );
+
+  it(
+    'plays the V1-compatible vignette over a ducked music bus',
+    () => {
+      const context =
+        new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+        ],
+        [],
+        context.sampleRate,
+        null,
+        vignette(4),
+      );
+
+      engine.start(0);
+
+      /*
+       * source[0] = music
+       * source[1] = vignette
+       */
+      expect(
+        context.sources[1]
+          .starts[0],
+      ).toEqual({
+        when: 12,
+        offset: 0,
+        duration: 4,
+      });
+
+      /*
+       * gain[0] = shared music bus.
+       */
+      const musicBus =
+        context.gains[0].gain;
+
+      expect(
+        musicBus.linearRamps,
+      ).toContain({
+        value: 0.35,
+        time: 12,
+      });
+
+      expect(
+        musicBus.linearRamps,
+      ).toContain({
+        value: 1,
+        time: 17.5,
+      });
+    },
+  );
+
+  it(
+    'seeks into the vignette using the correct source offset',
+    () => {
+      const context =
+        new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+        ],
+        [],
+        context.sampleRate,
+        null,
+        vignette(4),
+      );
+
+      engine.start(3);
+
+      expect(
+        context.sources[1]
+          .starts[0],
+      ).toEqual({
+        when: 10,
+        offset: 1,
+        duration: 3,
+      });
+
+      expect(
+        context.gains[0]
+          .gain
+          .sets[0]
+          .value,
+      ).toBe(0.35);
+    },
+  );
+
+  it(
+    'seeks into vignette recovery without replaying the vignette',
+    () => {
+      const context =
+        new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+        ],
+        [],
+        context.sampleRate,
+        null,
+        vignette(4),
+      );
+
+      engine.start(7);
+
+      expect(
+        context.sources.length,
+      ).toBe(1);
+
+      expect(
+        context.gains[0]
+          .gain
+          .sets[0]
+          .value,
+      ).toBeCloseTo(
+        0.783333,
+        5,
+      );
+
+      expect(
+        context.gains[0]
+          .gain
+          .linearRamps
+          .at(-1),
+      ).toEqual({
+        value: 1,
+        time: 10.5,
+      });
     },
   );
 

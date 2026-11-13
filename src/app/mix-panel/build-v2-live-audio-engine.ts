@@ -7,6 +7,11 @@ import {
   BuildV2PlannedTrack,
   planBuildV2Mix,
 } from './build-v2-audio-engine';
+import {
+  BuildV2EngineVignette,
+  BuildV2PlannedVignette,
+  scheduleBuildV2VignetteDuck,
+} from './build-v2-vignette';
 
 interface BuildV2LiveTrackNodes {
   source: AudioBufferSourceNode;
@@ -24,6 +29,12 @@ export class BuildV2LiveAudioEngine {
   private readonly active =
     new Map<string, BuildV2LiveTrackNodes>();
 
+  private musicBus:
+    GainNode | null = null;
+
+  private vignetteSource:
+    AudioBufferSourceNode | null = null;
+
   constructor(
     private readonly context: AudioContext,
   ) {}
@@ -34,6 +45,8 @@ export class BuildV2LiveAudioEngine {
     sampleRate = this.context.sampleRate,
     finalFade:
       BuildV2EngineFinalFade | null = null,
+    vignette:
+      BuildV2EngineVignette | null = null,
   ): BuildV2EnginePlan {
     /*
      * Build the new plan BEFORE stopping the currently
@@ -47,6 +60,7 @@ export class BuildV2LiveAudioEngine {
       transitions,
       sampleRate,
       finalFade,
+      vignette,
     );
 
     this.stop();
@@ -79,11 +93,46 @@ export class BuildV2LiveAudioEngine {
 
     const now = this.context.currentTime;
 
+    let musicDestination:
+      AudioNode = this.context.destination;
+
+    if (plan.vignette) {
+      const musicBus =
+        this.context.createGain();
+
+      musicBus.connect(
+        this.context.destination,
+      );
+
+      scheduleBuildV2VignetteDuck(
+        musicBus.gain,
+        position,
+        now,
+        plan.vignette.durationSeconds,
+      );
+
+      this.musicBus =
+        musicBus;
+
+      musicDestination =
+        musicBus;
+    }
+
     for (const track of plan.tracks) {
       this.scheduleTrack(
         track,
         position,
         now,
+        musicDestination,
+      );
+    }
+
+    if (plan.vignette) {
+      this.scheduleVignette(
+        plan.vignette,
+        position,
+        now,
+        plan.outputDurationSeconds,
       );
     }
   }
@@ -181,6 +230,28 @@ export class BuildV2LiveAudioEngine {
     }
 
     this.active.clear();
+
+    const vignetteSource =
+      this.vignetteSource;
+
+    if (vignetteSource) {
+      vignetteSource.onended = null;
+
+      try {
+        vignetteSource.stop();
+      } catch {
+        // Source may already have ended.
+      }
+
+      vignetteSource.disconnect();
+
+      this.vignetteSource = null;
+    }
+
+    if (this.musicBus) {
+      this.musicBus.disconnect();
+      this.musicBus = null;
+    }
   }
 
   clear(): void {
@@ -192,6 +263,7 @@ export class BuildV2LiveAudioEngine {
     track: BuildV2PlannedTrack,
     positionSeconds: number,
     audioNow: number,
+    destination: AudioNode,
   ): void {
     const trackStart =
       track.timelineStartSeconds;
@@ -242,7 +314,7 @@ export class BuildV2LiveAudioEngine {
       .connect(mixGain)
       .connect(fadeGain)
       .connect(pan)
-      .connect(this.context.destination);
+      .connect(destination);
 
     mixGain.gain.setValueAtTime(
       track.gainLinear,
@@ -294,6 +366,88 @@ export class BuildV2LiveAudioEngine {
       track.sourceOffsetSeconds
         + elapsedInsideTrack,
       remainingDuration,
+    );
+  }
+
+  private scheduleVignette(
+    vignette: BuildV2PlannedVignette,
+    positionSeconds: number,
+    audioNow: number,
+    outputDurationSeconds: number,
+  ): void {
+    const start =
+      vignette.startSeconds;
+
+    const end = Math.min(
+      start + vignette.durationSeconds,
+      outputDurationSeconds,
+    );
+
+    if (
+      positionSeconds
+      >= end - EPSILON
+    ) {
+      return;
+    }
+
+    const elapsed = Math.max(
+      0,
+      positionSeconds - start,
+    );
+
+    const contextStart =
+      audioNow
+      + Math.max(
+        0,
+        start - positionSeconds,
+      );
+
+    const audibleTimelineStart =
+      Math.max(
+        start,
+        positionSeconds,
+      );
+
+    const remaining = Math.min(
+      vignette.durationSeconds - elapsed,
+      outputDurationSeconds
+        - audibleTimelineStart,
+    );
+
+    if (remaining <= EPSILON) {
+      return;
+    }
+
+    const source =
+      this.context.createBufferSource();
+
+    source.buffer =
+      vignette.buffer;
+
+    source.connect(
+      this.context.destination,
+    );
+
+    this.vignetteSource =
+      source;
+
+    source.onended = () => {
+      if (
+        this.vignetteSource
+        !== source
+      ) {
+        return;
+      }
+
+      this.vignetteSource = null;
+
+      source.disconnect();
+    };
+
+    source.start(
+      contextStart,
+      elapsed,
+      remaining,
     );
   }
 

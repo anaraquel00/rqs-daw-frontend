@@ -31,6 +31,7 @@ describe('BUILD V2 local render coordinator', () => {
   it('decodes ordered files and passes them to the V2 engine', async () => {
     const decodedA = buffer(2);
     const decodedB = buffer(3);
+    const decodedVignette = buffer(1);
     const finalBuffer = buffer(4);
 
     const decoder: BuildV2AudioDecoder = {
@@ -39,6 +40,7 @@ describe('BUILD V2 local render coordinator', () => {
           .and.returnValues(
             Promise.resolve(decodedA),
             Promise.resolve(decodedB),
+            Promise.resolve(decodedVignette),
           ),
     };
 
@@ -85,6 +87,10 @@ describe('BUILD V2 local render coordinator', () => {
           duration: 8,
           curve: 'equal-power',
         },
+        vignette: {
+          id: 'id-drop',
+          file: file('id-drop.wav'),
+        },
         createDecoder: () => decoder,
         render,
       },
@@ -98,6 +104,7 @@ describe('BUILD V2 local render coordinator', () => {
       transitions,
       sampleRate,
       finalFade,
+      vignette,
     ] = render.calls.mostRecent().args;
 
     expect(engineTracks.length).toBe(2);
@@ -122,6 +129,11 @@ describe('BUILD V2 local render coordinator', () => {
     expect(finalFade).toEqual({
       duration: 8,
       curve: 'equal-power',
+    });
+
+    expect(vignette).toEqual({
+      id: 'id-drop',
+      buffer: decodedVignette,
     });
   });
 });

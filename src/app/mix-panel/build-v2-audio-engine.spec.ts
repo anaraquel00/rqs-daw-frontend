@@ -6,6 +6,9 @@ import {
 import {
   createBuildV2TrackState,
 } from './build-v2-track-state';
+import type {
+  BuildV2EngineVignette,
+} from './build-v2-vignette';
 
 describe('BUILD V2 audio engine POC', () => {
   function buffer(
@@ -215,6 +218,90 @@ describe('BUILD V2 audio engine POC', () => {
         ),
       ).toThrowError(
         'BUILD_V2_INVALID_FINAL_FADE',
+      );
+    },
+  );
+
+  it(
+    'plans a vignette without extending the music timeline',
+    () => {
+      const vignette:
+        BuildV2EngineVignette = {
+          id: 'id-drop',
+          buffer: buffer(
+            4,
+          ),
+        };
+
+      const plan = planBuildV2Mix(
+        [
+          track('a', 10),
+        ],
+        [],
+        8_000,
+        null,
+        vignette,
+      );
+
+      expect(
+        plan.outputDurationSeconds,
+      ).toBe(10);
+
+      expect(
+        plan.vignette?.startSeconds,
+      ).toBe(2);
+
+      expect(
+        plan.vignette?.durationSeconds,
+      ).toBe(4);
+    },
+  );
+
+  it(
+    'applies V1-compatible music ducking in the offline render',
+    async () => {
+      const silentVignette:
+        BuildV2EngineVignette = {
+          id: 'id-drop',
+          buffer: buffer(
+            1,
+            0,
+          ),
+        };
+
+      const rendered =
+        await renderBuildV2Offline(
+          [
+            track('a', 6),
+          ],
+          [],
+          8_000,
+          null,
+          silentVignette,
+        );
+
+      const left =
+        rendered.getChannelData(0);
+
+      expect(
+        left[8_000],
+      ).toBeCloseTo(
+        1,
+        1,
+      );
+
+      expect(
+        left[20_000],
+      ).toBeCloseTo(
+        0.35,
+        1,
+      );
+
+      expect(
+        left[40_000],
+      ).toBeCloseTo(
+        1,
+        1,
       );
     },
   );

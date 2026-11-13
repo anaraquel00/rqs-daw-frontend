@@ -5,6 +5,12 @@ import {
   dbToLinearGain,
   normalizeBuildV2TrackState,
 } from './build-v2-track-state';
+import {
+  BuildV2EngineVignette,
+  BuildV2PlannedVignette,
+  planBuildV2Vignette,
+  scheduleBuildV2VignetteDuck,
+} from './build-v2-vignette';
 
 export interface BuildV2EngineTrack {
   id: string;
@@ -39,6 +45,8 @@ export interface BuildV2EnginePlan {
   tracks: BuildV2PlannedTrack[];
   outputDurationSeconds: number;
   sampleRate: number;
+  vignette:
+    BuildV2PlannedVignette | null;
 }
 
 const EPSILON = 0.000001;
@@ -49,12 +57,15 @@ export function planBuildV2Mix(
   sampleRate = 48_000,
   finalFade:
     BuildV2EngineFinalFade | null = null,
+  vignette:
+    BuildV2EngineVignette | null = null,
 ): BuildV2EnginePlan {
   if (tracks.length === 0) {
     return {
       tracks: [],
       outputDurationSeconds: 0,
       sampleRate,
+      vignette: null,
     };
   }
 
@@ -188,12 +199,27 @@ export function planBuildV2Mix(
 
   const last = planned.at(-1);
 
+  const outputDurationSeconds =
+    last
+      ? (
+        last.timelineStartSeconds
+        + last.durationSeconds
+      )
+      : 0;
+
+  const plannedVignette =
+    vignette
+      ? planBuildV2Vignette(
+          vignette,
+        )
+      : null;
+
   return {
     tracks: planned,
-    outputDurationSeconds: last
-      ? last.timelineStartSeconds + last.durationSeconds
-      : 0,
+    outputDurationSeconds,
     sampleRate,
+    vignette:
+      plannedVignette,
   };
 }
 
@@ -203,12 +229,15 @@ export async function renderBuildV2Offline(
   sampleRate = 48_000,
   finalFade:
     BuildV2EngineFinalFade | null = null,
+  vignette:
+    BuildV2EngineVignette | null = null,
 ): Promise<AudioBuffer> {
   const plan = planBuildV2Mix(
     tracks,
     transitions,
     sampleRate,
     finalFade,
+    vignette,
   );
 
   if (plan.tracks.length === 0) {
@@ -228,8 +257,42 @@ export async function renderBuildV2Offline(
     sampleRate,
   );
 
+  let musicDestination:
+    AudioNode = context.destination;
+
+  if (plan.vignette) {
+    const musicBus =
+      context.createGain();
+
+    musicBus.connect(
+      context.destination,
+    );
+
+    scheduleBuildV2VignetteDuck(
+      musicBus.gain,
+      0,
+      0,
+      plan.vignette.durationSeconds,
+    );
+
+    musicDestination =
+      musicBus;
+  }
+
   for (const track of plan.tracks) {
-    scheduleTrack(context, track);
+    scheduleTrack(
+      context,
+      track,
+      musicDestination,
+    );
+  }
+
+  if (plan.vignette) {
+    scheduleOfflineVignette(
+      context,
+      plan.vignette,
+      plan.outputDurationSeconds,
+    );
   }
 
   return context.startRendering();
@@ -238,6 +301,7 @@ export async function renderBuildV2Offline(
 function scheduleTrack(
   context: OfflineAudioContext,
   track: BuildV2PlannedTrack,
+  destination: AudioNode,
 ): void {
   const source = context.createBufferSource();
   source.buffer = track.buffer;
@@ -248,7 +312,7 @@ function scheduleTrack(
   source
     .connect(gain)
     .connect(pan)
-    .connect(context.destination);
+    .connect(destination);
 
   pan.pan.setValueAtTime(
     track.pan,
@@ -264,6 +328,44 @@ function scheduleTrack(
     track.timelineStartSeconds,
     track.sourceOffsetSeconds,
     track.durationSeconds,
+  );
+}
+
+function scheduleOfflineVignette(
+  context: OfflineAudioContext,
+  vignette: BuildV2PlannedVignette,
+  outputDurationSeconds: number,
+): void {
+  const available =
+    outputDurationSeconds
+    - vignette.startSeconds;
+
+  const duration = Math.min(
+    vignette.durationSeconds,
+    Math.max(
+      0,
+      available,
+    ),
+  );
+
+  if (duration <= EPSILON) {
+    return;
+  }
+
+  const source =
+    context.createBufferSource();
+
+  source.buffer =
+    vignette.buffer;
+
+  source.connect(
+    context.destination,
+  );
+
+  source.start(
+    vignette.startSeconds,
+    0,
+    duration,
   );
 }
 

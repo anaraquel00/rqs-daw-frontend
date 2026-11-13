@@ -73,6 +73,9 @@ import {
   createBuildV2FinalFadeState,
   normalizeBuildV2FinalFadeState,
 } from './build-v2-final-fade';
+import type {
+  BuildV2EngineVignette,
+} from './build-v2-vignette';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -329,6 +332,9 @@ export class MixPanelComponent implements OnDestroy {
 
   private buildV2DecodedTracks:
     BuildV2EngineTrack[] | null = null;
+
+  private buildV2DecodedVignette:
+    BuildV2EngineVignette | null = null;
 
   private buildV2TransportRafId:
     number | null = null;
@@ -1534,6 +1540,16 @@ export class MixPanelComponent implements OnDestroy {
         sampleRate: 48_000,
         finalFade:
           this.buildV2CurrentEngineFinalFade(),
+        vignette:
+          this.vignetteEnabled
+          && this.vignetteTrack
+            ? {
+                id:
+                  this.vignetteTrack.id,
+                file:
+                  this.vignetteTrack.file,
+              }
+            : null,
       },
     );
   }
@@ -1596,6 +1612,29 @@ export class MixPanelComponent implements OnDestroy {
         },
       };
     });
+  }
+
+  private buildV2CurrentEngineVignette():
+    BuildV2EngineVignette | null {
+    if (
+      !this.vignetteEnabled
+      || !this.vignetteTrack
+    ) {
+      return null;
+    }
+
+    const decoded =
+      this.buildV2DecodedVignette;
+
+    if (
+      !decoded
+      || decoded.id
+        !== this.vignetteTrack.id
+    ) {
+      return null;
+    }
+
+    return decoded;
   }
 
   private buildV2CurrentEngineTransitions() {
@@ -1670,6 +1709,74 @@ export class MixPanelComponent implements OnDestroy {
         this.buildV2DecodedTracks = decoded;
       }
 
+      if (
+        this.vignetteEnabled
+        && this.vignetteTrack
+      ) {
+        const vignetteTrack =
+          this.vignetteTrack;
+
+        const cachedVignette =
+          this.buildV2DecodedVignette;
+
+        if (
+          !cachedVignette
+          || cachedVignette.id
+            !== vignetteTrack.id
+        ) {
+          this.buildV2TransportRendering.set(
+            true,
+          );
+
+          const decodedVignetteTracks =
+            await decodeBuildV2TrackFiles(
+              [
+                {
+                  id:
+                    vignetteTrack.id,
+                  file:
+                    vignetteTrack.file,
+                  state:
+                    createBuildV2TrackState(),
+                },
+              ],
+              () => ({
+                decodeAudioData:
+                  (data: ArrayBuffer) =>
+                    context.decodeAudioData(
+                      data,
+                    ),
+              }),
+            );
+
+          if (
+            attempt
+            !== this.buildV2TransportAttempt
+          ) {
+            return;
+          }
+
+          const decodedVignette =
+            decodedVignetteTracks[0];
+
+          if (!decodedVignette) {
+            throw new Error(
+              'BUILD_V2_VIGNETTE_DECODE_UNAVAILABLE',
+            );
+          }
+
+          this.buildV2DecodedVignette = {
+            id:
+              decodedVignette.id,
+            buffer:
+              decodedVignette.buffer,
+          };
+        }
+      } else {
+        this.buildV2DecodedVignette =
+          null;
+      }
+
       const liveTracks =
         this.buildV2CurrentLiveTracks();
 
@@ -1692,6 +1799,7 @@ export class MixPanelComponent implements OnDestroy {
         this.buildV2CurrentEngineTransitions(),
         context.sampleRate,
         this.buildV2CurrentEngineFinalFade(),
+        this.buildV2CurrentEngineVignette(),
       );
 
       this.cancelBuildV2TransportAnimation();
@@ -1834,6 +1942,7 @@ export class MixPanelComponent implements OnDestroy {
         this.buildV2CurrentEngineTransitions(),
         context.sampleRate,
         this.buildV2CurrentEngineFinalFade(),
+        this.buildV2CurrentEngineVignette(),
       );
 
       /*
@@ -2069,7 +2178,22 @@ export class MixPanelComponent implements OnDestroy {
     const file = input.files?.[0] ?? null;
     input.value = '';
     if (!file || !/\.(wav|mp3)$/i.test(file.name)) return;
-    if (this.vignetteTrack) this.disposeTrack(this.vignetteTrack);
+
+    this.stopTransitionPreview();
+
+    this.buildV2DecodedVignette =
+      null;
+
+    this.invalidateBuildV2TransportPreview(
+      false,
+    );
+
+    if (this.vignetteTrack) {
+      this.disposeTrack(
+        this.vignetteTrack,
+      );
+    }
+
     this.vignetteEnabled = true;
     this.vignetteTrack = this.createTrack(file);
     this.uploadTrack(this.vignetteTrack);
@@ -2117,8 +2241,20 @@ export class MixPanelComponent implements OnDestroy {
       audio.load();
     };
     audio.addEventListener('loadedmetadata', () => {
-      track.duration = Number.isFinite(audio.duration) ? audio.duration : 0;
-      this.tracks = [...this.tracks];
+      track.duration =
+        Number.isFinite(audio.duration)
+          ? audio.duration
+          : 0;
+
+      if (
+        this.vignetteTrack
+        !== track
+      ) {
+        this.tracks = [
+          ...this.tracks,
+        ];
+      }
+
       finish();
     }, { once: true });
     audio.addEventListener('error', finish, { once: true });
@@ -2337,9 +2473,29 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   removeVignette(): void {
-    if (this.vignetteTrack) this.disposeTrack(this.vignetteTrack);
+    const hadVignette =
+      Boolean(
+        this.vignetteTrack
+        || this.buildV2DecodedVignette,
+      );
+
+    if (this.vignetteTrack) {
+      this.disposeTrack(
+        this.vignetteTrack,
+      );
+    }
+
     this.vignetteTrack = null;
     this.vignetteEnabled = false;
+
+    this.buildV2DecodedVignette =
+      null;
+
+    if (hadVignette) {
+      this.invalidateBuildV2TransportPreview(
+        false,
+      );
+    }
   }
 
   private disposeTrack(track: RQSTrack): void {
