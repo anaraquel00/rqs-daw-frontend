@@ -17,6 +17,134 @@
       hidden>
   </div>
 
+  <section
+    class="build-v2-project-bar"
+    aria-label="BUILD V2 local projects">
+
+    <div class="build-v2-project-bar-copy">
+      <span>LOCAL PROJECTS</span>
+
+      @if (activeLocalProjectId) {
+        <strong>
+          ACTIVE · {{ setlistName }}
+        </strong>
+      } @else {
+        <strong>
+          BROWSER STORAGE
+        </strong>
+      }
+    </div>
+
+    <select
+      class="build-v2-project-select"
+      [(ngModel)]="selectedLocalProjectId"
+      [disabled]="
+        buildV2ProjectStorageBusy
+        || localProjects.length === 0
+      "
+      aria-label="Saved local BUILD project">
+
+      <option value="">
+        {{
+          localProjects.length === 0
+            ? 'NO SAVED PROJECTS'
+            : 'SELECT PROJECT'
+        }}
+      </option>
+
+      @for (
+        project of localProjects;
+        track project.projectId
+      ) {
+        <option
+          [value]="project.projectId">
+          {{
+            project.name
+          }}
+          ·
+          {{
+            project.trackCount
+          }}
+          TRACKS
+        </option>
+      }
+    </select>
+
+
+    <div class="build-v2-project-actions">
+
+      <button
+        type="button"
+        (click)="openBuildV2Project()"
+        [disabled]="
+          !canOpenBuildV2Project()
+        ">
+        OPEN
+      </button>
+
+      <button
+        type="button"
+        class="primary"
+        (click)="saveBuildV2Project()"
+        [disabled]="
+          !canSaveBuildV2Project()
+        ">
+        @if (buildV2ProjectStorageBusy) {
+          …
+        } @else {
+          SAVE
+        }
+      </button>
+
+      <button
+        type="button"
+        (click)="newBuildV2Project()"
+        [disabled]="
+          buildV2ProjectStorageBusy
+          || (
+            tracks.length === 0
+            && !activeLocalProjectId
+          )
+        ">
+        NEW
+      </button>
+
+    </div>
+
+
+    <div
+      class="build-v2-project-status"
+      aria-live="polite">
+
+      @if (
+        buildV2ProjectStatus === 'saved'
+      ) {
+        SAVED LOCALLY
+      }
+
+      @if (
+        buildV2ProjectStatus === 'opened'
+      ) {
+        PROJECT RESTORED
+      }
+
+      @if (
+        buildV2ProjectStatus === 'error'
+      ) {
+        LOCAL STORAGE ERROR
+      }
+
+      @if (
+        buildV2ProjectStorageBusy
+      ) {
+        WORKING…
+      }
+
+    </div>
+
+  </section>
+
+
   @if (tracks.length > 0) {
     <div class="validation-panel">
       <h3 class="panel-title">{{ lang.tr().VALIDATION_TITLE }}</h3>

@@ -5,6 +5,9 @@ import { provideRouter } from '@angular/router';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 import { MixPanelComponent, RQSTrack } from './mix-panel';
 import { createBuildV2TrackState } from './build-v2-track-state';
+import type {
+  BuildV2ProjectDocumentV1,
+} from './build-v2-project-schema';
 import {
   DspService,
   SetlistRenderRequest,
@@ -163,13 +166,41 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.calculateEstimatedOutputDuration()).toBe(169);
   });
 
-  for (const duration of [0, 0.49, 16, 60, NaN]) {
-    it(`continues to reject invalid transition duration ${duration}`, () => {
-      component.tracks = readyTracks(2);
-      component.editTransition(0, duration, 'linear');
-      expect(component.canIgniteSetlist()).toBeFalse();
-      expect(component.canPreviewTransition(0)).toBeFalse();
-    });
+  for (const testCase of [
+    { input: 0, expected: 0.5 },
+    { input: 0.49, expected: 0.5 },
+    { input: 16, expected: 15 },
+    { input: 60, expected: 15 },
+    { input: NaN, expected: 8 },
+  ]) {
+    it(
+      `normalizes transition duration ${testCase.input} to ${testCase.expected}`,
+      () => {
+        component.tracks = readyTracks(2);
+
+        component.editTransition(
+          0,
+          testCase.input,
+          'linear',
+        );
+
+        expect(
+          component.transitions[0].duration,
+        ).toBe(testCase.expected);
+
+        expect(
+          component.transitions[0].curve,
+        ).toBe('linear');
+
+        expect(
+          component.canPreviewTransition(0),
+        ).toBeTrue();
+
+        expect(
+          component.canIgniteSetlist(),
+        ).toBeTrue();
+      },
+    );
   }
 
   it('renders fixed track controls and one shared timeline lane per track', () => {
@@ -259,55 +290,213 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   }));
 
   for (const testCase of [
-    { duration: 240, fade: 8, lead: 12, start: 220 },
-    { duration: 10, fade: 3, lead: 7, start: 0 },
-    { duration: 3.5, fade: 3, lead: 0.5, start: 0 },
-    { duration: 3.001, fade: 3, lead: 0.001, start: 0 },
+    { duration: 240, requestedFade: 8 },
+    { duration: 10, requestedFade: 3 },
+    { duration: 3.5, requestedFade: 3 },
+    { duration: 3.001, requestedFade: 3 },
   ]) {
-    it(`aligns preview overlap for ${testCase.duration}s source and ${testCase.fade}s transition`, fakeAsync(() => {
-      component.tracks = readyTracks(2);
-      component.tracks[0].duration = testCase.duration;
-      component.editTransition(0, testCase.fade, 'linear');
-      const outgoing = component.transitionRegion(0, 'out');
-      const incoming = component.transitionRegion(1, 'in');
-      const internal = component as any;
-      const incomingPlay = jasmine.createSpy('incomingPlay').and.returnValue(Promise.resolve());
-      internal.playerElement1 = { src: '', currentTime: 0, play: () => Promise.resolve(), pause: () => {} };
-      internal.playerElement2 = { src: '', currentTime: 0, play: incomingPlay, pause: () => {} };
-      internal.audioCtx = { state: 'running', currentTime: 0, close: () => Promise.resolve() };
-      internal.gainNode1 = { gain: { setValueAtTime: () => {} } };
-      internal.gainNode2 = { gain: { setValueAtTime: () => {} } };
-      spyOn(internal, 'initializeWebAudio').and.returnValue(true);
-      const apply = spyOn(internal, 'applyCrossfadeCurve');
-      void component.previewTransition(0);
-      flushMicrotasks();
-      expect(internal.playerElement1.currentTime).toBeCloseTo(testCase.start, 8);
-      expect(internal.playerElement1.currentTime).toBeGreaterThanOrEqual(0);
-      expect(testCase.start + testCase.lead).toBeCloseTo(outgoing!.start, 8);
-      const beforeOverlapMs = Math.max(0, Math.floor(testCase.lead * 1000) - 100);
-      tick(beforeOverlapMs);
-      flushMicrotasks();
-      expect(incomingPlay).not.toHaveBeenCalled();
-      tick(200);
-      flushMicrotasks();
-      expect(incomingPlay).toHaveBeenCalledTimes(1);
-      expect(internal.playerElement2.currentTime).toBe(incoming!.start);
-      expect(apply).toHaveBeenCalledWith(testCase.fade, 'linear');
-      expect(component.transitionRegion(0, 'out')).toEqual(outgoing);
-      expect(component.transitionRegion(1, 'in')).toEqual(incoming);
-      component.stopTransitionPreview();
-    }));
+    it(
+      `aligns preview overlap for ${testCase.duration}s source and requested ${testCase.requestedFade}s transition`,
+      fakeAsync(() => {
+        component.tracks = readyTracks(2);
+
+        component.tracks[0].duration =
+          testCase.duration;
+
+        component.editTransition(
+          0,
+          testCase.requestedFade,
+          'linear',
+        );
+
+        const effectiveFade =
+          component.transitions[0].duration;
+
+        const expectedLead =
+          Math.min(
+            12,
+            Math.max(
+              0,
+              testCase.duration
+                - effectiveFade,
+            ),
+          );
+
+        const expectedStart =
+          Math.max(
+            0,
+            testCase.duration
+              - expectedLead
+              - effectiveFade,
+          );
+
+        const outgoing =
+          component.transitionRegion(
+            0,
+            'out',
+          );
+
+        const incoming =
+          component.transitionRegion(
+            1,
+            'in',
+          );
+
+        const internal =
+          component as any;
+
+        const incomingPlay =
+          jasmine
+            .createSpy('incomingPlay')
+            .and.returnValue(
+              Promise.resolve(),
+            );
+
+        internal.playerElement1 = {
+          src: '',
+          currentTime: 0,
+          play: () =>
+            Promise.resolve(),
+          pause: () => {},
+        };
+
+        internal.playerElement2 = {
+          src: '',
+          currentTime: 0,
+          play: incomingPlay,
+          pause: () => {},
+        };
+
+        internal.audioCtx = {
+          state: 'running',
+          currentTime: 0,
+          close: () =>
+            Promise.resolve(),
+        };
+
+        internal.gainNode1 = {
+          gain: {
+            setValueAtTime: () => {},
+          },
+        };
+
+        internal.gainNode2 = {
+          gain: {
+            setValueAtTime: () => {},
+          },
+        };
+
+        spyOn(
+          internal,
+          'initializeWebAudio',
+        ).and.returnValue(true);
+
+        const apply =
+          spyOn(
+            internal,
+            'applyCrossfadeCurve',
+          );
+
+        void component.previewTransition(0);
+
+        flushMicrotasks();
+
+        expect(
+          internal.playerElement1.currentTime,
+        ).toBeCloseTo(
+          expectedStart,
+          8,
+        );
+
+        expect(
+          expectedStart + expectedLead,
+        ).toBeCloseTo(
+          outgoing!.start,
+          8,
+        );
+
+        const beforeOverlapMs =
+          Math.max(
+            0,
+            Math.floor(
+              expectedLead * 1000,
+            ) - 100,
+          );
+
+        tick(beforeOverlapMs);
+        flushMicrotasks();
+
+        expect(
+          incomingPlay,
+        ).not.toHaveBeenCalled();
+
+        tick(200);
+        flushMicrotasks();
+
+        expect(
+          incomingPlay,
+        ).toHaveBeenCalledTimes(1);
+
+        expect(
+          internal.playerElement2.currentTime,
+        ).toBe(
+          incoming!.start,
+        );
+
+        expect(
+          apply,
+        ).toHaveBeenCalledWith(
+          effectiveFade,
+          'linear',
+        );
+
+        component.stopTransitionPreview();
+      }),
+    );
   }
 
-  it('blocks an invalid overlap rather than starting a preview with negative available lead', async () => {
-    component.tracks = readyTracks(2);
-    component.tracks[0].duration = 2;
-    component.editTransition(0, 3, 'linear');
-    const initialize = spyOn(component as any, 'initializeWebAudio');
-    await component.previewTransition(0);
-    expect(initialize).not.toHaveBeenCalled();
-    expect(component.previewingIndex).toBe(-1);
-  });
+  it(
+    'clamps an oversized overlap to valid track geometry',
+    () => {
+      component.tracks = readyTracks(2);
+
+      component.tracks[0].duration = 2;
+
+      component.editTransition(
+        0,
+        3,
+        'linear',
+      );
+
+      expect(
+        component.transitions[0].duration,
+      ).toBe(1.5);
+
+      expect(
+        component.canPreviewTransition(0),
+      ).toBeTrue();
+
+      const outgoing =
+        component.transitionRegion(
+          0,
+          'out',
+        );
+
+      expect(
+        outgoing?.start,
+      ).toBeCloseTo(
+        0.5,
+        8,
+      );
+
+      expect(
+        outgoing?.end,
+      ).toBeCloseTo(
+        2,
+        8,
+      );
+    },
+  );
 
   it('blocks render until every music upload is ready', () => {
     component.tracks = [
@@ -380,63 +569,142 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(incoming?.end).toBe(13);
   });
 
-  it('keeps all BUILD V2 editing controls integrated into each track', () => {
-    component.tracks = readyTracks(2);
-    fixture.detectChanges();
+  it(
+    'keeps compact track rows plus one fixed selected-track inspector',
+    () => {
+      component.tracks = readyTracks(2);
 
-    expect(
-      fixture.nativeElement.querySelectorAll('.daw-track-controls').length
-    ).toBe(2);
+      fixture.detectChanges();
 
-    expect(
-      fixture.nativeElement.querySelectorAll('.daw-track-trim').length
-    ).toBe(2);
+      expect(
+        fixture.nativeElement
+          .querySelectorAll(
+            '.daw-track-controls',
+          ).length,
+      ).toBe(2);
 
-    expect(
-      fixture.nativeElement.querySelector(
-        '.build-v2-advanced-panel'
-      )
-    ).toBeNull();
+      expect(
+        fixture.nativeElement
+          .querySelectorAll(
+            '.daw-track-trim',
+          ).length,
+      ).toBe(0);
 
-    expect(
-      fixture.nativeElement.querySelector('.build-v2-daw')
-    ).not.toBeNull();
+      expect(
+        fixture.nativeElement
+          .querySelector(
+            '.daw-inspector',
+          ),
+      ).not.toBeNull();
 
-    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
-    expect(uploadToS3).not.toHaveBeenCalled();
-    expect(generateMixS3).not.toHaveBeenCalled();
-  });
+      expect(
+        fixture.nativeElement
+          .querySelector(
+            '.build-v2-advanced-panel',
+          ),
+      ).toBeNull();
 
-  it('places gain, pan and trim controls directly on every track', () => {
-    component.tracks = readyTracks(2);
-    fixture.detectChanges();
+      expect(
+        fixture.nativeElement
+          .querySelector(
+            '.build-v2-daw',
+          ),
+      ).not.toBeNull();
 
-    const gainSliders = fixture.nativeElement.querySelectorAll(
-      '.track-control-gain'
-    );
+      expect(
+        getSetlistPresignedUrl,
+      ).not.toHaveBeenCalled();
 
-    const panSliders = fixture.nativeElement.querySelectorAll(
-      '.track-control-pan'
-    );
+      expect(
+        uploadToS3,
+      ).not.toHaveBeenCalled();
 
-    const trimStartSliders = fixture.nativeElement.querySelectorAll(
-      '.track-trim-start'
-    );
+      expect(
+        generateMixS3,
+      ).not.toHaveBeenCalled();
+    },
+  );
 
-    const trimEndSliders = fixture.nativeElement.querySelectorAll(
-      '.track-trim-end'
-    );
+  it(
+    'places gain, pan and trim controls in the selected-track inspector',
+    () => {
+      component.tracks = readyTracks(2);
 
-    expect(gainSliders.length).toBe(2);
-    expect(panSliders.length).toBe(2);
-    expect(trimStartSliders.length).toBe(2);
-    expect(trimEndSliders.length).toBe(2);
+      fixture.detectChanges();
 
-    expect(gainSliders[0].getAttribute('min')).toBe('-24');
-    expect(gainSliders[0].getAttribute('max')).toBe('6');
-    expect(panSliders[0].getAttribute('min')).toBe('-1');
-    expect(panSliders[0].getAttribute('max')).toBe('1');
-  });
+      const gainSliders =
+        fixture.nativeElement
+          .querySelectorAll(
+            '.track-control-gain',
+          );
+
+      const panSliders =
+        fixture.nativeElement
+          .querySelectorAll(
+            '.track-control-pan',
+          );
+
+      const trimStartSliders =
+        fixture.nativeElement
+          .querySelectorAll(
+            '.track-trim-start',
+          );
+
+      const trimEndSliders =
+        fixture.nativeElement
+          .querySelectorAll(
+            '.track-trim-end',
+          );
+
+      expect(
+        gainSliders.length,
+      ).toBe(1);
+
+      expect(
+        panSliders.length,
+      ).toBe(1);
+
+      expect(
+        trimStartSliders.length,
+      ).toBe(1);
+
+      expect(
+        trimEndSliders.length,
+      ).toBe(1);
+
+      expect(
+        gainSliders[0]
+          .getAttribute('min'),
+      ).toBe('-24');
+
+      expect(
+        gainSliders[0]
+          .getAttribute('max'),
+      ).toBe('6');
+
+      expect(
+        panSliders[0]
+          .getAttribute('min'),
+      ).toBe('-1');
+
+      expect(
+        panSliders[0]
+          .getAttribute('max'),
+      ).toBe('1');
+
+      component.selectTrack(
+        component.tracks[1],
+      );
+
+      fixture.detectChanges();
+
+      expect(
+        component.selectedTrackId,
+      ).toBe(
+        component.tracks[1].id,
+      );
+    },
+  );
 
   it('maps sequential tracks onto one shared setlist timeline', () => {
     component.tracks = readyTracks(3);
@@ -482,19 +750,397 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     ))).toBeTrue();
   });
 
-  it('renders one compact non-interactive waveform for every local track', () => {
-    component.tracks = readyTracks(3);
-    fixture.detectChanges();
+  it(
+    'renders one compact interactive waveform for every local track',
+    () => {
+      component.tracks = readyTracks(3);
 
-    const waveforms = fixture.debugElement.queryAll(By.directive(PreviewWaveformComponent));
-    expect(waveforms.length).toBe(3);
-    for (const waveform of waveforms) {
-      const instance = waveform.componentInstance as PreviewWaveformComponent;
-      expect(instance.compact).toBeTrue();
-      expect(waveform.query(By.css('.preview-region'))).toBeNull();
-      expect(waveform.query(By.css('.waveform-playhead'))).toBeNull();
-    }
-  });
+      fixture.detectChanges();
+
+      const waveforms =
+        fixture.debugElement.queryAll(
+          By.directive(
+            PreviewWaveformComponent,
+          ),
+        );
+
+      expect(
+        waveforms.length,
+      ).toBe(3);
+
+      for (
+        const waveform
+        of waveforms
+      ) {
+        const instance =
+          waveform.componentInstance as PreviewWaveformComponent;
+
+        expect(
+          instance.compact,
+        ).toBeTrue();
+
+        expect(
+          instance.compactInteractive,
+        ).toBeTrue();
+
+        expect(
+          waveform.query(
+            By.css('.preview-region'),
+          ),
+        ).toBeNull();
+      }
+
+      /*
+       * Transport starts at global t=0.
+       * Only Track 01 owns a local playhead then.
+       */
+      expect(
+        fixture.debugElement
+          .queryAll(
+            By.css(
+              '.waveform-local-playhead',
+            ),
+          ).length,
+      ).toBe(1);
+    },
+  );
+
+  it(
+    'restores a canonical BUILD V2 project without network upload',
+    () => {
+      const fileA =
+        new File(
+          ['aaa'],
+          'a.wav',
+          {
+            type:
+              'audio/wav',
+          },
+        );
+
+      const fileB =
+        new File(
+          ['bbbb'],
+          'b.wav',
+          {
+            type:
+              'audio/wav',
+          },
+        );
+
+      const vignette =
+        new File(
+          ['id'],
+          'id.wav',
+          {
+            type:
+              'audio/wav',
+          },
+        );
+
+      const project:
+        BuildV2ProjectDocumentV1 = {
+        kind:
+          'rqs-build-project',
+
+        schemaVersion:
+          1,
+
+        projectId:
+          'restore-project',
+
+        name:
+          'RESTORE PROJECT',
+
+        createdAt:
+          '2026-11-13T18:00:00.000Z',
+
+        updatedAt:
+          '2026-11-13T19:00:00.000Z',
+
+        assets: [
+          {
+            assetId:
+              'asset-a',
+
+            originalFileName:
+              fileA.name,
+
+            format:
+              'wav',
+
+            sizeBytes:
+              fileA.size,
+
+            durationSeconds:
+              60,
+          },
+          {
+            assetId:
+              'asset-b',
+
+            originalFileName:
+              fileB.name,
+
+            format:
+              'wav',
+
+            sizeBytes:
+              fileB.size,
+
+            durationSeconds:
+              70,
+          },
+          {
+            assetId:
+              'asset-id',
+
+            originalFileName:
+              vignette.name,
+
+            format:
+              'wav',
+
+            sizeBytes:
+              vignette.size,
+
+            durationSeconds:
+              3,
+          },
+        ],
+
+        tracks: [
+          {
+            trackId:
+              'track-a',
+
+            assetId:
+              'asset-a',
+
+            state: {
+              trimStartSeconds:
+                2,
+
+              trimEndSeconds:
+                55,
+
+              gainDb:
+                -3,
+
+              pan:
+                -0.25,
+            },
+          },
+          {
+            trackId:
+              'track-b',
+
+            assetId:
+              'asset-b',
+
+            state: {
+              trimStartSeconds:
+                1,
+
+              trimEndSeconds:
+                65,
+
+              gainDb:
+                1,
+
+              pan:
+                0.4,
+            },
+          },
+        ],
+
+        transitions: [
+          {
+            fromTrackId:
+              'track-a',
+
+            toTrackId:
+              'track-b',
+
+            durationSeconds:
+              4,
+
+            curve:
+              'fast-cut',
+
+            usesDefault:
+              false,
+          },
+        ],
+
+        transitionDefaults: {
+          durationSeconds:
+            8,
+
+          curve:
+            'equal-power',
+        },
+
+        finalFade: {
+          enabled:
+            true,
+
+          durationSeconds:
+            6,
+
+          curve:
+            'linear',
+        },
+
+        vignette: {
+          enabled:
+            true,
+
+          assetId:
+            'asset-id',
+
+          mode:
+            'duck-overlay-v1',
+        },
+
+        render: {
+          exportName:
+            'RESTORE_PROJECT',
+
+          loudnessMode:
+            'off',
+
+          outputFormat:
+            'wav',
+
+          sampleRate:
+            48_000,
+
+          channels:
+            2,
+        },
+      };
+
+      component.restoreBuildV2Project(
+        project,
+        new Map([
+          [
+            'asset-a',
+            fileA,
+          ],
+          [
+            'asset-b',
+            fileB,
+          ],
+          [
+            'asset-id',
+            vignette,
+          ],
+        ]),
+      );
+
+      expect(
+        component.tracks.map(
+          track =>
+            track.id,
+        ),
+      ).toEqual([
+        'track-a',
+        'track-b',
+      ]);
+
+      expect(
+        component.tracks.map(
+          track =>
+            track.assetId,
+        ),
+      ).toEqual([
+        'asset-a',
+        'asset-b',
+      ]);
+
+      expect(
+        component.tracks[0].v2,
+      ).toEqual({
+        trimStartSeconds:
+          2,
+
+        trimEndSeconds:
+          55,
+
+        gainDb:
+          -3,
+
+        pan:
+          -0.25,
+      });
+
+      expect(
+        component.transitions[0],
+      ).toEqual({
+        fromTrackId:
+          'track-a',
+
+        toTrackId:
+          'track-b',
+
+        duration:
+          4,
+
+        curve:
+          'fast-cut',
+
+        usesDefault:
+          false,
+      });
+
+      expect(
+        component.finalFade,
+      ).toEqual({
+        enabled:
+          true,
+
+        duration:
+          6,
+
+        curve:
+          'linear',
+      });
+
+      expect(
+        component.vignetteEnabled,
+      ).toBeTrue();
+
+      expect(
+        component.vignetteTrack
+          ?.assetId,
+      ).toBe(
+        'asset-id',
+      );
+
+      expect(
+        component.setlistName,
+      ).toBe(
+        'RESTORE_PROJECT',
+      );
+
+      /*
+       * Local restore must never silently upload.
+       */
+      expect(
+        getSetlistPresignedUrl,
+      ).not.toHaveBeenCalled();
+
+      expect(
+        uploadToS3,
+      ).not.toHaveBeenCalled();
+
+      expect(
+        generateMixS3,
+      ).not.toHaveBeenCalled();
+    },
+  );
+
 
   it('renders local waveforms without starting additional network operations', () => {
     component.tracks = readyTracks(2);
@@ -876,6 +1522,7 @@ function track(
 ): RQSTrack {
   return {
     id: crypto.randomUUID(),
+    assetId: crypto.randomUUID(),
     file: new File(['audio'], name, { type: 'audio/wav' }),
     name,
     crossfadeNext: 8,

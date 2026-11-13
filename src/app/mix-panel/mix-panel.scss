@@ -2300,3 +2300,110 @@ $text-muted: #8b949e;
     min-height: 40px;
   }
 }
+
+/* ==========================================================
+   BUILD V2 — Gate 4B.4 Local Project Persistence
+   ========================================================== */
+
+.build-v2-project-bar {
+  display: grid;
+  grid-template-columns:
+    minmax(140px, .7fr)
+    minmax(200px, 1.4fr)
+    auto auto;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--studio-border-strong);
+  border-radius: 8px;
+  background: var(--studio-card);
+}
+
+.build-v2-project-bar-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.build-v2-project-bar-copy span,
+.build-v2-project-status {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.build-v2-project-bar-copy span {
+  color: var(--studio-cyan-strong, #00dce8);
+}
+
+.build-v2-project-bar-copy strong {
+  overflow: hidden;
+  color: var(--studio-text);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.build-v2-project-select,
+.build-v2-project-actions button {
+  min-height: 32px;
+  border: 1px solid var(--studio-border-strong);
+  border-radius: 5px;
+  background: var(--studio-card);
+  color: var(--studio-text);
+  font: inherit;
+  font-size: 8px;
+}
+
+.build-v2-project-select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+}
+
+.build-v2-project-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.build-v2-project-actions button {
+  padding: 5px 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.build-v2-project-actions button.primary {
+  border-color: var(--studio-cyan-strong, #00dce8);
+  color: var(--studio-cyan-strong, #00dce8);
+}
+
+.build-v2-project-actions button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.build-v2-project-status {
+  color: #58e39a;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .build-v2-project-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .build-v2-project-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .build-v2-project-actions button {
+    min-height: 40px;
+  }
+
+  .build-v2-project-status {
+    text-align: left;
+  }
+}

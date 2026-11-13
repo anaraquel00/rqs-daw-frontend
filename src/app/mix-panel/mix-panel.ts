@@ -76,11 +76,26 @@ import {
 import type {
   BuildV2EngineVignette,
 } from './build-v2-vignette';
+import {
+  buildBuildV2ProjectSnapshot,
+  type BuildV2ProjectSaveSnapshot,
+} from './build-v2-project-session';
+import type {
+  BuildV2ProjectDocumentV1,
+} from './build-v2-project-schema';
+import {
+  buildBuildV2ProjectRestorePlan,
+} from './build-v2-project-restore';
+import {
+  BuildV2ProjectStorage,
+  type BuildV2LocalProjectSummary,
+} from './build-v2-project-storage';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
 export interface RQSTrack {
   id: string;
+  assetId: string;
   file: File;
   name: string;
   crossfadeNext: number;
@@ -282,6 +297,29 @@ export class MixPanelComponent implements OnDestroy {
   readonly lang = inject(LanguageService);
   readonly auth = inject(AuthService);
   private readonly analytics = inject(AnalyticsService);
+
+  private readonly buildV2ProjectStorage =
+    new BuildV2ProjectStorage();
+
+  localProjects:
+    BuildV2LocalProjectSummary[] = [];
+
+  selectedLocalProjectId = '';
+
+  activeLocalProjectId:
+    string | null = null;
+
+  activeLocalProjectCreatedAt:
+    string | null = null;
+
+  buildV2ProjectStorageBusy = false;
+
+  buildV2ProjectStatus:
+    'idle'
+    | 'saved'
+    | 'opened'
+    | 'error' =
+    'idle';
 
   private currentTracks: RQSTrack[] = [];
   selectedTrackId: string | null = null;
@@ -1065,7 +1103,11 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   constructor() {
-    afterNextRender(() => this.initializeTransitionPlayers());
+    afterNextRender(() => {
+      this.initializeTransitionPlayers();
+
+      void this.refreshBuildV2LocalProjects();
+    });
     effect(() => {
       const userId = this.auth.session()?.user?.id ?? null;
       const previousUserId = this.previousUserId;
@@ -1087,6 +1129,447 @@ export class MixPanelComponent implements OnDestroy {
   buildV2Copy(key: keyof typeof BUILD_V2_COPY.en): string {
     return BUILD_V2_COPY[this.lang.currentLang()][key];
   }
+
+  buildV2ProjectSaveSnapshot(
+    projectId: string,
+    createdAt: string,
+    updatedAt =
+      new Date().toISOString(),
+  ): BuildV2ProjectSaveSnapshot {
+    return buildBuildV2ProjectSnapshot({
+      projectId,
+
+      projectName:
+        this.setlistName,
+
+      createdAt,
+      updatedAt,
+
+      tracks:
+        this.tracks.map(
+          track => ({
+            trackId:
+              track.id,
+
+            assetId:
+              track.assetId,
+
+            file:
+              track.file,
+
+            durationSeconds:
+              track.duration,
+
+            state: {
+              ...track.v2,
+            },
+          }),
+        ),
+
+      transitions:
+        this.transitions.map(
+          transition => ({
+            fromTrackId:
+              transition.fromTrackId,
+
+            toTrackId:
+              transition.toTrackId,
+
+            durationSeconds:
+              transition.duration,
+
+            curve:
+              transition.curve,
+
+            usesDefault:
+              transition.usesDefault,
+          }),
+        ),
+
+      transitionDefaults: {
+        durationSeconds:
+          this.defaultDuration,
+
+        curve:
+          this.activeCurve,
+      },
+
+      finalFade: {
+        ...this.finalFade,
+      },
+
+      vignette: {
+        enabled:
+          this.vignetteEnabled,
+
+        assetId:
+          this.vignetteEnabled
+          && this.vignetteTrack
+            ? this.vignetteTrack
+                .assetId
+            : null,
+
+        file:
+          this.vignetteEnabled
+          && this.vignetteTrack
+            ? this.vignetteTrack
+                .file
+            : null,
+
+        durationSeconds:
+          this.vignetteEnabled
+          && this.vignetteTrack
+            ? this.vignetteTrack
+                .duration
+            : 0,
+      },
+
+      render: {
+        exportName:
+          this.setlistName,
+
+        loudnessMode:
+          this.loudnessMatchMode,
+      },
+    });
+  }
+
+
+  restoreBuildV2Project(
+    project:
+      BuildV2ProjectDocumentV1,
+    files:
+      ReadonlyMap<string, File>,
+  ): void {
+    const plan =
+      buildBuildV2ProjectRestorePlan(
+        project,
+        files,
+      );
+
+    /*
+     * Tear down the previous runtime only after the
+     * restore plan has passed canonical validation.
+     */
+    this.clearAllLocalAudio();
+
+    this.defaultDuration =
+      plan.transitionDefaults
+        .durationSeconds;
+
+    this.activeCurve =
+      plan.transitionDefaults.curve;
+
+    this.setlistName =
+      plan.render.exportName;
+
+    this.loudnessMatchMode =
+      plan.render.loudnessMode;
+
+    this.currentTracks =
+      plan.tracks.map(
+        track =>
+          this.createRestoredTrack(
+            track.file,
+            track.trackId,
+            track.assetId,
+            track.durationSeconds,
+            track.state,
+          ),
+      );
+
+    this.transitions =
+      plan.transitions.map(
+        transition => ({
+          fromTrackId:
+            transition.fromTrackId,
+
+          toTrackId:
+            transition.toTrackId,
+
+          duration:
+            transition.durationSeconds,
+
+          curve:
+            transition.curve,
+
+          usesDefault:
+            transition.usesDefault,
+        }),
+      );
+
+    this.finalFade = {
+      ...plan.finalFade,
+    };
+
+    this.vignetteEnabled =
+      plan.vignette.enabled;
+
+    this.vignetteTrack =
+      plan.vignette.enabled
+      && plan.vignette.file
+      && plan.vignette.assetId
+        ? this.createRestoredTrack(
+            plan.vignette.file,
+            `vignette:${plan.vignette.assetId}`,
+            plan.vignette.assetId,
+            plan.vignette.durationSeconds,
+            createBuildV2TrackState(),
+          )
+        : null;
+
+    this.selectedTrackId =
+      this.currentTracks[0]?.id
+      ?? null;
+
+    this.expandedTransition =
+      null;
+
+    this.buildV2DecodedTracks =
+      null;
+
+    this.buildV2DecodedVignette =
+      null;
+
+    this.pricingUpgradeRequired.set(
+      false,
+    );
+
+    this.setlistError =
+      null;
+
+    this.invalidateBuildV2TransportPreview(
+      true,
+    );
+  }
+
+
+  canSaveBuildV2Project(): boolean {
+    return (
+      !this.buildV2ProjectStorageBusy
+      && this.tracks.length > 0
+      && this.setlistName.trim().length > 0
+    );
+  }
+
+
+  canOpenBuildV2Project(): boolean {
+    return (
+      !this.buildV2ProjectStorageBusy
+      && this.selectedLocalProjectId
+        .trim()
+        .length > 0
+    );
+  }
+
+
+  async refreshBuildV2LocalProjects():
+    Promise<void> {
+    try {
+      const projects =
+        await this.buildV2ProjectStorage
+          .list();
+
+      this.localProjects =
+        projects;
+
+      const currentStillExists =
+        projects.some(
+          project =>
+            project.projectId
+            === this.selectedLocalProjectId,
+        );
+
+      if (
+        !currentStillExists
+      ) {
+        const preferred =
+          this.activeLocalProjectId
+          && projects.some(
+            project =>
+              project.projectId
+              === this.activeLocalProjectId,
+          )
+            ? this.activeLocalProjectId
+            : projects[0]
+                ?.projectId
+              ?? '';
+
+        this.selectedLocalProjectId =
+          preferred;
+      }
+    } catch (error) {
+      console.warn(
+        '[RQS BUILD V2 PROJECT LIST]',
+        error,
+      );
+
+      this.buildV2ProjectStatus =
+        'error';
+    }
+  }
+
+
+  async saveBuildV2Project():
+    Promise<void> {
+    if (
+      !this.canSaveBuildV2Project()
+    ) {
+      return;
+    }
+
+    this.buildV2ProjectStorageBusy =
+      true;
+
+    this.buildV2ProjectStatus =
+      'idle';
+
+    const now =
+      new Date().toISOString();
+
+    const projectId =
+      this.activeLocalProjectId
+      ?? crypto.randomUUID();
+
+    const createdAt =
+      this.activeLocalProjectCreatedAt
+      ?? now;
+
+    try {
+      const snapshot =
+        this.buildV2ProjectSaveSnapshot(
+          projectId,
+          createdAt,
+          now,
+        );
+
+      await this.buildV2ProjectStorage
+        .save(
+          snapshot.project,
+          snapshot.assets,
+        );
+
+      /*
+       * Identity becomes active only after the
+       * IndexedDB transaction has committed.
+       */
+      this.activeLocalProjectId =
+        snapshot.project.projectId;
+
+      this.activeLocalProjectCreatedAt =
+        snapshot.project.createdAt;
+
+      this.selectedLocalProjectId =
+        snapshot.project.projectId;
+
+      this.localProjects =
+        await this.buildV2ProjectStorage
+          .list();
+
+      this.buildV2ProjectStatus =
+        'saved';
+    } catch (error) {
+      console.warn(
+        '[RQS BUILD V2 PROJECT SAVE]',
+        error,
+      );
+
+      this.buildV2ProjectStatus =
+        'error';
+    } finally {
+      this.buildV2ProjectStorageBusy =
+        false;
+    }
+  }
+
+
+  async openBuildV2Project():
+    Promise<void> {
+    if (
+      !this.canOpenBuildV2Project()
+    ) {
+      return;
+    }
+
+    const projectId =
+      this.selectedLocalProjectId;
+
+    this.buildV2ProjectStorageBusy =
+      true;
+
+    this.buildV2ProjectStatus =
+      'idle';
+
+    try {
+      const loaded =
+        await this.buildV2ProjectStorage
+          .load(
+            projectId,
+          );
+
+      if (!loaded) {
+        throw new Error(
+          'BUILD_V2_LOCAL_PROJECT_NOT_FOUND',
+        );
+      }
+
+      /*
+       * restoreBuildV2Project validates everything
+       * before replacing the current runtime.
+       */
+      this.restoreBuildV2Project(
+        loaded.project,
+        loaded.files,
+      );
+
+      this.activeLocalProjectId =
+        loaded.project.projectId;
+
+      this.activeLocalProjectCreatedAt =
+        loaded.project.createdAt;
+
+      this.selectedLocalProjectId =
+        loaded.project.projectId;
+
+      this.buildV2ProjectStatus =
+        'opened';
+    } catch (error) {
+      console.warn(
+        '[RQS BUILD V2 PROJECT OPEN]',
+        error,
+      );
+
+      this.buildV2ProjectStatus =
+        'error';
+    } finally {
+      this.buildV2ProjectStorageBusy =
+        false;
+    }
+  }
+
+
+  newBuildV2Project(): void {
+    if (
+      this.buildV2ProjectStorageBusy
+    ) {
+      return;
+    }
+
+    this.clearAllLocalAudio();
+
+    this.activeLocalProjectId =
+      null;
+
+    this.activeLocalProjectCreatedAt =
+      null;
+
+    this.selectedLocalProjectId =
+      '';
+
+    this.buildV2ProjectStatus =
+      'idle';
+  }
+
 
   effectiveRange(track: RQSTrack) {
     return buildV2EffectiveRange(track.v2, track.duration);
@@ -2219,10 +2702,73 @@ export class MixPanelComponent implements OnDestroy {
     this.uploadTrack(replacement);
   }
 
+  private createRestoredTrack(
+    file: File,
+    trackId: string,
+    assetId: string,
+    duration: number,
+    state: BuildV2TrackState,
+  ): RQSTrack {
+    const rawUrl =
+      URL.createObjectURL(
+        file,
+      );
+
+    return {
+      id:
+        trackId,
+
+      assetId,
+
+      file,
+
+      name:
+        file.name,
+
+      crossfadeNext:
+        this.defaultDuration,
+
+      rawUrl,
+
+      previewUrl:
+        this.sanitizer
+          .bypassSecurityTrustUrl(
+            rawUrl,
+          ),
+
+      duration,
+
+      /*
+       * Local restore deliberately does not pretend that
+       * an S3 upload still exists.
+       *
+       * Local BUILD V2 playback/bounce works from File.
+       * Server V1 render remains unavailable until upload.
+       */
+      s3Key:
+        null,
+
+      uploadState:
+        'idle',
+
+      uploadError:
+        null,
+
+      uploadAttempt:
+        0,
+
+      v2: {
+        ...state,
+      },
+    };
+  }
+
+
   private createTrack(file: File): RQSTrack {
     const rawUrl = URL.createObjectURL(file);
     const track: RQSTrack = {
       id: crypto.randomUUID(),
+      assetId: crypto.randomUUID(),
       file,
       name: file.name,
       crossfadeNext: 8,
