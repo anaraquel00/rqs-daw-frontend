@@ -36,6 +36,10 @@ import {
 import {
   renderBuildV2FilesOffline,
 } from './build-v2-local-render';
+import {
+  BuildV2TransportClock,
+  type BuildV2TransportSnapshot,
+} from './build-v2-live-transport';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -253,6 +257,7 @@ export class MixPanelComponent implements OnDestroy {
     this.currentTracks = value;
     this.reconcileTransitions();
     this.reconcileSelectedTrack();
+    this.invalidateBuildV2TransportPreview();
   }
   vignetteEnabled = false;
   vignetteTrack: RQSTrack | null = null;
@@ -266,6 +271,31 @@ export class MixPanelComponent implements OnDestroy {
   loudnessMatchMode: SetlistLoudnessMode = 'off';
   previewingIndex = -1;
   previewProgress = signal<number>(0);
+
+  private buildV2TransportClock =
+    new BuildV2TransportClock(0);
+
+  readonly buildV2TransportSnapshot =
+    signal<BuildV2TransportSnapshot>(
+      this.buildV2TransportClock.snapshot(),
+    );
+
+  readonly buildV2TransportRendering =
+    signal(false);
+
+  private buildV2TransportAudioCtx:
+    AudioContext | null = null;
+
+  private buildV2TransportSource:
+    AudioBufferSourceNode | null = null;
+
+  private buildV2TransportBuffer:
+    AudioBuffer | null = null;
+
+  private buildV2TransportRafId:
+    number | null = null;
+
+  private buildV2TransportAttempt = 0;
 
   private audioCtx: AudioContext | null = null;
   private sourceNode1: MediaElementAudioSourceNode | null = null;
@@ -423,6 +453,7 @@ export class MixPanelComponent implements OnDestroy {
     this.activeCurve = curve;
     this.transitions = this.transitions.map(t => t.usesDefault
       ? { ...t, duration: this.defaultDuration, curve } : t);
+    this.invalidateBuildV2TransportPreview();
   }
 
   editTransition(index: number, duration: number, curve: SetlistCurve): void {
@@ -430,12 +461,14 @@ export class MixPanelComponent implements OnDestroy {
     this.stopTransitionPreview();
     this.transitions = this.transitions.map((t, i) => i === index
       ? { ...t, duration: Number(duration), curve, usesDefault: false } : t);
+    this.invalidateBuildV2TransportPreview();
   }
 
   resetTransition(index: number): void {
     this.stopTransitionPreview();
     this.transitions = this.transitions.map((t, i) => i === index
       ? { ...t, duration: this.defaultDuration, curve: this.activeCurve, usesDefault: true } : t);
+    this.invalidateBuildV2TransportPreview();
   }
 
   applyDefaultsToAll(): void {
@@ -443,6 +476,7 @@ export class MixPanelComponent implements OnDestroy {
     this.transitions = this.transitions.map(t => ({
       ...t, duration: this.defaultDuration, curve: this.activeCurve, usesDefault: true,
     }));
+    this.invalidateBuildV2TransportPreview();
   }
 
   toggleTransition(t: SetlistTransition): void {
@@ -532,6 +566,310 @@ export class MixPanelComponent implements OnDestroy {
         sampleRate: 48_000,
       },
     );
+  }
+
+  canPlayBuildV2Transport(): boolean {
+    return (
+      this.tracks.length > 0
+      && this.buildV2TransportDurationSeconds() > 0
+      && !this.buildV2TransportRendering()
+    );
+  }
+
+  buildV2TransportDurationSeconds(): number {
+    const duration =
+      this.buildV2TransportSnapshot()
+        .durationSeconds;
+
+    return duration > 0
+      ? duration
+      : this.calculateBuildV2TransportEstimatedDuration();
+  }
+
+  private calculateBuildV2TransportEstimatedDuration():
+    number {
+    const clips = this.tracks.reduce(
+      (sum, track) =>
+        sum + this.effectiveRange(track).duration,
+      0,
+    );
+
+    const overlaps = this.transitions.reduce(
+      (sum, transition) =>
+        sum + Math.max(0, transition.duration),
+      0,
+    );
+
+    return Math.max(
+      0,
+      clips - overlaps,
+    );
+  }
+
+  async playBuildV2Transport(): Promise<void> {
+    if (!this.canPlayBuildV2Transport()) {
+      return;
+    }
+
+    this.stopTransitionPreview();
+
+    const attempt =
+      ++this.buildV2TransportAttempt;
+
+    this.setlistError = null;
+
+    try {
+      let buffer =
+        this.buildV2TransportBuffer;
+
+      if (!buffer) {
+        this.buildV2TransportRendering.set(true);
+
+        buffer =
+          await this.renderBuildV2PocAudioBuffer();
+
+        if (
+          attempt
+          !== this.buildV2TransportAttempt
+        ) {
+          return;
+        }
+
+        this.buildV2TransportBuffer = buffer;
+      }
+
+      const context =
+        this.ensureBuildV2TransportAudioContext();
+
+      if (context.state === 'suspended') {
+        await context.resume();
+      }
+
+      if (
+        attempt
+        !== this.buildV2TransportAttempt
+      ) {
+        return;
+      }
+
+      this.stopBuildV2TransportSource();
+      this.cancelBuildV2TransportAnimation();
+
+      this.buildV2TransportSnapshot.set(
+        this.buildV2TransportClock.setDuration(
+          buffer.duration,
+          context.currentTime,
+        ),
+      );
+
+      const snapshot =
+        this.buildV2TransportClock.play(
+          context.currentTime,
+        );
+
+      this.buildV2TransportSnapshot.set(
+        snapshot,
+      );
+
+      const source =
+        context.createBufferSource();
+
+      source.buffer = buffer;
+      source.connect(context.destination);
+
+      this.buildV2TransportSource = source;
+
+      source.onended = () => {
+        if (
+          this.buildV2TransportSource
+          !== source
+        ) {
+          return;
+        }
+
+        this.buildV2TransportSource = null;
+        source.disconnect();
+
+        this.cancelBuildV2TransportAnimation();
+
+        if (
+          this.buildV2TransportSnapshot()
+            .state === 'playing'
+        ) {
+          this.buildV2TransportSnapshot.set(
+            this.buildV2TransportClock.seek(
+              buffer.duration,
+            ),
+          );
+        }
+      };
+
+      source.start(
+        0,
+        snapshot.positionSeconds,
+      );
+
+      this.startBuildV2TransportAnimation();
+    } catch (error) {
+      if (
+        attempt
+        === this.buildV2TransportAttempt
+      ) {
+        console.error(
+          '[RQS BUILD V2 TRANSPORT] Local preview failed.',
+          error,
+        );
+
+        const messages = {
+          en: 'Could not create the BUILD V2 local transport preview.',
+          pt: 'Não foi possível criar a prévia local do transport BUILD V2.',
+          pl: 'Nie udało się utworzyć lokalnego podglądu transportu BUILD V2.',
+          fr: 'Impossible de créer la préécoute locale du transport BUILD V2.',
+        };
+
+        this.setlistError =
+          messages[this.lang.currentLang()];
+      }
+    } finally {
+      if (
+        attempt
+        === this.buildV2TransportAttempt
+      ) {
+        this.buildV2TransportRendering.set(
+          false,
+        );
+      }
+    }
+  }
+
+  pauseBuildV2Transport(): void {
+    const context =
+      this.buildV2TransportAudioCtx;
+
+    if (
+      !context
+      || this.buildV2TransportSnapshot()
+        .state !== 'playing'
+    ) {
+      return;
+    }
+
+    this.buildV2TransportSnapshot.set(
+      this.buildV2TransportClock.pause(
+        context.currentTime,
+      ),
+    );
+
+    this.stopBuildV2TransportSource();
+    this.cancelBuildV2TransportAnimation();
+  }
+
+  stopBuildV2Transport(): void {
+    this.buildV2TransportAttempt += 1;
+    this.buildV2TransportRendering.set(false);
+
+    this.stopBuildV2TransportSource();
+    this.cancelBuildV2TransportAnimation();
+
+    this.buildV2TransportSnapshot.set(
+      this.buildV2TransportClock.stop(),
+    );
+  }
+
+  private invalidateBuildV2TransportPreview():
+    void {
+    this.stopBuildV2Transport();
+
+    this.buildV2TransportBuffer = null;
+
+    this.buildV2TransportSnapshot.set(
+      this.buildV2TransportClock.setDuration(
+        this.calculateBuildV2TransportEstimatedDuration(),
+      ),
+    );
+  }
+
+  private ensureBuildV2TransportAudioContext():
+    AudioContext {
+    if (!this.buildV2TransportAudioCtx) {
+      this.buildV2TransportAudioCtx =
+        new (
+          window.AudioContext
+          || (window as any).webkitAudioContext
+        )();
+    }
+
+    return this.buildV2TransportAudioCtx;
+  }
+
+  private startBuildV2TransportAnimation():
+    void {
+    const context =
+      this.buildV2TransportAudioCtx;
+
+    if (!context) {
+      return;
+    }
+
+    this.cancelBuildV2TransportAnimation();
+
+    const frame = () => {
+      const snapshot =
+        this.buildV2TransportClock.tick(
+          context.currentTime,
+        );
+
+      this.buildV2TransportSnapshot.set(
+        snapshot,
+      );
+
+      if (snapshot.state !== 'playing') {
+        this.buildV2TransportRafId = null;
+        return;
+      }
+
+      this.buildV2TransportRafId =
+        requestAnimationFrame(frame);
+    };
+
+    this.buildV2TransportRafId =
+      requestAnimationFrame(frame);
+  }
+
+  private cancelBuildV2TransportAnimation():
+    void {
+    if (
+      this.buildV2TransportRafId
+      !== null
+    ) {
+      cancelAnimationFrame(
+        this.buildV2TransportRafId,
+      );
+    }
+
+    this.buildV2TransportRafId = null;
+  }
+
+  private stopBuildV2TransportSource():
+    void {
+    const source =
+      this.buildV2TransportSource;
+
+    this.buildV2TransportSource = null;
+
+    if (!source) {
+      return;
+    }
+
+    source.onended = null;
+
+    try {
+      source.stop();
+    } catch {
+      // Source may already have ended.
+    }
+
+    source.disconnect();
   }
 
   curveLabel(curve: SetlistCurve): string {
@@ -765,6 +1103,7 @@ export class MixPanelComponent implements OnDestroy {
 
   async previewTransition(index: number): Promise<void> {
     if (!this.canPreviewTransition(index)) return;
+    this.stopBuildV2Transport();
     this.stopTransitionPreview();
     const attempt = this.previewAttempt;
     const transition = { ...this.transitions[index] };
@@ -918,6 +1257,7 @@ export class MixPanelComponent implements OnDestroy {
 
   igniteSetlist(): void {
     if (!this.hasAuthenticatedBuildSession()) return;
+    this.stopBuildV2Transport();
     this.cancelActiveRender();
     if (this.hasBuildV2Adjustments()) {
       this.setlistError = this.buildV2Copy('renderBlocked');
@@ -995,6 +1335,7 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   private clearAllLocalAudio(): void {
+    this.stopBuildV2Transport();
     this.cancelActiveRender();
     this.stopTransitionPreview();
     this.tracks.forEach((track) => this.disposeTrack(track));
@@ -1005,7 +1346,16 @@ export class MixPanelComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.clearAllLocalAudio();
-    if (this.audioCtx) void this.audioCtx.close();
+
+    if (this.audioCtx) {
+      void this.audioCtx.close();
+    }
+
+    if (this.buildV2TransportAudioCtx) {
+      void this.buildV2TransportAudioCtx.close();
+    }
+
     this.audioCtx = null;
+    this.buildV2TransportAudioCtx = null;
   }
 }

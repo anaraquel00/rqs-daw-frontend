@@ -176,15 +176,104 @@
 
     <div class="build-v2-daw">
 
+      <div
+        class="daw-transport"
+        aria-label="BUILD V2 transport">
+
+        <div class="daw-transport-controls">
+          <button
+            type="button"
+            class="daw-transport-button"
+            (click)="playBuildV2Transport()"
+            [disabled]="
+              !canPlayBuildV2Transport()
+              || buildV2TransportSnapshot().state === 'playing'
+            "
+            aria-label="Play">
+            @if (buildV2TransportRendering()) {
+              …
+            } @else {
+              ▶
+            }
+          </button>
+
+          <button
+            type="button"
+            class="daw-transport-button"
+            (click)="pauseBuildV2Transport()"
+            [disabled]="
+              buildV2TransportSnapshot().state !== 'playing'
+            "
+            aria-label="Pause">
+            ⏸
+          </button>
+
+          <button
+            type="button"
+            class="daw-transport-button"
+            (click)="stopBuildV2Transport()"
+            [disabled]="
+              buildV2TransportSnapshot().state === 'stopped'
+              && !buildV2TransportRendering()
+            "
+            aria-label="Stop">
+            ■
+          </button>
+        </div>
+
+        <output class="daw-transport-time">
+          {{
+            formatDuration(
+              buildV2TransportSnapshot().positionSeconds
+            )
+          }}
+          /
+          {{
+            formatDuration(
+              buildV2TransportDurationSeconds()
+            )
+          }}
+        </output>
+
+        <span
+          class="daw-transport-state"
+          [class.playing]="
+            buildV2TransportSnapshot().state === 'playing'
+          ">
+          @if (buildV2TransportRendering()) {
+            RENDERING LOCAL PREVIEW
+          } @else {
+            {{
+              buildV2TransportSnapshot().state
+                | uppercase
+            }}
+          }
+        </span>
+      </div>
+
+      <div class="daw-timeline-stage">
+
+        <div
+          class="daw-global-playhead-layer"
+          aria-hidden="true">
+          <div
+            class="daw-global-playhead"
+            [style.left.%]="
+              buildV2TransportSnapshot()
+                .progressPercent
+            ">
+          </div>
+        </div>
+
       <div class="daw-timeline-head">
         <div class="daw-track-column-title">TRACKS</div>
 
         <div class="daw-ruler" aria-hidden="true">
           <span>00:00</span>
-          <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.25) }}</span>
-          <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.5) }}</span>
-          <span>{{ formatDuration(calculateEstimatedOutputDuration() * 0.75) }}</span>
-          <span>{{ formatDuration(calculateEstimatedOutputDuration()) }}</span>
+          <span>{{ formatDuration(buildV2TransportDurationSeconds() * 0.25) }}</span>
+          <span>{{ formatDuration(buildV2TransportDurationSeconds() * 0.5) }}</span>
+          <span>{{ formatDuration(buildV2TransportDurationSeconds() * 0.75) }}</span>
+          <span>{{ formatDuration(buildV2TransportDurationSeconds()) }}</span>
         </div>
       </div>
 
@@ -591,6 +680,7 @@
             </section>
           }
         }
+      </div>
       </div>
     </div>
 
