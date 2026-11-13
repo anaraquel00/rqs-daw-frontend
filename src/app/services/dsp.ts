@@ -49,6 +49,44 @@ export interface SetlistPresignResponse {
   s3Key: string;
 }
 
+export type BuildV2CloudAssetFormat = 'wav' | 'mp3';
+
+export interface BuildV2CloudAssetRequest {
+  assetId: string;
+  originalFileName: string;
+  format: BuildV2CloudAssetFormat;
+  sizeBytes: number;
+}
+
+export interface BuildV2CloudAssetRecord {
+  projectId: string;
+  assetId: string;
+  originalFileName: string;
+  format: BuildV2CloudAssetFormat;
+  contentType: 'audio/wav' | 'audio/mpeg';
+  sizeBytes: number;
+  etag: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type BuildV2CloudAssetPresignResponse =
+  | {
+      alreadyConfirmed: true;
+      asset: BuildV2CloudAssetRecord;
+    }
+  | {
+      alreadyConfirmed: false;
+      uploadUrl: string;
+      objectKey: string;
+      expiresInSeconds: number;
+      requiredHeaders: { 'Content-Type': 'audio/wav' | 'audio/mpeg' };
+    };
+
+export interface BuildV2CloudAssetConfirmResponse {
+  asset: BuildV2CloudAssetRecord;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -139,6 +177,30 @@ export class DspService {
     });
   }
 
+  presignBuildV2Asset(
+    projectId: string,
+    request: BuildV2CloudAssetRequest,
+  ): Observable<BuildV2CloudAssetPresignResponse> {
+    return this.http.post<BuildV2CloudAssetPresignResponse>(
+      `${this.baseUrl}/build/v2/projects/${encodeURIComponent(projectId)}/assets/presign`,
+      request,
+      { headers: this.buildV2Headers() },
+    );
+  }
+
+  confirmBuildV2Asset(
+    projectId: string,
+    assetId: string,
+    request: Omit<BuildV2CloudAssetRequest, 'assetId'>,
+  ): Observable<BuildV2CloudAssetConfirmResponse> {
+    return this.http.post<BuildV2CloudAssetConfirmResponse>(
+      `${this.baseUrl}/build/v2/projects/${encodeURIComponent(projectId)}`
+        + `/assets/${encodeURIComponent(assetId)}/confirm`,
+      request,
+      { headers: this.buildV2Headers() },
+    );
+  }
+
   masterizeTrack(formData: FormData): Observable<Blob> {
     return this.http.post(`${this.baseUrl}/mastering/process`, formData, { responseType: 'blob' });
   }
@@ -207,12 +269,20 @@ export class DspService {
     );
   }
 
-  uploadToS3(uploadUrl: string, file: File): Observable<unknown> {
+  uploadToS3(uploadUrl: string, file: File, requiredContentType?: string): Observable<unknown> {
     const fileName = file.name.toLowerCase();
-    const contentType = fileName.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav';
+    const contentType = requiredContentType
+      || (fileName.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav');
     return this.http.put(uploadUrl, file, {
       headers: { 'Content-Type': contentType },
     });
+  }
+
+  private buildV2Headers(): HttpHeaders {
+    const accessToken = this.auth.session()?.access_token;
+    return accessToken
+      ? new HttpHeaders({ Authorization: `Bearer ${accessToken}` })
+      : new HttpHeaders();
   }
 
   private masteringV2Headers(): HttpHeaders {
