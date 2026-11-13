@@ -1978,3 +1978,217 @@ $text-muted: #8b949e;
     font-size: 11px;
   }
 }
+
+/* ==========================================================
+   BUILD V2 — DAW WORKSPACE V3
+   Fixed shell + internal scroll + selected-track inspector
+   ========================================================== */
+
+.build-v2-daw-v3 {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: min(760px, calc(100dvh - 140px));
+  min-height: 540px;
+  overflow: hidden;
+}
+
+.build-v2-daw-v3 .daw-timeline-stage {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.daw-track-viewport {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.build-v2-daw-v3 .daw-track-row {
+  min-height: 72px;
+}
+
+.build-v2-daw-v3 .daw-track-controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 10px;
+}
+
+.build-v2-daw-v3 .daw-track-state {
+  margin: 4px 0 0;
+}
+
+.build-v2-daw-v3 .daw-track-lane {
+  min-height: 72px;
+}
+
+.build-v2-daw-v3 .daw-track-clip {
+  top: 7px;
+  bottom: 7px;
+}
+
+.build-v2-daw-v3 .daw-transition-row-compact
+.daw-transition-label {
+  padding: 6px 10px;
+}
+
+.build-v2-daw-v3 .daw-transition-row-compact
+.daw-transition-content {
+  padding: 4px 8px;
+}
+
+.daw-inspector {
+  position: relative;
+  z-index: 30;
+  min-width: 0;
+  padding: 9px 12px 11px;
+  border-top: 1px solid
+    var(--studio-border-strong, rgba(255, 255, 255, 0.1));
+  background: var(--studio-card, #0b1015);
+  color: var(--studio-text, #e5edf3);
+}
+
+.daw-inspector-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.daw-inspector-heading > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.daw-inspector-heading strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daw-inspector-eyebrow,
+.daw-inspector-duration {
+  color: var(--studio-text-secondary, #718090);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.daw-inspector-body {
+  display: grid;
+  grid-template-columns:
+    minmax(130px, 0.8fr)
+    minmax(130px, 0.8fr)
+    minmax(280px, 1.5fr)
+    auto;
+  align-items: end;
+  gap: 12px;
+  min-width: 0;
+}
+
+.daw-inspector-control {
+  margin: 0;
+}
+
+.daw-inspector-trim {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(130px, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.daw-inspector-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.daw-inspector-actions button {
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 1px solid
+    var(--studio-border-strong, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.daw-inspector-actions button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.daw-inspector-delete {
+  min-width: 32px;
+}
+
+.daw-inspector-empty {
+  color: var(--studio-text-secondary, #718090);
+  font-size: 9px;
+}
+
+@media (max-width: 960px) {
+  .daw-inspector-body {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .daw-inspector-trim {
+    grid-column: 1 / -1;
+  }
+
+  .daw-inspector-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .build-v2-daw-v3 {
+    height: calc(100dvh - 90px);
+    min-height: 500px;
+  }
+
+  .build-v2-daw-v3 .daw-track-row,
+  .build-v2-daw-v3 .daw-transition-row {
+    grid-template-columns:
+      132px minmax(0, 1fr);
+  }
+
+  .build-v2-daw-v3 .daw-track-lane {
+    min-height: 72px;
+  }
+
+  .build-v2-daw-v3 .daw-track-clip {
+    top: 6px;
+    bottom: 6px;
+    height: auto;
+  }
+
+  .daw-inspector {
+    max-height: 42dvh;
+    overflow-y: auto;
+  }
+
+  .daw-inspector-body,
+  .daw-inspector-trim {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .daw-inspector-trim,
+  .daw-inspector-actions {
+    grid-column: auto;
+  }
+
+  .daw-inspector-actions {
+    flex-wrap: wrap;
+  }
+}

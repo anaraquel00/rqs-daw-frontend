@@ -174,7 +174,11 @@
       </div>
     </section>
 
-    <div class="build-v2-daw">
+    <div class="build-v2-daw build-v2-daw-v3">
+
+      <!-- ==================================================
+           FIXED TRANSPORT
+           ================================================== -->
 
       <div
         class="daw-transport"
@@ -251,6 +255,11 @@
         </span>
       </div>
 
+
+      <!-- ==================================================
+           FIXED RULER + INTERNAL TRACK VIEWPORT
+           ================================================== -->
+
       <div class="daw-timeline-stage">
 
         <div
@@ -265,423 +274,852 @@
           </div>
         </div>
 
-      <div class="daw-timeline-head">
-        <div class="daw-track-column-title">TRACKS</div>
+        <div class="daw-timeline-head">
+          <div class="daw-track-column-title">
+            TRACKS
+          </div>
 
-        <div class="daw-ruler" aria-hidden="true">
-          <span>00:00</span>
-          <span>{{ formatDuration(buildV2TransportDurationSeconds() * 0.25) }}</span>
-          <span>{{ formatDuration(buildV2TransportDurationSeconds() * 0.5) }}</span>
-          <span>{{ formatDuration(buildV2TransportDurationSeconds() * 0.75) }}</span>
-          <span>{{ formatDuration(buildV2TransportDurationSeconds()) }}</span>
+          <div class="daw-ruler" aria-hidden="true">
+            <span>00:00</span>
+
+            <span>
+              {{
+                formatDuration(
+                  buildV2TransportDurationSeconds() * 0.25
+                )
+              }}
+            </span>
+
+            <span>
+              {{
+                formatDuration(
+                  buildV2TransportDurationSeconds() * 0.5
+                )
+              }}
+            </span>
+
+            <span>
+              {{
+                formatDuration(
+                  buildV2TransportDurationSeconds() * 0.75
+                )
+              }}
+            </span>
+
+            <span>
+              {{
+                formatDuration(
+                  buildV2TransportDurationSeconds()
+                )
+              }}
+            </span>
+          </div>
+        </div>
+
+
+        <!-- ONLY THIS AREA SCROLLS VERTICALLY -->
+
+        <div class="daw-track-viewport">
+
+          <div class="daw-track-stack">
+
+            @for (
+              track of tracks;
+              track track.id;
+              let i = $index
+            ) {
+
+              <section
+                class="daw-track-row daw-track-row-compact"
+                [class.selected]="
+                  selectedTrackId === track.id
+                "
+                (click)="selectTrack(track)">
+
+                <!-- COMPACT TRACK HEADER -->
+
+                <aside class="daw-track-controls">
+
+                  <div class="daw-track-title">
+                    <span class="daw-track-number">
+                      {{ i + 1 }}
+                    </span>
+
+                    <strong [title]="track.name">
+                      {{ track.name }}
+                    </strong>
+                  </div>
+
+                  <div class="daw-track-state">
+                    <span>
+                      {{ formatDuration(track.duration) }}
+                    </span>
+
+                    <span
+                      [class.uploading]="
+                        track.uploadState === 'uploading'
+                      "
+                      [class.ready]="
+                        track.uploadState === 'ready'
+                      "
+                      [class.upload-error]="
+                        track.uploadState === 'error'
+                      ">
+                      {{ uploadStatus(track) }}
+                    </span>
+                  </div>
+
+                </aside>
+
+
+                <!-- TIMELINE LANE -->
+
+                <div class="daw-track-lane">
+
+                  <div
+                    class="daw-grid-lines"
+                    aria-hidden="true">
+                  </div>
+
+                  @let incoming =
+                    transitionRegion(i, 'in');
+
+                  @let outgoing =
+                    transitionRegion(i, 'out');
+
+                  <div
+                    class="daw-track-clip"
+                    [style.left.%]="
+                      trackTimelineLeftPercent(i)
+                    "
+                    [style.width.%]="
+                      trackTimelineWidthPercent(i)
+                    ">
+
+                    <app-preview-waveform
+                      [file]="track.file"
+                      [duration]="track.duration"
+                      [compact]="true">
+                    </app-preview-waveform>
+
+
+                    <!-- TRIM VISUAL -->
+
+                    <div
+                      class="trim-shades"
+                      aria-hidden="true">
+
+                      @if (
+                        trimStartPercent(track) > 0
+                      ) {
+                        <div
+                          class="trim-shade trim-start"
+                          [style.width.%]="
+                            trimStartPercent(track)
+                          ">
+                        </div>
+                      }
+
+                      @if (
+                        trimEndPercent(track) < 100
+                      ) {
+                        <div
+                          class="trim-shade trim-end"
+                          [style.left.%]="
+                            trimEndPercent(track)
+                          "
+                          [style.width.%]="
+                            100 - trimEndPercent(track)
+                          ">
+                        </div>
+                      }
+
+                    </div>
+
+
+                    <!-- TRANSITION VISUAL -->
+
+                    <div
+                      class="transition-shades"
+                      aria-hidden="true">
+
+                      @if (incoming) {
+                        <div
+                          class="
+                            transition-shade
+                            transition-in
+                          "
+                          [style.left.%]="
+                            incoming.left
+                          "
+                          [style.width.%]="
+                            incoming.width
+                          ">
+                        </div>
+                      }
+
+                      @if (outgoing) {
+                        <div
+                          class="
+                            transition-shade
+                            transition-out
+                          "
+                          [style.left.%]="
+                            outgoing.left
+                          "
+                          [style.width.%]="
+                            outgoing.width
+                          ">
+                        </div>
+                      }
+
+                    </div>
+
+                  </div>
+                </div>
+              </section>
+
+
+              <!-- COMPACT TRANSITION STRIP -->
+
+              @if (
+                transitions[i];
+                as transition
+              ) {
+
+                <section
+                  class="
+                    daw-transition-row
+                    daw-transition-row-compact
+                  ">
+
+                  <div class="daw-transition-label">
+                    {{
+                      transitionCopy('transition')
+                    }}
+                    {{ i + 1 }} → {{ i + 2 }}
+                  </div>
+
+                  <div class="daw-transition-content">
+
+                    <div class="transition-summary">
+
+                      <span>
+                        {{ transition.duration }}
+                        {{ lang.tr().SECONDS }}
+                        ·
+                        {{
+                          curveLabel(
+                            transition.curve
+                          )
+                        }}
+                      </span>
+
+                      <span
+                        class="
+                          transition-inheritance
+                        ">
+                        {{
+                          transitionCopy(
+                            transition.usesDefault
+                              ? 'inherited'
+                              : 'custom'
+                          )
+                        }}
+                      </span>
+
+                      <button
+                        type="button"
+                        class="btn-preview-transition"
+                        (click)="
+                          previewTransition(i)
+                        "
+                        [disabled]="
+                          !canPreviewTransition(i)
+                          || previewingIndex === i
+                        ">
+                        {{
+                          lang.tr()
+                            .BTN_PREVIEW_TRANSITION
+                        }}
+                      </button>
+
+                      <button
+                        type="button"
+                        (click)="
+                          toggleTransition(
+                            transition
+                          )
+                        "
+                        [attr.aria-expanded]="
+                          expandedTransition
+                          === transitionKey(
+                            transition
+                          )
+                        ">
+                        {{
+                          transitionCopy('edit')
+                        }}
+                      </button>
+
+                    </div>
+
+
+                    @if (
+                      expandedTransition
+                      === transitionKey(
+                        transition
+                      )
+                    ) {
+
+                      <div
+                        class="
+                          transition-editor
+                          daw-transition-editor
+                        "
+                        [id]="
+                          'transition-'
+                          + transition.fromTrackId
+                        ">
+
+                        <label
+                          class="
+                            transition-parameter
+                          ">
+
+                          <span>
+                            {{
+                              transitionCopy(
+                                'duration'
+                              )
+                            }}
+                          </span>
+
+                          <div
+                            class="
+                              transition-duration-control
+                            ">
+
+                            <input
+                              class="
+                                transition-duration-slider
+                              "
+                              type="range"
+                              min="0.5"
+                              max="15"
+                              step="0.5"
+                              [ngModel]="
+                                transition.duration
+                              "
+                              (ngModelChange)="
+                                editTransition(
+                                  i,
+                                  $event,
+                                  transition.curve
+                                )
+                              ">
+
+                            <div
+                              class="
+                                transition-duration-value
+                              ">
+                              <input
+                                type="number"
+                                min="0.5"
+                                max="15"
+                                step="0.5"
+                                [ngModel]="
+                                  transition.duration
+                                "
+                                (ngModelChange)="
+                                  editTransition(
+                                    i,
+                                    $event,
+                                    transition.curve
+                                  )
+                                ">
+                              <span>s</span>
+                            </div>
+
+                          </div>
+                        </label>
+
+
+                        <label
+                          class="
+                            transition-parameter
+                          ">
+
+                          <span>
+                            {{
+                              transitionCopy(
+                                'curve'
+                              )
+                            }}
+                          </span>
+
+                          <select
+                            [ngModel]="
+                              transition.curve
+                            "
+                            (ngModelChange)="
+                              editTransition(
+                                i,
+                                transition.duration,
+                                $event
+                              )
+                            ">
+
+                            <option
+                              value="equal-power">
+                              {{
+                                lang.tr()
+                                  .CURVE_EQUAL_POWER
+                              }}
+                            </option>
+
+                            <option value="linear">
+                              {{
+                                lang.tr()
+                                  .CURVE_LINEAR
+                              }}
+                            </option>
+
+                            <option
+                              value="fast-cut">
+                              {{
+                                lang.tr()
+                                  .CURVE_FAST_CUT
+                              }}
+                            </option>
+
+                          </select>
+                        </label>
+
+
+                        <button
+                          type="button"
+                          class="transition-reset"
+                          (click)="
+                            resetTransition(i)
+                          ">
+                          {{
+                            transitionCopy(
+                              'reset'
+                            )
+                          }}
+                        </button>
+
+                        <span
+                          class="transition-limits">
+                          {{
+                            transitionCopy(
+                              'limits'
+                            )
+                          }}
+                        </span>
+
+                      </div>
+                    }
+
+                  </div>
+                </section>
+              }
+            }
+
+          </div>
         </div>
       </div>
 
-      <div class="daw-track-stack">
-        @for (track of tracks; track track.id; let i = $index) {
-          <section
-            class="daw-track-row"
-            [class.selected]="selectedTrackId === track.id"
-            (click)="selectTrack(track)">
 
-            <aside class="daw-track-controls">
-              <div class="daw-track-title">
-                <span class="daw-track-number">{{ i + 1 }}</span>
+      <!-- ==================================================
+           FIXED SELECTED TRACK INSPECTOR
+           ================================================== -->
 
-                <strong [title]="track.name">
-                  {{ track.name }}
-                </strong>
+      <section
+        class="daw-inspector"
+        aria-label="Selected track inspector">
+
+        @if (
+          selectedTrack();
+          as selected
+        ) {
+
+          @let selectedIndex =
+            selectedTrackIndex();
+
+          <div class="daw-inspector-heading">
+
+            <div>
+              <span class="daw-inspector-eyebrow">
+                SELECTED TRACK
+              </span>
+
+              <strong>
+                {{ selectedIndex + 1 }} ·
+                {{ selected.name }}
+              </strong>
+            </div>
+
+            <span class="daw-inspector-duration">
+              {{
+                formatDuration(
+                  selected.duration
+                )
+              }}
+            </span>
+
+          </div>
+
+
+          <div class="daw-inspector-body">
+
+            <!-- GAIN -->
+
+            <label
+              class="
+                daw-mixer-control
+                daw-inspector-control
+              ">
+
+              <div>
+                <span>GAIN</span>
+
+                <output>
+                  {{
+                    selected.v2.gainDb
+                      | number:'1.1-1'
+                  }}
+                  dB
+                </output>
               </div>
 
-              <div class="daw-track-state">
-                <span>{{ formatDuration(track.duration) }}</span>
+              <input
+                class="
+                  track-control-slider
+                  track-control-gain
+                "
+                type="range"
+                min="-24"
+                max="6"
+                step="0.5"
+                [ngModel]="
+                  selected.v2.gainDb
+                "
+                (ngModelChange)="
+                  updateBuildV2Track(
+                    selectedIndex,
+                    { gainDb: $event }
+                  )
+                ">
 
-                <span
-                  [class.uploading]="track.uploadState === 'uploading'"
-                  [class.ready]="track.uploadState === 'ready'"
-                  [class.upload-error]="track.uploadState === 'error'">
-                  {{ uploadStatus(track) }}
-                </span>
+            </label>
+
+
+            <!-- PAN -->
+
+            <label
+              class="
+                daw-mixer-control
+                daw-inspector-control
+              ">
+
+              <div>
+                <span>PAN</span>
+
+                <output>
+                  {{
+                    selected.v2.pan === 0
+                      ? 'C'
+                      : (
+                          selected.v2.pan
+                          | number:'1.2-2'
+                        )
+                  }}
+                </output>
               </div>
 
-              <label class="daw-mixer-control">
-                <div>
-                  <span>GAIN</span>
-                  <output>{{ track.v2.gainDb | number:'1.1-1' }} dB</output>
-                </div>
+              <div class="daw-pan-line">
+                <span>L</span>
 
                 <input
-                  class="track-control-slider track-control-gain"
+                  class="
+                    track-control-slider
+                    track-control-pan
+                  "
                   type="range"
-                  min="-24"
-                  max="6"
-                  step="0.5"
-                  [ngModel]="track.v2.gainDb"
-                  (ngModelChange)="updateBuildV2Track(
-                    i,
-                    { gainDb: $event }
-                  )">
-              </label>
+                  min="-1"
+                  max="1"
+                  step="0.05"
+                  [ngModel]="
+                    selected.v2.pan
+                  "
+                  (ngModelChange)="
+                    updateBuildV2Track(
+                      selectedIndex,
+                      { pan: $event }
+                    )
+                  ">
 
-              <label class="daw-mixer-control">
-                <div>
-                  <span>PAN</span>
+                <span>R</span>
+              </div>
+
+            </label>
+
+
+            <!-- TRIM -->
+
+            <div class="daw-inspector-trim">
+
+              <label class="daw-trim-control">
+
+                <div class="daw-trim-label">
+                  <span>
+                    {{
+                      buildV2Copy(
+                        'trimStart'
+                      )
+                    }}
+                  </span>
+
                   <output>
-                    {{ track.v2.pan === 0
-                      ? 'C'
-                      : (track.v2.pan | number:'1.2-2') }}
+                    {{
+                      selected.v2
+                        .trimStartSeconds
+                        | number:'1.1-1'
+                    }}
+                    s
                   </output>
                 </div>
 
-                <div class="daw-pan-line">
-                  <span>L</span>
+                <div class="daw-trim-row">
 
                   <input
-                    class="track-control-slider track-control-pan"
+                    class="
+                      track-control-slider
+                      track-trim-start
+                    "
                     type="range"
-                    min="-1"
-                    max="1"
-                    step="0.05"
-                    [ngModel]="track.v2.pan"
-                    (ngModelChange)="updateBuildV2Track(
-                      i,
-                      { pan: $event }
-                    )">
+                    min="0"
+                    [max]="selected.duration"
+                    step="0.1"
+                    [ngModel]="
+                      selected.v2
+                        .trimStartSeconds
+                    "
+                    (ngModelChange)="
+                      updateBuildV2Track(
+                        selectedIndex,
+                        {
+                          trimStartSeconds:
+                            $event
+                        }
+                      )
+                    ">
 
-                  <span>R</span>
+                  <div class="daw-trim-number">
+                    <input
+                      type="number"
+                      min="0"
+                      [max]="selected.duration"
+                      step="0.1"
+                      [ngModel]="
+                        selected.v2
+                          .trimStartSeconds
+                      "
+                      (ngModelChange)="
+                        updateBuildV2Track(
+                          selectedIndex,
+                          {
+                            trimStartSeconds:
+                              $event
+                          }
+                        )
+                      ">
+                    <span>s</span>
+                  </div>
+
                 </div>
               </label>
 
-              <div class="daw-track-trim">
-                <label class="daw-trim-control">
-                  <div class="daw-trim-label">
-                    <span>{{ buildV2Copy('trimStart') }}</span>
-                    <output>
-                      {{ track.v2.trimStartSeconds | number:'1.1-1' }} s
-                    </output>
-                  </div>
 
-                  <div class="daw-trim-row">
+              <label class="daw-trim-control">
+
+                <div class="daw-trim-label">
+                  <span>
+                    {{
+                      buildV2Copy(
+                        'trimEnd'
+                      )
+                    }}
+                  </span>
+
+                  <output>
+                    {{
+                      (
+                        selected.v2
+                          .trimEndSeconds
+                        ?? selected.duration
+                      )
+                      | number:'1.1-1'
+                    }}
+                    s
+                  </output>
+                </div>
+
+                <div class="daw-trim-row">
+
+                  <input
+                    class="
+                      track-control-slider
+                      track-trim-end
+                    "
+                    type="range"
+                    min="0"
+                    [max]="selected.duration"
+                    step="0.1"
+                    [ngModel]="
+                      selected.v2
+                        .trimEndSeconds
+                      ?? selected.duration
+                    "
+                    (ngModelChange)="
+                      updateBuildV2Track(
+                        selectedIndex,
+                        {
+                          trimEndSeconds:
+                            $event
+                        }
+                      )
+                    ">
+
+                  <div class="daw-trim-number">
                     <input
-                      class="track-control-slider track-trim-start"
-                      type="range"
+                      type="number"
                       min="0"
-                      [max]="track.duration"
-                      step="0.1"
-                      [ngModel]="track.v2.trimStartSeconds"
-                      (ngModelChange)="updateBuildV2Track(
-                        i,
-                        { trimStartSeconds: $event }
-                      )">
-
-                    <div class="daw-trim-number">
-                      <input
-                        type="number"
-                        min="0"
-                        [max]="track.duration"
-                        step="0.1"
-                        [ngModel]="track.v2.trimStartSeconds"
-                        (ngModelChange)="updateBuildV2Track(
-                          i,
-                          { trimStartSeconds: $event }
-                        )">
-                      <span>s</span>
-                    </div>
-                  </div>
-                </label>
-
-                <label class="daw-trim-control">
-                  <div class="daw-trim-label">
-                    <span>{{ buildV2Copy('trimEnd') }}</span>
-                    <output>
-                      {{
-                        (
-                          track.v2.trimEndSeconds
-                          ?? track.duration
-                        ) | number:'1.1-1'
-                      }} s
-                    </output>
-                  </div>
-
-                  <div class="daw-trim-row">
-                    <input
-                      class="track-control-slider track-trim-end"
-                      type="range"
-                      min="0"
-                      [max]="track.duration"
+                      [max]="selected.duration"
                       step="0.1"
                       [ngModel]="
-                        track.v2.trimEndSeconds
-                        ?? track.duration
+                        selected.v2
+                          .trimEndSeconds
+                        ?? selected.duration
                       "
-                      (ngModelChange)="updateBuildV2Track(
-                        i,
-                        { trimEndSeconds: $event }
-                      )">
-
-                    <div class="daw-trim-number">
-                      <input
-                        type="number"
-                        min="0"
-                        [max]="track.duration"
-                        step="0.1"
-                        [ngModel]="
-                          track.v2.trimEndSeconds
-                          ?? track.duration
-                        "
-                        (ngModelChange)="updateBuildV2Track(
-                          i,
-                          { trimEndSeconds: $event }
-                        )">
-                      <span>s</span>
-                    </div>
+                      (ngModelChange)="
+                        updateBuildV2Track(
+                          selectedIndex,
+                          {
+                            trimEndSeconds:
+                              $event
+                          }
+                        )
+                      ">
+                    <span>s</span>
                   </div>
-                </label>
-              </div>
 
-              <div class="daw-track-actions">
-                <input
-                  type="file"
-                  #replacementInput
-                  accept=".wav,.mp3,audio/wav,audio/mpeg"
-                  (change)="replaceTrackFile(i, $event)"
-                  hidden>
-
-                <button
-                  type="button"
-                  class="replace-action"
-                  (click)="replacementInput.click()">
-                  {{ localCopy('replace') }}
-                </button>
-
-                <button
-                  type="button"
-                  (click)="moveUp(i)"
-                  [disabled]="i === 0"
-                  aria-label="Move track up">
-                  ▲
-                </button>
-
-                <button
-                  type="button"
-                  (click)="moveDown(i)"
-                  [disabled]="i === tracks.length - 1"
-                  aria-label="Move track down">
-                  ▼
-                </button>
-
-                <button
-                  type="button"
-                  class="btn-danger"
-                  (click)="removeTrack(i)"
-                  aria-label="Remove track">
-                  ×
-                </button>
-              </div>
-
-              @if (track.uploadState === 'error') {
-                <button
-                  type="button"
-                  class="daw-retry-upload"
-                  (click)="retryTrackUpload(i)">
-                  {{ localCopy('retry') }}
-                </button>
-              }
-            </aside>
-
-            <div class="daw-track-lane">
-              <div class="daw-grid-lines" aria-hidden="true"></div>
-
-              @let incoming = transitionRegion(i, 'in');
-              @let outgoing = transitionRegion(i, 'out');
-
-              <div
-                class="daw-track-clip"
-                [style.left.%]="trackTimelineLeftPercent(i)"
-                [style.width.%]="trackTimelineWidthPercent(i)">
-
-                <app-preview-waveform
-                  [file]="track.file"
-                  [duration]="track.duration"
-                  [compact]="true">
-                </app-preview-waveform>
-
-                <div class="trim-shades" aria-hidden="true">
-                  @if (trimStartPercent(track) > 0) {
-                    <div
-                      class="trim-shade trim-start"
-                      [style.width.%]="trimStartPercent(track)">
-                    </div>
-                  }
-
-                  @if (trimEndPercent(track) < 100) {
-                    <div
-                      class="trim-shade trim-end"
-                      [style.left.%]="trimEndPercent(track)"
-                      [style.width.%]="100 - trimEndPercent(track)">
-                    </div>
-                  }
                 </div>
+              </label>
 
-                <div class="transition-shades" aria-hidden="true">
-                  @if (incoming) {
-                    <div
-                      class="transition-shade transition-in"
-                      [style.left.%]="incoming.left"
-                      [style.width.%]="incoming.width">
-                    </div>
-                  }
-
-                  @if (outgoing) {
-                    <div
-                      class="transition-shade transition-out"
-                      [style.left.%]="outgoing.left"
-                      [style.width.%]="outgoing.width">
-                    </div>
-                  }
-                </div>
-              </div>
-
-              <div class="daw-lane-meta">
-                @if (incoming) {
-                  <span class="region-in">{{ incoming.label }}</span>
-                }
-
-                @if (outgoing) {
-                  <span class="region-out">{{ outgoing.label }}</span>
-                }
-              </div>
             </div>
-          </section>
 
-          @if (transitions[i]; as transition) {
-            <section class="daw-transition-row">
-              <div class="daw-transition-label">
-                {{ transitionCopy('transition') }} {{ i + 1 }} → {{ i + 2 }}
-              </div>
 
-              <div class="daw-transition-content">
-                <div class="transition-summary">
-                  <span>
-                    {{ transition.duration }}
-                    {{ lang.tr().SECONDS }}
-                    ·
-                    {{ curveLabel(transition.curve) }}
-                  </span>
+            <!-- TRACK ACTIONS -->
 
-                  <span class="transition-inheritance">
-                    {{ transitionCopy(
-                      transition.usesDefault ? 'inherited' : 'custom'
-                    ) }}
-                  </span>
+            <div class="daw-inspector-actions">
 
-                  <button
-                    type="button"
-                    class="btn-preview-transition"
-                    (click)="previewTransition(i)"
-                    [disabled]="
-                      !canPreviewTransition(i)
-                      || previewingIndex === i
-                    ">
-                    {{ lang.tr().BTN_PREVIEW_TRANSITION }}
-                  </button>
+              <input
+                type="file"
+                #selectedReplacementInput
+                accept="
+                  .wav,
+                  .mp3,
+                  audio/wav,
+                  audio/mpeg
+                "
+                (change)="
+                  replaceTrackFile(
+                    selectedIndex,
+                    $event
+                  )
+                "
+                hidden>
 
-                  <button
-                    type="button"
-                    (click)="toggleTransition(transition)"
-                    [attr.aria-expanded]="
-                      expandedTransition === transitionKey(transition)
-                    "
-                    [attr.aria-controls]="
-                      'transition-' + transition.fromTrackId
-                    ">
-                    {{ transitionCopy('edit') }}
-                  </button>
-                </div>
+              <button
+                type="button"
+                (click)="
+                  selectedReplacementInput
+                    .click()
+                ">
+                {{
+                  localCopy('replace')
+                }}
+              </button>
 
-                @if (
-                  expandedTransition === transitionKey(transition)
-                ) {
-                  <div
-                    class="transition-editor daw-transition-editor"
-                    [id]="'transition-' + transition.fromTrackId">
+              <button
+                type="button"
+                (click)="
+                  moveUp(selectedIndex)
+                "
+                [disabled]="
+                  selectedIndex <= 0
+                "
+                aria-label="Move selected track up">
+                ↑
+              </button>
 
-                    <label class="transition-parameter">
-                      <span>{{ transitionCopy('duration') }}</span>
+              <button
+                type="button"
+                (click)="
+                  moveDown(selectedIndex)
+                "
+                [disabled]="
+                  selectedIndex
+                  >= tracks.length - 1
+                "
+                aria-label="Move selected track down">
+                ↓
+              </button>
 
-                      <div class="transition-duration-control">
-                        <input
-                          class="transition-duration-slider"
-                          type="range"
-                          min="0.5"
-                          max="15"
-                          step="0.5"
-                          [ngModel]="transition.duration"
-                          (ngModelChange)="editTransition(
-                            i,
-                            $event,
-                            transition.curve
-                          )">
+              <button
+                type="button"
+                class="daw-inspector-reset"
+                (click)="
+                  resetBuildV2Track(
+                    selectedIndex
+                  )
+                ">
+                {{
+                  buildV2Copy('reset')
+                }}
+              </button>
 
-                        <div class="transition-duration-value">
-                          <input
-                            type="number"
-                            min="0.5"
-                            max="15"
-                            step="0.5"
-                            [ngModel]="transition.duration"
-                            (ngModelChange)="editTransition(
-                              i,
-                              $event,
-                              transition.curve
-                            )">
-                          <span>s</span>
-                        </div>
-                      </div>
-                    </label>
+              <button
+                type="button"
+                class="
+                  btn-danger
+                  daw-inspector-delete
+                "
+                (click)="
+                  removeTrack(
+                    selectedIndex
+                  )
+                ">
+                ×
+              </button>
 
-                    <label class="transition-parameter">
-                      <span>{{ transitionCopy('curve') }}</span>
+            </div>
 
-                      <select
-                        [ngModel]="transition.curve"
-                        (ngModelChange)="editTransition(
-                          i,
-                          transition.duration,
-                          $event
-                        )">
-                        <option value="equal-power">
-                          {{ lang.tr().CURVE_EQUAL_POWER }}
-                        </option>
+          </div>
 
-                        <option value="linear">
-                          {{ lang.tr().CURVE_LINEAR }}
-                        </option>
+        } @else {
 
-                        <option value="fast-cut">
-                          {{ lang.tr().CURVE_FAST_CUT }}
-                        </option>
-                      </select>
-                    </label>
+          <div class="daw-inspector-empty">
+            Select a track to edit.
+          </div>
 
-                    <button
-                      type="button"
-                      class="transition-reset"
-                      (click)="resetTransition(i)">
-                      {{ transitionCopy('reset') }}
-                    </button>
-
-                    <span class="transition-limits">
-                      {{ transitionCopy('limits') }}
-                    </span>
-                  </div>
-                }
-              </div>
-            </section>
-          }
         }
-      </div>
-      </div>
+
+      </section>
+
     </div>
 
     <div class="metadata-section">
