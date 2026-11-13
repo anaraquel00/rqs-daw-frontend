@@ -41,6 +41,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   private peaks: number[] = [];
   private viewReady = false;
   private resizeObserver?: ResizeObserver;
+  private themeObserver?: MutationObserver;
   private decodeToken = 0;
   private dragging = false;
   private dragPointerId: number | null = null;
@@ -50,10 +51,35 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
 
   ngAfterViewInit(): void {
     this.viewReady = true;
-    if (isPlatformBrowser(this.platformId) && typeof ResizeObserver !== 'undefined' && this.waveformHost) {
-      this.resizeObserver = new ResizeObserver(() => this.drawWaveform());
-      this.resizeObserver.observe(this.waveformHost.nativeElement);
+
+    if (isPlatformBrowser(this.platformId) && this.waveformHost) {
+      if (typeof ResizeObserver !== 'undefined') {
+        this.resizeObserver = new ResizeObserver(
+          () => this.drawWaveform(),
+        );
+        this.resizeObserver.observe(
+          this.waveformHost.nativeElement,
+        );
+      }
+
+      if (typeof MutationObserver !== 'undefined') {
+        const shell = this.waveformHost.nativeElement.closest(
+          'app-studio-shell',
+        );
+
+        if (shell) {
+          this.themeObserver = new MutationObserver(
+            () => this.drawWaveform(),
+          );
+
+          this.themeObserver.observe(shell, {
+            attributes: true,
+            attributeFilter: ['data-theme'],
+          });
+        }
+      }
     }
+
     void this.loadWaveform();
   }
 
@@ -72,6 +98,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   ngOnDestroy(): void {
     this.decodeToken += 1;
     this.resizeObserver?.disconnect();
+    this.themeObserver?.disconnect();
   }
 
   previewLeftPercent(): number {
@@ -249,8 +276,22 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cssWidth, cssHeight);
 
+    const waveformStyles = window.getComputedStyle(host);
+
+    const midlineColor =
+      waveformStyles
+        .getPropertyValue('--rqs-waveform-midline')
+        .trim()
+      || 'rgba(0, 240, 255, 0.14)';
+
+    const waveformColor =
+      waveformStyles
+        .getPropertyValue('--rqs-waveform-stroke')
+        .trim()
+      || 'rgba(0, 240, 255, 0.72)';
+
     const mid = cssHeight / 2;
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.14)';
+    ctx.strokeStyle = midlineColor;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, mid);
@@ -259,7 +300,7 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
 
     if (this.peaks.length === 0) return;
     const stepX = cssWidth / this.peaks.length;
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.72)';
+    ctx.strokeStyle = waveformColor;
     ctx.lineWidth = Math.max(1, stepX * 0.55);
     ctx.beginPath();
     for (let i = 0; i < this.peaks.length; i += 1) {
