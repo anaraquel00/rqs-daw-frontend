@@ -78,8 +78,18 @@
     <div class="curve-selection-console">
       <span class="console-label">{{ transitionCopy('defaults') }}</span>
       <label class="default-duration">{{ transitionCopy('duration') }}
-        <input type="number" min="0.5" max="15" step="0.5" [ngModel]="defaultDuration"
-          (ngModelChange)="updateDefaults($event, activeCurve)">
+        <input
+          type="number"
+          min="0.5"
+          [max]="buildV2DefaultDurationMaxSeconds()"
+          step="0.5"
+          [ngModel]="defaultDuration"
+          (ngModelChange)="
+            updateDefaults(
+              $event,
+              activeCurve
+            )
+          ">
         {{ lang.tr().SECONDS }}
       </label>
       <span>{{ transitionCopy('curve') }}</span>
@@ -591,7 +601,11 @@
                               "
                               type="range"
                               min="0.5"
-                              max="15"
+                              [max]="
+                                buildV2TransitionMaxDuration(
+                                  i
+                                )
+                              "
                               step="0.5"
                               [ngModel]="
                                 transition.duration
@@ -611,7 +625,11 @@
                               <input
                                 type="number"
                                 min="0.5"
-                                max="15"
+                                [max]="
+                                  buildV2TransitionMaxDuration(
+                                    i
+                                  )
+                                "
                                 step="0.5"
                                 [ngModel]="
                                   transition.duration

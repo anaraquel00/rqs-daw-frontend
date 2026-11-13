@@ -57,6 +57,14 @@ import {
   buildV2TimelineDurationSeconds,
   buildV2TrackTimelineStartSeconds,
 } from './build-v2-track-playhead';
+import {
+  BUILD_V2_TRANSITION_MAX_SECONDS,
+  BUILD_V2_TRANSITION_MIN_SECONDS,
+  buildV2SharedTransitionMaxDuration,
+  buildV2TransitionMaxDuration as calculateBuildV2TransitionMaxDuration,
+  normalizeBuildV2TransitionCurve,
+  normalizeBuildV2TransitionDuration,
+} from './build-v2-transition-state';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -673,36 +681,343 @@ export class MixPanelComponent implements OnDestroy {
     };
   }
 
-  updateDefaults(duration: number, curve: SetlistCurve): void {
-    this.stopTransitionPreview();
-    this.defaultDuration = Number(duration);
-    this.activeCurve = curve;
-    this.transitions = this.transitions.map(t => t.usesDefault
-      ? { ...t, duration: this.defaultDuration, curve } : t);
-    this.invalidateBuildV2TransportPreview();
+  buildV2TransitionMaxDuration(
+    index: number,
+  ): number {
+    const left =
+      this.tracks[index];
+
+    const right =
+      this.tracks[index + 1];
+
+    if (!left || !right) {
+      return (
+        BUILD_V2_TRANSITION_MAX_SECONDS
+      );
+    }
+
+    const leftIncoming =
+      index > 0
+        ? (
+          this.transitions[index - 1]
+            ?.duration
+          ?? 0
+        )
+        : 0;
+
+    const rightOutgoing =
+      index + 1
+        < this.transitions.length
+        ? (
+          this.transitions[index + 1]
+            ?.duration
+          ?? 0
+        )
+        : 0;
+
+    return Math.max(
+      BUILD_V2_TRANSITION_MIN_SECONDS,
+      calculateBuildV2TransitionMaxDuration(
+        this.effectiveRange(left).duration,
+        this.effectiveRange(right).duration,
+        leftIncoming,
+        rightOutgoing,
+      ),
+    );
   }
 
-  editTransition(index: number, duration: number, curve: SetlistCurve): void {
-    if (!this.transitions[index]) return;
-    this.stopTransitionPreview();
-    this.transitions = this.transitions.map((t, i) => i === index
-      ? { ...t, duration: Number(duration), curve, usesDefault: false } : t);
-    this.invalidateBuildV2TransportPreview();
+  private buildV2BulkTransitionMaxDuration(
+    applyToAll: boolean,
+  ): number {
+    return Math.max(
+      BUILD_V2_TRANSITION_MIN_SECONDS,
+      buildV2SharedTransitionMaxDuration(
+        this.buildV2EffectiveDurations(),
+        this.transitions.map(
+          transition =>
+            transition.duration,
+        ),
+        this.transitions.map(
+          transition =>
+            applyToAll
+            || transition.usesDefault,
+        ),
+      ),
+    );
   }
 
-  resetTransition(index: number): void {
+  buildV2DefaultDurationMaxSeconds():
+    number {
+    return this.buildV2BulkTransitionMaxDuration(
+      false,
+    );
+  }
+
+  private commitBuildV2TransitionMutation(
+    nextTransitions:
+      SetlistTransition[],
+    previous:
+      BuildV2TransportSnapshot,
+  ): boolean {
+    const oldTransitions =
+      this.transitions;
+
+    this.transitions =
+      nextTransitions;
+
+    const success =
+      this.rescheduleBuildV2TransportAfterStructuralEdit(
+        previous,
+      );
+
+    if (!success) {
+      this.transitions =
+        oldTransitions;
+
+      return false;
+    }
+
+    return true;
+  }
+
+  updateDefaults(
+    duration: number,
+    curve: SetlistCurve,
+  ): void {
     this.stopTransitionPreview();
-    this.transitions = this.transitions.map((t, i) => i === index
-      ? { ...t, duration: this.defaultDuration, curve: this.activeCurve, usesDefault: true } : t);
-    this.invalidateBuildV2TransportPreview();
+
+    const previous =
+      this.captureBuildV2TransportSnapshot();
+
+    const previousDefaultDuration =
+      this.defaultDuration;
+
+    const previousActiveCurve =
+      this.activeCurve;
+
+    const normalizedCurve =
+      normalizeBuildV2TransitionCurve(
+        curve,
+        this.activeCurve,
+      );
+
+    const maximum =
+      this.buildV2BulkTransitionMaxDuration(
+        false,
+      );
+
+    const normalizedDuration =
+      normalizeBuildV2TransitionDuration(
+        duration,
+        this.defaultDuration,
+        maximum,
+      );
+
+    if (normalizedDuration === null) {
+      return;
+    }
+
+    this.defaultDuration =
+      normalizedDuration;
+
+    this.activeCurve =
+      normalizedCurve;
+
+    const nextTransitions =
+      this.transitions.map(
+        transition =>
+          transition.usesDefault
+            ? {
+                ...transition,
+                duration:
+                  normalizedDuration,
+                curve:
+                  normalizedCurve,
+              }
+            : transition,
+      );
+
+    if (
+      !this.commitBuildV2TransitionMutation(
+        nextTransitions,
+        previous,
+      )
+    ) {
+      this.defaultDuration =
+        previousDefaultDuration;
+
+      this.activeCurve =
+        previousActiveCurve;
+    }
+  }
+
+  editTransition(
+    index: number,
+    duration: number,
+    curve: SetlistCurve,
+  ): void {
+    const current =
+      this.transitions[index];
+
+    if (!current) {
+      return;
+    }
+
+    this.stopTransitionPreview();
+
+    const previous =
+      this.captureBuildV2TransportSnapshot();
+
+    const maximum =
+      this.buildV2TransitionMaxDuration(
+        index,
+      );
+
+    const normalizedDuration =
+      normalizeBuildV2TransitionDuration(
+        duration,
+        current.duration,
+        maximum,
+      );
+
+    if (normalizedDuration === null) {
+      return;
+    }
+
+    const normalizedCurve =
+      normalizeBuildV2TransitionCurve(
+        curve,
+        current.curve,
+      );
+
+    const nextTransitions =
+      this.transitions.map(
+        (transition, transitionIndex) =>
+          transitionIndex === index
+            ? {
+                ...transition,
+                duration:
+                  normalizedDuration,
+                curve:
+                  normalizedCurve,
+                usesDefault: false,
+              }
+            : transition,
+      );
+
+    this.commitBuildV2TransitionMutation(
+      nextTransitions,
+      previous,
+    );
+  }
+
+  resetTransition(
+    index: number,
+  ): void {
+    const current =
+      this.transitions[index];
+
+    if (!current) {
+      return;
+    }
+
+    this.stopTransitionPreview();
+
+    const previous =
+      this.captureBuildV2TransportSnapshot();
+
+    const maximum =
+      this.buildV2TransitionMaxDuration(
+        index,
+      );
+
+    const normalizedDuration =
+      normalizeBuildV2TransitionDuration(
+        this.defaultDuration,
+        current.duration,
+        maximum,
+      );
+
+    if (normalizedDuration === null) {
+      return;
+    }
+
+    const nextTransitions =
+      this.transitions.map(
+        (transition, transitionIndex) =>
+          transitionIndex === index
+            ? {
+                ...transition,
+                duration:
+                  normalizedDuration,
+                curve:
+                  this.activeCurve,
+                usesDefault: true,
+              }
+            : transition,
+      );
+
+    this.commitBuildV2TransitionMutation(
+      nextTransitions,
+      previous,
+    );
   }
 
   applyDefaultsToAll(): void {
+    if (
+      this.transitions.length === 0
+    ) {
+      return;
+    }
+
     this.stopTransitionPreview();
-    this.transitions = this.transitions.map(t => ({
-      ...t, duration: this.defaultDuration, curve: this.activeCurve, usesDefault: true,
-    }));
-    this.invalidateBuildV2TransportPreview();
+
+    const previous =
+      this.captureBuildV2TransportSnapshot();
+
+    const previousDefaultDuration =
+      this.defaultDuration;
+
+    const maximum =
+      this.buildV2BulkTransitionMaxDuration(
+        true,
+      );
+
+    const normalizedDuration =
+      normalizeBuildV2TransitionDuration(
+        this.defaultDuration,
+        this.defaultDuration,
+        maximum,
+      );
+
+    if (normalizedDuration === null) {
+      return;
+    }
+
+    this.defaultDuration =
+      normalizedDuration;
+
+    const nextTransitions =
+      this.transitions.map(
+        transition => ({
+          ...transition,
+          duration:
+            normalizedDuration,
+          curve:
+            this.activeCurve,
+          usesDefault: true,
+        }),
+      );
+
+    if (
+      !this.commitBuildV2TransitionMutation(
+        nextTransitions,
+        previous,
+      )
+    ) {
+      this.defaultDuration =
+        previousDefaultDuration;
+    }
   }
 
   toggleTransition(t: SetlistTransition): void {
@@ -954,7 +1269,7 @@ export class MixPanelComponent implements OnDestroy {
       && transportBefore
     ) {
       const rescheduled =
-        this.rescheduleBuildV2TransportAfterTrim(
+        this.rescheduleBuildV2TransportAfterStructuralEdit(
           transportBefore,
         );
 
@@ -1269,7 +1584,7 @@ export class MixPanelComponent implements OnDestroy {
     );
   }
 
-  private rescheduleBuildV2TransportAfterTrim(
+  private rescheduleBuildV2TransportAfterStructuralEdit(
     previous:
       BuildV2TransportSnapshot,
   ): boolean {
@@ -1323,8 +1638,9 @@ export class MixPanelComponent implements OnDestroy {
       /*
        * Preserve the absolute global position.
        *
-       * Geometry before/after Trim may differ, but the
-       * setlist clock never jumps back to zero.
+       * Geometry before/after Trim or Crossfade may
+       * differ, but the setlist clock never jumps back
+       * to zero.
        */
       this.buildV2TransportClock.setDuration(
         plan.outputDurationSeconds,
@@ -1383,7 +1699,7 @@ export class MixPanelComponent implements OnDestroy {
        * sources remain alive if planning fails.
        */
       console.warn(
-        '[RQS BUILD V2 TRIM] '
+        '[RQS BUILD V2 STRUCTURAL EDIT] '
         + 'Live replan rejected; restoring previous state.',
         error,
       );

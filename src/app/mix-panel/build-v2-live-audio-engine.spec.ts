@@ -427,6 +427,157 @@ describe('BUILD V2 live audio engine', () => {
     },
   );
 
+  it(
+    'reschedules track overlap when transition duration changes',
+    () => {
+      const context =
+        new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      const original = engine.prepare(
+        [
+          makeTrack('a', 10),
+          makeTrack('b', 10),
+        ],
+        [
+          transition(2),
+        ],
+      );
+
+      expect(
+        original.outputDurationSeconds,
+      ).toBe(18);
+
+      engine.start(9);
+
+      const originalB =
+        context.sources[1];
+
+      expect(
+        originalB.starts[0].offset,
+      ).toBe(1);
+
+      const updated = engine.prepare(
+        [
+          makeTrack('a', 10),
+          makeTrack('b', 10),
+        ],
+        [
+          transition(4),
+        ],
+      );
+
+      expect(
+        updated.outputDurationSeconds,
+      ).toBe(16);
+
+      engine.start(9);
+
+      const updatedB =
+        context.sources.at(-1);
+
+      expect(
+        updatedB?.starts[0],
+      ).toEqual({
+        when: 10,
+        offset: 3,
+        duration: 7,
+      });
+
+      expect(
+        originalB.stopCount,
+      ).toBe(1);
+    },
+  );
+
+  it(
+    'rebuilds fade envelopes when the transition curve changes during playback',
+    () => {
+      const context =
+        new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+          makeTrack('b', 10),
+        ],
+        [
+          {
+            duration: 2,
+            curve: 'equal-power',
+          },
+        ],
+      );
+
+      engine.start(9);
+
+      /*
+       * Track B:
+       * gains[2] = mixGain
+       * gains[3] = fadeGain
+       */
+      const equalPowerFade =
+        context.gains[3]
+          .gain
+          .curves[0]
+          .values[0];
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+          makeTrack('b', 10),
+        ],
+        [
+          {
+            duration: 2,
+            curve: 'linear',
+          },
+        ],
+      );
+
+      engine.start(9);
+
+      const lastFadeGain =
+        context.gains.at(-1);
+
+      const linearFade =
+        lastFadeGain
+          ?.gain
+          .curves[0]
+          .values[0];
+
+      expect(
+        equalPowerFade,
+      ).toBeCloseTo(
+        Math.SQRT1_2,
+        2,
+      );
+
+      expect(
+        linearFade,
+      ).toBeCloseTo(
+        0.5,
+        2,
+      );
+
+      expect(
+        linearFade,
+      ).not.toBeCloseTo(
+        equalPowerFade,
+        2,
+      );
+    },
+  );
+
   it('updates gain immediately without rebuilding the source', () => {
     const context = new FakeContext();
 

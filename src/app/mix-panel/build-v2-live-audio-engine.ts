@@ -36,7 +36,7 @@ export class BuildV2LiveAudioEngine {
      * Build the new plan BEFORE stopping the currently
      * audible sources.
      *
-     * If the new Trim/transition combination is invalid,
+     * If a new Trim/transition plan is invalid,
      * the existing playback remains untouched.
      */
     const nextPlan = planBuildV2Mix(
