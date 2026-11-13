@@ -241,6 +241,66 @@ describe('DspService Mastering V2 transport', () => {
     expect(request.request.headers.get('Content-Type')).toBe('audio/wav');
     request.flush(null);
   });
+
+  it('sends the BUILD V2 presign contract with the authenticated bearer token', () => {
+    const projectId = '20000000-0000-4000-8000-000000000002';
+    const assetId = '30000000-0000-4000-8000-000000000003';
+    const body = {
+      assetId,
+      originalFileName: 'track.wav',
+      format: 'wav' as const,
+      sizeBytes: 1024,
+    };
+    service.presignBuildV2Asset(projectId, body).subscribe();
+
+    const request = http.expectOne(
+      `${environment.baseUrl}/build/v2/projects/${projectId}/assets/presign`,
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(body);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      alreadyConfirmed: false,
+      uploadUrl: 'https://s3.example.test/build-upload',
+      objectKey: 'uploads/user/build/project/asset.wav',
+      expiresInSeconds: 900,
+      requiredHeaders: { 'Content-Type': 'audio/wav' },
+    });
+  });
+
+  it('sends the BUILD V2 confirm contract with the authenticated bearer token', () => {
+    const projectId = '20000000-0000-4000-8000-000000000002';
+    const assetId = '30000000-0000-4000-8000-000000000003';
+    const body = {
+      originalFileName: 'track.mp3',
+      format: 'mp3' as const,
+      sizeBytes: 2048,
+    };
+    service.confirmBuildV2Asset(projectId, assetId, body).subscribe();
+
+    const request = http.expectOne(
+      `${environment.baseUrl}/build/v2/projects/${projectId}/assets/${assetId}/confirm`,
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(body);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({ asset: {} });
+  });
+
+  it('uses the exact server-required Content-Type without adding JWT to BUILD S3 PUT', () => {
+    const file = new File(['audio'], 'ambiguous.wav', { type: 'application/octet-stream' });
+    service.uploadToS3(
+      'https://s3.example.test/build-upload',
+      file,
+      'audio/mpeg',
+    ).subscribe();
+
+    const request = http.expectOne('https://s3.example.test/build-upload');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.headers.get('Content-Type')).toBe('audio/mpeg');
+    expect(request.request.headers.has('Authorization')).toBeFalse();
+    request.flush(null);
+  });
   it('requests a user-owned Setlist upload URL with authentication', () => {
     service.getSetlistPresignedUrl('set-track.wav').subscribe();
 
