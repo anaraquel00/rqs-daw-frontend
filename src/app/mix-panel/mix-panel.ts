@@ -33,6 +33,9 @@ import {
   hasBuildV2Adjustments,
   normalizeBuildV2TrackState,
 } from './build-v2-track-state';
+import {
+  renderBuildV2FilesOffline,
+} from './build-v2-local-render';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -510,6 +513,25 @@ export class MixPanelComponent implements OnDestroy {
     this.tracks.forEach(track => { track.v2 = createBuildV2TrackState(); });
     this.tracks = [...this.tracks];
     this.stopTransitionPreview();
+  }
+
+  async renderBuildV2PocAudioBuffer(): Promise<AudioBuffer> {
+    return renderBuildV2FilesOffline(
+      this.tracks.map(track => ({
+        id: track.id,
+        file: track.file,
+        state: {
+          ...track.v2,
+        },
+      })),
+      this.transitions.map(transition => ({
+        duration: transition.duration,
+        curve: transition.curve,
+      })),
+      {
+        sampleRate: 48_000,
+      },
+    );
   }
 
   curveLabel(curve: SetlistCurve): string {
