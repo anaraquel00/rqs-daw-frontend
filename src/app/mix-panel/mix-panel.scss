@@ -808,38 +808,34 @@ $text-muted: #8b949e;
   min-width: 0;
 }
 
-.daw-global-playhead-layer {
+.daw-ruler-playhead-track {
   position: absolute;
-  z-index: 25;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 210px;
+  z-index: 2;
+  inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
 
-.daw-global-playhead {
+.daw-ruler-global-playhead {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 2px;
-  transform: translateX(-1px);
-  background: #ff2f76;
+  width: 1px;
+  transform: translateX(-0.5px);
+  background: rgba(255, 47, 118, 0.72);
   box-shadow:
-    0 0 0 1px rgba(255, 47, 118, 0.12),
-    0 0 8px rgba(255, 47, 118, 0.42);
+    0 0 5px rgba(255, 47, 118, 0.28);
 }
 
-.daw-global-playhead::before {
+.daw-ruler-global-playhead::before {
   position: absolute;
   top: 0;
   left: 50%;
   width: 0;
   height: 0;
-  border-top: 6px solid #ff2f76;
-  border-right: 4px solid transparent;
-  border-left: 4px solid transparent;
+  border-top: 5px solid #ff2f76;
+  border-right: 3px solid transparent;
+  border-left: 3px solid transparent;
   transform: translateX(-50%);
   content: '';
 }
@@ -863,6 +859,7 @@ $text-muted: #8b949e;
 }
 
 .daw-ruler {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -1180,10 +1177,6 @@ $text-muted: #8b949e;
   .daw-transport-state {
     grid-column: 1 / -1;
     justify-self: start;
-  }
-
-  .daw-global-playhead-layer {
-    left: 0;
   }
 
   .daw-timeline-head {

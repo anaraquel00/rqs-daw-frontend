@@ -52,6 +52,7 @@ import {
 import {
   buildV2GlobalSecondsToSource,
   buildV2SourceSecondsToGlobal,
+  buildV2TimelineDurationSeconds,
   buildV2TrackTimelineStartSeconds,
 } from './build-v2-track-playhead';
 
@@ -384,18 +385,36 @@ export class MixPanelComponent implements OnDestroy {
     return 100 * this.effectiveRange(track).end / track.duration;
   }
 
+  private buildV2EffectiveDurations():
+    number[] {
+    return this.tracks.map(
+      track =>
+        this.effectiveRange(track).duration,
+    );
+  }
+
+  private buildV2TransitionDurations():
+    number[] {
+    return this.transitions.map(
+      transition =>
+        transition.duration,
+    );
+  }
+
+  private buildV2UnifiedTimelineDurationSeconds():
+    number {
+    return buildV2TimelineDurationSeconds(
+      this.buildV2EffectiveDurations(),
+      this.buildV2TransitionDurations(),
+    );
+  }
+
   private buildV2TrackAudioTimelineStartSeconds(
     index: number,
   ): number {
     return buildV2TrackTimelineStartSeconds(
-      this.tracks.map(
-        track =>
-          this.effectiveRange(track).duration,
-      ),
-      this.transitions.map(
-        transition =>
-          transition.duration,
-      ),
+      this.buildV2EffectiveDurations(),
+      this.buildV2TransitionDurations(),
       index,
     );
   }
@@ -526,55 +545,68 @@ export class MixPanelComponent implements OnDestroy {
     );
   }
 
-  trackTimelineStartSeconds(index: number): number {
-    if (index <= 0) return 0;
-
-    let start = 0;
-
-    for (let i = 0; i < index; i += 1) {
-      const current = this.tracks[i];
-      const next = this.tracks[i + 1];
-
-      if (!current) break;
-
-      start += Math.max(0, current.duration);
-
-      const transition = this.transitions[i];
-
-      if (transition && next) {
-        const safeOverlap = Math.min(
-          Math.max(0, transition.duration),
-          Math.max(0, current.duration),
-          Math.max(0, next.duration),
-        );
-
-        start -= safeOverlap;
-      }
-    }
-
-    return Math.max(0, start);
-  }
-
-  trackTimelineLeftPercent(index: number): number {
-    const total = this.calculateEstimatedOutputDuration();
-    if (total <= 0) return 0;
-
-    return Math.min(
-      100,
-      100 * this.trackTimelineStartSeconds(index) / total,
+  trackTimelineStartSeconds(
+    index: number,
+  ): number {
+    return this.buildV2TrackAudioTimelineStartSeconds(
+      index,
     );
   }
 
-  trackTimelineWidthPercent(index: number): number {
+  trackTimelineLeftPercent(
+    index: number,
+  ): number {
+    const total =
+      this.buildV2UnifiedTimelineDurationSeconds();
+
+    if (total <= 0) {
+      return 0;
+    }
+
+    return Math.min(
+      100,
+      (
+        this.trackTimelineStartSeconds(index)
+        / total
+      ) * 100,
+    );
+  }
+
+  trackTimelineWidthPercent(
+    index: number,
+  ): number {
     const track = this.tracks[index];
-    const total = this.calculateEstimatedOutputDuration();
 
-    if (!track || total <= 0 || track.duration <= 0) return 0;
+    const total =
+      this.buildV2UnifiedTimelineDurationSeconds();
 
-    const left = this.trackTimelineLeftPercent(index);
-    const width = 100 * track.duration / total;
+    if (!track || total <= 0) {
+      return 0;
+    }
 
-    return Math.max(0, Math.min(width, 100 - left));
+    const effectiveDuration =
+      this.effectiveRange(track).duration;
+
+    if (effectiveDuration <= 0) {
+      return 0;
+    }
+
+    const left =
+      this.trackTimelineLeftPercent(index);
+
+    const width =
+      (
+        effectiveDuration
+        / total
+      ) * 100;
+
+    return Math.max(
+      0,
+      Math.min(
+        width,
+        100 - left,
+      ),
+    );
   }
 
   transitionKey(t: Pick<SetlistTransition, 'fromTrackId' | 'toTrackId'>): string {
@@ -588,9 +620,25 @@ export class MixPanelComponent implements OnDestroy {
       || !Number.isFinite(transition.duration) || transition.duration <= 0
       || (direction === 'in' ? transition.toTrackId : transition.fromTrackId) !== track.id) return null;
     const range = this.effectiveRange(track);
-    const seconds = Math.min(range.duration, transition.duration);
-    const start = direction === 'in' ? range.start : range.end - seconds;
+    const seconds = Math.min(
+      range.duration,
+      transition.duration,
+    );
+
+    const start =
+      direction === 'in'
+        ? range.start
+        : range.end - seconds;
+
     const end = start + seconds;
+
+    const localStart =
+      direction === 'in'
+        ? 0
+        : Math.max(
+            0,
+            range.duration - seconds,
+          );
     const labels = {
       en: { in: 'Transition in', out: 'Transition out' },
       pt: { in: 'Entrada da transição', out: 'Saída da transição' },
@@ -598,9 +646,29 @@ export class MixPanelComponent implements OnDestroy {
       fr: { in: 'Entrée de transition', out: 'Sortie de transition' },
     };
     const label = labels[this.lang.currentLang()][direction];
-    return { start, end, seconds, left: 100 * start / track.duration,
-      width: 100 * seconds / track.duration,
-      label: `${label}: ${seconds} s · ${this.formatDuration(start)} → ${this.formatDuration(end)}` };
+    return {
+      start,
+      end,
+      seconds,
+      left:
+        range.duration > 0
+          ? (
+            localStart
+            / range.duration
+          ) * 100
+          : 0,
+      width:
+        range.duration > 0
+          ? (
+            seconds
+            / range.duration
+          ) * 100
+          : 0,
+      label:
+        `${label}: ${seconds} s · `
+        + `${this.formatDuration(start)} → `
+        + `${this.formatDuration(end)}`,
+    };
   }
 
   updateDefaults(duration: number, curve: SetlistCurve): void {
@@ -827,22 +895,7 @@ export class MixPanelComponent implements OnDestroy {
 
   private calculateBuildV2TransportEstimatedDuration():
     number {
-    const clips = this.tracks.reduce(
-      (sum, track) =>
-        sum + this.effectiveRange(track).duration,
-      0,
-    );
-
-    const overlaps = this.transitions.reduce(
-      (sum, transition) =>
-        sum + Math.max(0, transition.duration),
-      0,
-    );
-
-    return Math.max(
-      0,
-      clips - overlaps,
-    );
+    return this.buildV2UnifiedTimelineDurationSeconds();
   }
 
   async playBuildV2Transport(): Promise<void> {
@@ -1333,7 +1386,7 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   calculateEstimatedOutputDuration(): number {
-    return Math.max(0, this.calculateSourceDuration() - this.calculateCrossfadeDuration());
+    return this.buildV2UnifiedTimelineDurationSeconds();
   }
 
   calculateEstimatedSizeMb(): number {

@@ -262,24 +262,24 @@
 
       <div class="daw-timeline-stage">
 
-        <div
-          class="daw-global-playhead-layer"
-          aria-hidden="true">
-          <div
-            class="daw-global-playhead"
-            [style.left.%]="
-              buildV2TransportSnapshot()
-                .progressPercent
-            ">
-          </div>
-        </div>
-
         <div class="daw-timeline-head">
           <div class="daw-track-column-title">
             TRACKS
           </div>
 
           <div class="daw-ruler" aria-hidden="true">
+
+            <div
+              class="daw-ruler-playhead-track">
+              <div
+                class="daw-ruler-global-playhead"
+                [style.left.%]="
+                  buildV2TransportSnapshot()
+                    .progressPercent
+                ">
+              </div>
+            </div>
+
             <span>00:00</span>
 
             <span>
@@ -404,6 +404,12 @@
                       [currentTime]="
                         trackLocalPlayheadSeconds(i)
                       "
+                      [viewStart]="
+                        effectiveRange(track).start
+                      "
+                      [viewEnd]="
+                        effectiveRange(track).end
+                      "
                       [showPlayhead]="
                         trackLocalPlayheadVisible(i)
                       "
@@ -414,40 +420,6 @@
                         )
                       ">
                     </app-preview-waveform>
-
-
-                    <!-- TRIM VISUAL -->
-
-                    <div
-                      class="trim-shades"
-                      aria-hidden="true">
-
-                      @if (
-                        trimStartPercent(track) > 0
-                      ) {
-                        <div
-                          class="trim-shade trim-start"
-                          [style.width.%]="
-                            trimStartPercent(track)
-                          ">
-                        </div>
-                      }
-
-                      @if (
-                        trimEndPercent(track) < 100
-                      ) {
-                        <div
-                          class="trim-shade trim-end"
-                          [style.left.%]="
-                            trimEndPercent(track)
-                          "
-                          [style.width.%]="
-                            100 - trimEndPercent(track)
-                          ">
-                        </div>
-                      }
-
-                    </div>
 
 
                     <!-- TRANSITION VISUAL -->

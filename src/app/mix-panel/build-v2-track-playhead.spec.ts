@@ -1,6 +1,7 @@
 import {
   buildV2GlobalSecondsToSource,
   buildV2SourceSecondsToGlobal,
+  buildV2TimelineDurationSeconds,
   buildV2TrackTimelineStartSeconds,
 } from './build-v2-track-playhead';
 
@@ -44,6 +45,25 @@ describe(
             2,
           ),
         ).toBe(13);
+      },
+    );
+
+    it(
+      'calculates one unified effective timeline duration',
+      () => {
+        expect(
+          buildV2TimelineDurationSeconds(
+            [
+              10,
+              8,
+              12,
+            ],
+            [
+              2,
+              3,
+            ],
+          ),
+        ).toBe(25);
       },
     );
 

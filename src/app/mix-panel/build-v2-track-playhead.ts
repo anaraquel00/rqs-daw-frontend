@@ -62,6 +62,38 @@ export function buildV2TrackTimelineStartSeconds(
   return Math.max(0, start);
 }
 
+export function buildV2TimelineDurationSeconds(
+  effectiveDurations: readonly number[],
+  transitionDurations: readonly number[],
+): number {
+  if (effectiveDurations.length === 0) {
+    return 0;
+  }
+
+  const lastIndex =
+    effectiveDurations.length - 1;
+
+  const lastStart =
+    buildV2TrackTimelineStartSeconds(
+      effectiveDurations,
+      transitionDurations,
+      lastIndex,
+    );
+
+  const lastDuration = Math.max(
+    0,
+    finiteOr(
+      effectiveDurations[lastIndex],
+      0,
+    ),
+  );
+
+  return Math.max(
+    0,
+    lastStart + lastDuration,
+  );
+}
+
 export function buildV2SourceSecondsToGlobal(
   timelineStartSeconds: number,
   sourceSeconds: number,

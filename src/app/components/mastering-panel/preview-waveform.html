@@ -25,10 +25,14 @@
       : null
   "
   [attr.aria-valuemin]="
-    compactInteractive ? 0 : null
+    compactInteractive
+      ? viewStartSeconds()
+      : null
   "
   [attr.aria-valuemax]="
-    compactInteractive ? duration : null
+    compactInteractive
+      ? viewEndSeconds()
+      : null
   "
   [attr.aria-valuenow]="
     compactInteractive ? currentTime : null

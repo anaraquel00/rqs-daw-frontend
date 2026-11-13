@@ -33,6 +33,16 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   @Input() compactInteractive = false;
   @Input() showPlayhead = true;
 
+  /*
+   * Optional source window displayed by compact BUILD
+   * waveforms.
+   *
+   * Default behaviour remains the full source, so the
+   * MASTER waveform is unaffected.
+   */
+  @Input() viewStart = 0;
+  @Input() viewEnd: number | null = null;
+
   @Output() rangeStartChange = new EventEmitter<number>();
   @Output() peaksReady = new EventEmitter<number[]>();
   @Output() seekTo = new EventEmitter<number>();
@@ -114,9 +124,76 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
     return Math.max(0, Math.min(100, (length / this.duration) * 100));
   }
 
+  viewStartSeconds(): number {
+    if (this.duration <= 0) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.min(
+        Number(this.viewStart) || 0,
+        this.duration,
+      ),
+    );
+  }
+
+  viewEndSeconds(): number {
+    if (this.duration <= 0) {
+      return 0;
+    }
+
+    const start =
+      this.viewStartSeconds();
+
+    const rawEnd =
+      this.viewEnd === null
+        ? this.duration
+        : Number(this.viewEnd);
+
+    return Math.max(
+      start,
+      Math.min(
+        Number.isFinite(rawEnd)
+          ? rawEnd
+          : this.duration,
+        this.duration,
+      ),
+    );
+  }
+
+  viewDurationSeconds(): number {
+    return Math.max(
+      0,
+      this.viewEndSeconds()
+      - this.viewStartSeconds(),
+    );
+  }
+
   playheadPercent(): number {
-    if (this.duration <= 0) return 0;
-    return Math.max(0, Math.min(100, (this.currentTime / this.duration) * 100));
+    const start =
+      this.viewStartSeconds();
+
+    const duration =
+      this.viewDurationSeconds();
+
+    if (duration <= 0) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.min(
+        100,
+        (
+          (
+            this.currentTime
+            - start
+          )
+          / duration
+        ) * 100,
+      ),
+    );
   }
 
   rangeSeconds(): number {
@@ -180,11 +257,39 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
     return Math.max(0, Math.min(value, maxStart));
   }
 
-  private secondsAtClientX(clientX: number): number {
-    const rect = this.waveformHost?.nativeElement.getBoundingClientRect();
-    if (!rect || rect.width <= 0 || this.duration <= 0) return 0;
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    return ratio * this.duration;
+  private secondsAtClientX(
+    clientX: number,
+  ): number {
+    const rect =
+      this.waveformHost
+        ?.nativeElement
+        .getBoundingClientRect();
+
+    const viewDuration =
+      this.viewDurationSeconds();
+
+    if (
+      !rect
+      || rect.width <= 0
+      || viewDuration <= 0
+    ) {
+      return this.viewStartSeconds();
+    }
+
+    const ratio = Math.max(
+      0,
+      Math.min(
+        1,
+        (
+          clientX - rect.left
+        ) / rect.width,
+      ),
+    );
+
+    return (
+      this.viewStartSeconds()
+      + ratio * viewDuration
+    );
   }
 
   private async loadWaveform(): Promise<void> {
@@ -314,17 +419,91 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
     ctx.lineTo(cssWidth, mid);
     ctx.stroke();
 
-    if (this.peaks.length === 0) return;
-    const stepX = cssWidth / this.peaks.length;
-    ctx.strokeStyle = waveformColor;
-    ctx.lineWidth = Math.max(1, stepX * 0.55);
-    ctx.beginPath();
-    for (let i = 0; i < this.peaks.length; i += 1) {
-      const x = (i + 0.5) * stepX;
-      const half = Math.max(1, this.peaks[i] * (cssHeight * 0.43));
-      ctx.moveTo(x, mid - half);
-      ctx.lineTo(x, mid + half);
+    if (this.peaks.length === 0) {
+      return;
     }
+
+    const startRatio =
+      this.duration > 0
+        ? (
+          this.viewStartSeconds()
+          / this.duration
+        )
+        : 0;
+
+    const endRatio =
+      this.duration > 0
+        ? (
+          this.viewEndSeconds()
+          / this.duration
+        )
+        : 1;
+
+    const startIndex = Math.max(
+      0,
+      Math.min(
+        this.peaks.length - 1,
+        Math.floor(
+          startRatio
+          * this.peaks.length,
+        ),
+      ),
+    );
+
+    const endIndex = Math.max(
+      startIndex + 1,
+      Math.min(
+        this.peaks.length,
+        Math.ceil(
+          endRatio
+          * this.peaks.length,
+        ),
+      ),
+    );
+
+    const visiblePeaks =
+      this.peaks.slice(
+        startIndex,
+        endIndex,
+      );
+
+    const stepX =
+      cssWidth / visiblePeaks.length;
+
+    ctx.strokeStyle = waveformColor;
+
+    ctx.lineWidth = Math.max(
+      1,
+      stepX * 0.55,
+    );
+
+    ctx.beginPath();
+
+    for (
+      let index = 0;
+      index < visiblePeaks.length;
+      index += 1
+    ) {
+      const x =
+        (index + 0.5) * stepX;
+
+      const half = Math.max(
+        1,
+        visiblePeaks[index]
+        * (cssHeight * 0.43),
+      );
+
+      ctx.moveTo(
+        x,
+        mid - half,
+      );
+
+      ctx.lineTo(
+        x,
+        mid + half,
+      );
+    }
+
     ctx.stroke();
   }
 }
