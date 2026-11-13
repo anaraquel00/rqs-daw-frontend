@@ -37,6 +37,15 @@ import {
   renderBuildV2FilesOffline,
 } from './build-v2-local-render';
 import {
+  decodeBuildV2TrackFiles,
+} from './build-v2-audio-decoder';
+import type {
+  BuildV2EngineTrack,
+} from './build-v2-audio-engine';
+import {
+  BuildV2LiveAudioEngine,
+} from './build-v2-live-audio-engine';
+import {
   BuildV2TransportClock,
   type BuildV2TransportSnapshot,
 } from './build-v2-live-transport';
@@ -257,7 +266,7 @@ export class MixPanelComponent implements OnDestroy {
     this.currentTracks = value;
     this.reconcileTransitions();
     this.reconcileSelectedTrack();
-    this.invalidateBuildV2TransportPreview();
+    this.invalidateBuildV2TransportPreview(true);
   }
   vignetteEnabled = false;
   vignetteTrack: RQSTrack | null = null;
@@ -286,11 +295,11 @@ export class MixPanelComponent implements OnDestroy {
   private buildV2TransportAudioCtx:
     AudioContext | null = null;
 
-  private buildV2TransportSource:
-    AudioBufferSourceNode | null = null;
+  private buildV2LiveEngine:
+    BuildV2LiveAudioEngine | null = null;
 
-  private buildV2TransportBuffer:
-    AudioBuffer | null = null;
+  private buildV2DecodedTracks:
+    BuildV2EngineTrack[] | null = null;
 
   private buildV2TransportRafId:
     number | null = null;
@@ -530,23 +539,106 @@ export class MixPanelComponent implements OnDestroy {
   updateBuildV2Track(index: number, patch: Partial<BuildV2TrackState>): void {
     const track = this.tracks[index];
     if (!track) return;
-    track.v2 = normalizeBuildV2TrackState({ ...track.v2, ...patch }, track.duration);
-    this.tracks = [...this.tracks];
+
+    const trimChanged =
+      Object.prototype.hasOwnProperty.call(
+        patch,
+        'trimStartSeconds',
+      )
+      || Object.prototype.hasOwnProperty.call(
+        patch,
+        'trimEndSeconds',
+      );
+
+    track.v2 = normalizeBuildV2TrackState(
+      {
+        ...track.v2,
+        ...patch,
+      },
+      track.duration,
+    );
+
+    /*
+     * Do not use the tracks setter here.
+     *
+     * Gain/Pan must not invalidate or stop the live
+     * transport. The Angular event itself triggers the
+     * required view update.
+     */
+    this.currentTracks = [
+      ...this.currentTracks,
+    ];
+
     this.stopTransitionPreview();
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        patch,
+        'gainDb',
+      )
+    ) {
+      this.buildV2LiveEngine?.updateGain(
+        track.id,
+        dbToLinearGain(
+          track.v2.gainDb,
+        ),
+      );
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        patch,
+        'pan',
+      )
+    ) {
+      this.buildV2LiveEngine?.updatePan(
+        track.id,
+        track.v2.pan,
+      );
+    }
+
+    if (trimChanged) {
+      this.invalidateBuildV2TransportPreview(
+        false,
+      );
+    }
   }
 
   resetBuildV2Track(index: number): void {
     const track = this.tracks[index];
     if (!track) return;
+
     track.v2 = createBuildV2TrackState();
-    this.tracks = [...this.tracks];
+
+    this.currentTracks = [
+      ...this.currentTracks,
+    ];
+
     this.stopTransitionPreview();
+
+    /*
+     * Reset can change Trim as well as Gain/Pan,
+     * therefore the current scheduling plan is invalid.
+     */
+    this.invalidateBuildV2TransportPreview(
+      false,
+    );
   }
 
   resetAllBuildV2Tracks(): void {
-    this.tracks.forEach(track => { track.v2 = createBuildV2TrackState(); });
-    this.tracks = [...this.tracks];
+    this.tracks.forEach(track => {
+      track.v2 = createBuildV2TrackState();
+    });
+
+    this.currentTracks = [
+      ...this.currentTracks,
+    ];
+
     this.stopTransitionPreview();
+
+    this.invalidateBuildV2TransportPreview(
+      false,
+    );
   }
 
   async renderBuildV2PocAudioBuffer(): Promise<AudioBuffer> {
@@ -619,25 +711,6 @@ export class MixPanelComponent implements OnDestroy {
     this.setlistError = null;
 
     try {
-      let buffer =
-        this.buildV2TransportBuffer;
-
-      if (!buffer) {
-        this.buildV2TransportRendering.set(true);
-
-        buffer =
-          await this.renderBuildV2PocAudioBuffer();
-
-        if (
-          attempt
-          !== this.buildV2TransportAttempt
-        ) {
-          return;
-        }
-
-        this.buildV2TransportBuffer = buffer;
-      }
-
       const context =
         this.ensureBuildV2TransportAudioContext();
 
@@ -652,12 +725,95 @@ export class MixPanelComponent implements OnDestroy {
         return;
       }
 
-      this.stopBuildV2TransportSource();
+      let decoded =
+        this.buildV2DecodedTracks;
+
+      if (!decoded) {
+        this.buildV2TransportRendering.set(
+          true,
+        );
+
+        decoded =
+          await decodeBuildV2TrackFiles(
+            this.tracks.map(track => ({
+              id: track.id,
+              file: track.file,
+              state: {
+                ...track.v2,
+              },
+            })),
+            () => ({
+              decodeAudioData:
+                (data: ArrayBuffer) =>
+                  context.decodeAudioData(data),
+            }),
+          );
+
+        if (
+          attempt
+          !== this.buildV2TransportAttempt
+        ) {
+          return;
+        }
+
+        this.buildV2DecodedTracks = decoded;
+      }
+
+      const decodedById =
+        new Map(
+          decoded.map(track => [
+            track.id,
+            track,
+          ]),
+        );
+
+      const liveTracks:
+        BuildV2EngineTrack[] =
+        this.tracks.map(track => {
+          const decodedTrack =
+            decodedById.get(track.id);
+
+          if (!decodedTrack) {
+            throw new Error(
+              `BUILD_V2_LIVE_BUFFER_MISSING_${track.id}`,
+            );
+          }
+
+          return {
+            id: track.id,
+            buffer: decodedTrack.buffer,
+            state: {
+              ...track.v2,
+            },
+          };
+        });
+
+      const engine =
+        this.buildV2LiveEngine
+        ?? new BuildV2LiveAudioEngine(
+          context,
+        );
+
+      this.buildV2LiveEngine = engine;
+
+      const plan = engine.prepare(
+        liveTracks,
+        this.transitions.map(
+          transition => ({
+            duration:
+              transition.duration,
+            curve:
+              transition.curve,
+          }),
+        ),
+        context.sampleRate,
+      );
+
       this.cancelBuildV2TransportAnimation();
 
       this.buildV2TransportSnapshot.set(
         this.buildV2TransportClock.setDuration(
-          buffer.duration,
+          plan.outputDurationSeconds,
           context.currentTime,
         ),
       );
@@ -671,41 +827,7 @@ export class MixPanelComponent implements OnDestroy {
         snapshot,
       );
 
-      const source =
-        context.createBufferSource();
-
-      source.buffer = buffer;
-      source.connect(context.destination);
-
-      this.buildV2TransportSource = source;
-
-      source.onended = () => {
-        if (
-          this.buildV2TransportSource
-          !== source
-        ) {
-          return;
-        }
-
-        this.buildV2TransportSource = null;
-        source.disconnect();
-
-        this.cancelBuildV2TransportAnimation();
-
-        if (
-          this.buildV2TransportSnapshot()
-            .state === 'playing'
-        ) {
-          this.buildV2TransportSnapshot.set(
-            this.buildV2TransportClock.seek(
-              buffer.duration,
-            ),
-          );
-        }
-      };
-
-      source.start(
-        0,
+      engine.start(
         snapshot.positionSeconds,
       );
 
@@ -716,15 +838,16 @@ export class MixPanelComponent implements OnDestroy {
         === this.buildV2TransportAttempt
       ) {
         console.error(
-          '[RQS BUILD V2 TRANSPORT] Local preview failed.',
+          '[RQS BUILD V2 LIVE ENGINE] '
+          + 'Local playback failed.',
           error,
         );
 
         const messages = {
-          en: 'Could not create the BUILD V2 local transport preview.',
-          pt: 'Não foi possível criar a prévia local do transport BUILD V2.',
-          pl: 'Nie udało się utworzyć lokalnego podglądu transportu BUILD V2.',
-          fr: 'Impossible de créer la préécoute locale du transport BUILD V2.',
+          en: 'Could not start the BUILD V2 live preview.',
+          pt: 'Não foi possível iniciar a prévia ao vivo do BUILD V2.',
+          pl: 'Nie udało się uruchomić podglądu na żywo BUILD V2.',
+          fr: 'Impossible de démarrer la préécoute en direct du BUILD V2.',
         };
 
         this.setlistError =
@@ -760,7 +883,7 @@ export class MixPanelComponent implements OnDestroy {
       ),
     );
 
-    this.stopBuildV2TransportSource();
+    this.buildV2LiveEngine?.stop();
     this.cancelBuildV2TransportAnimation();
   }
 
@@ -768,7 +891,7 @@ export class MixPanelComponent implements OnDestroy {
     this.buildV2TransportAttempt += 1;
     this.buildV2TransportRendering.set(false);
 
-    this.stopBuildV2TransportSource();
+    this.buildV2LiveEngine?.stop();
     this.cancelBuildV2TransportAnimation();
 
     this.buildV2TransportSnapshot.set(
@@ -776,11 +899,16 @@ export class MixPanelComponent implements OnDestroy {
     );
   }
 
-  private invalidateBuildV2TransportPreview():
-    void {
+  private invalidateBuildV2TransportPreview(
+    dropDecoded = false,
+  ): void {
     this.stopBuildV2Transport();
 
-    this.buildV2TransportBuffer = null;
+    this.buildV2LiveEngine?.clear();
+
+    if (dropDecoded) {
+      this.buildV2DecodedTracks = null;
+    }
 
     this.buildV2TransportSnapshot.set(
       this.buildV2TransportClock.setDuration(
@@ -825,6 +953,11 @@ export class MixPanelComponent implements OnDestroy {
 
       if (snapshot.state !== 'playing') {
         this.buildV2TransportRafId = null;
+
+        if (snapshot.state === 'ended') {
+          this.buildV2LiveEngine?.stop();
+        }
+
         return;
       }
 
@@ -848,28 +981,6 @@ export class MixPanelComponent implements OnDestroy {
     }
 
     this.buildV2TransportRafId = null;
-  }
-
-  private stopBuildV2TransportSource():
-    void {
-    const source =
-      this.buildV2TransportSource;
-
-    this.buildV2TransportSource = null;
-
-    if (!source) {
-      return;
-    }
-
-    source.onended = null;
-
-    try {
-      source.stop();
-    } catch {
-      // Source may already have ended.
-    }
-
-    source.disconnect();
   }
 
   curveLabel(curve: SetlistCurve): string {
