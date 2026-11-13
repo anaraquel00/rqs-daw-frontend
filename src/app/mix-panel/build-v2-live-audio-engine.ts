@@ -1,5 +1,6 @@
 import type { SetlistCurve } from '../services/dsp';
 import {
+  BuildV2EngineFinalFade,
   BuildV2EnginePlan,
   BuildV2EngineTrack,
   BuildV2EngineTransition,
@@ -31,6 +32,8 @@ export class BuildV2LiveAudioEngine {
     tracks: BuildV2EngineTrack[],
     transitions: BuildV2EngineTransition[],
     sampleRate = this.context.sampleRate,
+    finalFade:
+      BuildV2EngineFinalFade | null = null,
   ): BuildV2EnginePlan {
     /*
      * Build the new plan BEFORE stopping the currently
@@ -43,6 +46,7 @@ export class BuildV2LiveAudioEngine {
       tracks,
       transitions,
       sampleRate,
+      finalFade,
     );
 
     this.stop();
@@ -355,6 +359,23 @@ export class BuildV2LiveAudioEngine {
         positionSeconds,
         audioNow,
       );
+
+      return;
+    }
+
+    const finalFade =
+      track.finalFade;
+
+    if (finalFade) {
+      this.scheduleTransitionCurve(
+        param,
+        'out',
+        finalFade.curve,
+        trackEnd - finalFade.duration,
+        finalFade.duration,
+        positionSeconds,
+        audioNow,
+      );
     }
   }
 
@@ -476,6 +497,34 @@ export class BuildV2LiveAudioEngine {
         return transitionValue(
           'out',
           outgoing.curve,
+          ratio,
+        );
+      }
+    }
+
+    const finalFade =
+      track.finalFade;
+
+    if (finalFade) {
+      const fadeStart =
+        end - finalFade.duration;
+
+      if (
+        timelineSeconds
+        >= fadeStart
+      ) {
+        const ratio = clamp(
+          (
+            timelineSeconds
+            - fadeStart
+          ) / finalFade.duration,
+          0,
+          1,
+        );
+
+        return transitionValue(
+          'out',
+          finalFade.curve,
           ratio,
         );
       }

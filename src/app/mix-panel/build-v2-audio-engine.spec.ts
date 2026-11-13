@@ -154,6 +154,71 @@ describe('BUILD V2 audio engine POC', () => {
     );
   });
 
+  it(
+    'assigns final fade only to the final planned track',
+    () => {
+      const plan = planBuildV2Mix(
+        [
+          track('a', 10),
+          track('b', 10),
+        ],
+        [
+          {
+            duration: 2,
+            curve: 'equal-power',
+          },
+        ],
+        8_000,
+        {
+          duration: 4,
+          curve: 'linear',
+        },
+      );
+
+      expect(
+        plan.tracks[0].finalFade,
+      ).toBeNull();
+
+      expect(
+        plan.tracks[1].finalFade,
+      ).toEqual({
+        duration: 4,
+        curve: 'linear',
+      });
+
+      expect(
+        plan.outputDurationSeconds,
+      ).toBe(18);
+    },
+  );
+
+  it(
+    'rejects a final fade that overlaps the incoming transition',
+    () => {
+      expect(() =>
+        planBuildV2Mix(
+          [
+            track('a', 10),
+            track('b', 10),
+          ],
+          [
+            {
+              duration: 6,
+              curve: 'linear',
+            },
+          ],
+          8_000,
+          {
+            duration: 5,
+            curve: 'linear',
+          },
+        ),
+      ).toThrowError(
+        'BUILD_V2_INVALID_FINAL_FADE',
+      );
+    },
+  );
+
   it('renders an offline stereo buffer with the planned duration', async () => {
     const rendered = await renderBuildV2Offline(
       [
@@ -176,6 +241,44 @@ describe('BUILD V2 audio engine POC', () => {
       3,
     );
   });
+
+  it(
+    'applies a final fade to the offline render',
+    async () => {
+      const rendered =
+        await renderBuildV2Offline(
+          [
+            track('a', 1),
+          ],
+          [],
+          8_000,
+          {
+            duration: 0.5,
+            curve: 'linear',
+          },
+        );
+
+      const left =
+        rendered.getChannelData(0);
+
+      expect(
+        left[2_000],
+      ).toBeGreaterThan(0.9);
+
+      expect(
+        left[6_000],
+      ).toBeCloseTo(
+        0.5,
+        1,
+      );
+
+      expect(
+        Math.abs(
+          left[7_900],
+        ),
+      ).toBeLessThan(0.1);
+    },
+  );
 
   it('applies track gain to the offline render', async () => {
     const source = track('a', 1);

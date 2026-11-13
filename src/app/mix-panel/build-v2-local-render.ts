@@ -5,6 +5,7 @@ import {
   decodeBuildV2TrackFiles,
 } from './build-v2-audio-decoder';
 import {
+  BuildV2EngineFinalFade,
   BuildV2EngineTrack,
   BuildV2EngineTransition,
   renderBuildV2Offline,
@@ -13,10 +14,13 @@ import {
 export interface BuildV2LocalRenderOptions {
   sampleRate?: number;
   createDecoder?: BuildV2AudioDecoderFactory;
+  finalFade?: BuildV2EngineFinalFade | null;
   render?: (
     tracks: BuildV2EngineTrack[],
     transitions: BuildV2EngineTransition[],
     sampleRate: number,
+    finalFade:
+      BuildV2EngineFinalFade | null,
   ) => Promise<AudioBuffer>;
 }
 
@@ -43,5 +47,6 @@ export async function renderBuildV2FilesOffline(
     decoded,
     transitions,
     sampleRate,
+    options.finalFade ?? null,
   );
 }

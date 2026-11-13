@@ -81,6 +81,10 @@ describe('BUILD V2 local render coordinator', () => {
       ],
       {
         sampleRate: 48_000,
+        finalFade: {
+          duration: 8,
+          curve: 'equal-power',
+        },
         createDecoder: () => decoder,
         render,
       },
@@ -93,6 +97,7 @@ describe('BUILD V2 local render coordinator', () => {
       engineTracks,
       transitions,
       sampleRate,
+      finalFade,
     ] = render.calls.mostRecent().args;
 
     expect(engineTracks.length).toBe(2);
@@ -113,5 +118,10 @@ describe('BUILD V2 local render coordinator', () => {
     ]);
 
     expect(sampleRate).toBe(48_000);
+
+    expect(finalFade).toEqual({
+      duration: 8,
+      curve: 'equal-power',
+    });
   });
 });

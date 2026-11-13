@@ -17,6 +17,11 @@ export interface BuildV2EngineTransition {
   curve: SetlistCurve;
 }
 
+export interface BuildV2EngineFinalFade {
+  duration: number;
+  curve: SetlistCurve;
+}
+
 export interface BuildV2PlannedTrack {
   id: string;
   buffer: AudioBuffer;
@@ -27,6 +32,7 @@ export interface BuildV2PlannedTrack {
   pan: number;
   incomingTransition: BuildV2EngineTransition | null;
   outgoingTransition: BuildV2EngineTransition | null;
+  finalFade: BuildV2EngineFinalFade | null;
 }
 
 export interface BuildV2EnginePlan {
@@ -41,6 +47,8 @@ export function planBuildV2Mix(
   tracks: BuildV2EngineTrack[],
   transitions: BuildV2EngineTransition[],
   sampleRate = 48_000,
+  finalFade:
+    BuildV2EngineFinalFade | null = null,
 ): BuildV2EnginePlan {
   if (tracks.length === 0) {
     return {
@@ -83,6 +91,41 @@ export function planBuildV2Mix(
       );
     }
   });
+
+  if (finalFade) {
+    const lastRange =
+      ranges.at(-1);
+
+    const incoming =
+      transitions.at(-1)?.duration
+      ?? 0;
+
+    const validCurve =
+      [
+        'equal-power',
+        'linear',
+        'fast-cut',
+      ].includes(finalFade.curve);
+
+    if (
+      !lastRange
+      || !Number.isFinite(
+        finalFade.duration,
+      )
+      || finalFade.duration < 0.5
+      || finalFade.duration > 30
+      || !validCurve
+      || finalFade.duration
+        > lastRange.duration + EPSILON
+      || incoming
+        + finalFade.duration
+        > lastRange.duration + EPSILON
+    ) {
+      throw new Error(
+        'BUILD_V2_INVALID_FINAL_FADE',
+      );
+    }
+  }
 
   const planned: BuildV2PlannedTrack[] = [];
   let timelineStart = 0;
@@ -134,6 +177,10 @@ export function planBuildV2Mix(
       pan: state.pan,
       incomingTransition: incoming,
       outgoingTransition: outgoing,
+      finalFade:
+        index === tracks.length - 1
+          ? finalFade
+          : null,
     });
 
     timelineStart += range.duration;
@@ -154,11 +201,14 @@ export async function renderBuildV2Offline(
   tracks: BuildV2EngineTrack[],
   transitions: BuildV2EngineTransition[],
   sampleRate = 48_000,
+  finalFade:
+    BuildV2EngineFinalFade | null = null,
 ): Promise<AudioBuffer> {
   const plan = planBuildV2Mix(
     tracks,
     transitions,
     sampleRate,
+    finalFade,
   );
 
   if (plan.tracks.length === 0) {
@@ -252,9 +302,31 @@ function scheduleTrackGain(
       track.outgoingTransition.curve,
       base,
     );
-  } else {
-    gain.setValueAtTime(base, end);
+
+    return;
   }
+
+  if (track.finalFade) {
+    const fadeStart =
+      end - track.finalFade.duration;
+
+    gain.setValueAtTime(
+      base,
+      fadeStart,
+    );
+
+    scheduleFadeOut(
+      gain,
+      fadeStart,
+      track.finalFade.duration,
+      track.finalFade.curve,
+      base,
+    );
+
+    return;
+  }
+
+  gain.setValueAtTime(base, end);
 }
 
 function scheduleFadeIn(

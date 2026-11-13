@@ -578,6 +578,119 @@ describe('BUILD V2 live audio engine', () => {
     },
   );
 
+  it(
+    'starts inside a live final fade at the correct envelope value',
+    () => {
+      const context =
+        new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+        ],
+        [],
+        context.sampleRate,
+        {
+          duration: 4,
+          curve: 'linear',
+        },
+      );
+
+      engine.start(8);
+
+      const fadeGain =
+        context.gains[1].gain;
+
+      expect(
+        fadeGain.sets.at(-1)?.value,
+      ).toBeCloseTo(
+        0.5,
+        2,
+      );
+
+      expect(
+        fadeGain.curves[0]
+          .values[0],
+      ).toBeCloseTo(
+        0.5,
+        2,
+      );
+    },
+  );
+
+  it(
+    'rebuilds the live final fade without resetting global position',
+    () => {
+      const context =
+        new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+        ],
+        [],
+        context.sampleRate,
+        {
+          duration: 2,
+          curve: 'linear',
+        },
+      );
+
+      engine.start(9);
+
+      const originalSource =
+        context.sources[0];
+
+      engine.prepare(
+        [
+          makeTrack('a', 10),
+        ],
+        [],
+        context.sampleRate,
+        {
+          duration: 4,
+          curve: 'linear',
+        },
+      );
+
+      engine.start(9);
+
+      expect(
+        originalSource.stopCount,
+      ).toBe(1);
+
+      expect(
+        context.sources.at(-1)
+          ?.starts[0],
+      ).toEqual({
+        when: 10,
+        offset: 9,
+        duration: 1,
+      });
+
+      const fadeGain =
+        context.gains.at(-1)?.gain;
+
+      expect(
+        fadeGain?.curves[0]
+          .values[0],
+      ).toBeCloseTo(
+        0.25,
+        2,
+      );
+    },
+  );
+
   it('updates gain immediately without rebuilding the source', () => {
     const context = new FakeContext();
 

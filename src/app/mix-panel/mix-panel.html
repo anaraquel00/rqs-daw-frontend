@@ -397,6 +397,9 @@
                   @let outgoing =
                     transitionRegion(i, 'out');
 
+                  @let finalFade =
+                    finalFadeRegion(i);
+
                   <div
                     class="daw-track-clip"
                     [style.left.%]="
@@ -464,6 +467,21 @@
                           "
                           [style.width.%]="
                             outgoing.width
+                          ">
+                        </div>
+                      }
+
+                      @if (finalFade) {
+                        <div
+                          class="
+                            transition-shade
+                            final-fade-shade
+                          "
+                          [style.left.%]="
+                            finalFade.left
+                          "
+                          [style.width.%]="
+                            finalFade.width
                           ">
                         </div>
                       }
@@ -1128,6 +1146,172 @@
             </div>
 
           </div>
+
+          @if (
+            selectedIndex
+            === tracks.length - 1
+          ) {
+
+            <div class="daw-final-fade">
+
+              <label
+                class="daw-final-fade-toggle">
+
+                <input
+                  type="checkbox"
+                  [ngModel]="
+                    finalFade.enabled
+                  "
+                  [disabled]="
+                    buildV2FinalFadeMaxSeconds()
+                    <
+                    0.5
+                  "
+                  (ngModelChange)="
+                    updateBuildV2FinalFade({
+                      enabled: $event
+                    })
+                  ">
+
+                <span>
+                  FINAL FADE OUT
+                </span>
+
+                <strong>
+                  {{
+                    finalFade.enabled
+                      ? 'ON'
+                      : 'OFF'
+                  }}
+                </strong>
+
+              </label>
+
+              @if (finalFade.enabled) {
+
+                <label
+                  class="
+                    transition-parameter
+                    daw-final-fade-duration
+                  ">
+
+                  <span>
+                    DURATION
+                  </span>
+
+                  <div
+                    class="
+                      transition-duration-control
+                    ">
+
+                    <input
+                      class="
+                        transition-duration-slider
+                      "
+                      type="range"
+                      min="0.5"
+                      [max]="
+                        buildV2FinalFadeMaxSeconds()
+                      "
+                      step="0.5"
+                      [ngModel]="
+                        finalFade.duration
+                      "
+                      (ngModelChange)="
+                        updateBuildV2FinalFade({
+                          duration: $event
+                        })
+                      ">
+
+                    <div
+                      class="
+                        transition-duration-value
+                      ">
+                      <input
+                        type="number"
+                        min="0.5"
+                        [max]="
+                          buildV2FinalFadeMaxSeconds()
+                        "
+                        step="0.5"
+                        [ngModel]="
+                          finalFade.duration
+                        "
+                        (ngModelChange)="
+                          updateBuildV2FinalFade({
+                            duration: $event
+                          })
+                        ">
+                      <span>s</span>
+                    </div>
+
+                  </div>
+                </label>
+
+                <label
+                  class="
+                    transition-parameter
+                    daw-final-fade-curve
+                  ">
+
+                  <span>
+                    CURVE
+                  </span>
+
+                  <select
+                    [ngModel]="
+                      finalFade.curve
+                    "
+                    (ngModelChange)="
+                      updateBuildV2FinalFade({
+                        curve: $event
+                      })
+                    ">
+
+                    <option
+                      value="equal-power">
+                      {{
+                        lang.tr()
+                          .CURVE_EQUAL_POWER
+                      }}
+                    </option>
+
+                    <option
+                      value="linear">
+                      {{
+                        lang.tr()
+                          .CURVE_LINEAR
+                      }}
+                    </option>
+
+                    <option
+                      value="fast-cut">
+                      {{
+                        lang.tr()
+                          .CURVE_FAST_CUT
+                      }}
+                    </option>
+
+                  </select>
+                </label>
+
+                <span
+                  class="
+                    daw-final-fade-limit
+                  ">
+                  MAX
+                  {{
+                    buildV2FinalFadeMaxSeconds()
+                    | number:'1.1-1'
+                  }}
+                  s
+                </span>
+
+              }
+
+            </div>
+
+          }
 
         } @else {
 

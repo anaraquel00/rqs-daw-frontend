@@ -42,6 +42,7 @@ import {
   decodeBuildV2TrackFiles,
 } from './build-v2-audio-decoder';
 import type {
+  BuildV2EngineFinalFade,
   BuildV2EngineTrack,
 } from './build-v2-audio-engine';
 import {
@@ -65,6 +66,13 @@ import {
   normalizeBuildV2TransitionCurve,
   normalizeBuildV2TransitionDuration,
 } from './build-v2-transition-state';
+import {
+  BuildV2FinalFadeState,
+  BUILD_V2_FINAL_FADE_MIN_SECONDS,
+  buildV2FinalFadeMaxDuration,
+  createBuildV2FinalFadeState,
+  normalizeBuildV2FinalFadeState,
+} from './build-v2-final-fade';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -276,6 +284,11 @@ export class MixPanelComponent implements OnDestroy {
   selectedTrackId: string | null = null;
   transitions: SetlistTransition[] = [];
   defaultDuration = 8;
+
+  finalFade:
+    BuildV2FinalFadeState =
+    createBuildV2FinalFadeState();
+
   expandedTransition: string | null = null;
   get tracks(): RQSTrack[] { return this.currentTracks; }
   set tracks(value: RQSTrack[]) {
@@ -762,8 +775,14 @@ export class MixPanelComponent implements OnDestroy {
     const oldTransitions =
       this.transitions;
 
+    const oldFinalFade = {
+      ...this.finalFade,
+    };
+
     this.transitions =
       nextTransitions;
+
+    this.normalizeCurrentBuildV2FinalFade();
 
     const success =
       this.rescheduleBuildV2TransportAfterStructuralEdit(
@@ -773,6 +792,9 @@ export class MixPanelComponent implements OnDestroy {
     if (!success) {
       this.transitions =
         oldTransitions;
+
+      this.finalFade =
+        oldFinalFade;
 
       return false;
     }
@@ -1065,7 +1087,16 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   hasBuildV2Adjustments(): boolean {
-    return this.tracks.some(track => hasBuildV2Adjustments(track.v2, track.duration));
+    return (
+      this.finalFade.enabled
+      || this.tracks.some(
+        track =>
+          hasBuildV2Adjustments(
+            track.v2,
+            track.duration,
+          ),
+      )
+    );
   }
 
   private buildV2IncomingTransitionSeconds(
@@ -1143,6 +1174,149 @@ export class MixPanelComponent implements OnDestroy {
         index,
       ),
     );
+  }
+
+  private buildV2FinalFadeIncomingSeconds():
+    number {
+    return this.transitions.at(-1)
+      ?.duration
+      ?? 0;
+  }
+
+  buildV2FinalFadeMaxSeconds():
+    number {
+    const lastTrack =
+      this.tracks.at(-1);
+
+    if (!lastTrack) {
+      return 0;
+    }
+
+    return buildV2FinalFadeMaxDuration(
+      this.effectiveRange(
+        lastTrack,
+      ).duration,
+      this.buildV2FinalFadeIncomingSeconds(),
+    );
+  }
+
+  private normalizeCurrentBuildV2FinalFade():
+    void {
+    this.finalFade =
+      normalizeBuildV2FinalFadeState(
+        this.finalFade,
+        this.buildV2FinalFadeMaxSeconds(),
+      );
+  }
+
+  private buildV2CurrentEngineFinalFade():
+    BuildV2EngineFinalFade | null {
+    const normalized =
+      normalizeBuildV2FinalFadeState(
+        this.finalFade,
+        this.buildV2FinalFadeMaxSeconds(),
+      );
+
+    if (!normalized.enabled) {
+      return null;
+    }
+
+    return {
+      duration: normalized.duration,
+      curve: normalized.curve,
+    };
+  }
+
+  finalFadeRegion(
+    index: number,
+  ) {
+    if (
+      index !== this.tracks.length - 1
+      || !this.finalFade.enabled
+    ) {
+      return null;
+    }
+
+    const track =
+      this.tracks[index];
+
+    if (!track) {
+      return null;
+    }
+
+    const range =
+      this.effectiveRange(track);
+
+    if (range.duration <= 0) {
+      return null;
+    }
+
+    const normalized =
+      normalizeBuildV2FinalFadeState(
+        this.finalFade,
+        this.buildV2FinalFadeMaxSeconds(),
+      );
+
+    if (!normalized.enabled) {
+      return null;
+    }
+
+    const duration =
+      Math.min(
+        normalized.duration,
+        range.duration,
+      );
+
+    return {
+      left:
+        (
+          (
+            range.duration - duration
+          )
+          / range.duration
+        ) * 100,
+      width:
+        (
+          duration
+          / range.duration
+        ) * 100,
+      duration,
+    };
+  }
+
+  updateBuildV2FinalFade(
+    patch:
+      Partial<BuildV2FinalFadeState>,
+  ): void {
+    if (this.tracks.length === 0) {
+      return;
+    }
+
+    const previous =
+      this.captureBuildV2TransportSnapshot();
+
+    const previousFade = {
+      ...this.finalFade,
+    };
+
+    this.finalFade =
+      normalizeBuildV2FinalFadeState(
+        {
+          ...this.finalFade,
+          ...patch,
+        },
+        this.buildV2FinalFadeMaxSeconds(),
+      );
+
+    const success =
+      this.rescheduleBuildV2TransportAfterStructuralEdit(
+        previous,
+      );
+
+    if (!success) {
+      this.finalFade =
+        previousFade;
+    }
   }
 
   private captureBuildV2TransportSnapshot():
@@ -1225,6 +1399,21 @@ export class MixPanelComponent implements OnDestroy {
             track.duration,
           );
 
+    const previousFinalFade =
+      trimChanged
+      && index === this.tracks.length - 1
+        ? {
+            ...this.finalFade,
+          }
+        : null;
+
+    if (
+      trimChanged
+      && index === this.tracks.length - 1
+    ) {
+      this.normalizeCurrentBuildV2FinalFade();
+    }
+
     /*
      * Do not use the tracks setter here.
      *
@@ -1276,6 +1465,11 @@ export class MixPanelComponent implements OnDestroy {
       if (!rescheduled) {
         track.v2 = previousState;
 
+        if (previousFinalFade) {
+          this.finalFade =
+            previousFinalFade;
+        }
+
         this.currentTracks = [
           ...this.currentTracks,
         ];
@@ -1309,6 +1503,9 @@ export class MixPanelComponent implements OnDestroy {
       track.v2 = createBuildV2TrackState();
     });
 
+    this.finalFade =
+      createBuildV2FinalFadeState();
+
     this.currentTracks = [
       ...this.currentTracks,
     ];
@@ -1335,6 +1532,8 @@ export class MixPanelComponent implements OnDestroy {
       })),
       {
         sampleRate: 48_000,
+        finalFade:
+          this.buildV2CurrentEngineFinalFade(),
       },
     );
   }
@@ -1492,6 +1691,7 @@ export class MixPanelComponent implements OnDestroy {
         liveTracks,
         this.buildV2CurrentEngineTransitions(),
         context.sampleRate,
+        this.buildV2CurrentEngineFinalFade(),
       );
 
       this.cancelBuildV2TransportAnimation();
@@ -1633,6 +1833,7 @@ export class MixPanelComponent implements OnDestroy {
         liveTracks,
         this.buildV2CurrentEngineTransitions(),
         context.sampleRate,
+        this.buildV2CurrentEngineFinalFade(),
       );
 
       /*
