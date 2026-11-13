@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import type { BuildV2ProjectDocumentV1 } from '../mix-panel/build-v2-project-schema';
 import {
   MasteringAnalysisResponse,
   MasteringAutoRecommendation,
@@ -85,6 +86,20 @@ export type BuildV2CloudAssetPresignResponse =
 
 export interface BuildV2CloudAssetConfirmResponse {
   asset: BuildV2CloudAssetRecord;
+}
+
+export interface BuildV2CloudProjectSaveResponse {
+  success: true;
+  alreadySaved: boolean;
+  project: {
+    projectId: string;
+    name: string;
+    schemaVersion: number;
+    assetCount: number;
+    trackCount: number;
+    documentCreatedAt: string;
+    documentUpdatedAt: string;
+  };
 }
 
 @Injectable({
@@ -197,6 +212,16 @@ export class DspService {
       `${this.baseUrl}/build/v2/projects/${encodeURIComponent(projectId)}`
         + `/assets/${encodeURIComponent(assetId)}/confirm`,
       request,
+      { headers: this.buildV2Headers() },
+    );
+  }
+
+  saveBuildV2CloudProject(
+    project: BuildV2ProjectDocumentV1,
+  ): Observable<BuildV2CloudProjectSaveResponse> {
+    return this.http.put<BuildV2CloudProjectSaveResponse>(
+      `${this.baseUrl}/build/v2/projects/${encodeURIComponent(project.projectId)}`,
+      project,
       { headers: this.buildV2Headers() },
     );
   }

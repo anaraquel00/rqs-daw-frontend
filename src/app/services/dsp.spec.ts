@@ -287,6 +287,53 @@ describe('DspService Mastering V2 transport', () => {
     request.flush({ asset: {} });
   });
 
+  it('sends the raw canonical BUILD V2 project with PUT and bearer authentication', () => {
+    const projectId = '20000000-0000-4000-8000-000000000002';
+    const project = {
+      kind: 'rqs-build-project' as const,
+      schemaVersion: 1 as const,
+      projectId,
+      name: 'CLOUD PROJECT',
+      createdAt: '2026-11-13T20:00:00.000Z',
+      updatedAt: '2026-11-13T20:00:00.000Z',
+      assets: [],
+      tracks: [],
+      transitions: [],
+      transitionDefaults: { durationSeconds: 8, curve: 'equal-power' as const },
+      finalFade: { enabled: false, durationSeconds: 8, curve: 'equal-power' as const },
+      vignette: { enabled: false, assetId: null, mode: 'duck-overlay-v1' as const },
+      render: {
+        exportName: 'CLOUD_PROJECT',
+        loudnessMode: 'off' as const,
+        outputFormat: 'wav' as const,
+        sampleRate: 48_000 as const,
+        channels: 2 as const,
+      },
+    };
+
+    service.saveBuildV2CloudProject(project).subscribe(response => {
+      expect(response.alreadySaved).toBeFalse();
+    });
+
+    const request = http.expectOne(`${environment.baseUrl}/build/v2/projects/${projectId}`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toBe(project);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      success: true,
+      alreadySaved: false,
+      project: {
+        projectId,
+        name: project.name,
+        schemaVersion: 1,
+        assetCount: 0,
+        trackCount: 0,
+        documentCreatedAt: project.createdAt,
+        documentUpdatedAt: project.updatedAt,
+      },
+    });
+  });
+
   it('uses the exact server-required Content-Type without adding JWT to BUILD S3 PUT', () => {
     const file = new File(['audio'], 'ambiguous.wav', { type: 'application/octet-stream' });
     service.uploadToS3(
