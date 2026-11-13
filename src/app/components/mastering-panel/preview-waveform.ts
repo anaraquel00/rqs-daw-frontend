@@ -30,6 +30,8 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   @Input() previewEnd = 15;
   @Input() disabled = false;
   @Input() compact = false;
+  @Input() compactInteractive = false;
+  @Input() showPlayhead = true;
 
   @Output() rangeStartChange = new EventEmitter<number>();
   @Output() peaksReady = new EventEmitter<number[]>();
@@ -154,8 +156,22 @@ export class PreviewWaveformComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   onHostPointerDown(event: PointerEvent): void {
-    if (this.compact || this.disabled || this.dragging) return;
-    this.seekTo.emit(this.secondsAtClientX(event.clientX));
+    if (
+      (
+        this.compact
+        && !this.compactInteractive
+      )
+      || this.disabled
+      || this.dragging
+    ) {
+      return;
+    }
+
+    this.seekTo.emit(
+      this.secondsAtClientX(
+        event.clientX,
+      ),
+    );
   }
 
   private normalizeRangeStart(value: number): number {

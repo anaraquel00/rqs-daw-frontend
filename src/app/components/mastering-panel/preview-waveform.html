@@ -2,9 +2,37 @@
   #waveformHost
   class="waveform-host"
   [class.waveform-compact]="compact"
+  [class.waveform-compact-interactive]="
+    compact && compactInteractive
+  "
   [class.waveform-disabled]="disabled"
-  [attr.role]="compact ? 'img' : null"
-  [attr.aria-label]="compact ? 'Audio waveform' : null"
+  [attr.role]="
+    compact
+      ? (
+          compactInteractive
+            ? 'slider'
+            : 'img'
+        )
+      : null
+  "
+  [attr.aria-label]="
+    compact
+      ? (
+          compactInteractive
+            ? 'Seek audio waveform'
+            : 'Audio waveform'
+        )
+      : null
+  "
+  [attr.aria-valuemin]="
+    compactInteractive ? 0 : null
+  "
+  [attr.aria-valuemax]="
+    compactInteractive ? duration : null
+  "
+  [attr.aria-valuenow]="
+    compactInteractive ? currentTime : null
+  "
   (pointerdown)="onHostPointerDown($event)"
   (pointermove)="onHostPointerMove($event)"
   (pointerup)="onHostPointerUp($event)"
@@ -23,6 +51,14 @@
       [attr.aria-valuenow]="previewStart">
       <span class="preview-grip">↔ {{ rangeLabel() }}</span>
     </div>
-    <div class="waveform-playhead" [style.left.%]="playheadPercent()" aria-hidden="true"></div>
+  }
+
+  @if (!compact || showPlayhead) {
+    <div
+      class="waveform-playhead"
+      [class.waveform-local-playhead]="compact"
+      [style.left.%]="playheadPercent()"
+      aria-hidden="true">
+    </div>
   }
 </div>

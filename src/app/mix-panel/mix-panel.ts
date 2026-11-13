@@ -49,6 +49,11 @@ import {
   BuildV2TransportClock,
   type BuildV2TransportSnapshot,
 } from './build-v2-live-transport';
+import {
+  buildV2GlobalSecondsToSource,
+  buildV2SourceSecondsToGlobal,
+  buildV2TrackTimelineStartSeconds,
+} from './build-v2-track-playhead';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -377,6 +382,148 @@ export class MixPanelComponent implements OnDestroy {
   trimEndPercent(track: RQSTrack): number {
     if (!Number.isFinite(track.duration) || track.duration <= 0) return 100;
     return 100 * this.effectiveRange(track).end / track.duration;
+  }
+
+  private buildV2TrackAudioTimelineStartSeconds(
+    index: number,
+  ): number {
+    return buildV2TrackTimelineStartSeconds(
+      this.tracks.map(
+        track =>
+          this.effectiveRange(track).duration,
+      ),
+      this.transitions.map(
+        transition =>
+          transition.duration,
+      ),
+      index,
+    );
+  }
+
+  trackLocalPlayheadSeconds(
+    index: number,
+  ): number {
+    const track = this.tracks[index];
+
+    if (!track) {
+      return 0;
+    }
+
+    const range =
+      this.effectiveRange(track);
+
+    return (
+      buildV2GlobalSecondsToSource(
+        this.buildV2TransportSnapshot()
+          .positionSeconds,
+        this.buildV2TrackAudioTimelineStartSeconds(
+          index,
+        ),
+        range.start,
+        range.end,
+      )
+      ?? 0
+    );
+  }
+
+  trackLocalPlayheadVisible(
+    index: number,
+  ): boolean {
+    const track = this.tracks[index];
+
+    if (!track) {
+      return false;
+    }
+
+    const range =
+      this.effectiveRange(track);
+
+    return (
+      buildV2GlobalSecondsToSource(
+        this.buildV2TransportSnapshot()
+          .positionSeconds,
+        this.buildV2TrackAudioTimelineStartSeconds(
+          index,
+        ),
+        range.start,
+        range.end,
+      )
+      !== null
+    );
+  }
+
+  seekBuildV2Track(
+    index: number,
+    sourceSeconds: number,
+  ): void {
+    const track = this.tracks[index];
+
+    if (!track) {
+      return;
+    }
+
+    this.selectTrack(track);
+
+    const range =
+      this.effectiveRange(track);
+
+    const timelineStart =
+      this.buildV2TrackAudioTimelineStartSeconds(
+        index,
+      );
+
+    const globalSeconds =
+      Math.min(
+        this.buildV2TransportDurationSeconds(),
+        buildV2SourceSecondsToGlobal(
+          timelineStart,
+          sourceSeconds,
+          range.start,
+          range.end,
+        ),
+      );
+
+    const current =
+      this.buildV2TransportSnapshot();
+
+    if (current.state === 'playing') {
+      const context =
+        this.buildV2TransportAudioCtx;
+
+      const engine =
+        this.buildV2LiveEngine;
+
+      if (!context || !engine) {
+        return;
+      }
+
+      const next =
+        this.buildV2TransportClock.seek(
+          globalSeconds,
+          context.currentTime,
+        );
+
+      this.buildV2TransportSnapshot.set(
+        next,
+      );
+
+      if (next.state === 'playing') {
+        engine.start(
+          next.positionSeconds,
+        );
+      } else {
+        engine.stop();
+        this.cancelBuildV2TransportAnimation();
+      }
+
+      return;
+    }
+
+    this.buildV2TransportSnapshot.set(
+      this.buildV2TransportClock.seek(
+        globalSeconds,
+      ),
+    );
   }
 
   trackTimelineStartSeconds(index: number): number {

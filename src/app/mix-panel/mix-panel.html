@@ -399,7 +399,20 @@
                     <app-preview-waveform
                       [file]="track.file"
                       [duration]="track.duration"
-                      [compact]="true">
+                      [compact]="true"
+                      [compactInteractive]="true"
+                      [currentTime]="
+                        trackLocalPlayheadSeconds(i)
+                      "
+                      [showPlayhead]="
+                        trackLocalPlayheadVisible(i)
+                      "
+                      (seekTo)="
+                        seekBuildV2Track(
+                          i,
+                          $event
+                        )
+                      ">
                     </app-preview-waveform>
 
 

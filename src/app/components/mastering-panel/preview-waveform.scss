@@ -80,5 +80,23 @@
   background: transparent;
   box-shadow: none;
   cursor: default;
+}
+
+.waveform-compact:not(
+  .waveform-compact-interactive
+) {
   pointer-events: none;
+}
+
+.waveform-compact-interactive {
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+.waveform-local-playhead {
+  width: 2px;
+  background: #00f0ff;
+  box-shadow:
+    0 0 4px rgba(0, 240, 255, 0.95),
+    0 0 9px rgba(0, 240, 255, 0.55);
 }
