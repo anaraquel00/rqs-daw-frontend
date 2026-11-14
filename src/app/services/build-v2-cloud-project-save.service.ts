@@ -16,6 +16,7 @@ export class BuildV2CloudProjectSaveService {
 
   saveBuildV2CloudProjectSnapshot(
     snapshot: BuildV2ProjectSaveSnapshot,
+    expectedRevision?: number,
   ): Observable<BuildV2CloudProjectSaveResponse> {
     return from(snapshot.assets).pipe(
       concatMap(asset => this.assetUpload.uploadBuildV2CloudAsset(
@@ -24,7 +25,7 @@ export class BuildV2CloudProjectSaveService {
         asset.file,
       )),
       toArray(),
-      switchMap(() => this.dsp.saveBuildV2CloudProject(snapshot.project)),
+      switchMap(() => this.dsp.saveBuildV2CloudProject(snapshot.project, expectedRevision)),
     );
   }
 }

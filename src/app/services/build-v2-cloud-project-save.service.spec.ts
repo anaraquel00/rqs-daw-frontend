@@ -79,10 +79,12 @@ describe('BuildV2CloudProjectSaveService', () => {
   const response = {
     success: true as const,
     alreadySaved: false,
+    updated: false,
     project: {
       projectId,
       name: 'CLOUD SAVE',
       schemaVersion: 1,
+      revision: 1,
       assetCount: 2,
       trackCount: 2,
       documentCreatedAt: timestamp,
@@ -152,15 +154,33 @@ describe('BuildV2CloudProjectSaveService', () => {
     expect(dsp.saveBuildV2CloudProject).toHaveBeenCalledTimes(1);
   });
 
-  it('surfaces a create-only 409 from metadata persistence', async () => {
+  it('forwards the expected revision only after every asset upload succeeds', async () => {
+    assetUpload.uploadBuildV2CloudAsset.and.callFake((_project, assetId) => (
+      of(confirmedAsset(assetId))
+    ));
+    dsp.saveBuildV2CloudProject.and.returnValue(of({
+      ...response,
+      updated: true,
+      project: { ...response.project, revision: 3 },
+    }));
+
+    await firstValueFrom(service.saveBuildV2CloudProjectSnapshot(snapshot(), 2));
+    expect(dsp.saveBuildV2CloudProject).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({ projectId }),
+      2,
+    );
+  });
+
+  it('surfaces a 412 without attempting any client-side asset rollback', async () => {
     assetUpload.uploadBuildV2CloudAsset.and.callFake((_project, assetId) => (
       of(confirmedAsset(assetId))
     ));
     dsp.saveBuildV2CloudProject.and.returnValue(
-      throwError(() => new Error('BUILD_PROJECT_ALREADY_EXISTS')),
+      throwError(() => new Error('BUILD_PROJECT_REVISION_CONFLICT')),
     );
 
-    await expectAsync(firstValueFrom(service.saveBuildV2CloudProjectSnapshot(snapshot())))
-      .toBeRejectedWithError('BUILD_PROJECT_ALREADY_EXISTS');
+    await expectAsync(firstValueFrom(service.saveBuildV2CloudProjectSnapshot(snapshot(), 1)))
+      .toBeRejectedWithError('BUILD_PROJECT_REVISION_CONFLICT');
+    expect(assetUpload.uploadBuildV2CloudAsset).toHaveBeenCalledTimes(2);
   });
 });

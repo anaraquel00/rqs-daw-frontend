@@ -91,15 +91,27 @@ export interface BuildV2CloudAssetConfirmResponse {
 export interface BuildV2CloudProjectSaveResponse {
   success: true;
   alreadySaved: boolean;
+  updated: boolean;
   project: {
     projectId: string;
     name: string;
     schemaVersion: number;
+    revision: number;
     assetCount: number;
     trackCount: number;
     documentCreatedAt: string;
     documentUpdatedAt: string;
   };
+}
+
+export interface BuildV2CloudProjectDeleteResponse {
+  success: true;
+  alreadyDeleted: boolean;
+  projectId: string;
+  finalRevision: number;
+  cleanupComplete: boolean;
+  deletedAssets: number;
+  pendingAssets: number;
 }
 
 @Injectable({
@@ -218,11 +230,22 @@ export class DspService {
 
   saveBuildV2CloudProject(
     project: BuildV2ProjectDocumentV1,
+    expectedRevision?: number,
   ): Observable<BuildV2CloudProjectSaveResponse> {
     return this.http.put<BuildV2CloudProjectSaveResponse>(
       `${this.baseUrl}/build/v2/projects/${encodeURIComponent(project.projectId)}`,
       project,
-      { headers: this.buildV2Headers() },
+      { headers: this.buildV2Headers(expectedRevision) },
+    );
+  }
+
+  deleteBuildV2CloudProject(
+    projectId: string,
+    expectedRevision: number,
+  ): Observable<BuildV2CloudProjectDeleteResponse> {
+    return this.http.delete<BuildV2CloudProjectDeleteResponse>(
+      `${this.baseUrl}/build/v2/projects/${encodeURIComponent(projectId)}`,
+      { headers: this.buildV2Headers(expectedRevision) },
     );
   }
 
@@ -303,11 +326,18 @@ export class DspService {
     });
   }
 
-  private buildV2Headers(): HttpHeaders {
+  private buildV2Headers(expectedRevision?: number): HttpHeaders {
     const accessToken = this.auth.session()?.access_token;
-    return accessToken
+    let headers = accessToken
       ? new HttpHeaders({ Authorization: `Bearer ${accessToken}` })
       : new HttpHeaders();
+    if (expectedRevision !== undefined) {
+      if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 1) {
+        throw new RangeError('expectedRevision must be a positive safe integer.');
+      }
+      headers = headers.set('If-Match', `"${expectedRevision}"`);
+    }
+    return headers;
   }
 
   private masteringV2Headers(): HttpHeaders {

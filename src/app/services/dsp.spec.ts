@@ -319,18 +319,89 @@ describe('DspService Mastering V2 transport', () => {
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toBe(project);
     expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    expect(request.request.headers.has('If-Match')).toBeFalse();
     request.flush({
       success: true,
       alreadySaved: false,
+      updated: false,
       project: {
         projectId,
         name: project.name,
         schemaVersion: 1,
+        revision: 1,
         assetCount: 0,
         trackCount: 0,
         documentCreatedAt: project.createdAt,
         documentUpdatedAt: project.updatedAt,
       },
+    });
+  });
+
+  it('sends a quoted strong If-Match revision for BUILD V2 project updates', () => {
+    const projectId = '20000000-0000-4000-8000-000000000002';
+    const project = {
+      kind: 'rqs-build-project' as const,
+      schemaVersion: 1 as const,
+      projectId,
+      name: 'REVISIONED PROJECT',
+      createdAt: '2026-11-13T20:00:00.000Z',
+      updatedAt: '2026-11-13T21:00:00.000Z',
+      assets: [],
+      tracks: [],
+      transitions: [],
+      transitionDefaults: { durationSeconds: 8, curve: 'equal-power' as const },
+      finalFade: { enabled: false, durationSeconds: 8, curve: 'equal-power' as const },
+      vignette: { enabled: false, assetId: null, mode: 'duck-overlay-v1' as const },
+      render: {
+        exportName: 'REVISIONED_PROJECT',
+        loudnessMode: 'off' as const,
+        outputFormat: 'wav' as const,
+        sampleRate: 48_000 as const,
+        channels: 2 as const,
+      },
+    };
+
+    service.saveBuildV2CloudProject(project, 7).subscribe();
+
+    const request = http.expectOne(`${environment.baseUrl}/build/v2/projects/${projectId}`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.headers.get('If-Match')).toBe('"7"');
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      success: true,
+      alreadySaved: false,
+      updated: true,
+      project: {
+        projectId,
+        name: project.name,
+        schemaVersion: 1,
+        revision: 8,
+        assetCount: 0,
+        trackCount: 0,
+        documentCreatedAt: project.createdAt,
+        documentUpdatedAt: project.updatedAt,
+      },
+    });
+  });
+
+  it('deletes a BUILD V2 project with bearer authentication and If-Match', () => {
+    const projectId = '20000000-0000-4000-8000-000000000002';
+    service.deleteBuildV2CloudProject(projectId, 8).subscribe(response => {
+      expect(response.cleanupComplete).toBeTrue();
+    });
+
+    const request = http.expectOne(`${environment.baseUrl}/build/v2/projects/${projectId}`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.headers.get('If-Match')).toBe('"8"');
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      success: true,
+      alreadyDeleted: false,
+      projectId,
+      finalRevision: 9,
+      cleanupComplete: true,
+      deletedAssets: 2,
+      pendingAssets: 0,
     });
   });
 
