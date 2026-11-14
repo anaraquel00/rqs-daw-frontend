@@ -114,6 +114,24 @@ export interface BuildV2CloudProjectDeleteResponse {
   pendingAssets: number;
 }
 
+export interface BuildV2CloudQuotaResponse {
+  plan: 'free' | 'master' | 'plus' | 'pro';
+  projects: {
+    used: number;
+    limit: number;
+    remaining: number;
+    canCreate: boolean;
+  };
+  storage: {
+    confirmedBytes: number;
+    reservedBytes: number;
+    usedBytes: number;
+    limitBytes: number;
+    remainingBytes: number;
+    canReserve: boolean;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -211,6 +229,13 @@ export class DspService {
     return this.http.post<BuildV2CloudAssetPresignResponse>(
       `${this.baseUrl}/build/v2/projects/${encodeURIComponent(projectId)}/assets/presign`,
       request,
+      { headers: this.buildV2Headers() },
+    );
+  }
+
+  getBuildV2CloudQuota(): Observable<BuildV2CloudQuotaResponse> {
+    return this.http.get<BuildV2CloudQuotaResponse>(
+      `${this.baseUrl}/build/v2/quota`,
       { headers: this.buildV2Headers() },
     );
   }

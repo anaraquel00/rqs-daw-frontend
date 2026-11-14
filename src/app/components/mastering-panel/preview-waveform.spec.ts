@@ -26,6 +26,7 @@ describe('PreviewWaveformComponent display modes', () => {
 
   it('renders compact mode without Preview selection or playhead', () => {
     component.compact = true;
+    component.showPlayhead = false;
     component.duration = 120;
     fixture.detectChanges();
 

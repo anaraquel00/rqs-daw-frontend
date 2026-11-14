@@ -268,6 +268,36 @@ describe('DspService Mastering V2 transport', () => {
     });
   });
 
+  it('surfaces BUILD V2 storage quota rejection from presign unchanged', () => {
+    const projectId = '20000000-0000-4000-8000-000000000002';
+    const assetId = '30000000-0000-4000-8000-000000000003';
+    let status = 0;
+    let errorCode = '';
+
+    service.presignBuildV2Asset(projectId, {
+      assetId,
+      originalFileName: 'track.wav',
+      format: 'wav',
+      sizeBytes: 512 * 1024 * 1024,
+    }).subscribe({
+      error: error => {
+        status = error.status;
+        errorCode = error.error?.error?.code;
+      },
+    });
+
+    const request = http.expectOne(
+      `${environment.baseUrl}/build/v2/projects/${projectId}/assets/presign`,
+    );
+    request.flush(
+      { error: { code: 'BUILD_STORAGE_QUOTA_EXCEEDED' } },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
+
+    expect(status).toBe(429);
+    expect(errorCode).toBe('BUILD_STORAGE_QUOTA_EXCEEDED');
+  });
+
   it('sends the BUILD V2 confirm contract with the authenticated bearer token', () => {
     const projectId = '20000000-0000-4000-8000-000000000002';
     const assetId = '30000000-0000-4000-8000-000000000003';
@@ -285,6 +315,31 @@ describe('DspService Mastering V2 transport', () => {
     expect(request.request.body).toEqual(body);
     expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
     request.flush({ asset: {} });
+  });
+
+  it('gets BUILD V2 cloud quota with bearer authentication and maps the response', () => {
+    service.getBuildV2CloudQuota().subscribe(response => {
+      expect(response.plan).toBe('free');
+      expect(response.projects).toEqual({ used: 1, limit: 2, remaining: 1, canCreate: true });
+      expect(response.storage.usedBytes).toBe(1644);
+      expect(response.storage.canReserve).toBeTrue();
+    });
+
+    const request = http.expectOne(`${environment.baseUrl}/build/v2/quota`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      plan: 'free',
+      projects: { used: 1, limit: 2, remaining: 1, canCreate: true },
+      storage: {
+        confirmedBytes: 1644,
+        reservedBytes: 0,
+        usedBytes: 1644,
+        limitBytes: 1073741824,
+        remainingBytes: 1073740180,
+        canReserve: true,
+      },
+    });
   });
 
   it('sends the raw canonical BUILD V2 project with PUT and bearer authentication', () => {
@@ -335,6 +390,49 @@ describe('DspService Mastering V2 transport', () => {
         documentUpdatedAt: project.updatedAt,
       },
     });
+  });
+
+  it('surfaces BUILD V2 project quota rejection from save unchanged', () => {
+    const projectId = '20000000-0000-4000-8000-000000000002';
+    const project = {
+      kind: 'rqs-build-project' as const,
+      schemaVersion: 1 as const,
+      projectId,
+      name: 'QUOTA PROJECT',
+      createdAt: '2026-11-13T20:00:00.000Z',
+      updatedAt: '2026-11-13T20:00:00.000Z',
+      assets: [],
+      tracks: [],
+      transitions: [],
+      transitionDefaults: { durationSeconds: 8, curve: 'equal-power' as const },
+      finalFade: { enabled: false, durationSeconds: 8, curve: 'equal-power' as const },
+      vignette: { enabled: false, assetId: null, mode: 'duck-overlay-v1' as const },
+      render: {
+        exportName: 'QUOTA_PROJECT',
+        loudnessMode: 'off' as const,
+        outputFormat: 'wav' as const,
+        sampleRate: 48_000 as const,
+        channels: 2 as const,
+      },
+    };
+    let status = 0;
+    let errorCode = '';
+
+    service.saveBuildV2CloudProject(project).subscribe({
+      error: error => {
+        status = error.status;
+        errorCode = error.error?.error?.code;
+      },
+    });
+
+    const request = http.expectOne(`${environment.baseUrl}/build/v2/projects/${projectId}`);
+    request.flush(
+      { error: { code: 'BUILD_PROJECT_QUOTA_EXCEEDED' } },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
+
+    expect(status).toBe(429);
+    expect(errorCode).toBe('BUILD_PROJECT_QUOTA_EXCEEDED');
   });
 
   it('sends a quoted strong If-Match revision for BUILD V2 project updates', () => {
