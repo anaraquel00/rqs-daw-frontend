@@ -2298,6 +2298,14 @@ export class MixPanelComponent implements OnDestroy {
       this.analytics.trackEvent(
         'build_v2_local_wav_bounced',
       );
+
+      const completedObjectUrl = objectUrl;
+      objectUrl = null;
+
+      window.setTimeout(
+        () => URL.revokeObjectURL(completedObjectUrl),
+        1_000,
+      );
     } catch {
       this.setlistError =
         this.buildV2Copy('bounceFailed');
