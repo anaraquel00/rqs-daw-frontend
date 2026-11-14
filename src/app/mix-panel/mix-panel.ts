@@ -40,6 +40,9 @@ import {
   renderBuildV2FilesOffline,
 } from './build-v2-local-render';
 import {
+  encodeBuildV2WavPcm24,
+} from './build-v2-wav-encoder';
+import {
   decodeBuildV2TrackFiles,
 } from './build-v2-audio-decoder';
 import type {
@@ -222,6 +225,9 @@ const BUILD_V2_COPY = {
     timeline: 'SETLIST TIMELINE',
     selectedTrack: 'SELECTED TRACK',
     source: 'Source',
+    bounceWav: 'BOUNCE WAV',
+    bouncingWav: 'BOUNCING WAV…',
+    bounceFailed: 'Local WAV bounce failed safely. Review the project audio and retry.',
   },
   pt: {
     title: 'Laboratório de prévia BUILD V2',
@@ -240,6 +246,9 @@ const BUILD_V2_COPY = {
     timeline: 'LINHA DO TEMPO DA SETLIST',
     selectedTrack: 'FAIXA SELECIONADA',
     source: 'Origem',
+    bounceWav: 'BOUNCE WAV',
+    bouncingWav: 'GERANDO WAV…',
+    bounceFailed: 'O bounce WAV local falhou com segurança. Revise o áudio do projeto e tente novamente.',
   },
   pl: {
     title: 'Laboratorium podglądu BUILD V2',
@@ -258,6 +267,9 @@ const BUILD_V2_COPY = {
     timeline: 'OŚ CZASU SETLISTY',
     selectedTrack: 'WYBRANY UTWÓR',
     source: 'Źródło',
+    bounceWav: 'BOUNCE WAV',
+    bouncingWav: 'TWORZENIE WAV…',
+    bounceFailed: 'Lokalny bounce WAV nie powiódł się bezpiecznie. Sprawdź dźwięk projektu i spróbuj ponownie.',
   },
   fr: {
     title: 'Laboratoire de préécoute BUILD V2',
@@ -276,6 +288,9 @@ const BUILD_V2_COPY = {
     timeline: 'TIMELINE DE LA SETLIST',
     selectedTrack: 'PISTE SÉLECTIONNÉE',
     source: 'Source',
+    bounceWav: 'BOUNCE WAV',
+    bouncingWav: 'CRÉATION DU WAV…',
+    bounceFailed: 'Le bounce WAV local a échoué sans risque. Vérifiez l’audio du projet et réessayez.',
   },
 } as const;
 
@@ -404,6 +419,9 @@ export class MixPanelComponent implements OnDestroy {
     );
 
   readonly buildV2TransportRendering =
+    signal(false);
+
+  readonly buildV2BounceRendering =
     signal(false);
 
   private buildV2TransportAudioCtx:
@@ -2231,6 +2249,65 @@ export class MixPanelComponent implements OnDestroy {
             : null,
       },
     );
+  }
+
+  async bounceBuildV2Wav(): Promise<void> {
+    if (
+      this.tracks.length === 0
+      || this.buildV2BounceRendering()
+      || this.buildV2TransportRendering()
+    ) {
+      return;
+    }
+
+    this.stopBuildV2Transport();
+    this.buildV2BounceRendering.set(true);
+    this.setlistError = null;
+
+    let objectUrl: string | null = null;
+
+    try {
+      const rendered =
+        await this.renderBuildV2PocAudioBuffer();
+
+      const wav =
+        encodeBuildV2WavPcm24(rendered);
+
+      objectUrl = URL.createObjectURL(
+        new Blob(
+          [wav.buffer as ArrayBuffer],
+          { type: 'audio/wav' },
+        ),
+      );
+
+      const normalizedName =
+        this.setlistName
+          .trim()
+          .replace(/[^a-zA-Z0-9._-]+/g, '_')
+          .replace(/^_+|_+$/g, '')
+        || 'RQS_SETLIST';
+
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = `${normalizedName}.wav`;
+      anchor.rel = 'noopener';
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+
+      this.analytics.trackEvent(
+        'build_v2_local_wav_bounced',
+      );
+    } catch {
+      this.setlistError =
+        this.buildV2Copy('bounceFailed');
+    } finally {
+      this.buildV2BounceRendering.set(false);
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    }
   }
 
   canPlayBuildV2Transport(): boolean {

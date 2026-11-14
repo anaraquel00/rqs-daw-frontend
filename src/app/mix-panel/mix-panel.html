@@ -401,6 +401,21 @@
             {{ buildV2Copy('resetAll') }}
           </button>
         }
+
+        <button
+          type="button"
+          (click)="bounceBuildV2Wav()"
+          [disabled]="
+            tracks.length === 0
+            || buildV2BounceRendering()
+            || buildV2TransportRendering()
+          ">
+          @if (buildV2BounceRendering()) {
+            {{ buildV2Copy('bouncingWav') }}
+          } @else {
+            {{ buildV2Copy('bounceWav') }}
+          }
+        </button>
       </div>
     </section>
 
