@@ -104,6 +104,38 @@ export interface BuildV2CloudProjectSaveResponse {
   };
 }
 
+export interface BuildV2CloudProjectSummary {
+  projectId: string;
+  name: string;
+  schemaVersion: number;
+  revision: number;
+  assetCount: number;
+  trackCount: number;
+  documentCreatedAt: string;
+  documentUpdatedAt: string;
+}
+
+export interface BuildV2CloudProjectListResponse {
+  projects: BuildV2CloudProjectSummary[];
+}
+
+export interface BuildV2CloudRestoreAsset {
+  assetId: string;
+  originalFileName: string;
+  format: BuildV2CloudAssetFormat;
+  contentType: 'audio/wav' | 'audio/mpeg';
+  sizeBytes: number;
+  downloadUrl: string;
+  expiresInSeconds: number;
+}
+
+export interface BuildV2CloudRestoreManifest {
+  project: BuildV2ProjectDocumentV1;
+  revision: number;
+  totalBytes: number;
+  assets: BuildV2CloudRestoreAsset[];
+}
+
 export interface BuildV2CloudProjectDeleteResponse {
   success: true;
   alreadyDeleted: boolean;
@@ -262,6 +294,30 @@ export class DspService {
       project,
       { headers: this.buildV2Headers(expectedRevision) },
     );
+  }
+
+  listBuildV2CloudProjects(): Observable<BuildV2CloudProjectListResponse> {
+    return this.http.get<BuildV2CloudProjectListResponse>(
+      `${this.baseUrl}/build/v2/projects`,
+      { headers: this.buildV2Headers() },
+    );
+  }
+
+  getBuildV2CloudRestoreManifest(
+    projectId: string,
+  ): Observable<BuildV2CloudRestoreManifest> {
+    return this.http.post<BuildV2CloudRestoreManifest>(
+      `${this.baseUrl}/build/v2/projects/${encodeURIComponent(projectId)}/restore-manifest`,
+      {},
+      { headers: this.buildV2Headers() },
+    );
+  }
+
+  downloadBuildV2CloudAsset(downloadUrl: string): Observable<Blob> {
+    return this.http.get(downloadUrl, {
+      responseType: 'blob',
+      withCredentials: false,
+    });
   }
 
   deleteBuildV2CloudProject(

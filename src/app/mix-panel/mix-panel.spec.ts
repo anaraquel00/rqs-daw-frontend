@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed, tick } from '@angular/core/testing';
 import { By, SafeUrl } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import { NEVER, Observable, of, throwError } from 'rxjs';
+import { NEVER, Observable, of, Subject, throwError } from 'rxjs';
 import { MixPanelComponent, RQSTrack } from './mix-panel';
 import { createBuildV2TrackState } from './build-v2-track-state';
 import type {
@@ -17,6 +17,10 @@ import { AuthService } from '../services/auth.service';
 import { AudioComparisonService } from '../services/audio-comparison.service';
 import { AnalyticsService } from '../services/analytics.service';
 import { PreviewWaveformComponent } from '../components/mastering-panel/preview-waveform';
+import {
+  BuildV2CloudProjectRestoreService,
+  type BuildV2CloudProjectRestoreBundle,
+} from '../services/build-v2-cloud-project-restore.service';
 
 describe('MixPanelComponent Setlist Stage 1 contract', () => {
   const session = signal<{ access_token: string; user: { id: string } } | null>({
@@ -29,6 +33,8 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   let getSetlistPresignedUrl: jasmine.Spy;
   let uploadToS3: jasmine.Spy;
   let requestSignIn: jasmine.Spy;
+  let listBuildV2CloudProjects: jasmine.Spy;
+  let restoreBuildV2CloudProject: jasmine.Spy;
   let analytics: { trackEvent: jasmine.Spy };
   let audioComparison: {
     audioProcessed: ReturnType<typeof signal<boolean>>;
@@ -42,6 +48,9 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     getSetlistPresignedUrl = jasmine.createSpy('getSetlistPresignedUrl').and.returnValue(NEVER);
     uploadToS3 = jasmine.createSpy('uploadToS3').and.returnValue(NEVER);
     requestSignIn = jasmine.createSpy('requestSignIn');
+    listBuildV2CloudProjects = jasmine.createSpy('listBuildV2CloudProjects')
+      .and.returnValue(of({ projects: [] }));
+    restoreBuildV2CloudProject = jasmine.createSpy('restoreBuildV2CloudProject');
     analytics = { trackEvent: jasmine.createSpy('trackEvent') };
     audioComparison = {
       audioProcessed: signal(false),
@@ -56,7 +65,16 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
         provideRouter([]),
         {
           provide: DspService,
-          useValue: { generateMixS3, getSetlistPresignedUrl, uploadToS3 },
+          useValue: {
+            generateMixS3,
+            getSetlistPresignedUrl,
+            uploadToS3,
+            listBuildV2CloudProjects,
+          },
+        },
+        {
+          provide: BuildV2CloudProjectRestoreService,
+          useValue: { restoreBuildV2CloudProject },
         },
         { provide: AuthService, useValue: { session, userRole, requestSignIn } },
         { provide: AudioComparisonService, useValue: audioComparison },
@@ -1141,6 +1159,122 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     },
   );
 
+  it('keeps the CLOUD PROJECTS browser visible with an empty runtime', () => {
+    component.tracks = [];
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector('[aria-label="BUILD V2 cloud projects"]'),
+    ).not.toBeNull();
+  });
+
+  it('opens a cloud bundle through the existing restore pipeline and isolates local identity', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000011',
+      'CLOUD B',
+      4,
+    );
+    restoreBuildV2CloudProject.and.returnValue(of(bundle));
+    component.activeLocalProjectId = 'local-a';
+    component.activeLocalProjectCreatedAt = '2026-11-13T18:00:00.000Z';
+    component.selectedCloudProjectId = bundle.project.projectId;
+
+    await component.openBuildV2CloudProject();
+
+    expect(component.tracks.map(track => track.id)).toEqual(['cloud-track-a', 'cloud-track-b']);
+    expect(component.activeCloudProjectId).toBe(bundle.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(4);
+    expect(component.activeLocalProjectId).toBeNull();
+    expect(component.activeLocalProjectCreatedAt).toBeNull();
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('preserves the current runtime when cloud bundle preparation fails', async () => {
+    const originalTracks = readyTracks(2);
+    component.tracks = originalTracks;
+    const originalTransitions = component.transitions;
+    component.selectedCloudProjectId = '20000000-0000-4000-8000-000000000012';
+    restoreBuildV2CloudProject.and.returnValue(
+      throwError(() => new Error('asset 3 failed')),
+    );
+
+    await component.openBuildV2CloudProject();
+
+    expect(component.tracks).toBe(originalTracks);
+    expect(component.transitions).toBe(originalTransitions);
+    expect(component.buildV2CloudStatus).toBe('error');
+  });
+
+  it('commits only the latest concurrent cloud open', async () => {
+    const projectA = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000013',
+      'CLOUD A',
+      2,
+    );
+    const projectB = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000014',
+      'CLOUD B',
+      5,
+    );
+    const first = new Subject<BuildV2CloudProjectRestoreBundle>();
+    const second = new Subject<BuildV2CloudProjectRestoreBundle>();
+    restoreBuildV2CloudProject.and.returnValues(first, second);
+
+    component.selectedCloudProjectId = projectA.project.projectId;
+    const openA = component.openBuildV2CloudProject();
+    component.selectedCloudProjectId = projectB.project.projectId;
+    const openB = component.openBuildV2CloudProject();
+
+    second.next(projectB);
+    second.complete();
+    await openB;
+    first.next(projectA);
+    first.complete();
+    await openA;
+
+    expect(component.activeCloudProjectId).toBe(projectB.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(5);
+    expect(component.setlistName).toBe('CLOUD B');
+  });
+
+  it('does not commit a cloud restore after logout', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000015',
+      'USER A CLOUD',
+      3,
+    );
+    const pending = new Subject<BuildV2CloudProjectRestoreBundle>();
+    restoreBuildV2CloudProject.and.returnValue(pending);
+    component.selectedCloudProjectId = bundle.project.projectId;
+    const originalTracks = readyTracks(1);
+    component.tracks = originalTracks;
+
+    const opening = component.openBuildV2CloudProject();
+    session.set(null);
+    pending.next(bundle);
+    pending.complete();
+    await opening;
+
+    expect(component.tracks).toBe(originalTracks);
+    expect(component.activeCloudProjectId).toBeNull();
+    expect(component.activeCloudProjectRevision).toBeNull();
+  });
+
+  it('clears both local and cloud active identities on NEW', () => {
+    component.activeLocalProjectId = 'local-a';
+    component.activeLocalProjectCreatedAt = '2026-11-13T18:00:00.000Z';
+    component.activeCloudProjectId = '20000000-0000-4000-8000-000000000016';
+    component.activeCloudProjectRevision = 8;
+    component.tracks = readyTracks(1);
+
+    component.newBuildV2Project();
+
+    expect(component.activeLocalProjectId).toBeNull();
+    expect(component.activeLocalProjectCreatedAt).toBeNull();
+    expect(component.activeCloudProjectId).toBeNull();
+    expect(component.activeCloudProjectRevision).toBeNull();
+  });
+
 
   it('renders local waveforms without starting additional network operations', () => {
     component.tracks = readyTracks(2);
@@ -1497,6 +1631,76 @@ function renderResponse(): SetlistRenderResponse {
       channels: 2,
       durationSeconds: 112,
     },
+  };
+}
+
+function cloudRestoreBundle(
+  projectId: string,
+  name: string,
+  revision: number,
+): BuildV2CloudProjectRestoreBundle {
+  const fileA = new File(['aaaaa'], 'cloud-a.wav', { type: 'audio/wav' });
+  const fileB = new File(['bbbbbb'], 'cloud-b.mp3', { type: 'audio/mpeg' });
+  const project: BuildV2ProjectDocumentV1 = {
+    kind: 'rqs-build-project',
+    schemaVersion: 1,
+    projectId,
+    name,
+    createdAt: '2026-11-13T18:00:00.000Z',
+    updatedAt: '2026-11-14T01:00:00.000Z',
+    assets: [
+      {
+        assetId: '30000000-0000-4000-8000-000000000001',
+        originalFileName: fileA.name,
+        format: 'wav',
+        sizeBytes: fileA.size,
+        durationSeconds: 60,
+      },
+      {
+        assetId: '30000000-0000-4000-8000-000000000002',
+        originalFileName: fileB.name,
+        format: 'mp3',
+        sizeBytes: fileB.size,
+        durationSeconds: 70,
+      },
+    ],
+    tracks: [
+      {
+        trackId: 'cloud-track-a',
+        assetId: '30000000-0000-4000-8000-000000000001',
+        state: { trimStartSeconds: 2, trimEndSeconds: 55, gainDb: -3, pan: -0.25 },
+      },
+      {
+        trackId: 'cloud-track-b',
+        assetId: '30000000-0000-4000-8000-000000000002',
+        state: { trimStartSeconds: 1, trimEndSeconds: 65, gainDb: 1, pan: 0.4 },
+      },
+    ],
+    transitions: [{
+      fromTrackId: 'cloud-track-a',
+      toTrackId: 'cloud-track-b',
+      durationSeconds: 4,
+      curve: 'fast-cut',
+      usesDefault: false,
+    }],
+    transitionDefaults: { durationSeconds: 8, curve: 'equal-power' },
+    finalFade: { enabled: true, durationSeconds: 6, curve: 'linear' },
+    vignette: { enabled: false, assetId: null, mode: 'duck-overlay-v1' },
+    render: {
+      exportName: name,
+      loudnessMode: 'off',
+      outputFormat: 'wav',
+      sampleRate: 48_000,
+      channels: 2,
+    },
+  };
+  return {
+    project,
+    revision,
+    files: new Map([
+      [project.assets[0].assetId, fileA],
+      [project.assets[1].assetId, fileB],
+    ]),
   };
 }
 

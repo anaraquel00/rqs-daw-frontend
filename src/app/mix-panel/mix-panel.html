@@ -144,6 +144,98 @@
 
   </section>
 
+  <section
+    class="build-v2-project-bar"
+    aria-label="BUILD V2 cloud projects">
+
+    <div class="build-v2-project-bar-copy">
+      <span>{{ cloudProjectCopy('title') }}</span>
+
+      @if (activeCloudProjectId) {
+        <strong>
+          {{ cloudProjectCopy('revision') }}
+          {{ activeCloudProjectRevision }}
+          ·
+          {{ setlistName }}
+        </strong>
+      } @else {
+        <strong>
+          {{
+            auth.session()?.user
+              ? cloudProjectCopy('select')
+              : cloudProjectCopy('signedOut')
+          }}
+        </strong>
+      }
+    </div>
+
+    <select
+      class="build-v2-project-select"
+      [(ngModel)]="selectedCloudProjectId"
+      [disabled]="
+        cloudProjects.length === 0
+      "
+      aria-label="Saved cloud BUILD project">
+
+      <option value="">
+        {{
+          cloudProjects.length === 0
+            ? cloudProjectCopy('empty')
+            : cloudProjectCopy('select')
+        }}
+      </option>
+
+      @for (
+        project of cloudProjects;
+        track project.projectId
+      ) {
+        <option [value]="project.projectId">
+          {{ project.name }}
+          ·
+          {{ cloudProjectCopy('revision') }}
+          {{ project.revision }}
+          ·
+          {{ project.trackCount }} TRACKS
+        </option>
+      }
+    </select>
+
+    <div class="build-v2-project-actions">
+      <button
+        type="button"
+        (click)="refreshBuildV2CloudProjects()"
+        [disabled]="
+          buildV2CloudBusy
+          || !auth.session()?.user
+        ">
+        {{ cloudProjectCopy('refresh') }}
+      </button>
+
+      <button
+        type="button"
+        class="primary"
+        (click)="openBuildV2CloudProject()"
+        [disabled]="!canOpenBuildV2CloudProject()">
+        {{ cloudProjectCopy('open') }}
+      </button>
+    </div>
+
+    <div
+      class="build-v2-project-status"
+      aria-live="polite">
+      @if (buildV2CloudBusy) {
+        {{ cloudProjectCopy('loading') }}
+      }
+      @if (buildV2CloudStatus === 'opened') {
+        {{ cloudProjectCopy('opened') }}
+      }
+      @if (buildV2CloudStatus === 'error') {
+        {{ cloudProjectCopy('error') }}
+      }
+    </div>
+
+  </section>
+
 
   @if (tracks.length > 0) {
     <div class="validation-panel">

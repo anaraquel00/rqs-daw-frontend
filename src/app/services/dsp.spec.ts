@@ -482,6 +482,45 @@ describe('DspService Mastering V2 transport', () => {
     });
   });
 
+  it('lists BUILD V2 cloud projects with bearer authentication', () => {
+    service.listBuildV2CloudProjects().subscribe(response => {
+      expect(response.projects.length).toBe(1);
+    });
+    const request = http.expectOne(`${environment.baseUrl}/build/v2/projects`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({ projects: [{
+      projectId: '20000000-0000-4000-8000-000000000002',
+      name: 'CLOUD PROJECT', schemaVersion: 1, revision: 2,
+      assetCount: 2, trackCount: 2,
+      documentCreatedAt: '2026-11-14T00:00:00.000Z',
+      documentUpdatedAt: '2026-11-14T01:00:00.000Z',
+    }] });
+  });
+
+  it('requests a BUILD V2 restore manifest with bearer authentication and an empty body', () => {
+    const projectId = '20000000-0000-4000-8000-000000000002';
+    service.getBuildV2CloudRestoreManifest(projectId).subscribe();
+    const request = http.expectOne(
+      `${environment.baseUrl}/build/v2/projects/${projectId}/restore-manifest`,
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({});
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({ project: {}, revision: 2, totalBytes: 0, assets: [] });
+  });
+
+  it('downloads a signed BUILD V2 asset without app JWT or credentials', () => {
+    const downloadUrl = 'https://s3.example.test/signed-get?signature=private';
+    service.downloadBuildV2CloudAsset(downloadUrl).subscribe();
+    const request = http.expectOne(downloadUrl);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+    expect(request.request.withCredentials).toBeFalse();
+    expect(request.request.headers.has('Authorization')).toBeFalse();
+    request.flush(new Blob(['audio'], { type: 'audio/wav' }));
+  });
+
   it('deletes a BUILD V2 project with bearer authentication and If-Match', () => {
     const projectId = '20000000-0000-4000-8000-000000000002';
     service.deleteBuildV2CloudProject(projectId, 8).subscribe(response => {

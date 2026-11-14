@@ -8,12 +8,13 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import {
   DspService,
+  type BuildV2CloudProjectSummary,
   SetlistCurve,
   SetlistLoudnessMode,
   SetlistRenderRequest,
@@ -90,6 +91,9 @@ import {
   BuildV2ProjectStorage,
   type BuildV2LocalProjectSummary,
 } from './build-v2-project-storage';
+import {
+  BuildV2CloudProjectRestoreService,
+} from '../services/build-v2-cloud-project-restore.service';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -282,6 +286,29 @@ const TRANSITION_COPY = {
   fr: { defaults: 'Transition par défaut', duration: 'Durée', curve: 'Courbe', apply: 'Appliquer à toutes les transitions', transition: 'Transition', edit: 'Modifier', reset: 'Rétablir les valeurs par défaut', inherited: 'Par défaut', custom: 'Personnalisée', limits: '0,5–15 secondes · plus court que les deux pistes adjacentes' },
 };
 
+const CLOUD_PROJECT_COPY = {
+  en: {
+    title: 'CLOUD PROJECTS', refresh: 'REFRESH', open: 'OPEN CLOUD', empty: 'NO CLOUD PROJECTS',
+    select: 'SELECT CLOUD PROJECT', loading: 'LOADING CLOUD PROJECTS…', opened: 'CLOUD PROJECT RESTORED',
+    error: 'CLOUD RESTORE FAILED', revision: 'REVISION', signedOut: 'SIGN IN TO LOAD CLOUD PROJECTS',
+  },
+  pt: {
+    title: 'PROJETOS NA NUVEM', refresh: 'ATUALIZAR', open: 'ABRIR DA NUVEM', empty: 'NENHUM PROJETO NA NUVEM',
+    select: 'SELECIONE UM PROJETO NA NUVEM', loading: 'CARREGANDO PROJETOS NA NUVEM…', opened: 'PROJETO DA NUVEM RESTAURADO',
+    error: 'FALHA AO RESTAURAR PROJETO DA NUVEM', revision: 'REVISÃO', signedOut: 'ENTRE PARA CARREGAR PROJETOS NA NUVEM',
+  },
+  pl: {
+    title: 'PROJEKTY W CHMURZE', refresh: 'ODŚWIEŻ', open: 'OTWÓRZ Z CHMURY', empty: 'BRAK PROJEKTÓW W CHMURZE',
+    select: 'WYBIERZ PROJEKT W CHMURZE', loading: 'ŁADOWANIE PROJEKTÓW W CHMURZE…', opened: 'PROJEKT Z CHMURY PRZYWRÓCONY',
+    error: 'NIE UDAŁO SIĘ PRZYWRÓCIĆ PROJEKTU Z CHMURY', revision: 'WERSJA', signedOut: 'ZALOGUJ SIĘ, ABY WCZYTAĆ PROJEKTY W CHMURZE',
+  },
+  fr: {
+    title: 'PROJETS CLOUD', refresh: 'ACTUALISER', open: 'OUVRIR DEPUIS LE CLOUD', empty: 'AUCUN PROJET CLOUD',
+    select: 'SÉLECTIONNER UN PROJET CLOUD', loading: 'CHARGEMENT DES PROJETS CLOUD…', opened: 'PROJET CLOUD RESTAURÉ',
+    error: 'ÉCHEC DE LA RESTAURATION DU PROJET CLOUD', revision: 'RÉVISION', signedOut: 'CONNECTEZ-VOUS POUR CHARGER LES PROJETS CLOUD',
+  },
+} as const;
+
 @Component({
   selector: 'app-mix-panel',
   standalone: true,
@@ -292,6 +319,7 @@ const TRANSITION_COPY = {
 export class MixPanelComponent implements OnDestroy {
   private readonly audioComparison = inject(AudioComparisonService);
   private readonly dspService = inject(DspService);
+  private readonly cloudProjectRestore = inject(BuildV2CloudProjectRestoreService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
   readonly lang = inject(LanguageService);
@@ -320,6 +348,22 @@ export class MixPanelComponent implements OnDestroy {
     | 'opened'
     | 'error' =
     'idle';
+
+  cloudProjects: BuildV2CloudProjectSummary[] = [];
+
+  selectedCloudProjectId = '';
+
+  activeCloudProjectId: string | null = null;
+
+  activeCloudProjectRevision: number | null = null;
+
+  buildV2CloudBusy = false;
+
+  buildV2CloudStatus: 'idle' | 'opened' | 'error' = 'idle';
+
+  private buildV2CloudRestoreAttempt = 0;
+
+  private buildV2CloudListAttempt = 0;
 
   private currentTracks: RQSTrack[] = [];
   selectedTrackId: string | null = null;
@@ -1111,8 +1155,14 @@ export class MixPanelComponent implements OnDestroy {
     effect(() => {
       const userId = this.auth.session()?.user?.id ?? null;
       const previousUserId = this.previousUserId;
-      if (previousUserId && previousUserId !== userId) {
-        queueMicrotask(() => this.clearAllLocalAudio());
+      if (previousUserId !== userId) {
+        this.resetBuildV2CloudState();
+        if (previousUserId) {
+          queueMicrotask(() => this.clearAllLocalAudio());
+        }
+        if (userId) {
+          queueMicrotask(() => void this.refreshBuildV2CloudProjects());
+        }
       }
       this.previousUserId = userId;
     });
@@ -1128,6 +1178,10 @@ export class MixPanelComponent implements OnDestroy {
 
   buildV2Copy(key: keyof typeof BUILD_V2_COPY.en): string {
     return BUILD_V2_COPY[this.lang.currentLang()][key];
+  }
+
+  cloudProjectCopy(key: keyof typeof CLOUD_PROJECT_COPY.en): string {
+    return CLOUD_PROJECT_COPY[this.lang.currentLang()][key];
   }
 
   buildV2ProjectSaveSnapshot(
@@ -1410,6 +1464,111 @@ export class MixPanelComponent implements OnDestroy {
   }
 
 
+  canOpenBuildV2CloudProject(): boolean {
+    return (
+      !!this.auth.session()?.user?.id
+      && this.selectedCloudProjectId.trim().length > 0
+    );
+  }
+
+
+  async refreshBuildV2CloudProjects(): Promise<void> {
+    const userId = this.auth.session()?.user?.id ?? null;
+    if (!userId || this.buildV2CloudBusy) return;
+
+    const attempt = ++this.buildV2CloudListAttempt;
+    this.buildV2CloudBusy = true;
+    this.buildV2CloudStatus = 'idle';
+    try {
+      const response = await firstValueFrom(
+        this.dspService.listBuildV2CloudProjects(),
+      );
+      if (
+        attempt !== this.buildV2CloudListAttempt
+        || this.auth.session()?.user?.id !== userId
+      ) {
+        return;
+      }
+      this.cloudProjects = response.projects;
+      const selectedStillExists = response.projects.some(
+        project => project.projectId === this.selectedCloudProjectId,
+      );
+      if (!selectedStillExists) {
+        this.selectedCloudProjectId = response.projects[0]?.projectId ?? '';
+      }
+    } catch (error) {
+      if (
+        attempt === this.buildV2CloudListAttempt
+        && this.auth.session()?.user?.id === userId
+      ) {
+        console.warn('[RQS BUILD V2 CLOUD PROJECT LIST]', error);
+        this.cloudProjects = [];
+        this.selectedCloudProjectId = '';
+        this.buildV2CloudStatus = 'error';
+      }
+    } finally {
+      if (attempt === this.buildV2CloudListAttempt) {
+        this.buildV2CloudBusy = false;
+      }
+    }
+  }
+
+
+  async openBuildV2CloudProject(): Promise<void> {
+    if (!this.canOpenBuildV2CloudProject()) return;
+
+    const projectId = this.selectedCloudProjectId;
+    const userId = this.auth.session()?.user?.id ?? null;
+    if (!userId) return;
+
+    const attempt = ++this.buildV2CloudRestoreAttempt;
+    this.buildV2CloudBusy = true;
+    this.buildV2CloudStatus = 'idle';
+    try {
+      const bundle = await firstValueFrom(
+        this.cloudProjectRestore.restoreBuildV2CloudProject(projectId),
+      );
+      if (
+        attempt !== this.buildV2CloudRestoreAttempt
+        || this.auth.session()?.user?.id !== userId
+      ) {
+        return;
+      }
+
+      this.restoreBuildV2Project(bundle.project, bundle.files);
+      this.activeCloudProjectId = bundle.project.projectId;
+      this.activeCloudProjectRevision = bundle.revision;
+      this.activeLocalProjectId = null;
+      this.activeLocalProjectCreatedAt = null;
+      this.buildV2CloudStatus = 'opened';
+    } catch (error) {
+      if (
+        attempt === this.buildV2CloudRestoreAttempt
+        && this.auth.session()?.user?.id === userId
+      ) {
+        console.warn('[RQS BUILD V2 CLOUD PROJECT OPEN]', error);
+        this.buildV2CloudStatus = 'error';
+      }
+    } finally {
+      if (attempt === this.buildV2CloudRestoreAttempt) {
+        this.buildV2CloudBusy = false;
+      }
+    }
+  }
+
+
+  private resetBuildV2CloudState(): void {
+    this.buildV2CloudRestoreAttempt += 1;
+    this.buildV2CloudListAttempt += 1;
+    this.cloudProjects = [];
+    this.selectedCloudProjectId = '';
+    this.activeCloudProjectId = null;
+    this.activeCloudProjectRevision = null;
+    this.buildV2CloudBusy = false;
+    this.buildV2CloudStatus = 'idle';
+  }
+
+
   async saveBuildV2Project():
     Promise<void> {
     if (
@@ -1417,6 +1576,10 @@ export class MixPanelComponent implements OnDestroy {
     ) {
       return;
     }
+
+    this.buildV2CloudRestoreAttempt += 1;
+    this.buildV2CloudBusy = false;
+    this.buildV2CloudStatus = 'idle';
 
     this.buildV2ProjectStorageBusy =
       true;
@@ -1459,6 +1622,12 @@ export class MixPanelComponent implements OnDestroy {
       this.activeLocalProjectCreatedAt =
         snapshot.project.createdAt;
 
+      this.activeCloudProjectId =
+        null;
+
+      this.activeCloudProjectRevision =
+        null;
+
       this.selectedLocalProjectId =
         snapshot.project.projectId;
 
@@ -1490,6 +1659,9 @@ export class MixPanelComponent implements OnDestroy {
     ) {
       return;
     }
+
+    this.buildV2CloudRestoreAttempt += 1;
+    this.buildV2CloudBusy = false;
 
     const projectId =
       this.selectedLocalProjectId;
@@ -1528,6 +1700,15 @@ export class MixPanelComponent implements OnDestroy {
       this.activeLocalProjectCreatedAt =
         loaded.project.createdAt;
 
+      this.activeCloudProjectId =
+        null;
+
+      this.activeCloudProjectRevision =
+        null;
+
+      this.buildV2CloudStatus =
+        'idle';
+
       this.selectedLocalProjectId =
         loaded.project.projectId;
 
@@ -1562,6 +1743,21 @@ export class MixPanelComponent implements OnDestroy {
 
     this.activeLocalProjectCreatedAt =
       null;
+
+    this.activeCloudProjectId =
+      null;
+
+    this.activeCloudProjectRevision =
+      null;
+
+    this.buildV2CloudRestoreAttempt +=
+      1;
+
+    this.buildV2CloudBusy =
+      false;
+
+    this.buildV2CloudStatus =
+      'idle';
 
     this.selectedLocalProjectId =
       '';
