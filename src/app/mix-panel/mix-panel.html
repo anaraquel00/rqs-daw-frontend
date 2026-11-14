@@ -416,6 +416,15 @@
             {{ buildV2Copy('bounceWav') }}
           }
         </button>
+
+        @if (buildV2BounceDownloadUrl) {
+          <a
+            [href]="buildV2BounceDownloadUrl"
+            [download]="buildV2BounceDownloadName"
+            rel="noopener">
+            {{ buildV2Copy('downloadWav') }}
+          </a>
+        }
       </div>
     </section>
 

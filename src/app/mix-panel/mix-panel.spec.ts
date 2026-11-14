@@ -573,7 +573,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.canIgniteSetlist()).toBeTrue();
   });
 
-  it('bounces the BUILD V2 mix locally as WAV without an upload or server render', fakeAsync(() => {
+  it('prepares a user-activated BUILD V2 WAV download without upload or server render', async () => {
     component.tracks = readyTracks(2);
     component.setlistName = 'Gate 4D / Restore';
 
@@ -593,14 +593,12 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     const revokeObjectUrl = spyOn(URL, 'revokeObjectURL');
     const click = spyOn(HTMLAnchorElement.prototype, 'click');
 
-    void component.bounceBuildV2Wav();
-    flushMicrotasks();
-
-    const clickedAnchor = click.calls.mostRecent().object as unknown as HTMLAnchorElement;
+    await component.bounceBuildV2Wav();
 
     expect(createObjectUrl).toHaveBeenCalled();
-    expect(click).toHaveBeenCalled();
-    expect(clickedAnchor.download).toBe('Gate_4D_Restore.wav');
+    expect(click).not.toHaveBeenCalled();
+    expect(component.buildV2BounceDownloadUrl).toBe('blob:gate-4d');
+    expect(component.buildV2BounceDownloadName).toBe('Gate_4D_Restore.wav');
     expect(revokeObjectUrl).not.toHaveBeenCalled();
     expect(generateMixS3).not.toHaveBeenCalled();
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
@@ -611,9 +609,9 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.buildV2BounceRendering()).toBeFalse();
     expect(component.setlistError).toBeNull();
 
-    tick(1_000);
-    expect(revokeObjectUrl).toHaveBeenCalledOnceWith('blob:gate-4d');
-  }));
+    fixture.destroy();
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:gate-4d');
+  });
 
   it('moves transition regions to the trimmed source boundaries', () => {
     component.tracks = readyTracks(2);

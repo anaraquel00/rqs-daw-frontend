@@ -126,7 +126,8 @@ $text-muted: #8b949e;
   gap: 8px;
   width: 100%;
 
-  button {
+  button,
+  a {
     flex: 1;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -449,6 +450,7 @@ $text-muted: #8b949e;
     color: #dce5ed;
     font: inherit;
     font-size: 10px;
+    text-decoration: none;
     cursor: pointer;
   }
 }
@@ -716,7 +718,8 @@ $text-muted: #8b949e;
     color: #16794c;
   }
 
-  .build-v2-status button {
+  .build-v2-status button,
+  .build-v2-status a {
     border-color: var(--studio-border-strong);
     background: var(--studio-card);
     color: var(--studio-text);
@@ -1595,7 +1598,8 @@ $text-muted: #8b949e;
     white-space: normal;
   }
 
-  .build-v2-status button {
+  .build-v2-status button,
+  .build-v2-status a {
     width: 100%;
     min-height: 40px;
   }

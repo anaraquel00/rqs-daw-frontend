@@ -227,6 +227,7 @@ const BUILD_V2_COPY = {
     source: 'Source',
     bounceWav: 'BOUNCE WAV',
     bouncingWav: 'BOUNCING WAV…',
+    downloadWav: 'DOWNLOAD WAV',
     bounceFailed: 'Local WAV bounce failed safely. Review the project audio and retry.',
   },
   pt: {
@@ -248,6 +249,7 @@ const BUILD_V2_COPY = {
     source: 'Origem',
     bounceWav: 'BOUNCE WAV',
     bouncingWav: 'GERANDO WAV…',
+    downloadWav: 'BAIXAR WAV',
     bounceFailed: 'O bounce WAV local falhou com segurança. Revise o áudio do projeto e tente novamente.',
   },
   pl: {
@@ -269,6 +271,7 @@ const BUILD_V2_COPY = {
     source: 'Źródło',
     bounceWav: 'BOUNCE WAV',
     bouncingWav: 'TWORZENIE WAV…',
+    downloadWav: 'POBIERZ WAV',
     bounceFailed: 'Lokalny bounce WAV nie powiódł się bezpiecznie. Sprawdź dźwięk projektu i spróbuj ponownie.',
   },
   fr: {
@@ -290,6 +293,7 @@ const BUILD_V2_COPY = {
     source: 'Source',
     bounceWav: 'BOUNCE WAV',
     bouncingWav: 'CRÉATION DU WAV…',
+    downloadWav: 'TÉLÉCHARGER WAV',
     bounceFailed: 'Le bounce WAV local a échoué sans risque. Vérifiez l’audio du projet et réessayez.',
   },
 } as const;
@@ -423,6 +427,10 @@ export class MixPanelComponent implements OnDestroy {
 
   readonly buildV2BounceRendering =
     signal(false);
+
+  buildV2BounceDownloadUrl: string | null = null;
+
+  buildV2BounceDownloadName = '';
 
   private buildV2TransportAudioCtx:
     AudioContext | null = null;
@@ -2261,10 +2269,9 @@ export class MixPanelComponent implements OnDestroy {
     }
 
     this.stopBuildV2Transport();
+    this.clearBuildV2BounceDownload();
     this.buildV2BounceRendering.set(true);
     this.setlistError = null;
-
-    let objectUrl: string | null = null;
 
     try {
       const rendered =
@@ -2273,7 +2280,7 @@ export class MixPanelComponent implements OnDestroy {
       const wav =
         encodeBuildV2WavPcm24(rendered);
 
-      objectUrl = URL.createObjectURL(
+      this.buildV2BounceDownloadUrl = URL.createObjectURL(
         new Blob(
           [wav.buffer as ArrayBuffer],
           { type: 'audio/wav' },
@@ -2287,35 +2294,30 @@ export class MixPanelComponent implements OnDestroy {
           .replace(/^_+|_+$/g, '')
         || 'RQS_SETLIST';
 
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = `${normalizedName}.wav`;
-      anchor.rel = 'noopener';
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
+      this.buildV2BounceDownloadName =
+        `${normalizedName}.wav`;
 
       this.analytics.trackEvent(
         'build_v2_local_wav_bounced',
       );
-
-      const completedObjectUrl = objectUrl;
-      objectUrl = null;
-
-      window.setTimeout(
-        () => URL.revokeObjectURL(completedObjectUrl),
-        1_000,
-      );
     } catch {
+      this.clearBuildV2BounceDownload();
       this.setlistError =
         this.buildV2Copy('bounceFailed');
     } finally {
       this.buildV2BounceRendering.set(false);
-
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
     }
+  }
+
+  private clearBuildV2BounceDownload(): void {
+    if (this.buildV2BounceDownloadUrl) {
+      URL.revokeObjectURL(
+        this.buildV2BounceDownloadUrl,
+      );
+    }
+
+    this.buildV2BounceDownloadUrl = null;
+    this.buildV2BounceDownloadName = '';
   }
 
   canPlayBuildV2Transport(): boolean {
@@ -3449,6 +3451,7 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearBuildV2BounceDownload();
     this.clearAllLocalAudio();
 
     if (this.audioCtx) {
