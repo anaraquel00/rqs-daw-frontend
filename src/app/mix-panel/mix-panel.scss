@@ -2152,7 +2152,7 @@ $text-muted: #8b949e;
 
 @media (max-width: 760px) {
   .build-v2-daw-v3 {
-    max-height: calc(100dvh - 90px);
+    max-height: none;
   }
 
   .build-v2-daw-v3 .daw-track-row,
@@ -2172,8 +2172,8 @@ $text-muted: #8b949e;
   }
 
   .daw-inspector {
-    max-height: 42dvh;
-    overflow-y: auto;
+    max-height: none;
+    overflow-y: visible;
   }
 
   .daw-inspector-body,
