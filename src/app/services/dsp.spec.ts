@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { DspService } from './dsp';
+import { BuildV2RenderDeployRequest, DspService } from './dsp';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { SpotifyPitchRequest } from './mastering-types';
@@ -598,6 +598,35 @@ describe('DspService Mastering V2 transport', () => {
         sampleRate: 48000,
         channels: 2,
         durationSeconds: 120,
+      },
+    });
+  });
+
+  it('posts the canonical BUILD V2 render contract with authentication', () => {
+    const payload = {
+      project: { kind: 'rqs-build-project', schemaVersion: 1 },
+      sources: [
+        {
+          assetId: '30000000-0000-4000-8000-000000000001',
+          s3Key: 'uploads/user-id/setlist/track.wav',
+        },
+      ],
+    } as unknown as BuildV2RenderDeployRequest;
+
+    service.renderDeployBuildV2Setlist(payload).subscribe();
+
+    const request = http.expectOne(`${environment.baseUrl}/build/v2/render-deploy`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBe(payload);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${accessToken}`);
+    request.flush({
+      success: true,
+      engine: 'build-v2',
+      downloadUrl: 'https://s3.example.test/build-v2-download',
+      fileName: 'RQS_TEST_SETLIST.wav',
+      output: {
+        format: 'wav', codec: 'pcm_s24le', sampleRate: 48000, channels: 2,
+        durationSeconds: 120, bytes: 34_560_000,
       },
     });
   });

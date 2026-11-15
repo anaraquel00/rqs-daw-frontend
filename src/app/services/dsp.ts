@@ -45,6 +45,31 @@ export interface SetlistRenderResponse {
   };
 }
 
+export interface BuildV2RenderSource {
+  assetId: string;
+  s3Key: string;
+}
+
+export interface BuildV2RenderDeployRequest {
+  project: BuildV2ProjectDocumentV1;
+  sources: BuildV2RenderSource[];
+}
+
+export interface BuildV2RenderDeployResponse {
+  success: true;
+  engine: 'build-v2';
+  downloadUrl: string;
+  fileName: string;
+  output: {
+    format: 'wav';
+    codec: 'pcm_s24le';
+    sampleRate: 48000;
+    channels: 2;
+    durationSeconds: number;
+    bytes: number;
+  };
+}
+
 export interface SetlistPresignResponse {
   uploadUrl: string;
   s3Key: string;
@@ -245,6 +270,16 @@ export class DspService {
     return this.http.post<SetlistRenderResponse>(`${this.baseUrl}/mix/generate-s3`, payload, {
       headers: this.setlistHeaders(),
     });
+  }
+
+  renderDeployBuildV2Setlist(
+    request: BuildV2RenderDeployRequest,
+  ): Observable<BuildV2RenderDeployResponse> {
+    return this.http.post<BuildV2RenderDeployResponse>(
+      `${this.baseUrl}/build/v2/render-deploy`,
+      request,
+      { headers: this.buildV2Headers() },
+    );
   }
 
   getSetlistPresignedUrl(filename: string): Observable<SetlistPresignResponse> {
