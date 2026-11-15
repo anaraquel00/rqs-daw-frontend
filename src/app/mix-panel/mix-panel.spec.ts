@@ -9,9 +9,9 @@ import type {
   BuildV2ProjectDocumentV1,
 } from './build-v2-project-schema';
 import {
+  BuildV2RenderDeployRequest,
+  BuildV2RenderDeployResponse,
   DspService,
-  SetlistRenderRequest,
-  SetlistRenderResponse,
 } from '../services/dsp';
 import { AuthService } from '../services/auth.service';
 import { AudioComparisonService } from '../services/audio-comparison.service';
@@ -30,6 +30,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   const userRole = signal<'free' | 'premium'>('premium');
 
   let generateMixS3: jasmine.Spy;
+  let renderDeployBuildV2Setlist: jasmine.Spy;
   let getSetlistPresignedUrl: jasmine.Spy;
   let uploadToS3: jasmine.Spy;
   let requestSignIn: jasmine.Spy;
@@ -45,6 +46,8 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
 
   beforeEach(() => {
     generateMixS3 = jasmine.createSpy('generateMixS3').and.returnValue(of(renderResponse()));
+    renderDeployBuildV2Setlist = jasmine.createSpy('renderDeployBuildV2Setlist')
+      .and.returnValue(of(renderResponse()));
     getSetlistPresignedUrl = jasmine.createSpy('getSetlistPresignedUrl').and.returnValue(NEVER);
     uploadToS3 = jasmine.createSpy('uploadToS3').and.returnValue(NEVER);
     requestSignIn = jasmine.createSpy('requestSignIn');
@@ -67,6 +70,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
           provide: DspService,
           useValue: {
             generateMixS3,
+            renderDeployBuildV2Setlist,
             getSetlistPresignedUrl,
             uploadToS3,
             listBuildV2CloudProjects,
@@ -171,15 +175,16 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.transitions.every(t => t.duration === 5 && t.curve === 'linear' && t.usesDefault)).toBeTrue();
   });
 
-  it('sends ordered heterogeneous curves and durations while preserving the legacy curve', () => {
+  it('sends ordered heterogeneous curves and durations in the canonical BUILD V2 project', async () => {
     component.tracks = readyTracks(3);
     component.editTransition(1, 3, 'fast-cut');
     spyOn(HTMLAnchorElement.prototype, 'click');
-    component.igniteSetlist();
-    const payload = generateMixS3.calls.mostRecent().args[0] as SetlistRenderRequest;
-    expect(payload.crossfades).toEqual([8, 3]);
-    expect(payload.curves).toEqual(['equal-power', 'fast-cut']);
-    expect(payload.curve).toBe('equal-power');
+    await component.igniteSetlist();
+    const payload = renderDeployBuildV2Setlist.calls.mostRecent().args[0] as BuildV2RenderDeployRequest;
+    expect(payload.project.transitions.map(item => item.durationSeconds)).toEqual([8, 3]);
+    expect(payload.project.transitions.map(item => item.curve)).toEqual(['equal-power', 'fast-cut']);
+    expect(payload.project.transitionDefaults.curve).toBe('equal-power');
+    expect(generateMixS3).not.toHaveBeenCalled();
     expect(component.calculateCrossfadeDuration()).toBe(11);
     expect(component.calculateEstimatedOutputDuration()).toBe(169);
   });
@@ -516,20 +521,83 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     },
   );
 
-  it('blocks render until every music upload is ready', () => {
+  it('allows render preparation when a music upload is not ready yet', () => {
     component.tracks = [
       track('track-01.wav', 60, 'ready', 'uploads/user-id/setlist/track-01.wav'),
       track('track-02.wav', 60, 'uploading', null),
     ];
 
-    expect(component.canIgniteSetlist()).toBeFalse();
+    expect(component.canIgniteSetlist()).toBeTrue();
 
     component.tracks[1].uploadState = 'ready';
     component.tracks[1].s3Key = 'uploads/user-id/setlist/track-02.wav';
     expect(component.canIgniteSetlist()).toBeTrue();
   });
 
-  it('keeps BUILD V2 neutral by default so legacy render remains available', () => {
+  it('reuses ready inputs, uploads missing inputs and preserves exact asset identity', async () => {
+    const ready = track(
+      'ready.wav',
+      60,
+      'ready',
+      'uploads/user-id/setlist/ready.wav',
+    );
+    const missing = track('missing.wav', 60, 'idle', null);
+    component.tracks = [ready, missing];
+    getSetlistPresignedUrl.and.returnValue(of({
+      uploadUrl: 'https://s3.example.test/missing-put',
+      s3Key: 'uploads/user-id/setlist/missing.wav',
+    }));
+    uploadToS3.and.returnValue(of(null));
+    spyOn(HTMLAnchorElement.prototype, 'click');
+
+    await component.igniteSetlist();
+
+    expect(getSetlistPresignedUrl).toHaveBeenCalledOnceWith('missing.wav');
+    expect(uploadToS3).toHaveBeenCalledTimes(1);
+    const payload = renderDeployBuildV2Setlist.calls.mostRecent().args[0] as BuildV2RenderDeployRequest;
+    expect(payload.sources).toEqual([
+      { assetId: ready.assetId, s3Key: 'uploads/user-id/setlist/ready.wav' },
+      { assetId: missing.assetId, s3Key: 'uploads/user-id/setlist/missing.wav' },
+    ]);
+    expect(payload.project.assets.map(asset => asset.assetId)).toEqual(
+      payload.sources.map(source => source.assetId),
+    );
+    expect(generateMixS3).not.toHaveBeenCalled();
+  });
+
+  it('aborts before the render request when any missing input upload fails', async () => {
+    component.tracks = [
+      track('first.wav', 60, 'ready', 'uploads/user-id/setlist/first.wav'),
+      track('missing.wav', 60, 'idle', null),
+    ];
+    getSetlistPresignedUrl.and.returnValue(of({
+      uploadUrl: 'https://s3.example.test/missing-put',
+      s3Key: 'uploads/user-id/setlist/missing.wav',
+    }));
+    uploadToS3.and.returnValue(throwError(() => new Error('UPLOAD_FAILED')));
+
+    await component.igniteSetlist();
+
+    expect(renderDeployBuildV2Setlist).not.toHaveBeenCalled();
+    expect(generateMixS3).not.toHaveBeenCalled();
+    expect(component.isProcessing).toBeFalse();
+    expect(component.setlistError).toBe(component.localCopy('serverError'));
+  });
+
+  it('blocks normalize explicitly before upload and server render', async () => {
+    component.tracks = readyTracks(2);
+    component.setLoudnessMode('normalize');
+
+    await component.igniteSetlist();
+
+    expect(component.canIgniteSetlist()).toBeFalse();
+    expect(component.setlistError).toBe(component.buildV2Copy('renderBlocked'));
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(renderDeployBuildV2Setlist).not.toHaveBeenCalled();
+    expect(generateMixS3).not.toHaveBeenCalled();
+  });
+
+  it('keeps BUILD V2 neutral by default so server render remains available', () => {
     component.tracks = readyTracks(2);
     expect(component.hasBuildV2Adjustments()).toBeFalse();
     expect(component.canIgniteSetlist()).toBeTrue();
@@ -558,15 +626,19 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.hasBuildV2Adjustments()).toBeTrue();
   });
 
-  it('blocks the V1 server render while BUILD V2 preview-only adjustments are active', () => {
+  it('renders BUILD V2 adjustments on the new endpoint without invoking the legacy renderer', async () => {
     component.tracks = readyTracks(2);
     component.updateBuildV2Track(0, { gainDb: -3 });
-    spyOn(HTMLAnchorElement.prototype, 'click');
+    const download = spyOn(HTMLAnchorElement.prototype, 'click');
 
-    component.igniteSetlist();
+    await component.igniteSetlist();
 
     expect(generateMixS3).not.toHaveBeenCalled();
-    expect(component.setlistError).toBe(component.buildV2Copy('renderBlocked'));
+    expect(renderDeployBuildV2Setlist).toHaveBeenCalledTimes(1);
+    const payload = renderDeployBuildV2Setlist.calls.mostRecent().args[0] as BuildV2RenderDeployRequest;
+    expect(payload.project.tracks[0].state.gainDb).toBe(-3);
+    expect(component.setlistError).toBeNull();
+    expect(download).toHaveBeenCalledTimes(1);
 
     component.resetAllBuildV2Tracks();
     expect(component.hasBuildV2Adjustments()).toBeFalse();
@@ -1229,6 +1301,58 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(uploadToS3).not.toHaveBeenCalled();
   });
 
+  it('auto-uploads and renders a restored local project without changing its identity', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000021',
+      'LOCAL RESTORE',
+      1,
+    );
+    component.restoreBuildV2Project(bundle.project, bundle.files);
+    component.activeLocalProjectId = 'local-restored-id';
+    component.activeLocalProjectCreatedAt = bundle.project.createdAt;
+    getSetlistPresignedUrl.and.callFake((filename: string) => of({
+      uploadUrl: `https://s3.example.test/${filename}`,
+      s3Key: `uploads/user-id/setlist/${filename}`,
+    }));
+    uploadToS3.and.returnValue(of(null));
+    spyOn(HTMLAnchorElement.prototype, 'click');
+
+    await component.igniteSetlist();
+
+    expect(getSetlistPresignedUrl).toHaveBeenCalledTimes(2);
+    expect(uploadToS3).toHaveBeenCalledTimes(2);
+    expect(renderDeployBuildV2Setlist).toHaveBeenCalledTimes(1);
+    expect(component.activeLocalProjectId).toBe('local-restored-id');
+    expect(component.activeLocalProjectCreatedAt).toBe(bundle.project.createdAt);
+    expect(generateMixS3).not.toHaveBeenCalled();
+  });
+
+  it('auto-uploads and renders a restored cloud project without mutating cloud revision', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000022',
+      'CLOUD RESTORE',
+      7,
+    );
+    restoreBuildV2CloudProject.and.returnValue(of(bundle));
+    component.selectedCloudProjectId = bundle.project.projectId;
+    await component.openBuildV2CloudProject();
+    getSetlistPresignedUrl.and.callFake((filename: string) => of({
+      uploadUrl: `https://s3.example.test/${filename}`,
+      s3Key: `uploads/user-id/setlist/${filename}`,
+    }));
+    uploadToS3.and.returnValue(of(null));
+    spyOn(HTMLAnchorElement.prototype, 'click');
+
+    await component.igniteSetlist();
+
+    expect(getSetlistPresignedUrl).toHaveBeenCalledTimes(2);
+    expect(uploadToS3).toHaveBeenCalledTimes(2);
+    expect(renderDeployBuildV2Setlist).toHaveBeenCalledTimes(1);
+    expect(component.activeCloudProjectId).toBe(bundle.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(7);
+    expect(generateMixS3).not.toHaveBeenCalled();
+  });
+
   it('preserves the current runtime when cloud bundle preparation fails', async () => {
     const originalTracks = readyTracks(2);
     component.tracks = originalTracks;
@@ -1325,34 +1449,41 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(generateMixS3).not.toHaveBeenCalled();
   });
 
-  it('keeps Track 01 first and sends no vignette when the option is disabled', () => {
+  it('keeps Track 01 first and sends no vignette when the option is disabled', async () => {
     component.tracks = readyTracks(2);
     component.vignetteEnabled = false;
     spyOn(HTMLAnchorElement.prototype, 'click');
 
-    component.igniteSetlist();
+    await component.igniteSetlist();
 
-    const payload = generateMixS3.calls.mostRecent().args[0] as SetlistRenderRequest;
-    expect(payload.tracks).toEqual([
+    const payload = renderDeployBuildV2Setlist.calls.mostRecent().args[0] as BuildV2RenderDeployRequest;
+    expect(payload.sources.map(item => item.s3Key)).toEqual([
       'uploads/user-id/setlist/track-01.wav',
       'uploads/user-id/setlist/track-02.wav',
     ]);
-    expect(payload.vignette).toBeNull();
-    expect(payload.crossfades).toEqual([8]);
-    expect(payload.outputFormat).toBe('wav');
+    expect(payload.project.vignette).toEqual({
+      enabled: false,
+      assetId: null,
+      mode: 'duck-overlay-v1',
+    });
+    expect(payload.project.transitions.map(item => item.durationSeconds)).toEqual([8]);
+    expect(payload.project.render.outputFormat).toBe('wav');
+    expect(generateMixS3).not.toHaveBeenCalled();
   });
 
-  it('sends an enabled vignette separately instead of consuming Track 01', () => {
+  it('sends an enabled vignette separately instead of consuming Track 01', async () => {
     component.tracks = readyTracks(2);
     component.vignetteEnabled = true;
     component.vignetteTrack = track('id-drop.wav', 5, 'ready', 'uploads/user-id/setlist/id-drop.wav');
     spyOn(HTMLAnchorElement.prototype, 'click');
 
-    component.igniteSetlist();
+    await component.igniteSetlist();
 
-    const payload = generateMixS3.calls.mostRecent().args[0] as SetlistRenderRequest;
-    expect(payload.tracks[0]).toBe('uploads/user-id/setlist/track-01.wav');
-    expect(payload.vignette).toBe('uploads/user-id/setlist/id-drop.wav');
+    const payload = renderDeployBuildV2Setlist.calls.mostRecent().args[0] as BuildV2RenderDeployRequest;
+    expect(payload.sources[0].s3Key).toBe('uploads/user-id/setlist/track-01.wav');
+    expect(payload.project.vignette.assetId).toBe(component.vignetteTrack?.assetId ?? null);
+    expect(payload.sources.at(-1)?.s3Key).toBe('uploads/user-id/setlist/id-drop.wav');
+    expect(generateMixS3).not.toHaveBeenCalled();
   });
 
   it('invalidates stale credentials when a track is removed', () => {
@@ -1488,13 +1619,13 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(getSetlistPresignedUrl).toHaveBeenCalledTimes(1);
   });
 
-  it('safely maps the authoritative backend plan-limit error', () => {
+  it('safely maps the authoritative backend plan-limit error', async () => {
     component.tracks = readyTracks(2);
-    generateMixS3.and.returnValue(throwError(() => ({
+    renderDeployBuildV2Setlist.and.returnValue(throwError(() => ({
       error: { code: 'SETLIST_PLAN_LIMIT_EXCEEDED', detail: 'PRIVATE_DETAIL' },
     })));
 
-    component.igniteSetlist();
+    await component.igniteSetlist();
 
     expect(component.setlistError).toBe(component.localCopy('trackLimitServer'));
     expect(component.setlistError).not.toContain('PRIVATE_DETAIL');
@@ -1508,7 +1639,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     let emitDelayedSuccess = () => {};
     let subscribed = false;
     let unsubscribed = false;
-    generateMixS3.and.returnValue(new Observable<SetlistRenderResponse>((subscriber) => {
+    renderDeployBuildV2Setlist.and.returnValue(new Observable<BuildV2RenderDeployResponse>((subscriber) => {
       subscribed = true;
       emitDelayedSuccess = () => {
         subscriber.next(renderResponse());
@@ -1521,6 +1652,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     const anchorClick = spyOn(HTMLAnchorElement.prototype, 'click');
 
     component.igniteSetlist();
+    flushMicrotasks();
     expect(component.isProcessing).toBeTrue();
     expect(subscribed).toBeTrue();
 
@@ -1549,7 +1681,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   it('clears user A Setlist state on A to B switch and ignores a delayed A success', fakeAsync(() => {
     let emitDelayedSuccess = () => {};
     let unsubscribed = false;
-    generateMixS3.and.returnValue(new Observable<SetlistRenderResponse>((subscriber) => {
+    renderDeployBuildV2Setlist.and.returnValue(new Observable<BuildV2RenderDeployResponse>((subscriber) => {
       emitDelayedSuccess = () => {
         subscriber.next(renderResponse());
         subscriber.complete();
@@ -1570,6 +1702,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     const anchorClick = spyOn(HTMLAnchorElement.prototype, 'click');
 
     component.igniteSetlist();
+    flushMicrotasks();
     expect(component.isProcessing).toBeTrue();
 
     session.set({ access_token: 'user-b-token', user: { id: 'user-b' } });
@@ -1604,7 +1737,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
 
   it('preserves Setlist state and active render on same-user token refresh', fakeAsync(() => {
     let unsubscribed = false;
-    generateMixS3.and.returnValue(new Observable<SetlistRenderResponse>(() => (
+    renderDeployBuildV2Setlist.and.returnValue(new Observable<BuildV2RenderDeployResponse>(() => (
       () => { unsubscribed = true; }
     )));
     component.tracks = readyTracks(2);
@@ -1620,6 +1753,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     const revokeObjectUrl = spyOn(URL, 'revokeObjectURL');
 
     component.igniteSetlist();
+    flushMicrotasks();
     session.set({ access_token: 'refreshed-token', user: { id: 'user-id' } });
     fixture.detectChanges();
     flushMicrotasks();
@@ -1637,20 +1771,44 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(revokeObjectUrl).not.toHaveBeenCalled();
   }));
 
-  it('cancels an active render when the component is destroyed', () => {
+  it('accepts only the latest render attempt for download and success UI', async () => {
+    const first = new Subject<BuildV2RenderDeployResponse>();
+    const second = new Subject<BuildV2RenderDeployResponse>();
+    renderDeployBuildV2Setlist.and.returnValues(first, second);
+    component.tracks = readyTracks(2);
+    const download = spyOn(HTMLAnchorElement.prototype, 'click');
+
+    await component.igniteSetlist();
+    await component.igniteSetlist();
+    first.next(renderResponse());
+    first.complete();
+
+    expect(download).not.toHaveBeenCalled();
+    expect(component.mixSuccess).toBeFalse();
+
+    second.next(renderResponse());
+    second.complete();
+
+    expect(download).toHaveBeenCalledTimes(1);
+    expect(component.mixSuccess).toBeTrue();
+    expect(audioComparison.processedFilename()).toBe('RQS_TEST_SETLIST.wav');
+  });
+
+  it('cancels an active render when the component is destroyed', fakeAsync(() => {
     let unsubscribed = false;
-    generateMixS3.and.returnValue(new Observable<SetlistRenderResponse>(() => (
+    renderDeployBuildV2Setlist.and.returnValue(new Observable<BuildV2RenderDeployResponse>(() => (
       () => { unsubscribed = true; }
     )));
     component.tracks = readyTracks(2);
 
     component.igniteSetlist();
+    flushMicrotasks();
     fixture.destroy();
 
     expect(unsubscribed).toBeTrue();
     expect(component.isProcessing).toBeFalse();
     expect(component.mixSuccess).toBeFalse();
-  });
+  }));
 
   function stubTrackCreation(): void {
     spyOn<any>(component, 'createTrack').and.callFake((file: File) => (
@@ -1659,9 +1817,10 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   }
 });
 
-function renderResponse(): SetlistRenderResponse {
+function renderResponse(): BuildV2RenderDeployResponse {
   return {
     success: true,
+    engine: 'build-v2',
     downloadUrl: 'https://s3.example.test/result',
     fileName: 'RQS_TEST_SETLIST.wav',
     output: {
@@ -1670,6 +1829,7 @@ function renderResponse(): SetlistRenderResponse {
       sampleRate: 48000,
       channels: 2,
       durationSeconds: 112,
+      bytes: 32_256_000,
     },
   };
 }

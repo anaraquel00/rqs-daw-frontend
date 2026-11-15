@@ -17,7 +17,6 @@ import {
   type BuildV2CloudProjectSummary,
   SetlistCurve,
   SetlistLoudnessMode,
-  SetlistRenderRequest,
 } from '../services/dsp';
 import { LanguageService } from '../services/language.service';
 import type { UiLanguage } from '../services/language.service';
@@ -97,6 +96,11 @@ import {
 import {
   BuildV2CloudProjectRestoreService,
 } from '../services/build-v2-cloud-project-restore.service';
+import {
+  ensureBuildV2ServerRenderSources,
+  type BuildV2ServerRenderSource,
+  type BuildV2ServerRenderSourceCandidate,
+} from './build-v2-server-render-source';
 
 export type SetlistUploadState = 'idle' | 'uploading' | 'ready' | 'error';
 
@@ -152,7 +156,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
     vignette: 'Optional vignette / ID drop',
     vignetteOff: 'Off by default',
     vignetteChoose: 'Choose vignette',
-    renderBlocked: 'Every music track must finish uploading before render.',
+    renderBlocked: 'Server render requires a valid signed-in BUILD V2 session with loudness normalization off.',
     trackLimitSelection: 'Your plan allows up to {max} music tracks. Extra files were not uploaded.',
     trackLimitServer: 'Your account Setlist track limit was exceeded. Refresh your profile and try again.',
     serverError: 'Setlist request failed safely. Review the highlighted inputs and retry.',
@@ -168,7 +172,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
     vignette: 'Vinheta / ID drop opcional',
     vignetteOff: 'Desligada por padrão',
     vignetteChoose: 'Escolher vinheta',
-    renderBlocked: 'Todas as faixas precisam concluir o upload antes do render.',
+    renderBlocked: 'O render server exige uma sessão BUILD V2 válida e autenticada, com normalização de loudness desligada.',
     trackLimitSelection: 'Seu plano permite até {max} faixas musicais. Os arquivos extras não foram enviados.',
     trackLimitServer: 'O limite de faixas da Setlist da sua conta foi excedido. Atualize o perfil e tente novamente.',
     serverError: 'A solicitação da setlist falhou com segurança. Revise os campos e tente novamente.',
@@ -184,7 +188,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
     vignette: 'Opcjonalna winieta / ID drop',
     vignetteOff: 'Domyślnie wyłączona',
     vignetteChoose: 'Wybierz winietę',
-    renderBlocked: 'Każdy utwór musi zakończyć upload przed renderem.',
+    renderBlocked: 'Render serwerowy wymaga prawidłowej, zalogowanej sesji BUILD V2 z wyłączoną normalizacją głośności.',
     trackLimitSelection: 'Twój plan pozwala na maksymalnie {max} utwory. Dodatkowe pliki nie zostały wysłane.',
     trackLimitServer: 'Przekroczono limit utworów Setlisty dla konta. Odśwież profil i spróbuj ponownie.',
     serverError: 'Żądanie setlisty bezpiecznie odrzucono. Sprawdź pola i spróbuj ponownie.',
@@ -200,7 +204,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
     vignette: 'Vignette / ID drop facultatif',
     vignetteOff: 'Désactivée par défaut',
     vignetteChoose: 'Choisir une vignette',
-    renderBlocked: 'Chaque piste doit terminer son téléversement avant le rendu.',
+    renderBlocked: 'Le rendu serveur exige une session BUILD V2 valide et connectée, avec la normalisation du volume désactivée.',
     trackLimitSelection: 'Votre offre autorise jusqu’à {max} pistes musicales. Les fichiers supplémentaires n’ont pas été téléversés.',
     trackLimitServer: 'La limite de pistes Setlist de votre compte a été dépassée. Actualisez le profil et réessayez.',
     serverError: 'La requête Setlist a échoué de façon sécurisée. Vérifiez les champs et réessayez.',
@@ -210,7 +214,7 @@ const LOCAL_COPY: Record<UiLanguage, Record<LocalCopyKey, string>> = {
 const BUILD_V2_COPY = {
   en: {
     title: 'BUILD V2 preview lab',
-    previewOnly: 'Local preview only · current server render stays V1 until the V2 engine contract is enabled.',
+    previewOnly: 'BUILD V2 active · Preview and BOUNCE WAV run locally. RENDER & DEPLOY SETLIST uses the V2 server engine.',
     trimStart: 'Trim start',
     trimEnd: 'Trim end',
     gain: 'Gain',
@@ -218,7 +222,7 @@ const BUILD_V2_COPY = {
     effective: 'Effective clip',
     reset: 'Reset V2 controls',
     resetAll: 'Reset all V2 controls',
-    renderBlocked: 'BUILD V2 local adjustments are active. Reset them before using the current V1 server render.',
+    renderBlocked: 'Server V2 currently supports loudness mode OFF. Disable normalization to render.',
     workspace: 'RQS BUILD V2',
     workflow: 'ARRANGE · MIX · TRANSITION · BOUNCE',
     previewReady: 'LOCAL PREVIEW READY',
@@ -232,7 +236,7 @@ const BUILD_V2_COPY = {
   },
   pt: {
     title: 'Laboratório de prévia BUILD V2',
-    previewOnly: 'Somente prévia local · o render atual do servidor permanece V1 até o contrato do motor V2 ser ativado.',
+    previewOnly: 'BUILD V2 ativo · Prévia e BOUNCE WAV são processados localmente. RENDER & DEPLOY SETLIST usa o motor V2 server-side.',
     trimStart: 'Corte inicial',
     trimEnd: 'Corte final',
     gain: 'Ganho',
@@ -240,7 +244,7 @@ const BUILD_V2_COPY = {
     effective: 'Clipe efetivo',
     reset: 'Resetar controles V2',
     resetAll: 'Resetar todos os controles V2',
-    renderBlocked: 'Há ajustes locais do BUILD V2 ativos. Resete-os antes de usar o render V1 atual do servidor.',
+    renderBlocked: 'O servidor V2 aceita atualmente o modo de loudness OFF. Desative a normalização para renderizar.',
     workspace: 'RQS BUILD V2',
     workflow: 'ARRANJO · MIX · TRANSIÇÃO · BOUNCE',
     previewReady: 'PRÉVIA LOCAL PRONTA',
@@ -254,7 +258,7 @@ const BUILD_V2_COPY = {
   },
   pl: {
     title: 'Laboratorium podglądu BUILD V2',
-    previewOnly: 'Tylko podgląd lokalny · bieżący render serwerowy pozostaje V1 do czasu włączenia kontraktu silnika V2.',
+    previewOnly: 'BUILD V2 aktywny · Podgląd i BOUNCE WAV są przetwarzane lokalnie. RENDER & DEPLOY SETLIST używa silnika V2 po stronie serwera.',
     trimStart: 'Początek cięcia',
     trimEnd: 'Koniec cięcia',
     gain: 'Wzmocnienie',
@@ -262,7 +266,7 @@ const BUILD_V2_COPY = {
     effective: 'Efektywny klip',
     reset: 'Resetuj kontrolki V2',
     resetAll: 'Resetuj wszystkie kontrolki V2',
-    renderBlocked: 'Lokalne ustawienia BUILD V2 są aktywne. Zresetuj je przed użyciem bieżącego renderu serwerowego V1.',
+    renderBlocked: 'Serwer V2 obsługuje obecnie tryb głośności OFF. Wyłącz normalizację, aby renderować.',
     workspace: 'RQS BUILD V2',
     workflow: 'ARANŻACJA · MIKS · PRZEJŚCIA · BOUNCE',
     previewReady: 'PODGLĄD LOKALNY GOTOWY',
@@ -276,7 +280,7 @@ const BUILD_V2_COPY = {
   },
   fr: {
     title: 'Laboratoire de préécoute BUILD V2',
-    previewOnly: 'Préécoute locale uniquement · le rendu serveur actuel reste en V1 jusqu’à l’activation du contrat du moteur V2.',
+    previewOnly: 'BUILD V2 actif · La préécoute et BOUNCE WAV sont traités localement. RENDER & DEPLOY SETLIST utilise le moteur V2 côté serveur.',
     trimStart: 'Début du trim',
     trimEnd: 'Fin du trim',
     gain: 'Gain',
@@ -284,7 +288,7 @@ const BUILD_V2_COPY = {
     effective: 'Clip effectif',
     reset: 'Réinitialiser les contrôles V2',
     resetAll: 'Réinitialiser tous les contrôles V2',
-    renderBlocked: 'Des réglages locaux BUILD V2 sont actifs. Réinitialisez-les avant d’utiliser le rendu serveur V1 actuel.',
+    renderBlocked: 'Le serveur V2 prend actuellement en charge le mode de volume OFF. Désactivez la normalisation pour effectuer le rendu.',
     workspace: 'RQS BUILD V2',
     workflow: 'ARRANGEMENT · MIX · TRANSITIONS · BOUNCE',
     previewReady: 'PRÉÉCOUTE LOCALE PRÊTE',
@@ -464,6 +468,8 @@ export class MixPanelComponent implements OnDestroy {
   private previousUserId: string | null = null;
   private activeRenderSubscription: Subscription | null = null;
   private renderAttempt = 0;
+  private readonly renderOnlyProjectId = crypto.randomUUID();
+  private readonly renderOnlyProjectCreatedAt = new Date().toISOString();
   private successResetTimer: ReturnType<typeof setTimeout> | null = null;
   private previewAttempt = 0;
 
@@ -3174,17 +3180,26 @@ export class MixPanelComponent implements OnDestroy {
   }
 
   canIgniteSetlist(): boolean {
-    if (this.isProcessing || this.tracks.length < 2 || this.tracks.length > this.maxTrackCount()) return false;
-    if (this.hasBuildV2Adjustments()) return false;
-    if (!this.setlistName.trim()) return false;
-    if (this.tracks.some((track) => track.uploadState !== 'ready' || !track.s3Key || track.duration <= 0)) {
+    const session = this.auth.session();
+    if (
+      !session?.user?.id
+      || !session.access_token?.trim()
+      || this.isProcessing
+      || this.tracks.length < 2
+      || this.tracks.length > this.maxTrackCount()
+      || this.loudnessMatchMode !== 'off'
+    ) {
       return false;
     }
-    if (this.vignetteEnabled && (!this.vignetteTrack || this.vignetteTrack.uploadState !== 'ready' || !this.vignetteTrack.s3Key)) {
+    try {
+      this.buildV2ProjectSaveSnapshot(
+        this.renderOnlyProjectId,
+        this.renderOnlyProjectCreatedAt,
+      );
+      return true;
+    } catch {
       return false;
     }
-    return this.transitions.length === this.tracks.length - 1
-      && this.transitions.every((_, index) => this.canPreviewTransition(index));
   }
 
   async previewTransition(index: number): Promise<void> {
@@ -3361,11 +3376,110 @@ export class MixPanelComponent implements OnDestroy {
     return (error as { error?: { code?: unknown } })?.error?.code === 'SETLIST_PLAN_LIMIT_EXCEEDED';
   }
 
-  igniteSetlist(): void {
+  private buildV2ServerRenderTracks(): RQSTrack[] {
+    return [
+      ...this.tracks,
+      ...(
+        this.vignetteEnabled
+        && this.vignetteTrack
+          ? [this.vignetteTrack]
+          : []
+      ),
+    ];
+  }
+
+  private async uploadBuildV2ServerRenderTrack(
+    track: RQSTrack,
+    renderAttempt: number,
+    userId: string,
+  ): Promise<string> {
+    if (
+      track.uploadState === 'ready'
+      && track.s3Key
+    ) {
+      return track.s3Key;
+    }
+
+    const uploadAttempt =
+      ++track.uploadAttempt;
+
+    track.s3Key = null;
+    track.uploadError = null;
+    track.uploadState = 'uploading';
+
+    try {
+      const presign = await firstValueFrom(
+        this.dspService
+          .getSetlistPresignedUrl(
+            track.file.name,
+          ),
+      );
+
+      if (
+        !this.isCurrentRender(
+          renderAttempt,
+          userId,
+        )
+        || !this.isCurrentAttempt(
+          track,
+          uploadAttempt,
+        )
+      ) {
+        throw new Error(
+          'BUILD_V2_RENDER_ATTEMPT_STALE',
+        );
+      }
+
+      await firstValueFrom(
+        this.dspService.uploadToS3(
+          presign.uploadUrl,
+          track.file,
+        ),
+      );
+
+      if (
+        !this.isCurrentRender(
+          renderAttempt,
+          userId,
+        )
+        || !this.isCurrentAttempt(
+          track,
+          uploadAttempt,
+        )
+      ) {
+        throw new Error(
+          'BUILD_V2_RENDER_ATTEMPT_STALE',
+        );
+      }
+
+      track.s3Key = presign.s3Key;
+      track.uploadState = 'ready';
+      return presign.s3Key;
+    } catch (error) {
+      if (
+        this.isCurrentRender(
+          renderAttempt,
+          userId,
+        )
+        && this.isCurrentAttempt(
+          track,
+          uploadAttempt,
+        )
+      ) {
+        this.markUploadError(
+          track,
+          uploadAttempt,
+        );
+      }
+      throw error;
+    }
+  }
+
+  async igniteSetlist(): Promise<void> {
     if (!this.hasAuthenticatedBuildSession()) return;
     this.stopBuildV2Transport();
     this.cancelActiveRender();
-    if (this.hasBuildV2Adjustments()) {
+    if (this.loudnessMatchMode !== 'off') {
       this.setlistError = this.buildV2Copy('renderBlocked');
       return;
     }
@@ -3373,22 +3487,6 @@ export class MixPanelComponent implements OnDestroy {
       this.setlistError = this.localCopy('renderBlocked');
       return;
     }
-    const trackKeys = this.tracks.map((track) => track.s3Key);
-    if (trackKeys.some((key) => !key)) {
-      this.setlistError = this.localCopy('renderBlocked');
-      return;
-    }
-
-    const payload: SetlistRenderRequest = {
-      tracks: trackKeys as string[],
-      vignette: this.vignetteEnabled ? this.vignetteTrack?.s3Key ?? null : null,
-      crossfades: this.transitions.map(t => t.duration),
-      curves: this.transitions.map(t => t.curve),
-      curve: this.activeCurve,
-      loudness: this.loudnessMatchMode,
-      exportName: this.setlistName,
-      outputFormat: 'wav',
-    };
 
     const userId = this.auth.session()?.user?.id ?? null;
     const attempt = ++this.renderAttempt;
@@ -3397,7 +3495,81 @@ export class MixPanelComponent implements OnDestroy {
     this.setlistError = null;
     this.pricingUpgradeRequired.set(false);
     this.stopTransitionPreview();
-    const subscription = this.dspService.generateMixS3(payload).subscribe({
+
+    let sources: BuildV2ServerRenderSource[];
+    try {
+      const renderTracks =
+        this.buildV2ServerRenderTracks();
+
+      sources =
+        await ensureBuildV2ServerRenderSources(
+          renderTracks as BuildV2ServerRenderSourceCandidate[],
+          candidate => {
+            const track = renderTracks.find(
+              item =>
+                item.assetId
+                === candidate.assetId,
+            );
+            if (!track || !userId) {
+              throw new Error(
+                'BUILD_V2_RENDER_SOURCE_SET_INVALID',
+              );
+            }
+            return this.uploadBuildV2ServerRenderTrack(
+              track,
+              attempt,
+              userId,
+            );
+          },
+          3,
+        );
+
+      if (!this.isCurrentRender(attempt, userId)) {
+        return;
+      }
+    } catch (error) {
+      if (this.isCurrentRender(attempt, userId)) {
+        this.isProcessing = false;
+        this.setlistError = this.renderErrorMessage(error);
+      }
+      return;
+    }
+
+    const now = new Date().toISOString();
+    let snapshot: BuildV2ProjectSaveSnapshot;
+    try {
+      snapshot = this.buildV2ProjectSaveSnapshot(
+        this.renderOnlyProjectId,
+        this.renderOnlyProjectCreatedAt,
+        now,
+      );
+      if (
+        snapshot.project.assets.length
+          !== sources.length
+        || snapshot.project.assets.some(
+          (asset, index) =>
+            asset.assetId
+            !== sources[index]?.assetId,
+        )
+      ) {
+        throw new Error(
+          'BUILD_V2_RENDER_SOURCE_SET_INVALID',
+        );
+      }
+    } catch (error) {
+      if (this.isCurrentRender(attempt, userId)) {
+        this.isProcessing = false;
+        this.setlistError = this.renderErrorMessage(error);
+      }
+      return;
+    }
+
+    const subscription = this.dspService
+      .renderDeployBuildV2Setlist({
+        project: snapshot.project,
+        sources,
+      })
+      .subscribe({
       next: (response) => {
         if (!this.isCurrentRender(attempt, userId)) return;
         this.activeRenderSubscription = null;
