@@ -139,6 +139,25 @@ describe('BuildV2CloudAssetUploadService', () => {
     );
   });
 
+  it('does not PUT or confirm when presign fails', async () => {
+    const file = new File(['data'], 'track.wav', { type: 'audio/wav' });
+    const resultPromise = firstValueFrom(
+      service.uploadBuildV2CloudAsset(projectId, assetId, file),
+    );
+    http.expectOne(
+      `${environment.baseUrl}/build/v2/projects/${projectId}/assets/presign`,
+    ).flush(
+      { code: 'BUILD_STORAGE_QUOTA_EXCEEDED' },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
+
+    await expectAsync(resultPromise).toBeRejected();
+    http.expectNone('https://s3.example.test/signed-upload');
+    http.expectNone(
+      `${environment.baseUrl}/build/v2/projects/${projectId}/assets/${assetId}/confirm`,
+    );
+  });
+
   it('fails the operation when confirm fails', async () => {
     const file = new File(['data'], 'track.wav', { type: 'audio/wav' });
     const resultPromise = firstValueFrom(

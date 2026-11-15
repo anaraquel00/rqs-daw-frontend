@@ -21,6 +21,11 @@ import {
   BuildV2CloudProjectRestoreService,
   type BuildV2CloudProjectRestoreBundle,
 } from '../services/build-v2-cloud-project-restore.service';
+import {
+  BuildV2CloudProjectAuthoringService,
+  type BuildV2CloudProjectSaveRequest,
+  type BuildV2CloudProjectSaveResult,
+} from '../services/build-v2-cloud-project-authoring.service';
 
 describe('MixPanelComponent Setlist Stage 1 contract', () => {
   const session = signal<{ access_token: string; user: { id: string } } | null>({
@@ -35,7 +40,10 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   let uploadToS3: jasmine.Spy;
   let requestSignIn: jasmine.Spy;
   let listBuildV2CloudProjects: jasmine.Spy;
+  let getBuildV2CloudQuota: jasmine.Spy;
   let restoreBuildV2CloudProject: jasmine.Spy;
+  let saveBuildV2CloudProject: jasmine.Spy;
+  let deleteBuildV2CloudProject: jasmine.Spy;
   let analytics: { trackEvent: jasmine.Spy };
   let audioComparison: {
     audioProcessed: ReturnType<typeof signal<boolean>>;
@@ -53,7 +61,22 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     requestSignIn = jasmine.createSpy('requestSignIn');
     listBuildV2CloudProjects = jasmine.createSpy('listBuildV2CloudProjects')
       .and.returnValue(of({ projects: [] }));
+    getBuildV2CloudQuota = jasmine.createSpy('getBuildV2CloudQuota')
+      .and.returnValue(of({
+        plan: 'pro',
+        projects: { used: 0, limit: 100, remaining: 100, canCreate: true },
+        storage: {
+          confirmedBytes: 0,
+          reservedBytes: 0,
+          usedBytes: 0,
+          limitBytes: 50 * 1024 ** 3,
+          remainingBytes: 50 * 1024 ** 3,
+          canReserve: true,
+        },
+      }));
     restoreBuildV2CloudProject = jasmine.createSpy('restoreBuildV2CloudProject');
+    saveBuildV2CloudProject = jasmine.createSpy('saveBuildV2CloudProject');
+    deleteBuildV2CloudProject = jasmine.createSpy('deleteBuildV2CloudProject');
     analytics = { trackEvent: jasmine.createSpy('trackEvent') };
     audioComparison = {
       audioProcessed: signal(false),
@@ -74,11 +97,19 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
             getSetlistPresignedUrl,
             uploadToS3,
             listBuildV2CloudProjects,
+            getBuildV2CloudQuota,
           },
         },
         {
           provide: BuildV2CloudProjectRestoreService,
           useValue: { restoreBuildV2CloudProject },
+        },
+        {
+          provide: BuildV2CloudProjectAuthoringService,
+          useValue: {
+            save: saveBuildV2CloudProject,
+            delete: deleteBuildV2CloudProject,
+          },
         },
         { provide: AuthService, useValue: { session, userRole, requestSignIn } },
         { provide: AudioComparisonService, useValue: audioComparison },
@@ -1295,10 +1326,263 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.tracks.map(track => track.id)).toEqual(['cloud-track-a', 'cloud-track-b']);
     expect(component.activeCloudProjectId).toBe(bundle.project.projectId);
     expect(component.activeCloudProjectRevision).toBe(4);
+    expect(component.activeCloudProjectBaseline).toEqual(bundle.project);
     expect(component.activeLocalProjectId).toBeNull();
     expect(component.activeLocalProjectCreatedAt).toBeNull();
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('commits a new cloud identity only after the authoring request succeeds', async () => {
+    component.tracks = readyTracks(2);
+    component.activeLocalProjectId = 'local-before-cloud';
+    component.activeLocalProjectCreatedAt = '2026-11-13T18:00:00.000Z';
+    listBuildV2CloudProjects.calls.reset();
+    getBuildV2CloudQuota.calls.reset();
+    saveBuildV2CloudProject.and.callFake((request: BuildV2CloudProjectSaveRequest) => {
+      const result = cloudSaveResult(request, 1);
+      listBuildV2CloudProjects.and.returnValue(of({
+        projects: [result.response!.project],
+      }));
+      return of(result);
+    });
+
+    await component.saveBuildV2CloudProject();
+
+    const request = saveBuildV2CloudProject.calls.mostRecent()
+      .args[0] as BuildV2CloudProjectSaveRequest;
+    expect(request.baseline).toBeNull();
+    expect(request.expectedRevision).toBeNull();
+    expect(component.activeCloudProjectId).toBe(request.snapshot.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(1);
+    expect(component.activeCloudProjectBaseline).toEqual(request.snapshot.project);
+    expect(component.activeLocalProjectId).toBeNull();
+    expect(component.buildV2CloudStatus).toBe('saved');
+    expect(component.cloudProjects.map(project => project.projectId)).toEqual([
+      request.snapshot.project.projectId,
+    ]);
+    expect(listBuildV2CloudProjects).toHaveBeenCalledTimes(1);
+    expect(getBuildV2CloudQuota).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves cloud identity and exposes the explicit no-op state', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000031',
+      'NO OP',
+      6,
+    );
+    restoreBuildV2CloudProject.and.returnValue(of(bundle));
+    component.selectedCloudProjectId = bundle.project.projectId;
+    await component.openBuildV2CloudProject();
+    saveBuildV2CloudProject.and.callFake((request: BuildV2CloudProjectSaveRequest) => of({
+      kind: 'upToDate' as const,
+      project: request.baseline as BuildV2ProjectDocumentV1,
+      response: null,
+      quota: null,
+      uploadedAssetIds: [],
+      removedAssetIds: [],
+    }));
+
+    await component.saveBuildV2CloudProject();
+
+    expect(component.activeCloudProjectId).toBe(bundle.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(6);
+    expect(component.buildV2CloudStatus).toBe('upToDate');
+  });
+
+  it('keeps runtime and identities intact on a revision conflict', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000032',
+      'CONFLICT',
+      3,
+    );
+    restoreBuildV2CloudProject.and.returnValue(of(bundle));
+    component.selectedCloudProjectId = bundle.project.projectId;
+    await component.openBuildV2CloudProject();
+    const tracksBefore = component.tracks;
+    saveBuildV2CloudProject.and.returnValue(throwError(() => ({
+      status: 412,
+      error: { code: 'BUILD_PROJECT_REVISION_CONFLICT' },
+    })));
+
+    await component.saveBuildV2CloudProject();
+
+    expect(component.tracks).toBe(tracksBefore);
+    expect(component.activeCloudProjectId).toBe(bundle.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(3);
+    expect(component.activeCloudProjectBaseline).toEqual(bundle.project);
+    expect(component.buildV2CloudStatus).toBe('conflict');
+  });
+
+  it('maps a server-side quota race to the upgrade CTA without committing identity', async () => {
+    component.tracks = readyTracks(2);
+    saveBuildV2CloudProject.and.returnValue(throwError(() => ({
+      status: 429,
+      error: { code: 'BUILD_STORAGE_QUOTA_EXCEEDED' },
+    })));
+
+    await component.saveBuildV2CloudProject();
+
+    expect(component.activeCloudProjectId).toBeNull();
+    expect(component.activeCloudProjectRevision).toBeNull();
+    expect(component.pricingUpgradeRequired()).toBeTrue();
+    expect(component.buildV2CloudStatus).toBe('storageQuota');
+  });
+
+  it('preserves runtime and local identity when cloud project save fails', async () => {
+    component.tracks = readyTracks(2);
+    const tracksBefore = component.tracks;
+    component.activeLocalProjectId = 'local-safe';
+    component.activeLocalProjectCreatedAt = '2026-11-13T18:00:00.000Z';
+    saveBuildV2CloudProject.and.returnValue(
+      throwError(() => new Error('PROJECT_SAVE_FAILED')),
+    );
+
+    await component.saveBuildV2CloudProject();
+
+    expect(component.tracks).toBe(tracksBefore);
+    expect(component.activeLocalProjectId).toBe('local-safe');
+    expect(component.activeCloudProjectId).toBeNull();
+    expect(component.activeCloudProjectRevision).toBeNull();
+    expect(component.buildV2CloudStatus).toBe('saveError');
+    expect(renderDeployBuildV2Setlist).not.toHaveBeenCalled();
+  });
+
+  it('saves a conflicted runtime as a new cloud project with a fresh identity', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000033',
+      'SAVE AS NEW',
+      4,
+    );
+    restoreBuildV2CloudProject.and.returnValue(of(bundle));
+    component.selectedCloudProjectId = bundle.project.projectId;
+    await component.openBuildV2CloudProject();
+    saveBuildV2CloudProject.and.callFake((request: BuildV2CloudProjectSaveRequest) => (
+      of(cloudSaveResult(request, 1))
+    ));
+
+    await component.saveBuildV2CloudProject(true);
+
+    const request = saveBuildV2CloudProject.calls.mostRecent()
+      .args[0] as BuildV2CloudProjectSaveRequest;
+    expect(request.baseline).toBeNull();
+    expect(request.expectedRevision).toBeNull();
+    expect(request.snapshot.project.projectId).not.toBe(bundle.project.projectId);
+    expect(component.activeCloudProjectId).toBe(request.snapshot.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(1);
+  });
+
+  it('deletes a selected non-active project without changing active identity or runtime', async () => {
+    const active = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000034',
+      'ACTIVE',
+      5,
+    );
+    restoreBuildV2CloudProject.and.returnValue(of(active));
+    component.selectedCloudProjectId = active.project.projectId;
+    await component.openBuildV2CloudProject();
+    const tracksBefore = component.tracks;
+    const otherId = '20000000-0000-4000-8000-000000000035';
+    component.cloudProjects = [cloudSummary(otherId, 'OTHER', 2)];
+    component.selectedCloudProjectId = otherId;
+    deleteBuildV2CloudProject.and.returnValue(of({
+      success: true,
+      alreadyDeleted: false,
+      projectId: otherId,
+      finalRevision: 3,
+      cleanupComplete: true,
+      deletedAssets: 2,
+      pendingAssets: 0,
+    }));
+    spyOn(window, 'confirm').and.returnValue(true);
+
+    await component.deleteBuildV2CloudProject();
+
+    expect(deleteBuildV2CloudProject).toHaveBeenCalledOnceWith(otherId, 2);
+    expect(component.activeCloudProjectId).toBe(active.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(5);
+    expect(component.tracks).toBe(tracksBefore);
+    expect(component.buildV2CloudStatus).toBe('deleted');
+  });
+
+  it('clears only active cloud identity after deleting the active project', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000036',
+      'DELETE ACTIVE',
+      7,
+    );
+    restoreBuildV2CloudProject.and.returnValue(of(bundle));
+    component.selectedCloudProjectId = bundle.project.projectId;
+    await component.openBuildV2CloudProject();
+    const tracksBefore = component.tracks;
+    component.cloudProjects = [cloudSummary(bundle.project.projectId, bundle.project.name, 7)];
+    deleteBuildV2CloudProject.and.returnValue(of({
+      success: true,
+      alreadyDeleted: false,
+      projectId: bundle.project.projectId,
+      finalRevision: 8,
+      cleanupComplete: false,
+      deletedAssets: 1,
+      pendingAssets: 1,
+    }));
+    spyOn(window, 'confirm').and.returnValue(true);
+
+    await component.deleteBuildV2CloudProject();
+
+    expect(component.activeCloudProjectId).toBeNull();
+    expect(component.activeCloudProjectRevision).toBeNull();
+    expect(component.activeCloudProjectBaseline).toBeNull();
+    expect(component.tracks).toBe(tracksBefore);
+    expect(component.buildV2CloudStatus).toBe('cleanupPending');
+  });
+
+  it('preserves selected project and runtime when revision-aware delete is stale', async () => {
+    const bundle = cloudRestoreBundle(
+      '20000000-0000-4000-8000-000000000037',
+      'STALE DELETE',
+      4,
+    );
+    restoreBuildV2CloudProject.and.returnValue(of(bundle));
+    component.selectedCloudProjectId = bundle.project.projectId;
+    await component.openBuildV2CloudProject();
+    const summary = cloudSummary(bundle.project.projectId, bundle.project.name, 4);
+    component.cloudProjects = [summary];
+    const tracksBefore = component.tracks;
+    deleteBuildV2CloudProject.and.returnValue(throwError(() => ({
+      status: 412,
+      error: { code: 'BUILD_PROJECT_REVISION_CONFLICT' },
+    })));
+    spyOn(window, 'confirm').and.returnValue(true);
+
+    await component.deleteBuildV2CloudProject();
+
+    expect(deleteBuildV2CloudProject).toHaveBeenCalledOnceWith(
+      bundle.project.projectId,
+      4,
+    );
+    expect(component.cloudProjects).toEqual([summary]);
+    expect(component.tracks).toBe(tracksBefore);
+    expect(component.activeCloudProjectId).toBe(bundle.project.projectId);
+    expect(component.activeCloudProjectRevision).toBe(4);
+    expect(component.buildV2CloudStatus).toBe('conflict');
+  });
+
+  it('ignores a cloud save completion after logout', async () => {
+    component.tracks = readyTracks(2);
+    const pending = new Subject<BuildV2CloudProjectSaveResult>();
+    saveBuildV2CloudProject.and.returnValue(pending);
+
+    const saving = component.saveBuildV2CloudProject();
+    session.set(null);
+    const request = saveBuildV2CloudProject.calls.mostRecent()
+      .args[0] as BuildV2CloudProjectSaveRequest;
+    pending.next(cloudSaveResult(request, 1));
+    pending.complete();
+    await saving;
+
+    expect(component.activeCloudProjectId).toBeNull();
+    expect(component.activeCloudProjectRevision).toBeNull();
+    expect(component.activeCloudProjectBaseline).toBeNull();
   });
 
   it('auto-uploads and renders a restored local project without changing its identity', async () => {
@@ -1831,6 +2115,48 @@ function renderResponse(): BuildV2RenderDeployResponse {
       durationSeconds: 112,
       bytes: 32_256_000,
     },
+  };
+}
+
+function cloudSaveResult(
+  request: BuildV2CloudProjectSaveRequest,
+  revision: number,
+): BuildV2CloudProjectSaveResult {
+  const project = request.snapshot.project;
+  return {
+    kind: 'saved',
+    project,
+    response: {
+      success: true,
+      alreadySaved: false,
+      updated: request.baseline !== null,
+      project: {
+        projectId: project.projectId,
+        name: project.name,
+        schemaVersion: project.schemaVersion,
+        revision,
+        assetCount: project.assets.length,
+        trackCount: project.tracks.length,
+        documentCreatedAt: project.createdAt,
+        documentUpdatedAt: project.updatedAt,
+      },
+    },
+    quota: null,
+    uploadedAssetIds: project.assets.map(asset => asset.assetId),
+    removedAssetIds: [],
+  };
+}
+
+function cloudSummary(projectId: string, name: string, revision: number) {
+  return {
+    projectId,
+    name,
+    schemaVersion: 1,
+    revision,
+    assetCount: 2,
+    trackCount: 2,
+    documentCreatedAt: '2026-11-13T18:00:00.000Z',
+    documentUpdatedAt: '2026-11-14T01:00:00.000Z',
   };
 }
 
