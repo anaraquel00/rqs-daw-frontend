@@ -153,6 +153,8 @@
 
       @if (activeCloudProjectId) {
         <strong>
+          {{ cloudProjectCopy('active') }}
+          ·
           {{ cloudProjectCopy('revision') }}
           {{ activeCloudProjectRevision }}
           ·
@@ -218,16 +220,73 @@
         [disabled]="!canOpenBuildV2CloudProject()">
         {{ cloudProjectCopy('open') }}
       </button>
+
+      <button
+        type="button"
+        class="primary"
+        (click)="saveBuildV2CloudProject()"
+        [disabled]="!canSaveBuildV2CloudProject()">
+        {{ cloudProjectCopy('save') }}
+      </button>
+
+      @if (buildV2CloudStatus === 'conflict') {
+        <button
+          type="button"
+          (click)="saveBuildV2CloudProject(true)"
+          [disabled]="!canSaveBuildV2CloudProject()">
+          {{ cloudProjectCopy('saveAsNew') }}
+        </button>
+      }
+
+      <button
+        type="button"
+        (click)="deleteBuildV2CloudProject()"
+        [disabled]="!canDeleteBuildV2CloudProject()">
+        {{ cloudProjectCopy('delete') }}
+      </button>
     </div>
 
     <div
       class="build-v2-project-status"
       aria-live="polite">
-      @if (buildV2CloudBusy) {
+      @if (buildV2CloudBusy && buildV2CloudStatus === 'idle') {
         {{ cloudProjectCopy('loading') }}
+      }
+      @if (buildV2CloudStatus === 'saving') {
+        {{ cloudProjectCopy('saving') }}
       }
       @if (buildV2CloudStatus === 'opened') {
         {{ cloudProjectCopy('opened') }}
+      }
+      @if (buildV2CloudStatus === 'saved') {
+        {{ cloudProjectCopy('saved') }}
+      }
+      @if (buildV2CloudStatus === 'upToDate') {
+        {{ cloudProjectCopy('upToDate') }}
+      }
+      @if (buildV2CloudStatus === 'conflict') {
+        {{ cloudProjectCopy('conflict') }}
+      }
+      @if (buildV2CloudStatus === 'deleting') {
+        {{ cloudProjectCopy('deleting') }}
+      }
+      @if (buildV2CloudStatus === 'deleted') {
+        {{ cloudProjectCopy('deleted') }}
+      }
+      @if (buildV2CloudStatus === 'cleanupPending') {
+        {{ cloudProjectCopy('cleanupPending') }}
+      }
+      @if (buildV2CloudStatus === 'projectQuota') {
+        {{ cloudProjectCopy('projectQuota') }}
+      }
+      @if (buildV2CloudStatus === 'storageQuota') {
+        {{ cloudProjectCopy('storageQuota') }}
+      }
+      @if (buildV2CloudStatus === 'saveError') {
+        {{ cloudProjectCopy('saveError') }}
+      }
+      @if (buildV2CloudStatus === 'deleteError') {
+        {{ cloudProjectCopy('deleteError') }}
       }
       @if (buildV2CloudStatus === 'error') {
         {{ cloudProjectCopy('error') }}
