@@ -1782,26 +1782,69 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.tracks[0].name).toBe('track-02.wav');
   });
 
-  it('adds at most three music files for Free before presign', () => {
+  it('adds at most three local music files for Free without legacy upload', () => {
     userRole.set('free');
     stubTrackCreation();
 
     (component as any).addFiles(audioFiles(4));
 
     expect(component.tracks.length).toBe(3);
-    expect(getSetlistPresignedUrl).toHaveBeenCalledTimes(3);
+    expect(component.tracks.every(track => track.s3Key === null)).toBeTrue();
+    expect(component.tracks.every(track => track.uploadState === 'idle')).toBeTrue();
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
     expect(component.setlistError).toContain('3');
   });
 
-  it('adds at most eight music files for Premium before presign', () => {
+  it('selects two WAVs as local idle tracks without legacy upload', () => {
+    stubTrackCreation();
+    const input = {
+      files: audioFiles(2),
+      value: 'selected',
+    } as unknown as HTMLInputElement;
+
+    component.onFileSelect({ target: input } as unknown as Event);
+
+    expect(component.tracks.length).toBe(2);
+    expect(component.tracks.map(track => track.s3Key)).toEqual([null, null]);
+    expect(component.tracks.map(track => track.uploadState)).toEqual(['idle', 'idle']);
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
+    expect(input.value).toBe('');
+  });
+
+  it('adds at most eight local music files for Premium without legacy upload', () => {
     userRole.set('premium');
     stubTrackCreation();
 
     (component as any).addFiles(audioFiles(9));
 
     expect(component.tracks.length).toBe(8);
-    expect(getSetlistPresignedUrl).toHaveBeenCalledTimes(8);
+    expect(component.tracks.every(track => track.s3Key === null)).toBeTrue();
+    expect(component.tracks.every(track => track.uploadState === 'idle')).toBeTrue();
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
     expect(component.setlistError).toContain('8');
+  });
+
+  it('keeps drag-and-drop tracks local without legacy upload', () => {
+    stubTrackCreation();
+    const preventDefault = jasmine.createSpy('preventDefault');
+    const stopPropagation = jasmine.createSpy('stopPropagation');
+
+    component.onFileDrop({
+      preventDefault,
+      stopPropagation,
+      dataTransfer: { files: audioFiles(2) },
+    } as unknown as DragEvent);
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(stopPropagation).toHaveBeenCalled();
+    expect(component.tracks.length).toBe(2);
+    expect(component.tracks.every(track => track.s3Key === null)).toBeTrue();
+    expect(component.tracks.every(track => track.uploadState === 'idle')).toBeTrue();
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
   });
 
   it('does not start presign or upload for a Free fourth music file', () => {
@@ -1819,26 +1862,30 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(pricingLink.getAttribute('href')).toBe('/pricing?from=build&intent=upgrade');
   });
 
-  it('keeps anonymous track selection local and opens auth without presign or upload', () => {
+  it('keeps anonymous track selection local without opening auth or uploading', () => {
     session.set(null);
     stubTrackCreation();
 
     (component as any).addFiles(audioFiles(1));
 
     expect(component.tracks.length).toBe(1);
+    expect(component.tracks[0].s3Key).toBeNull();
     expect(component.tracks[0].uploadState).toBe('idle');
-    expect(requestSignIn).toHaveBeenCalledWith('general');
+    expect(requestSignIn).not.toHaveBeenCalled();
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
   });
 
-  it('does not presign while session restoration has no access token', () => {
+  it('keeps selection local while session restoration has no access token', () => {
     session.set({ access_token: '   ', user: { id: 'user-id' } });
     stubTrackCreation();
 
     (component as any).addFiles(audioFiles(1));
 
-    expect(requestSignIn).toHaveBeenCalledWith('general');
+    expect(component.tracks.length).toBe(1);
+    expect(component.tracks[0].s3Key).toBeNull();
+    expect(component.tracks[0].uploadState).toBe('idle');
+    expect(requestSignIn).not.toHaveBeenCalled();
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
   });
@@ -1861,7 +1908,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(pendingTrack.uploadState).toBe('uploading');
   });
 
-  it('protects vignette upload with the same authenticated-session gate', () => {
+  it('keeps vignette selection local without authentication or legacy upload', () => {
     session.set(null);
     stubTrackCreation();
     const vignette = new File(['audio'], 'id-drop.wav', { type: 'audio/wav' });
@@ -1869,10 +1916,33 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
 
     component.onVignetteSelect({ target: input } as unknown as Event);
 
+    expect(component.vignetteTrack?.s3Key).toBeNull();
     expect(component.vignetteTrack?.uploadState).toBe('idle');
-    expect(requestSignIn).toHaveBeenCalledWith('general');
+    expect(requestSignIn).not.toHaveBeenCalled();
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('uploads a local vignette only when server render starts', async () => {
+    component.tracks = readyTracks(2);
+    component.vignetteEnabled = true;
+    component.vignetteTrack = track('local-vignette.wav', 5, 'idle', null);
+    getSetlistPresignedUrl.and.returnValue(of({
+      uploadUrl: 'https://s3.example.test/local-vignette-put',
+      s3Key: 'uploads/user-id/setlist/local-vignette.wav',
+    }));
+    uploadToS3.and.returnValue(of(null));
+    spyOn(HTMLAnchorElement.prototype, 'click');
+
+    await component.igniteSetlist();
+
+    expect(getSetlistPresignedUrl).toHaveBeenCalledOnceWith('local-vignette.wav');
+    expect(uploadToS3).toHaveBeenCalledTimes(1);
+    expect(component.vignetteTrack?.s3Key).toBe(
+      'uploads/user-id/setlist/local-vignette.wav',
+    );
+    expect(component.vignetteTrack?.uploadState).toBe('ready');
+    expect(renderDeployBuildV2Setlist).toHaveBeenCalledTimes(1);
   });
 
   it('blocks generate-s3 before processing-state mutation when authentication is unavailable', () => {
@@ -1891,6 +1961,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   it('allows replacement while Free already has three music tracks', () => {
     userRole.set('free');
     component.tracks = readyTracks(3);
+    const previous = component.tracks[1];
     stubTrackCreation();
     spyOn(URL, 'revokeObjectURL');
     const replacement = new File(['audio'], 'replacement.wav', { type: 'audio/wav' });
@@ -1900,7 +1971,12 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
 
     expect(component.tracks.length).toBe(3);
     expect(component.tracks[1].name).toBe('replacement.wav');
-    expect(getSetlistPresignedUrl).toHaveBeenCalledTimes(1);
+    expect(component.tracks[1].id).toBe(previous.id);
+    expect(component.tracks[1].s3Key).toBeNull();
+    expect(component.tracks[1].uploadState).toBe('idle');
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(previous.rawUrl);
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
   });
 
   it('safely maps the authoritative backend plan-limit error', async () => {

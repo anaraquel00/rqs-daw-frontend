@@ -3266,7 +3266,6 @@ export class MixPanelComponent implements OnDestroy {
     acceptedFiles.forEach((file) => {
       const track = this.createTrack(file);
       this.tracks.push(track);
-      this.uploadTrack(track);
     });
     this.tracks = [...this.tracks];
     this.stopTransitionPreview();
@@ -3298,7 +3297,6 @@ export class MixPanelComponent implements OnDestroy {
 
     this.vignetteEnabled = true;
     this.vignetteTrack = this.createTrack(file);
-    this.uploadTrack(this.vignetteTrack);
   }
 
   onVignetteToggle(): void {
@@ -3318,7 +3316,6 @@ export class MixPanelComponent implements OnDestroy {
     replacement.crossfadeNext = previous.crossfadeNext;
     this.tracks[index] = replacement;
     this.tracks = [...this.tracks];
-    this.uploadTrack(replacement);
   }
 
   private createRestoredTrack(
