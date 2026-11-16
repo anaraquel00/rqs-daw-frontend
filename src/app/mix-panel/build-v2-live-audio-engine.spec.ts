@@ -610,6 +610,52 @@ describe('BUILD V2 live audio engine', () => {
   );
 
   it(
+    'keeps adjacent incoming and outgoing curves disjoint',
+    () => {
+      const context =
+        new FakeContext();
+
+      const engine =
+        new BuildV2LiveAudioEngine(
+          context as unknown as AudioContext,
+        );
+
+      engine.prepare(
+        [
+          makeTrack('a', 2),
+          makeTrack('b', 2),
+          makeTrack('c', 2),
+        ],
+        [
+          transition(1),
+          transition(1),
+        ],
+      );
+
+      engine.start(0);
+
+      /*
+       * Track B:
+       * gains[2] = mixGain
+       * gains[3] = fadeGain
+       */
+      const curves =
+        context.gains[3]
+          .gain
+          .curves;
+
+      expect(curves.length).toBe(2);
+
+      expect(
+        curves[0].start
+        + curves[0].duration,
+      ).toBeLessThan(
+        curves[1].start,
+      );
+    },
+  );
+
+  it(
     'starts inside a live final fade at the correct envelope value',
     () => {
       const context =

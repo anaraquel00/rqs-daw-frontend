@@ -489,6 +489,25 @@ export class BuildV2LiveAudioEngine {
       track.incomingTransition;
 
     if (incoming) {
+      const followingFadeStart =
+        track.outgoingTransition
+          ? trackEnd
+            - track.outgoingTransition.duration
+          : track.finalFade
+            ? trackEnd
+              - track.finalFade.duration
+            : null;
+
+      const incomingEndPadding =
+        followingFadeStart !== null
+        && Math.abs(
+          trackStart
+          + incoming.duration
+          - followingFadeStart,
+        ) <= EPSILON
+          ? EPSILON
+          : 0;
+
       this.scheduleTransitionCurve(
         param,
         'in',
@@ -497,6 +516,7 @@ export class BuildV2LiveAudioEngine {
         incoming.duration,
         positionSeconds,
         audioNow,
+        incomingEndPadding,
       );
     }
 
@@ -541,6 +561,7 @@ export class BuildV2LiveAudioEngine {
     durationSeconds: number,
     positionSeconds: number,
     audioNow: number,
+    endPaddingSeconds = 0,
   ): void {
     const timelineEnd =
       timelineStart + durationSeconds;
@@ -567,7 +588,9 @@ export class BuildV2LiveAudioEngine {
     );
 
     const remaining =
-      timelineEnd - effectiveStart;
+      timelineEnd
+      - effectiveStart
+      - endPaddingSeconds;
 
     if (remaining <= EPSILON) {
       return;
