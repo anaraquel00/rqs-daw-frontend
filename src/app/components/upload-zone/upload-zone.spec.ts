@@ -147,6 +147,46 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     component.selectedFile = new File(['audio'], 'track.wav', { type: 'audio/wav' });
   });
 
+  it('blocks the MASTER native picker before authentication', () => {
+    component.selectedFile = null;
+    const input = { click: jasmine.createSpy('click') } as unknown as HTMLInputElement;
+
+    component.requestFileSelection(input);
+
+    expect(requestSignIn).toHaveBeenCalledOnceWith('master');
+    expect(input.click).not.toHaveBeenCalled();
+    expect(component.selectedFile).toBeNull();
+  });
+
+  it('blocks a PITCH drop before accepting or analysing audio', () => {
+    component.workspace = 'pitch';
+    component.selectedFile = null;
+    const audio = new File(['audio'], 'pitch.wav', { type: 'audio/wav' });
+    const event = {
+      preventDefault: jasmine.createSpy('preventDefault'),
+      dataTransfer: { files: [audio] },
+    } as unknown as DragEvent;
+
+    component.onDrop(event);
+
+    expect(requestSignIn).toHaveBeenCalledOnceWith('pitch');
+    expect(component.selectedFile).toBeNull();
+    expect(dsp.analyzeMasteringV2).not.toHaveBeenCalled();
+    expect(dsp.getMasteringV2PresignedUrl).not.toHaveBeenCalled();
+  });
+
+  it('opens the shared picker directly after authentication without a second prompt', () => {
+    isLoggedIn.set(true);
+    TestBed.tick();
+    requestSignIn.calls.reset();
+    const input = { click: jasmine.createSpy('click') } as unknown as HTMLInputElement;
+
+    component.requestFileSelection(input);
+
+    expect(input.click).toHaveBeenCalledTimes(1);
+    expect(requestSignIn).not.toHaveBeenCalled();
+  });
+
   it('rehydrates an uploaded S3 source after reload without persisting the File or a signed URL', () => {
     const pointer = {
       version: 1,
@@ -356,9 +396,10 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     const response: MasteringAnalysisResponse = { ...analysis, audio_dna: audioDna, cache: { hit: false } };
     dsp.analyzeMasteringV2.and.returnValue(of(response));
     const file = new File(['audio-dna'], 'audio-dna.wav', { type: 'audio/wav' });
-    (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(file);
+    component.selectedFile = null;
     isLoggedIn.set(true);
     TestBed.tick();
+    (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(file);
 
     const mastering = TestBed.inject(MasteringService);
     expect(component.audioDna).toBe(audioDna);
@@ -379,11 +420,12 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       openai_music_analyst: openAiMusicAnalyst,
     };
     dsp.analyzeMasteringV2.and.returnValue(of(response));
+    component.selectedFile = null;
+    isLoggedIn.set(true);
+    TestBed.tick();
     (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(
       new File(['music-analyst'], 'music-analyst.wav', { type: 'audio/wav' }),
     );
-    isLoggedIn.set(true);
-    TestBed.tick();
 
     expect(component.analysisState()).toBe('success');
     expect(component.openAiMusicAnalyst).toEqual(openAiMusicAnalyst);
@@ -398,11 +440,12 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       ...analysis, source_generation: 'source-1', analyzer_generation: 'source-1',
       audio_dna: currentAudioDna, audio_intelligence: audioIntelligenceV2,
     }));
+    component.selectedFile = null;
+    isLoggedIn.set(true);
+    TestBed.tick();
     (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(
       new File(['audio-intelligence-v2'], 'audio-intelligence-v2.wav', { type: 'audio/wav' }),
     );
-    isLoggedIn.set(true);
-    TestBed.tick();
 
     expect(component.analysisState()).toBe('success');
     expect(component.audioIntelligence).toEqual(audioIntelligenceV2);
@@ -411,12 +454,13 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
 
   it('does not classify PITCH analysis as MASTER lifecycle usage', () => {
     component.workspace = 'pitch';
+    component.selectedFile = null;
+    isLoggedIn.set(true);
+    TestBed.tick();
     analytics.trackEvent.calls.reset();
     (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(
       new File(['pitch-source'], 'pitch-source.wav', { type: 'audio/wav' }),
     );
-    isLoggedIn.set(true);
-    TestBed.tick();
 
     expect(dsp.analyzeMasteringV2).toHaveBeenCalled();
     expect(analytics.trackEvent.calls.allArgs().some(([name]) => name.startsWith('master_'))).toBeFalse();
@@ -428,11 +472,12 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
       audio_dna: { ...audioDna, source_generation: 'source-1', analyzer_generation: 'source-1' },
       audio_intelligence: { ...audioIntelligenceV2, source_generation: 'source-stale', analyzer_generation: 'source-stale' },
     }));
+    component.selectedFile = null;
+    isLoggedIn.set(true);
+    TestBed.tick();
     (component as unknown as { acceptSelectedFile(file: File): void }).acceptSelectedFile(
       new File(['stale-v2'], 'stale-v2.wav', { type: 'audio/wav' }),
     );
-    isLoggedIn.set(true);
-    TestBed.tick();
 
     expect(component.analysisState()).toBe('error');
     expect(component.audioIntelligence).toBeNull();
@@ -698,7 +743,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
   it('does not request a protected presigned upload before authentication', () => {
     component.iniciarUploadS3Silencioso(component.selectedFile!);
 
-    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    expect(requestSignIn).toHaveBeenCalledOnceWith('master');
     expect(dsp.getMasteringV2PresignedUrl).not.toHaveBeenCalled();
     expect(dsp.uploadToS3).not.toHaveBeenCalled();
   });
@@ -773,7 +818,7 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
   it('does not emit a protected Full Master request before authentication', () => {
     component.processarMaster(command(false));
 
-    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    expect(requestSignIn).toHaveBeenCalledOnceWith('master');
     expect(dsp.masterizeV2Preview).not.toHaveBeenCalled();
     expect(dsp.masterizeV2Final).not.toHaveBeenCalled();
   });

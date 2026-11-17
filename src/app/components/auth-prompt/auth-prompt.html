@@ -6,7 +6,10 @@
       <p class="auth-eyebrow">{{ lang.t().AUTH_EYEBROW }}</p>
       <h2 id="auth-title">{{ lang.t().AUTH_REQUIRED_TITLE }}</h2>
       <p>{{ lang.t().AUTH_REQUIRED_BODY }}</p>
-      <p class="auth-benefit">{{ lang.t().AUTH_REQUIRED_BENEFIT }}</p>
+      <p>{{ lang.t().AUTH_SHARED_ACCOUNT }}</p>
+      <p class="auth-benefit" *ngIf="auth.authIntent() === 'master'">
+        {{ lang.t().AUTH_REQUIRED_BENEFIT }}
+      </p>
     </div>
 
     <div class="auth-providers" *ngIf="auth.authPromptMode() === 'providers'">

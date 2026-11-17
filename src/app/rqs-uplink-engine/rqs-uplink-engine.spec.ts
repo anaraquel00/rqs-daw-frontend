@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AnalyticsService } from '../services/analytics.service';
+import { AuthService } from '../services/auth.service';
 import { DeepLinkService } from '../services/deep-link.service';
 import { LanguageService } from '../services/language.service';
 import { EN_TRANSLATIONS } from '../services/language.service';
@@ -16,7 +17,8 @@ describe('RqsUplinkEngineComponent', () => {
         provideRouter([]),
         { provide: DeepLinkService, useValue: { detectPlatform: () => null, sessionEpoch: signal(0), limitReached: signal(false), compileAndRegisterLink: create } },
         { provide: LanguageService, useValue: { tr: () => EN_TRANSLATIONS } },
-        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } }
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } },
+        { provide: AuthService, useValue: { isLoggedIn: () => true, requestSignIn: jasmine.createSpy() } },
       ]
     }).compileComponents();
 
@@ -50,7 +52,8 @@ describe('RqsUplinkEngineComponent', () => {
         provideRouter([]),
         { provide: DeepLinkService, useValue: deepLinkService },
         { provide: LanguageService, useValue: { tr: () => ({ UPLINK_CREATE_FAILED: 'CREATE_FAILED' }) } },
-        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } }
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } },
+        { provide: AuthService, useValue: { isLoggedIn: () => true, requestSignIn: jasmine.createSpy() } },
       ]
     }).compileComponents();
 
@@ -79,7 +82,8 @@ describe('RqsUplinkEngineComponent', () => {
         provideRouter([]),
         { provide: DeepLinkService, useValue: deepLinkService },
         { provide: LanguageService, useValue: { tr: () => ({ UPLINK_CREATE_FAILED: 'CREATE_FAILED' }) } },
-        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } }
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } },
+        { provide: AuthService, useValue: { isLoggedIn: () => true, requestSignIn: jasmine.createSpy() } },
       ]
     }).compileComponents();
 
@@ -122,6 +126,7 @@ describe('RqsUplinkEngineComponent', () => {
         },
         { provide: LanguageService, useValue: { tr: () => EN_TRANSLATIONS } },
         { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } },
+        { provide: AuthService, useValue: { isLoggedIn: () => true, requestSignIn: jasmine.createSpy() } },
       ],
     }).compileComponents();
 
@@ -131,6 +136,41 @@ describe('RqsUplinkEngineComponent', () => {
     const link = fixture.nativeElement.querySelector('.uplink-upgrade-card [data-testid="plan-upgrade-link"]') as HTMLAnchorElement;
     expect(link.getAttribute('href')).toBe('/pricing?from=uplink&intent=quota');
     expect((fixture.nativeElement.querySelector('.create-toggle') as HTMLButtonElement).disabled).toBeTrue();
+  });
+
+  it('requests UPLINK authentication before opening or submitting creation', async () => {
+    const create = jasmine.createSpy('compileAndRegisterLink');
+    const requestSignIn = jasmine.createSpy('requestSignIn');
+    await TestBed.configureTestingModule({
+      imports: [RqsUplinkEngineComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: DeepLinkService,
+          useValue: {
+            detectPlatform: () => null,
+            sessionEpoch: signal(0),
+            limitReached: signal(false),
+            compileAndRegisterLink: create,
+          },
+        },
+        { provide: LanguageService, useValue: { tr: () => EN_TRANSLATIONS } },
+        { provide: AnalyticsService, useValue: { trackEvent: jasmine.createSpy() } },
+        { provide: AuthService, useValue: { isLoggedIn: () => false, requestSignIn } },
+      ],
+    }).compileComponents();
+
+    const component = TestBed.createComponent(RqsUplinkEngineComponent).componentInstance;
+    component.targetUrl.set('https://example.com');
+
+    component.toggleCreate();
+    await component.compileLink();
+
+    expect(component.createOpen()).toBeFalse();
+    expect(component.creating()).toBeFalse();
+    expect(create).not.toHaveBeenCalled();
+    expect(requestSignIn).toHaveBeenCalledTimes(2);
+    expect(requestSignIn).toHaveBeenCalledWith('uplink');
   });
 });
 

@@ -23,7 +23,7 @@
        (dragover)="onDragOver($event)"
        (drop)="onDrop($event)"
        (dragleave)="onDragLeave($event)"
-       (click)="fileInput.click()"
+       (click)="requestFileSelection(fileInput)"
        [class.active]="isDragging">
     <div class="icon-container"><span class="cyber-icon">🎧</span></div>
     <p class="drop-text" *ngIf="!selectedFile && !restoredSourceName">
@@ -35,7 +35,7 @@
     <p class="drop-text file-ready" *ngIf="selectedFile || restoredSourceName">
       💿 {{ selectedFile?.name || restoredSourceName }} {{ lang.t().FILE_INTERCEPTED }}
     </p>
-    <input type="file" #fileInput accept=".wav, .mp3" (change)="onFileSelect($event)" style="display: none;">
+    <input type="file" #fileInput accept=".wav, .mp3" (click)="$event.stopPropagation()" (change)="onFileSelect($event)" style="display: none;">
   </div>
 
   <div class="auth-resume-notice" role="alert" *ngIf="!selectedFile && masteringFeedbackMessage() as feedback">

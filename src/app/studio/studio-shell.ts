@@ -60,11 +60,24 @@ export class StudioShellComponent {
       if (user !== previousUser) {
         const previous = previousUser;
         previousUser = user;
-        // A sign-in callback must keep its validated V2 destination. A full
-        // identity exit or user-to-user switch still disposes retained engines.
+        // A sign-in callback must keep its validated V2 destination.
         if (previous === null && user !== null) return;
+
         this.visited.set(new Set());
-        // Re-enter the selected surface on the next navigation, after disposal.
+
+        // Session expiry/logout disposes user-bound engine state but keeps the
+        // public module open. Authentication is requested only by the next
+        // protected action, never by the session transition itself.
+        if (previous !== null && user === null) {
+          queueMicrotask(() => {
+            if (this.auth.session()?.user) return;
+            this.visited.set(new Set([this.surface()]));
+          });
+          return;
+        }
+
+        // A user-to-user identity switch returns to the neutral surface after
+        // disposing every retained engine.
         void this.router.navigateByUrl('/app');
       }
     });

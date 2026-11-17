@@ -5,7 +5,7 @@
     class="dropzone"
     (drop)="onFileDrop($event)"
     (dragover)="onDragOver($event)"
-    (click)="fileInput.click()">
+    (click)="requestFileSelection(fileInput)">
     <span class="icon">📁</span>
     <p>{{ lang.tr().MIX_DROP_PROMPT }}<br><strong>{{ lang.tr().MIX_OR_CLICK }}</strong></p>
     <input
@@ -13,6 +13,7 @@
       #fileInput
       multiple
       accept=".wav,.mp3,audio/wav,audio/mpeg"
+      (click)="$event.stopPropagation()"
       (change)="onFileSelect($event)"
       hidden>
   </div>
@@ -408,7 +409,7 @@
           accept=".wav,.mp3,audio/wav,audio/mpeg"
           (change)="onVignetteSelect($event)"
           hidden>
-        <button type="button" class="btn-preview-transition" (click)="vignetteInput.click()">
+        <button type="button" class="btn-preview-transition" (click)="requestFileSelection(vignetteInput)">
           {{ localCopy('vignetteChoose') }}
         </button>
         @if (vignetteTrack) {
@@ -1385,10 +1386,7 @@
 
               <button
                 type="button"
-                (click)="
-                  selectedReplacementInput
-                    .click()
-                ">
+                (click)="requestFileSelection(selectedReplacementInput)">
                 {{
                   localCopy('replace')
                 }}

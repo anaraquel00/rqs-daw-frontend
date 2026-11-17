@@ -16,6 +16,7 @@ import { environment } from '../../environments/environment';
 import { AnalyticsService } from './analytics.service';
 
 export type AuthPromptMode = 'providers' | 'email' | 'sent';
+export type AuthIntent = 'general' | 'master' | 'pitch' | 'build' | 'uplink';
 export type AuthMessageKey =
   | 'AUTH_EMAIL_REQUIRED'
   | 'AUTH_EMAIL_INVALID'
@@ -39,6 +40,7 @@ export class AuthService {
   readonly completedMasters = signal<number>(0);
   readonly authPromptOpen = signal(false);
   readonly authPromptMode = signal<AuthPromptMode>('providers');
+  readonly authIntent = signal<AuthIntent>('general');
   readonly authMessageKey = signal<AuthMessageKey | null>(null);
   readonly authEmailSending = signal(false);
   readonly reselectAudioRequired = signal(false);
@@ -153,6 +155,14 @@ export class AuthService {
         if (event === 'SIGNED_IN') this.trackExplicitLogin(callbackState, session);
 
         void this.handleSessionUpdate(session);
+        if (
+          event === 'SIGNED_IN'
+          && !callbackState.present
+          && session?.user
+          && this.authPromptOpen()
+        ) {
+          this.closeAuthPrompt();
+        }
         this.markAuthStateResolved();
       });
   }
@@ -256,26 +266,40 @@ export class AuthService {
   // LOGIN
   // =================================================
 
-  requestSignIn(intent: 'general' | 'mastering' = 'general', mode: AuthPromptMode = 'providers'): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+  requestSignIn(intent: AuthIntent = 'general', mode: AuthPromptMode = 'providers'): void {
+    if (
+      !isPlatformBrowser(this.platformId)
+      || this.isLoggedIn()
+      || this.authPromptOpen()
+    ) {
+      return;
+    }
 
     this.captureCurrentReturnPath();
 
-    if (intent === 'mastering') {
+    if (intent === 'master') {
       window.sessionStorage.setItem(this.resumeMasteringKey, 'true');
     }
 
+    this.authIntent.set(intent);
     this.authMessageKey.set(null);
     this.authPromptMode.set(mode);
     this.authPromptOpen.set(true);
   }
 
   requestSignInForPath(returnPath: string, mode: AuthPromptMode = 'providers'): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+    if (
+      !isPlatformBrowser(this.platformId)
+      || this.isLoggedIn()
+      || this.authPromptOpen()
+    ) {
+      return;
+    }
 
     const safeReturnPath = this.sanitizeReturnPath(returnPath) ?? '/app';
     window.sessionStorage.setItem(this.authReturnPathKey, safeReturnPath);
 
+    this.authIntent.set('general');
     this.authMessageKey.set(null);
     this.authPromptMode.set(mode);
     this.authPromptOpen.set(true);
@@ -284,9 +308,11 @@ export class AuthService {
   closeAuthPrompt(): void {
     if (isPlatformBrowser(this.platformId)) {
       window.sessionStorage.removeItem(this.authReturnPathKey);
+      window.sessionStorage.removeItem(this.resumeMasteringKey);
     }
     this.authPromptOpen.set(false);
     this.authPromptMode.set('providers');
+    this.authIntent.set('general');
     this.authMessageKey.set(null);
     this.authEmailSending.set(false);
   }

@@ -535,7 +535,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
 
   dispararPreview(): void {
     if (!this.auth.isLoggedIn()) {
-      this.auth.requestSignIn('mastering');
+      this.auth.requestSignIn('master');
       return;
     }
     if (!this.canGeneratePreview()) return;
@@ -553,7 +553,7 @@ export class MasteringPanelComponent implements OnInit, OnChanges, OnDestroy {
   dispararProcessamentoCompleto(): void {
     if (!this.canGenerateFullMaster()) return;
     if (!this.auth.isLoggedIn()) {
-      this.auth.requestSignIn('mastering');
+      this.auth.requestSignIn('master');
       return;
     }
     this.configInvalidatedResult.set(false);

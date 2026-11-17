@@ -194,17 +194,18 @@ describe('Studio V2 shell integration', () => {
     expect(restored).toBe(source);
     expect(restored.value).toBe('persistent-master-audio');
   });
-  it('keeps PITCH protected for unauthenticated users', async () => {
+  it('lets unauthenticated users enter PITCH without opening Auth UX', async () => {
     session.set(null);
     harness.detectChanges();
 
     await harness.navigateByUrl('/app/pitch');
     harness.detectChanges();
 
-    expect(TestBed.inject(Router).url).toBe('/app');
-    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).toBeNull();
-    expect(harness.routeNativeElement!.querySelector('input[type=file]')).toBeNull();
-    expect(requestSignInForPath).toHaveBeenCalledWith('/app/pitch', 'providers');
+    expect(TestBed.inject(Router).url).toBe('/app/pitch');
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).not.toBeNull();
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"] input')).not.toBeNull();
+    expect(requestSignInForPath).not.toHaveBeenCalled();
+    expect(requestSignIn).not.toHaveBeenCalled();
   });
 
   it('lets unauthenticated users enter MASTER without opening Auth UX', async () => {
@@ -297,27 +298,26 @@ describe('Studio V2 shell integration', () => {
     ).toBe(engine);
   });
 
-  it('removes PITCH immediately and redirects when the active session signs out', async () => {
+  it('keeps PITCH public after session expiry while disposing its retained engine', async () => {
     await harness.navigateByUrl('/app/pitch');
     harness.detectChanges();
-    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).not.toBeNull();
+    const retained = harness.routeNativeElement!.querySelector('section[aria-label="PITCH"] input');
 
     session.set(null);
     harness.detectChanges();
-    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).toBeNull();
-    expect(harness.routeNativeElement!.querySelector('input[type=file]')).toBeNull();
     await harness.fixture.whenStable();
     harness.detectChanges();
-    expect(TestBed.inject(Router).url).toBe('/app');
+    expect(TestBed.inject(Router).url).toBe('/app/pitch');
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).not.toBeNull();
+    expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"] input')).not.toBe(retained);
+    expect(requestSignIn).not.toHaveBeenCalled();
   });
-  it('allows PITCH again after authentication is restored', async () => {
+  it('keeps PITCH open when the shared session is restored', async () => {
     session.set(null);
     await harness.navigateByUrl('/app/pitch');
-    expect(TestBed.inject(Router).url).toBe('/app');
+    expect(TestBed.inject(Router).url).toBe('/app/pitch');
 
     session.set({ user: { id: 'owner-a', email: 'owner@example.invalid' } });
-    harness.detectChanges();
-    await harness.navigateByUrl('/app/pitch');
     harness.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/app/pitch');
     expect(harness.routeNativeElement!.querySelector('section[aria-label="PITCH"]')).not.toBeNull();

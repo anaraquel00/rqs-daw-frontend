@@ -5,6 +5,7 @@ import { DeepLinkService } from '../services/deep-link.service';
 import { LanguageService } from '../services/language.service';
 import { AnalyticsService } from '../services/analytics.service';
 import { PlanUpgradeCtaComponent } from '../components/plan-upgrade-cta/plan-upgrade-cta';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-rqs-uplink-engine',
@@ -15,6 +16,7 @@ import { PlanUpgradeCtaComponent } from '../components/plan-upgrade-cta/plan-upg
 })
 export class RqsUplinkEngineComponent {
   private deepLinkService = inject(DeepLinkService);
+  readonly auth = inject(AuthService);
   readonly lang = inject(LanguageService);
   private readonly analytics = inject(AnalyticsService);
 
@@ -51,11 +53,19 @@ export class RqsUplinkEngineComponent {
   }
 
   toggleCreate(): void {
+    if (!this.auth.isLoggedIn()) {
+      this.auth.requestSignIn('uplink');
+      return;
+    }
     if (!this.creating()) this.createOpen.update(open => !open);
   }
 
   async compileLink(): Promise<void> {
     if (this.creating()) return;
+    if (!this.auth.isLoggedIn()) {
+      this.auth.requestSignIn('uplink');
+      return;
+    }
     const requestId = ++this.latestCompileRequest;
     this.errorMessage.set('');
     if (!this.targetUrl()) return;

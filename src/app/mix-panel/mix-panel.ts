@@ -3242,13 +3242,23 @@ export class MixPanelComponent implements OnDestroy {
   onFileDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
+    if (!this.ensureBuildFileIngressAuth()) return;
     if (event.dataTransfer?.files) this.addFiles(Array.from(event.dataTransfer.files));
   }
 
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
+    if (!this.ensureBuildFileIngressAuth()) {
+      input.value = '';
+      return;
+    }
     if (input.files) this.addFiles(Array.from(input.files));
     input.value = '';
+  }
+
+  requestFileSelection(input: HTMLInputElement): void {
+    if (!this.ensureBuildFileIngressAuth()) return;
+    input.click();
   }
 
   maxTrackCount(): number {
@@ -3276,6 +3286,10 @@ export class MixPanelComponent implements OnDestroy {
 
   onVignetteSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
+    if (!this.ensureBuildFileIngressAuth()) {
+      input.value = '';
+      return;
+    }
     const file = input.files?.[0] ?? null;
     input.value = '';
     if (!file || !/\.(wav|mp3)$/i.test(file.name)) return;
@@ -3305,6 +3319,10 @@ export class MixPanelComponent implements OnDestroy {
 
   replaceTrackFile(index: number, event: Event): void {
     const input = event.target as HTMLInputElement;
+    if (!this.ensureBuildFileIngressAuth()) {
+      input.value = '';
+      return;
+    }
     const file = input.files?.[0] ?? null;
     input.value = '';
     if (!file || !/\.(wav|mp3)$/i.test(file.name) || !this.tracks[index]) return;
@@ -3316,6 +3334,12 @@ export class MixPanelComponent implements OnDestroy {
     replacement.crossfadeNext = previous.crossfadeNext;
     this.tracks[index] = replacement;
     this.tracks = [...this.tracks];
+  }
+
+  private ensureBuildFileIngressAuth(): boolean {
+    if (this.auth.session()?.user) return true;
+    this.auth.requestSignIn('build');
+    return false;
   }
 
   private createRestoredTrack(

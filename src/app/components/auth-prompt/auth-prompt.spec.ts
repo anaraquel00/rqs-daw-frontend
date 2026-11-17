@@ -65,4 +65,38 @@ describe('AuthPromptComponent', () => {
 
     expect(signIn).not.toHaveBeenCalled();
   });
+
+  it('shows the shared account message for every intent and the beta benefit only for MASTER', () => {
+    component.auth.requestSignIn('build');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(component.lang.t().AUTH_SHARED_ACCOUNT);
+    expect(fixture.nativeElement.querySelector('.auth-benefit')).toBeNull();
+
+    component.close();
+    component.auth.requestSignIn('master');
+    fixture.detectChanges();
+
+    const benefit = fixture.nativeElement.querySelector('.auth-benefit') as HTMLElement;
+    expect(benefit.textContent).toContain(component.lang.t().AUTH_REQUIRED_BENEFIT);
+  });
+
+  it('provides complete shared-auth copy in PT-BR, EN-US, PL-PL and FR-FR', () => {
+    for (const language of ['pt', 'en', 'pl', 'fr'] as const) {
+      component.lang.setLanguage(language);
+      component.auth.requestSignIn('pitch');
+      fixture.detectChanges();
+
+      const copy = component.lang.t();
+      expect(copy.AUTH_EYEBROW).withContext(language).toBeTruthy();
+      expect(copy.AUTH_REQUIRED_BODY).withContext(language).toBeTruthy();
+      expect(copy.AUTH_SHARED_ACCOUNT).withContext(language).toContain('MASTER');
+      expect(copy.AUTH_GOOGLE).withContext(language).toBeTruthy();
+      expect(copy.AUTH_GITHUB).withContext(language).toBeTruthy();
+      expect(copy.AUTH_EMAIL_CONTINUE).withContext(language).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.auth-benefit')).withContext(language).toBeNull();
+
+      component.close();
+    }
+  });
 });

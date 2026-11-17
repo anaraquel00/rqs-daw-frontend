@@ -1862,18 +1862,32 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(pricingLink.getAttribute('href')).toBe('/pricing?from=build&intent=upgrade');
   });
 
-  it('keeps anonymous track selection local without opening auth or uploading', () => {
+  it('blocks anonymous track drop before accepting a local File', () => {
     session.set(null);
     stubTrackCreation();
+    const preventDefault = jasmine.createSpy('preventDefault');
+    const stopPropagation = jasmine.createSpy('stopPropagation');
 
-    (component as any).addFiles(audioFiles(1));
+    component.onFileDrop({
+      preventDefault,
+      stopPropagation,
+      dataTransfer: { files: audioFiles(1) },
+    } as unknown as DragEvent);
 
-    expect(component.tracks.length).toBe(1);
-    expect(component.tracks[0].s3Key).toBeNull();
-    expect(component.tracks[0].uploadState).toBe('idle');
-    expect(requestSignIn).not.toHaveBeenCalled();
+    expect(component.tracks.length).toBe(0);
+    expect(requestSignIn).toHaveBeenCalledOnceWith('build');
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('blocks the anonymous BUILD picker before the native dialog opens', () => {
+    session.set(null);
+    const input = { click: jasmine.createSpy('click') } as unknown as HTMLInputElement;
+
+    component.requestFileSelection(input);
+
+    expect(requestSignIn).toHaveBeenCalledOnceWith('build');
+    expect(input.click).not.toHaveBeenCalled();
   });
 
   it('keeps selection local while session restoration has no access token', () => {
@@ -1908,7 +1922,7 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(pendingTrack.uploadState).toBe('uploading');
   });
 
-  it('keeps vignette selection local without authentication or legacy upload', () => {
+  it('blocks anonymous vignette selection without accepting or uploading the File', () => {
     session.set(null);
     stubTrackCreation();
     const vignette = new File(['audio'], 'id-drop.wav', { type: 'audio/wav' });
@@ -1916,9 +1930,23 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
 
     component.onVignetteSelect({ target: input } as unknown as Event);
 
-    expect(component.vignetteTrack?.s3Key).toBeNull();
-    expect(component.vignetteTrack?.uploadState).toBe('idle');
-    expect(requestSignIn).not.toHaveBeenCalled();
+    expect(component.vignetteTrack).toBeNull();
+    expect(requestSignIn).toHaveBeenCalledOnceWith('build');
+    expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
+  });
+
+  it('blocks anonymous track replacement without mutating the existing track', () => {
+    session.set(null);
+    component.tracks = readyTracks(1);
+    const existing = component.tracks[0];
+    const replacement = new File(['audio'], 'replacement.wav', { type: 'audio/wav' });
+    const input = { files: [replacement], value: 'selected' } as unknown as HTMLInputElement;
+
+    component.replaceTrackFile(0, { target: input } as unknown as Event);
+
+    expect(component.tracks[0]).toBe(existing);
+    expect(requestSignIn).toHaveBeenCalledOnceWith('build');
     expect(getSetlistPresignedUrl).not.toHaveBeenCalled();
     expect(uploadToS3).not.toHaveBeenCalled();
   });

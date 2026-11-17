@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Session } from '@supabase/supabase-js';
 import { AnalyticsService } from './analytics.service';
-import { AuthService } from './auth.service';
+import { AuthService, type AuthIntent } from './auth.service';
 
 describe('AuthService OAuth and Magic Link', () => {
   let service: AuthService;
@@ -63,7 +63,7 @@ describe('AuthService OAuth and Magic Link', () => {
     window.history.replaceState({}, '', '/app/master');
     const signIn = spyOn(service.getSupabaseClient().auth, 'signInWithOAuth').and.resolveTo({ data: {}, error: null } as never);
 
-    service.requestSignIn('mastering');
+    service.requestSignIn('master');
     await service.loginWithProvider('google');
 
     expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBe('/app/master');
@@ -97,7 +97,7 @@ describe('AuthService OAuth and Magic Link', () => {
     window.history.replaceState({}, '', '/app/master?gclid=click-123&utm_source=google&utm_campaign=master-search&access_token=secret');
     const signIn = spyOn(service.getSupabaseClient().auth, 'signInWithOAuth').and.resolveTo({ data: {}, error: null } as never);
 
-    service.requestSignIn('mastering');
+    service.requestSignIn('master');
     await service.loginWithProvider('google');
 
     const expected = '/app/master?gclid=click-123&utm_source=google&utm_campaign=master-search';
@@ -228,7 +228,7 @@ describe('AuthService OAuth and Magic Link', () => {
   });
 
   it('preserves only a non-sensitive mastering intent and requests audio reselection after return', () => {
-    service.requestSignIn('mastering');
+    service.requestSignIn('master');
 
     callbackHandler().handleAuthCallbackReturn({ present: true, errorCode: null }, authenticatedSession);
 
@@ -239,7 +239,7 @@ describe('AuthService OAuth and Magic Link', () => {
   for (const path of ['/app/master', '/pitch', '/app/pitch', '/app/build', '/app/uplink', '/app/split', '/app']) {
     it(`restores ${path} after a successful authentication callback`, () => {
       window.history.replaceState({}, '', path);
-      service.requestSignIn(path === '/app/master' ? 'mastering' : 'general');
+      service.requestSignIn(path === '/app/master' ? 'master' : 'general');
       window.history.replaceState({}, '', '/');
 
       callbackHandler().handleAuthCallbackReturn({ present: true, errorCode: null }, authenticatedSession);
@@ -323,5 +323,40 @@ describe('AuthService OAuth and Magic Link', () => {
       provider: 'github',
       options: { redirectTo: `${window.location.origin}/app` },
     });
+  });
+
+  it('tracks the module intent and keeps a single prompt open', () => {
+    window.history.replaceState({}, '', '/app/pitch');
+
+    service.requestSignIn('pitch');
+    service.requestSignIn('build', 'email');
+
+    expect(service.authPromptOpen()).toBeTrue();
+    expect(service.authPromptMode()).toBe('providers');
+    expect(service.authIntent()).toBe('pitch');
+    expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBe('/app/pitch');
+  });
+
+  it('does not open a protected-action prompt when a shared session already exists', () => {
+    service.session.set(authenticatedSession);
+
+    for (const intent of ['master', 'pitch', 'build', 'uplink'] satisfies AuthIntent[]) {
+      service.requestSignIn(intent);
+    }
+
+    expect(service.authPromptOpen()).toBeFalse();
+    expect(service.authIntent()).toBe('general');
+  });
+
+  it('clears master resume state when the prompt is cancelled', () => {
+    service.requestSignIn('master');
+
+    expect(window.sessionStorage.getItem('rqs_resume_mastering')).toBe('true');
+
+    service.closeAuthPrompt();
+
+    expect(window.sessionStorage.getItem('rqs_resume_mastering')).toBeNull();
+    expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBeNull();
+    expect(service.authIntent()).toBe('general');
   });
 });

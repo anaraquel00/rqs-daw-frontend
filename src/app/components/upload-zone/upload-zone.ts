@@ -154,6 +154,10 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
 
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
+    if (!this.ensureAudioIngressAuth()) {
+      input.value = '';
+      return;
+    }
     const selected = input.files?.[0] ?? null;
 
     if (selected) this.acceptSelectedFile(selected);
@@ -173,14 +177,20 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   onDrop(event: DragEvent): void {
     event.preventDefault();
     this.isDragging = false;
+    if (!this.ensureAudioIngressAuth()) return;
     const selected = event.dataTransfer?.files?.[0] ?? null;
     if (selected) this.acceptSelectedFile(selected);
+  }
+
+  requestFileSelection(input: HTMLInputElement): void {
+    if (!this.ensureAudioIngressAuth()) return;
+    input.click();
   }
 
   iniciarUploadS3Silencioso(file: File): void {
     if (!this.auth.isLoggedIn()) {
       this.trackAuthRequired('upload');
-      this.auth.requestSignIn('mastering');
+      this.auth.requestSignIn(this.authIntentForWorkspace());
       return;
     }
 
@@ -250,7 +260,7 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     if (this.isProcessing || !sourceAvailable) return;
     if (!this.auth.isLoggedIn()) {
       this.trackAuthRequired(command.preview ? 'preview' : 'full');
-      this.auth.requestSignIn('mastering');
+      this.auth.requestSignIn('master');
       return;
     }
     if (!this.masteringV2DirectUpload && !this.s3Key) {
@@ -457,6 +467,8 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
   }
 
   private acceptSelectedFile(file: File): void {
+    if (!this.ensureAudioIngressAuth()) return;
+
     const fileName = file.name.toLowerCase();
     if (!fileName.endsWith('.wav') && !fileName.endsWith('.mp3')) {
       this.masteringFeedback.set('invalid_format');
@@ -511,6 +523,16 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     } else {
       this.analysisState.set('auth_required');
     }
+  }
+
+  private ensureAudioIngressAuth(): boolean {
+    if (this.auth.isLoggedIn()) return true;
+    this.auth.requestSignIn(this.authIntentForWorkspace());
+    return false;
+  }
+
+  private authIntentForWorkspace(): 'master' | 'pitch' {
+    return this.workspace === 'pitch' ? 'pitch' : 'master';
   }
 
   private requestSourceAnalysis(file: File, generation: number): void {

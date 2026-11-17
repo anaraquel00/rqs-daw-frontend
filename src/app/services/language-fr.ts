@@ -77,6 +77,7 @@ export const FR_DICT: typeof PT_DICT = {
   AUTH_EMAIL_SUCCESS_BODY: 'Nous vous avons envoyé un lien sécurisé pour vous connecter à RQS Studio.',
   AUTH_REQUIRED_TITLE: 'Connexion requise',
   AUTH_REQUIRED_BODY: 'Créez un compte gratuit ou connectez-vous pour continuer.',
+  AUTH_SHARED_ACCOUNT: 'Un seul compte pour MASTER, PITCH, BUILD et UPLINK.',
   AUTH_REQUIRED_BENEFIT: 'Profitez de 3 masters complets gratuits pendant la bêta publique.',
   AUTH_EMAIL_REQUIRED: 'Saisissez votre adresse e-mail.',
   AUTH_EMAIL_INVALID: 'Saisissez une adresse e-mail valide.',

@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { Routes } from '@angular/router';
 import { StudioShellComponent } from './studio-shell';
-import { studioAuthGuard } from './studio-auth.guard';
 
 // The route selects a surface. The parent owns visited engine instances so that
 // Back/Forward and Module Selector navigation do not destroy local audio/jobs.
@@ -17,9 +16,7 @@ export const STUDIO_ROUTES: Routes = [{
       component: StudioRouteSurface,
       data: { surface },
       title: `RQS Studio — ${surface.toUpperCase()}`,
-      canActivate: surface === 'pitch' ? [studioAuthGuard] : [],
     })),
     { path: '**', redirectTo: '' },
   ],
 }];
-

@@ -316,7 +316,7 @@ it('sends the selected source start with the Preview command', () => {
     expect(panel.canActivatePreviewAction()).toBeTrue();
     panel.dispararPreview();
 
-    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    expect(requestSignIn).toHaveBeenCalledOnceWith('master');
     expect(processMaster).not.toHaveBeenCalled();
     expect(panel.audioComparison.previewStatus()).toBe('not-generated');
     expect(panel.isProcessing).toBeFalse();
@@ -352,7 +352,7 @@ it('sends the selected source start with the Preview command', () => {
     expect(previewButton.disabled).toBeFalse();
 
     previewButton.click();
-    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    expect(requestSignIn).toHaveBeenCalledOnceWith('master');
     fixture.destroy();
   });
 
@@ -366,7 +366,7 @@ it('sends the selected source start with the Preview command', () => {
 
     panel.dispararProcessamentoCompleto();
 
-    expect(requestSignIn).toHaveBeenCalledOnceWith('mastering');
+    expect(requestSignIn).toHaveBeenCalledOnceWith('master');
     expect(processMaster).not.toHaveBeenCalled();
   });
 
