@@ -227,13 +227,22 @@ describe('AuthService OAuth and Magic Link', () => {
     expect(service.authPromptOpen()).toBeTrue();
   });
 
-  it('preserves only a non-sensitive mastering intent and requests audio reselection after return', () => {
+  it('restores master after authentication without requiring audio reselection state', () => {
+    window.history.replaceState({}, '', '/app/master');
+
     service.requestSignIn('master');
+    window.history.replaceState({}, '', '/');
 
-    callbackHandler().handleAuthCallbackReturn({ present: true, errorCode: null }, authenticatedSession);
+    callbackHandler().handleAuthCallbackReturn(
+      { present: true, errorCode: null },
+      authenticatedSession
+    );
 
-    expect(service.reselectAudioRequired()).toBeTrue();
-    expect(window.sessionStorage.getItem('rqs_resume_mastering')).toBeNull();
+    expect(router.navigateByUrl).toHaveBeenCalledOnceWith(
+      '/app/master',
+      { replaceUrl: true }
+    );
+    expect(service.authIntent()).toBe('general');
   });
 
   for (const path of ['/app/master', '/pitch', '/app/pitch', '/app/build', '/app/uplink', '/app/split', '/app']) {
@@ -348,14 +357,15 @@ describe('AuthService OAuth and Magic Link', () => {
     expect(service.authIntent()).toBe('general');
   });
 
-  it('clears master resume state when the prompt is cancelled', () => {
+  it('clears the auth return path when the master prompt is cancelled', () => {
+    window.history.replaceState({}, '', '/app/master');
+
     service.requestSignIn('master');
 
-    expect(window.sessionStorage.getItem('rqs_resume_mastering')).toBe('true');
+    expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBe('/app/master');
 
     service.closeAuthPrompt();
 
-    expect(window.sessionStorage.getItem('rqs_resume_mastering')).toBeNull();
     expect(window.sessionStorage.getItem('rqs_auth_return_path')).toBeNull();
     expect(service.authIntent()).toBe('general');
   });

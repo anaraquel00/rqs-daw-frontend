@@ -370,6 +370,17 @@ describe('UploadZoneComponent protected Mastering V2 guard', () => {
     expect(component.persistedArtistConfirmation?.subgenres).toEqual(['Melodic Trance']);
   });
 
+  it('opens a new-track picker without ejecting the restored session before file selection', () => {
+    const input = document.createElement('input');
+    const requestSpy = spyOn(component, 'requestFileSelection');
+    const ejectSpy = spyOn(component, 'ejetarFaixa');
+
+    component.startNewTrack(input);
+
+    expect(requestSpy).toHaveBeenCalledOnceWith(input);
+    expect(ejectSpy).not.toHaveBeenCalled();
+  });
+
   it('analyzes one authenticated source exactly once without a second upload', () => {
     isLoggedIn.set(true);
     TestBed.tick();

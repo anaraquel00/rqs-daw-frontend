@@ -187,6 +187,12 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     input.click();
   }
 
+  startNewTrack(input: HTMLInputElement): void {
+    // Do not clear the restored session before the user actually selects
+    // another file. Cancelling the native picker keeps the current session.
+    this.requestFileSelection(input);
+  }
+
   iniciarUploadS3Silencioso(file: File): void {
     if (!this.auth.isLoggedIn()) {
       this.trackAuthRequired('upload');
@@ -638,14 +644,6 @@ export class UploadZoneComponent implements OnDestroy, OnInit, AfterViewChecked 
     this.analysisRequestId = null;
     this.analysisRestored.set(false);
     this.analysisState.set('empty');
-  }
-
-  restoredAnalysisMessage(): string {
-    const language = this.lang.currentLang();
-    if (language === 'pt') return 'Análise restaurada';
-    if (language === 'fr') return 'Analyse restaurée';
-    if (language === 'pl') return 'Analiza przywrócona';
-    return 'Analysis restored';
   }
 
   private restorePersistedAnalysisIfPresent(): void {

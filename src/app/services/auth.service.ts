@@ -43,14 +43,12 @@ export class AuthService {
   readonly authIntent = signal<AuthIntent>('general');
   readonly authMessageKey = signal<AuthMessageKey | null>(null);
   readonly authEmailSending = signal(false);
-  readonly reselectAudioRequired = signal(false);
   readonly authStateResolved = signal(false);
   private resolveInitialAuthState!: () => void;
   private readonly initialAuthState = new Promise<void>((resolve) => {
     this.resolveInitialAuthState = resolve;
   });
   private explicitLoginTracked = false;
-  private readonly resumeMasteringKey = 'rqs_resume_mastering';
   private readonly authReturnPathKey = 'rqs_auth_return_path';
   private readonly allowedV2ReturnPaths = new Set([
     '/app',
@@ -277,10 +275,6 @@ export class AuthService {
 
     this.captureCurrentReturnPath();
 
-    if (intent === 'master') {
-      window.sessionStorage.setItem(this.resumeMasteringKey, 'true');
-    }
-
     this.authIntent.set(intent);
     this.authMessageKey.set(null);
     this.authPromptMode.set(mode);
@@ -308,7 +302,6 @@ export class AuthService {
   closeAuthPrompt(): void {
     if (isPlatformBrowser(this.platformId)) {
       window.sessionStorage.removeItem(this.authReturnPathKey);
-      window.sessionStorage.removeItem(this.resumeMasteringKey);
     }
     this.authPromptOpen.set(false);
     this.authPromptMode.set('providers');
@@ -325,10 +318,6 @@ export class AuthService {
   showAuthProviders(): void {
     this.authMessageKey.set(null);
     this.authPromptMode.set('providers');
-  }
-
-  dismissReselectAudio(): void {
-    this.reselectAudioRequired.set(false);
   }
 
   async sendMagicLink(rawEmail: string): Promise<void> {
@@ -414,14 +403,12 @@ export class AuthService {
 
     const returnPath = this.callbackReturnPath();
     window.history.replaceState({}, document.title, window.location.pathname);
-    const resumeMastering = window.sessionStorage.getItem(this.resumeMasteringKey) === 'true';
 
     if (callback.errorCode) {
       const invalidOrExpired = /expired|otp_expired|invalid/i.test(callback.errorCode);
       this.authMessageKey.set(invalidOrExpired ? 'AUTH_LINK_INVALID' : 'AUTH_CALLBACK_ERROR');
       this.authPromptMode.set('email');
       this.authPromptOpen.set(true);
-      window.sessionStorage.removeItem(this.resumeMasteringKey);
       window.sessionStorage.removeItem(this.authReturnPathKey);
       return;
     }
@@ -430,15 +417,10 @@ export class AuthService {
       this.authMessageKey.set('AUTH_SESSION_MISSING');
       this.authPromptMode.set('email');
       this.authPromptOpen.set(true);
-      window.sessionStorage.removeItem(this.resumeMasteringKey);
       window.sessionStorage.removeItem(this.authReturnPathKey);
       return;
     }
 
-    if (resumeMastering) {
-      this.reselectAudioRequired.set(true);
-      window.sessionStorage.removeItem(this.resumeMasteringKey);
-    }
     window.sessionStorage.removeItem(this.authReturnPathKey);
     this.closeAuthPrompt();
     this.restoreReturnPath(returnPath);
