@@ -97,6 +97,7 @@ import {
 } from './build-v2-project-storage';
 import {
   BuildV2CloudProjectRestoreService,
+  type BuildV2CloudProjectRestoreProgress,
 } from '../services/build-v2-cloud-project-restore.service';
 import {
   BuildV2CloudAuthoringError,
@@ -318,7 +319,7 @@ const TRANSITION_COPY = {
 const CLOUD_PROJECT_COPY = {
   en: {
     title: 'CLOUD PROJECTS', refresh: 'REFRESH', open: 'OPEN CLOUD', empty: 'NO CLOUD PROJECTS',
-    select: 'SELECT CLOUD PROJECT', loading: 'LOADING CLOUD PROJECTS…', opened: 'CLOUD PROJECT RESTORED',
+    select: 'SELECT CLOUD PROJECT', loading: 'LOADING CLOUD PROJECTS…', opening: 'OPENING SETLIST FROM CLOUD…', preparing: 'PREPARING DOWNLOAD…', tracksCompleted: 'TRACKS COMPLETED', assembling: 'PREPARING PROJECT…', speed: 'SPEED', opened: 'CLOUD PROJECT RESTORED',
     active: 'ACTIVE', save: 'SAVE CLOUD', saveAsNew: 'SAVE AS NEW CLOUD', delete: 'DELETE CLOUD', saving: 'SAVING TO CLOUD…',
     saved: 'CLOUD PROJECT SAVED', upToDate: 'CLOUD PROJECT IS UP TO DATE', conflict: 'THIS CLOUD PROJECT CHANGED ELSEWHERE · YOUR SESSION WAS PRESERVED',
     deleting: 'DELETING CLOUD PROJECT…', deleted: 'CLOUD PROJECT DELETED', cleanupPending: 'CLOUD PROJECT DELETED · CLEANUP PENDING',
@@ -328,7 +329,7 @@ const CLOUD_PROJECT_COPY = {
   },
   pt: {
     title: 'PROJETOS NA NUVEM', refresh: 'ATUALIZAR', open: 'ABRIR DA NUVEM', empty: 'NENHUM PROJETO NA NUVEM',
-    select: 'SELECIONE UM PROJETO NA NUVEM', loading: 'CARREGANDO PROJETOS NA NUVEM…', opened: 'PROJETO DA NUVEM RESTAURADO',
+    select: 'SELECIONE UM PROJETO NA NUVEM', loading: 'CARREGANDO PROJETOS NA NUVEM…', opening: 'ABRINDO SETLIST DA NUVEM…', preparing: 'PREPARANDO DOWNLOAD…', tracksCompleted: 'FAIXAS CONCLUÍDAS', assembling: 'PREPARANDO O PROJETO…', speed: 'VELOCIDADE', opened: 'PROJETO DA NUVEM RESTAURADO',
     active: 'ATIVO', save: 'SALVAR NA NUVEM', saveAsNew: 'SALVAR COMO NOVO NA NUVEM', delete: 'EXCLUIR DA NUVEM', saving: 'SALVANDO NA NUVEM…',
     saved: 'PROJETO SALVO NA NUVEM', upToDate: 'PROJETO NA NUVEM JÁ ESTÁ ATUALIZADO', conflict: 'ESTE PROJETO MUDOU EM OUTRO LOCAL · SUA SESSÃO FOI PRESERVADA',
     deleting: 'EXCLUINDO PROJETO DA NUVEM…', deleted: 'PROJETO DA NUVEM EXCLUÍDO', cleanupPending: 'PROJETO EXCLUÍDO · LIMPEZA PENDENTE',
@@ -338,7 +339,7 @@ const CLOUD_PROJECT_COPY = {
   },
   pl: {
     title: 'PROJEKTY W CHMURZE', refresh: 'ODŚWIEŻ', open: 'OTWÓRZ Z CHMURY', empty: 'BRAK PROJEKTÓW W CHMURZE',
-    select: 'WYBIERZ PROJEKT W CHMURZE', loading: 'ŁADOWANIE PROJEKTÓW W CHMURZE…', opened: 'PROJEKT Z CHMURY PRZYWRÓCONY',
+    select: 'WYBIERZ PROJEKT W CHMURZE', loading: 'ŁADOWANIE PROJEKTÓW W CHMURZE…', opening: 'OTWIERANIE SETLISTY Z CHMURY…', preparing: 'PRZYGOTOWYWANIE POBIERANIA…', tracksCompleted: 'UKOŃCZONYCH UTWORÓW', assembling: 'PRZYGOTOWYWANIE PROJEKTU…', speed: 'PRĘDKOŚĆ', opened: 'PROJEKT Z CHMURY PRZYWRÓCONY',
     active: 'AKTYWNY', save: 'ZAPISZ W CHMURZE', saveAsNew: 'ZAPISZ JAKO NOWY W CHMURZE', delete: 'USUŃ Z CHMURY', saving: 'ZAPISYWANIE W CHMURZE…',
     saved: 'PROJEKT ZAPISANY W CHMURZE', upToDate: 'PROJEKT W CHMURZE JEST AKTUALNY', conflict: 'TEN PROJEKT ZMIENIŁ SIĘ GDZIE INDZIEJ · TWOJA SESJA ZOSTAŁA ZACHOWANA',
     deleting: 'USUWANIE PROJEKTU Z CHMURY…', deleted: 'PROJEKT USUNIĘTY Z CHMURY', cleanupPending: 'PROJEKT USUNIĘTY · OCZEKIWANIE NA CZYSZCZENIE',
@@ -348,7 +349,7 @@ const CLOUD_PROJECT_COPY = {
   },
   fr: {
     title: 'PROJETS CLOUD', refresh: 'ACTUALISER', open: 'OUVRIR DEPUIS LE CLOUD', empty: 'AUCUN PROJET CLOUD',
-    select: 'SÉLECTIONNER UN PROJET CLOUD', loading: 'CHARGEMENT DES PROJETS CLOUD…', opened: 'PROJET CLOUD RESTAURÉ',
+    select: 'SÉLECTIONNER UN PROJET CLOUD', loading: 'CHARGEMENT DES PROJETS CLOUD…', opening: 'OUVERTURE DE LA SETLIST CLOUD…', preparing: 'PRÉPARATION DU TÉLÉCHARGEMENT…', tracksCompleted: 'PISTES TERMINÉES', assembling: 'PRÉPARATION DU PROJET…', speed: 'VITESSE', opened: 'PROJET CLOUD RESTAURÉ',
     active: 'ACTIF', save: 'ENREGISTRER DANS LE CLOUD', saveAsNew: 'ENREGISTRER COMME NOUVEAU DANS LE CLOUD', delete: 'SUPPRIMER DU CLOUD', saving: 'ENREGISTREMENT DANS LE CLOUD…',
     saved: 'PROJET ENREGISTRÉ DANS LE CLOUD', upToDate: 'LE PROJET CLOUD EST À JOUR', conflict: 'CE PROJET A ÉTÉ MODIFIÉ AILLEURS · VOTRE SESSION A ÉTÉ PRÉSERVÉE',
     deleting: 'SUPPRESSION DU PROJET CLOUD…', deleted: 'PROJET CLOUD SUPPRIMÉ', cleanupPending: 'PROJET SUPPRIMÉ · NETTOYAGE EN ATTENTE',
@@ -412,6 +413,14 @@ export class MixPanelComponent implements OnDestroy {
   buildV2CloudQuota: BuildV2CloudQuotaResponse | null = null;
 
   buildV2CloudBusy = false;
+
+  buildV2CloudRestoreProgress:
+    BuildV2CloudProjectRestoreProgress
+    | null = null;
+
+  buildV2CloudRestoreSpeedBytesPerSecond = 0;
+
+  private buildV2CloudRestoreStartedAtMs = 0;
 
   buildV2CloudStatus:
     | 'idle'
@@ -1265,6 +1274,60 @@ export class MixPanelComponent implements OnDestroy {
     return CLOUD_PROJECT_COPY[this.lang.currentLang()][key];
   }
 
+  formatBuildV2CloudBytes(
+    bytes: number,
+  ): string {
+    if (
+      !Number.isFinite(bytes)
+      || bytes <= 0
+    ) {
+      return '0 MB';
+    }
+
+    const megabytes =
+      bytes / (1024 * 1024);
+
+    return `${
+      megabytes >= 100
+        ? megabytes.toFixed(0)
+        : megabytes.toFixed(1)
+    } MB`;
+  }
+
+  formatBuildV2CloudRate(
+    bytesPerSecond: number,
+  ): string {
+    if (
+      !Number.isFinite(
+        bytesPerSecond,
+      )
+      || bytesPerSecond <= 0
+    ) {
+      return '—';
+    }
+
+    const megabytesPerSecond =
+      bytesPerSecond
+      / (1024 * 1024);
+
+    if (
+      megabytesPerSecond >= 1
+    ) {
+      return `${
+        megabytesPerSecond.toFixed(1)
+      } MB/s`;
+    }
+
+    return `${
+      Math.max(
+        1,
+        Math.round(
+          bytesPerSecond / 1024,
+        ),
+      )
+    } kB/s`;
+  }
+
   buildV2ProjectSaveSnapshot(
     projectId: string,
     createdAt: string,
@@ -1549,6 +1612,7 @@ export class MixPanelComponent implements OnDestroy {
     return (
       !!this.auth.session()?.user?.id
       && this.selectedCloudProjectId.trim().length > 0
+      && !this.buildV2CloudBusy
     );
   }
 
@@ -1623,50 +1687,163 @@ export class MixPanelComponent implements OnDestroy {
   async openBuildV2CloudProject(): Promise<void> {
     if (
       !this.canOpenBuildV2CloudProject()
-      || (
-        this.buildV2CloudBusy
-        && this.buildV2CloudReadOperation !== 'restore'
-      )
     ) return;
 
-    const projectId = this.selectedCloudProjectId;
-    const userId = this.auth.session()?.user?.id ?? null;
+    const projectId =
+      this.selectedCloudProjectId;
+
+    const userId =
+      this.auth.session()?.user?.id
+      ?? null;
+
     if (!userId) return;
 
-    const attempt = ++this.buildV2CloudRestoreAttempt;
+    const attempt =
+      ++this.buildV2CloudRestoreAttempt;
+
     this.buildV2CloudBusy = true;
-    this.buildV2CloudReadOperation = 'restore';
-    this.buildV2CloudStatus = 'idle';
+    this.buildV2CloudReadOperation =
+      'restore';
+    this.buildV2CloudStatus =
+      'idle';
+    this.buildV2CloudRestoreProgress =
+      null;
+    this.buildV2CloudRestoreSpeedBytesPerSecond =
+      0;
+    this.buildV2CloudRestoreStartedAtMs =
+      0;
+
     try {
-      const bundle = await firstValueFrom(
-        this.cloudProjectRestore.restoreBuildV2CloudProject(projectId),
-      );
+      const bundle =
+        await firstValueFrom(
+          this.cloudProjectRestore
+            .restoreBuildV2CloudProject(
+              projectId,
+              progress => {
+                if (
+                  attempt
+                    !== this.buildV2CloudRestoreAttempt
+                  || this.auth.session()
+                    ?.user?.id
+                    !== userId
+                ) {
+                  return;
+                }
+
+                const previousPhase =
+                  this.buildV2CloudRestoreProgress
+                    ?.phase
+                  ?? null;
+
+                if (
+                  progress.phase
+                    === 'downloading'
+                  && previousPhase
+                    !== 'downloading'
+                ) {
+                  this.buildV2CloudRestoreStartedAtMs =
+                    Date.now();
+
+                  this.buildV2CloudRestoreSpeedBytesPerSecond =
+                    0;
+                }
+
+                this.buildV2CloudRestoreProgress =
+                  progress;
+
+                if (
+                  progress.phase
+                    === 'downloading'
+                  && progress.loadedBytes > 0
+                  && this.buildV2CloudRestoreStartedAtMs
+                    > 0
+                ) {
+                  const elapsedSeconds =
+                    Math.max(
+                      0.25,
+                      (
+                        Date.now()
+                        - this.buildV2CloudRestoreStartedAtMs
+                      ) / 1000,
+                    );
+
+                  this.buildV2CloudRestoreSpeedBytesPerSecond =
+                    progress.loadedBytes
+                    / elapsedSeconds;
+                }
+              },
+            ),
+        );
+
       if (
-        attempt !== this.buildV2CloudRestoreAttempt
-        || this.auth.session()?.user?.id !== userId
+        attempt
+          !== this.buildV2CloudRestoreAttempt
+        || this.auth.session()
+          ?.user?.id
+          !== userId
       ) {
         return;
       }
 
-      this.restoreBuildV2Project(bundle.project, bundle.files);
-      this.activeCloudProjectId = bundle.project.projectId;
-      this.activeCloudProjectRevision = bundle.revision;
-      this.activeCloudProjectBaseline = parseBuildV2ProjectDocument(bundle.project);
-      this.activeLocalProjectId = null;
-      this.activeLocalProjectCreatedAt = null;
-      this.buildV2CloudStatus = 'opened';
+      this.restoreBuildV2Project(
+        bundle.project,
+        bundle.files,
+      );
+
+      this.activeCloudProjectId =
+        bundle.project.projectId;
+
+      this.activeCloudProjectRevision =
+        bundle.revision;
+
+      this.activeCloudProjectBaseline =
+        parseBuildV2ProjectDocument(
+          bundle.project,
+        );
+
+      this.activeLocalProjectId =
+        null;
+
+      this.activeLocalProjectCreatedAt =
+        null;
+
+      this.buildV2CloudStatus =
+        'opened';
     } catch (error) {
       if (
-        attempt === this.buildV2CloudRestoreAttempt
-        && this.auth.session()?.user?.id === userId
+        attempt
+          === this.buildV2CloudRestoreAttempt
+        && this.auth.session()
+          ?.user?.id
+          === userId
       ) {
-        console.warn('[RQS BUILD V2 CLOUD PROJECT OPEN]', error);
-        this.buildV2CloudStatus = 'error';
+        console.warn(
+          '[RQS BUILD V2 CLOUD PROJECT OPEN]',
+          error,
+        );
+
+        this.buildV2CloudStatus =
+          'error';
       }
     } finally {
-      if (attempt === this.buildV2CloudRestoreAttempt) {
-        this.buildV2CloudReadOperation = 'none';
-        this.buildV2CloudBusy = false;
+      if (
+        attempt
+          === this.buildV2CloudRestoreAttempt
+      ) {
+        this.buildV2CloudReadOperation =
+          'none';
+
+        this.buildV2CloudBusy =
+          false;
+
+        this.buildV2CloudRestoreProgress =
+          null;
+
+        this.buildV2CloudRestoreSpeedBytesPerSecond =
+          0;
+
+        this.buildV2CloudRestoreStartedAtMs =
+          0;
       }
     }
   }
@@ -1908,6 +2085,9 @@ export class MixPanelComponent implements OnDestroy {
     this.buildV2CloudQuota = null;
     this.buildV2CloudReadOperation = 'none';
     this.buildV2CloudBusy = false;
+    this.buildV2CloudRestoreProgress = null;
+    this.buildV2CloudRestoreSpeedBytesPerSecond = 0;
+    this.buildV2CloudRestoreStartedAtMs = 0;
     this.buildV2CloudStatus = 'idle';
   }
 

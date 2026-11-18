@@ -31,6 +31,20 @@ export interface BuildV2CloudProjectRestoreBundle {
   revision: number;
 }
 
+export type BuildV2CloudProjectRestorePhase =
+  | 'manifest'
+  | 'downloading'
+  | 'assembling';
+
+export interface BuildV2CloudProjectRestoreProgress {
+  phase: BuildV2CloudProjectRestorePhase;
+  totalAssets: number;
+  completedAssets: number;
+  totalBytes: number;
+  loadedBytes: number;
+  percent: number;
+}
+
 export type BuildV2CloudProjectRestoreErrorCode =
   | 'INVALID_MANIFEST'
   | 'ASSET_SET_MISMATCH'
@@ -54,6 +68,7 @@ interface ValidatedManifest {
   project: BuildV2ProjectDocumentV1;
   revision: number;
   assets: readonly BuildV2CloudRestoreAsset[];
+  totalBytes: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -62,27 +77,90 @@ export class BuildV2CloudProjectRestoreService {
 
   restoreBuildV2CloudProject(
     projectId: string,
+    onProgress: (
+      progress: BuildV2CloudProjectRestoreProgress,
+    ) => void = () => undefined,
   ): Observable<BuildV2CloudProjectRestoreBundle> {
-    return this.restoreAttempt(projectId, 0);
+    this.emitManifestProgress(onProgress);
+
+    return this.restoreAttempt(
+      projectId,
+      0,
+      onProgress,
+    );
   }
 
   private restoreAttempt(
     projectId: string,
     refreshCount: number,
+    onProgress: (
+      progress: BuildV2CloudProjectRestoreProgress,
+    ) => void,
   ): Observable<BuildV2CloudProjectRestoreBundle> {
     return this.dsp.getBuildV2CloudRestoreManifest(projectId).pipe(
-      map(manifest => this.validateManifest(manifest, projectId)),
-      switchMap(manifest => this.downloadBundle(manifest)),
+      map(manifest => {
+        const validated =
+          this.validateManifest(
+            manifest,
+            projectId,
+          );
+
+        onProgress({
+          phase: 'downloading',
+          totalAssets:
+            validated.assets.length,
+          completedAssets: 0,
+          totalBytes:
+            validated.totalBytes,
+          loadedBytes: 0,
+          percent:
+            validated.totalBytes === 0
+              ? 100
+              : 0,
+        });
+
+        return validated;
+      }),
+      switchMap(manifest =>
+        this.downloadBundle(
+          manifest,
+          onProgress,
+        ),
+      ),
       catchError(error => {
         if (
           error instanceof BuildV2CloudDownloadExpiredError
           && refreshCount === 0
         ) {
-          return this.restoreAttempt(projectId, 1);
+          this.emitManifestProgress(
+            onProgress,
+          );
+
+          return this.restoreAttempt(
+            projectId,
+            1,
+            onProgress,
+          );
         }
+
         return throwError(() => error);
       }),
     );
+  }
+
+  private emitManifestProgress(
+    onProgress: (
+      progress: BuildV2CloudProjectRestoreProgress,
+    ) => void,
+  ): void {
+    onProgress({
+      phase: 'manifest',
+      totalAssets: 0,
+      completedAssets: 0,
+      totalBytes: 0,
+      loadedBytes: 0,
+      percent: 0,
+    });
   }
 
   private validateManifest(
@@ -180,23 +258,112 @@ export class BuildV2CloudProjectRestoreService {
       project,
       revision: manifest.revision,
       assets: orderedAssets,
+      totalBytes: manifest.totalBytes,
     };
   }
 
   private downloadBundle(
     manifest: ValidatedManifest,
+    onProgress: (
+      progress: BuildV2CloudProjectRestoreProgress,
+    ) => void,
   ): Observable<BuildV2CloudProjectRestoreBundle> {
+    const loadedByAsset =
+      new Map<string, number>();
+
+    let completedAssets = 0;
+
+    const emitProgress = (
+      phase: BuildV2CloudProjectRestorePhase,
+    ): void => {
+      const loadedBytes =
+        phase === 'assembling'
+          ? manifest.totalBytes
+          : Math.min(
+              manifest.totalBytes,
+              [...loadedByAsset.values()]
+                .reduce(
+                  (sum, value) =>
+                    sum + value,
+                  0,
+                ),
+            );
+
+      onProgress({
+        phase,
+        totalAssets:
+          manifest.assets.length,
+        completedAssets,
+        totalBytes:
+          manifest.totalBytes,
+        loadedBytes,
+        percent:
+          manifest.totalBytes === 0
+            ? 100
+            : Math.min(
+                100,
+                (
+                  loadedBytes
+                  / manifest.totalBytes
+                ) * 100,
+              ),
+      });
+    };
+
     return from(manifest.assets).pipe(
       mergeMap(
-        asset => this.downloadAsset(asset),
+        asset =>
+          this.downloadAsset(
+            asset,
+            loadedBytes => {
+              loadedByAsset.set(
+                asset.assetId,
+                Math.min(
+                  asset.sizeBytes,
+                  Math.max(
+                    0,
+                    loadedBytes,
+                  ),
+                ),
+              );
+
+              emitProgress(
+                'downloading',
+              );
+            },
+            () => {
+              loadedByAsset.set(
+                asset.assetId,
+                asset.sizeBytes,
+              );
+
+              completedAssets += 1;
+
+              emitProgress(
+                'downloading',
+              );
+            },
+          ),
         MAX_DOWNLOAD_CONCURRENCY,
       ),
       toArray(),
       map(downloaded => {
-        const files = new Map(
-          downloaded.map(({ assetId, file }) => [assetId, file]),
+        emitProgress(
+          'assembling',
         );
-        buildBuildV2ProjectRestorePlan(manifest.project, files);
+
+        const files = new Map(
+          downloaded.map(
+            ({ assetId, file }) =>
+              [assetId, file],
+          ),
+        );
+
+        buildBuildV2ProjectRestorePlan(
+          manifest.project,
+          files,
+        );
+
         return {
           project: manifest.project,
           files,
@@ -208,8 +375,16 @@ export class BuildV2CloudProjectRestoreService {
 
   private downloadAsset(
     asset: BuildV2CloudRestoreAsset,
+    onLoaded: (
+      loadedBytes: number,
+    ) => void,
+    onCompleted: () => void,
   ): Observable<{ assetId: string; file: File }> {
-    return this.dsp.downloadBuildV2CloudAsset(asset.downloadUrl).pipe(
+    return this.dsp.downloadBuildV2CloudAsset(
+      asset.downloadUrl,
+      loadedBytes =>
+        onLoaded(loadedBytes),
+    ).pipe(
       catchError(error => {
         if (error instanceof HttpErrorResponse && error.status === 403) {
           return throwError(() => new BuildV2CloudDownloadExpiredError());
@@ -229,6 +404,12 @@ export class BuildV2CloudProjectRestoreService {
             `Downloaded cloud asset does not match ${asset.assetId}.`,
           );
         }
+        onLoaded(
+          asset.sizeBytes,
+        );
+
+        onCompleted();
+
         return {
           assetId: asset.assetId,
           file: new File(

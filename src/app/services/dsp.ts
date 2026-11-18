@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpEventType, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { filter, map, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import type { BuildV2ProjectDocumentV1 } from '../mix-panel/build-v2-project-schema';
@@ -348,11 +348,46 @@ export class DspService {
     );
   }
 
-  downloadBuildV2CloudAsset(downloadUrl: string): Observable<Blob> {
+  downloadBuildV2CloudAsset(
+    downloadUrl: string,
+    onProgress?: (
+      loadedBytes: number,
+      totalBytes: number | null,
+    ) => void,
+  ): Observable<Blob> {
     return this.http.get(downloadUrl, {
       responseType: 'blob',
+      observe: 'events',
+      reportProgress: true,
       withCredentials: false,
-    });
+    }).pipe(
+      tap(event => {
+        if (event.type === HttpEventType.DownloadProgress) {
+          onProgress?.(
+            event.loaded,
+            event.total ?? null,
+          );
+        }
+      }),
+      filter(
+        (event): event is HttpResponse<Blob> =>
+          event.type === HttpEventType.Response,
+      ),
+      map(response => {
+        if (!response.body) {
+          throw new Error(
+            'BUILD_V2_CLOUD_EMPTY_ASSET_RESPONSE',
+          );
+        }
+
+        onProgress?.(
+          response.body.size,
+          response.body.size,
+        );
+
+        return response.body;
+      }),
+    );
   }
 
   deleteBuildV2CloudProject(

@@ -51,6 +51,111 @@ describe('BuildV2CloudProjectRestoreService', () => {
     }
   });
 
+  it('reports manifest, aggregate byte progress, completed tracks and assembly', async () => {
+    const manifest = restoreManifest(2);
+    const progress: Array<{
+      phase: string;
+      totalAssets: number;
+      completedAssets: number;
+      totalBytes: number;
+      loadedBytes: number;
+      percent: number;
+    }> = [];
+
+    dsp.getBuildV2CloudRestoreManifest.and.returnValue(
+      of(manifest),
+    );
+
+    dsp.downloadBuildV2CloudAsset.and.callFake(
+      (
+        url,
+        onProgress,
+      ) => {
+        const asset = manifest.assets.find(
+          candidate =>
+            candidate.downloadUrl === url,
+        )!;
+
+        return new Observable<Blob>(
+          subscriber => {
+            onProgress?.(
+              Math.floor(
+                asset.sizeBytes / 2,
+              ),
+              asset.sizeBytes,
+            );
+
+            subscriber.next(
+              new Blob(
+                [
+                  'x'.repeat(
+                    asset.sizeBytes,
+                  ),
+                ],
+                {
+                  type:
+                    asset.contentType,
+                },
+              ),
+            );
+
+            subscriber.complete();
+          },
+        );
+      },
+    );
+
+    await firstValueFrom(
+      service.restoreBuildV2CloudProject(
+        manifest.project.projectId,
+        value => progress.push(
+          { ...value },
+        ),
+      ),
+    );
+
+    expect(
+      progress[0].phase,
+    ).toBe('manifest');
+
+    expect(
+      progress.some(
+        value =>
+          value.phase === 'downloading'
+          && value.loadedBytes > 0
+          && value.loadedBytes
+            < value.totalBytes,
+      ),
+    ).toBeTrue();
+
+    expect(
+      progress.some(
+        value =>
+          value.phase === 'downloading'
+          && value.completedAssets === 1,
+      ),
+    ).toBeTrue();
+
+    const finalProgress =
+      progress.at(-1)!;
+
+    expect(
+      finalProgress.phase,
+    ).toBe('assembling');
+
+    expect(
+      finalProgress.completedAssets,
+    ).toBe(2);
+
+    expect(
+      finalProgress.loadedBytes,
+    ).toBe(manifest.totalBytes);
+
+    expect(
+      finalProgress.percent,
+    ).toBe(100);
+  });
+
   it('accepts an empty browser Blob type when size is exact', async () => {
     const manifest = restoreManifest(1);
     dsp.getBuildV2CloudRestoreManifest.and.returnValue(of(manifest));

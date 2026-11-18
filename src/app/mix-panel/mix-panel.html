@@ -177,6 +177,7 @@
       [(ngModel)]="selectedCloudProjectId"
       [disabled]="
         cloudProjects.length === 0
+        || buildV2CloudBusy
       "
       aria-label="Saved cloud BUILD project">
 
@@ -249,8 +250,128 @@
 
     <div
       class="build-v2-project-status"
-      aria-live="polite">
-      @if (buildV2CloudBusy && buildV2CloudStatus === 'idle') {
+      aria-live="polite"
+      [style.grid-column]="
+        buildV2CloudRestoreProgress
+          ? '1 / -1'
+          : null
+      "
+      [style.text-align]="
+        buildV2CloudRestoreProgress
+          ? 'left'
+          : null
+      ">
+
+      @if (
+        buildV2CloudRestoreProgress;
+        as restoreProgress
+      ) {
+        <strong>
+          {{
+            cloudProjectCopy(
+              'opening'
+            )
+          }}
+        </strong>
+
+        @if (
+          restoreProgress.phase
+            === 'manifest'
+        ) {
+          <span>
+            ·
+            {{
+              cloudProjectCopy(
+                'preparing'
+              )
+            }}
+          </span>
+        }
+
+        @if (
+          restoreProgress.phase
+            === 'downloading'
+        ) {
+          <div>
+            {{
+              restoreProgress.completedAssets
+            }}
+            /
+            {{
+              restoreProgress.totalAssets
+            }}
+            {{
+              cloudProjectCopy(
+                'tracksCompleted'
+              )
+            }}
+          </div>
+
+          <div>
+            {{
+              formatBuildV2CloudBytes(
+                restoreProgress.loadedBytes
+              )
+            }}
+            /
+            {{
+              formatBuildV2CloudBytes(
+                restoreProgress.totalBytes
+              )
+            }}
+            ·
+            {{
+              restoreProgress.percent
+                | number:'1.0-0'
+            }}%
+            ·
+            {{
+              cloudProjectCopy(
+                'speed'
+              )
+            }}
+            {{
+              formatBuildV2CloudRate(
+                buildV2CloudRestoreSpeedBytesPerSecond
+              )
+            }}
+          </div>
+
+          <progress
+            [value]="
+              restoreProgress.percent
+            "
+            max="100"
+            style="
+              display:block;
+              width:100%;
+              margin-top:4px
+            "
+            aria-label="Cloud restore download progress">
+          </progress>
+        }
+
+        @if (
+          restoreProgress.phase
+            === 'assembling'
+        ) {
+          <span>
+            ·
+            {{
+              cloudProjectCopy(
+                'assembling'
+              )
+            }}
+          </span>
+        }
+      }
+
+      @if (
+        !buildV2CloudRestoreProgress
+        && buildV2CloudBusy
+        && buildV2CloudStatus
+          === 'idle'
+      ) {
         {{ cloudProjectCopy('loading') }}
       }
       @if (buildV2CloudStatus === 'saving') {

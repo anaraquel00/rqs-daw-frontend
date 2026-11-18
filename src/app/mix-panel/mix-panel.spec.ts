@@ -1766,36 +1766,118 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
     expect(component.buildV2CloudStatus).toBe('error');
   });
 
-  it('commits only the latest concurrent cloud open', async () => {
-    const projectA = cloudRestoreBundle(
+  it('blocks duplicate cloud opens while one restore is active', async () => {
+    const bundle = cloudRestoreBundle(
       '20000000-0000-4000-8000-000000000013',
       'CLOUD A',
       2,
     );
-    const projectB = cloudRestoreBundle(
+
+    const pending =
+      new Subject<BuildV2CloudProjectRestoreBundle>();
+
+    restoreBuildV2CloudProject
+      .and.returnValue(pending);
+
+    component.selectedCloudProjectId =
+      bundle.project.projectId;
+
+    const opening =
+      component.openBuildV2CloudProject();
+
+    expect(
+      component.canOpenBuildV2CloudProject(),
+    ).toBeFalse();
+
+    await component.openBuildV2CloudProject();
+
+    expect(
+      restoreBuildV2CloudProject,
+    ).toHaveBeenCalledTimes(1);
+
+    pending.next(bundle);
+    pending.complete();
+
+    await opening;
+
+    expect(
+      component.activeCloudProjectId,
+    ).toBe(bundle.project.projectId);
+
+    expect(
+      component.activeCloudProjectRevision,
+    ).toBe(2);
+  });
+
+  it('surfaces cloud restore byte progress and clears it after success', async () => {
+    const bundle = cloudRestoreBundle(
       '20000000-0000-4000-8000-000000000014',
-      'CLOUD B',
+      'CLOUD PROGRESS',
       5,
     );
-    const first = new Subject<BuildV2CloudProjectRestoreBundle>();
-    const second = new Subject<BuildV2CloudProjectRestoreBundle>();
-    restoreBuildV2CloudProject.and.returnValues(first, second);
 
-    component.selectedCloudProjectId = projectA.project.projectId;
-    const openA = component.openBuildV2CloudProject();
-    component.selectedCloudProjectId = projectB.project.projectId;
-    const openB = component.openBuildV2CloudProject();
+    const pending =
+      new Subject<BuildV2CloudProjectRestoreBundle>();
 
-    second.next(projectB);
-    second.complete();
-    await openB;
-    first.next(projectA);
-    first.complete();
-    await openA;
+    restoreBuildV2CloudProject
+      .and.callFake(
+        (
+          _projectId,
+          onProgress,
+        ) => {
+          onProgress?.({
+            phase: 'downloading',
+            totalAssets: 5,
+            completedAssets: 3,
+            totalBytes:
+              434_396_670,
+            loadedBytes:
+              299_892_736,
+            percent: 69,
+          });
 
-    expect(component.activeCloudProjectId).toBe(projectB.project.projectId);
-    expect(component.activeCloudProjectRevision).toBe(5);
-    expect(component.setlistName).toBe('CLOUD B');
+          return pending;
+        },
+      );
+
+    component.selectedCloudProjectId =
+      bundle.project.projectId;
+
+    const opening =
+      component.openBuildV2CloudProject();
+
+    expect(
+      component.buildV2CloudRestoreProgress
+        ?.completedAssets,
+    ).toBe(3);
+
+    expect(
+      component.buildV2CloudRestoreProgress
+        ?.percent,
+    ).toBe(69);
+
+    expect(
+      component.formatBuildV2CloudBytes(
+        434_396_670,
+      ),
+    ).toBe('414 MB');
+
+    expect(
+      component.canOpenBuildV2CloudProject(),
+    ).toBeFalse();
+
+    pending.next(bundle);
+    pending.complete();
+
+    await opening;
+
+    expect(
+      component.buildV2CloudRestoreProgress,
+    ).toBeNull();
+
+    expect(
+      component.buildV2CloudStatus,
+    ).toBe('opened');
   });
 
   it('does not commit a cloud restore after logout', async () => {
