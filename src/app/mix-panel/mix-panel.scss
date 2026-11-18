@@ -1983,23 +1983,22 @@ $text-muted: #8b949e;
 
 .build-v2-daw-v3 {
   display: grid;
-  grid-template-rows: auto auto auto;
-  height: auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: min(760px, calc(100dvh - 140px));
   min-height: 0;
-  max-height: min(760px, calc(100dvh - 140px));
   overflow: hidden;
 }
 
 .build-v2-daw-v3 .daw-timeline-stage {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
 }
 
 .daw-track-viewport {
+  height: 100%;
   min-height: 0;
-  max-height: min(420px, calc(100dvh - 320px));
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
@@ -2152,7 +2151,7 @@ $text-muted: #8b949e;
 
 @media (max-width: 760px) {
   .build-v2-daw-v3 {
-    max-height: none;
+    height: auto;
   }
 
   .build-v2-daw-v3 .daw-track-row,

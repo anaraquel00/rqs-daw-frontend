@@ -787,6 +787,119 @@ describe('MixPanelComponent Setlist Stage 1 contract', () => {
   );
 
   it(
+    'shows transport and the first-track inspector before any manual track click',
+    () => {
+      component.tracks = readyTracks(5);
+      component.selectedTrackId = null;
+
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector(
+          '.daw-transport',
+        ),
+      ).not.toBeNull();
+
+      expect(
+        fixture.nativeElement.querySelector(
+          '.daw-inspector',
+        ),
+      ).not.toBeNull();
+
+      expect(
+        component.selectedTrack()?.id,
+      ).toBe(component.tracks[0].id);
+
+      expect(
+        component.selectedTrackIndex(),
+      ).toBe(0);
+    },
+  );
+
+  it(
+    'shows Final Fade Out only when the selected track is the current last track',
+    () => {
+      component.tracks = readyTracks(5);
+      component.finalFade = {
+        enabled: true,
+        duration: 8,
+        curve: 'linear',
+      };
+
+      component.selectTrack(
+        component.tracks[0],
+      );
+
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector(
+          '.daw-final-fade',
+        ),
+      ).toBeNull();
+
+      expect(
+        component.finalFadeRegion(0),
+      ).toBeNull();
+
+      component.selectTrack(
+        component.tracks[4],
+      );
+
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector(
+          '.daw-final-fade',
+        ),
+      ).not.toBeNull();
+
+      expect(
+        component.finalFadeRegion(4),
+      ).not.toBeNull();
+    },
+  );
+
+  it(
+    'keeps Final Fade Out attached to the setlist end after track reorder',
+    () => {
+      component.tracks = readyTracks(3);
+      component.finalFade = {
+        enabled: true,
+        duration: 6,
+        curve: 'linear',
+      };
+
+      const previousLast =
+        component.tracks[2];
+
+      component.selectTrack(previousLast);
+
+      expect(
+        component.finalFadeRegion(2),
+      ).not.toBeNull();
+
+      component.moveUp(2);
+
+      expect(
+        component.selectedTrack()?.id,
+      ).toBe(previousLast.id);
+
+      expect(
+        component.selectedTrackIndex(),
+      ).toBe(1);
+
+      expect(
+        component.finalFadeRegion(1),
+      ).toBeNull();
+
+      expect(
+        component.finalFadeRegion(2),
+      ).not.toBeNull();
+    },
+  );
+
+  it(
     'places gain, pan and trim controls in the selected-track inspector',
     () => {
       component.tracks = readyTracks(2);
