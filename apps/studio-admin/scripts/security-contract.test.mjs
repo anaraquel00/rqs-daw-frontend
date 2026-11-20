@@ -133,6 +133,15 @@ test('Studio Admin disables automatic Git deployments and preserves required SPA
         rewrite.destination === '/index.html',
     ),
   );
+
+
+  assert.ok(
+    vercel.rewrites?.some(
+      rewrite =>
+        rewrite.source === '/identity' &&
+        rewrite.destination === '/index.html',
+    ),
+  );
 });
 
 test('GCP identity is validated before OIDC token exchange', async () => {
@@ -359,5 +368,64 @@ test('Phase 3 capability endpoint exposes only bounded action configuration', as
   assert.doesNotMatch(
     config,
     /createDocument|updateDocument|documents:commit/,
+  );
+});
+
+test('Gate 3 Supabase identity contract is owner-gated, read-only and secretless', async () => {
+  const [
+    sql,
+    adapter,
+    summary,
+    records,
+    entitlements,
+  ] = await Promise.all([
+    read('../../supabase/review/studio_admin_identity_entitlements_gate3.sql'),
+    read('api/_supabase-identity.mjs'),
+    read('api/admin/identity/summary.js'),
+    read('api/admin/identity/records.js'),
+    read('api/admin/identity/entitlements.js'),
+  ]);
+
+  const runtime = [
+    adapter,
+    summary,
+    records,
+    entitlements,
+  ].join('\n');
+
+  assert.match(sql, /security definer/i);
+  assert.match(sql, /set search_path to ''/i);
+  assert.match(sql, /studio_admin_memberships/i);
+  assert.match(sql, /m\.role = 'owner'/i);
+  assert.match(sql, /auth\.users/i);
+  assert.match(sql, /profiles\.rqs_plan|p\.rqs_plan/i);
+  assert.match(sql, /rqs_plan_entitlements/i);
+
+  assert.match(
+    sql,
+    /revoke all on function public\.studio_admin_identity_summary\(\) from public, anon, authenticated/i,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.studio_admin_identity_summary\(\) to authenticated/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /\binsert\s+into\b|\bupdate\s+public\.|\bdelete\s+from\b|\btruncate\b/i,
+  );
+
+  assert.doesNotMatch(
+    runtime,
+    /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET|sb_secret_|private_key/i,
+  );
+
+  assert.match(summary, /authorizeOwner/);
+  assert.match(records, /authorizeOwner/);
+  assert.match(entitlements, /authorizeOwner/);
+  assert.match(records, /req\.method !== 'GET'/);
+  assert.doesNotMatch(
+    runtime,
+    /method:\s*['"](?:POST|PATCH|PUT|DELETE)['"]/,
   );
 });
