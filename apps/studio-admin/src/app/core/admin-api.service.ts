@@ -118,6 +118,75 @@ export interface ReferralRecordsPage {
   generatedAt: string;
 }
 
+export interface IdentityPlanBreakdown {
+  free: number;
+  master: number;
+  plus: number;
+  pro: number;
+  unknown: number;
+}
+
+export interface IdentitySummary {
+  totalUsers: number;
+  activeUsers: number;
+  confirmedUsers: number;
+  unconfirmedUsers: number;
+  authWithoutProfile: number;
+  profilesWithoutAuth: number;
+  byPlan: IdentityPlanBreakdown;
+  generatedAt: string;
+}
+
+export interface IdentityEntitlements {
+  fullMasterLimit: number | null;
+  spotifyPitchLimit: number | null;
+  buildProjectLimit: number | null;
+  buildStorageBytesLimit: number | null;
+}
+
+export interface IdentityRecord {
+  identityRef: string;
+  maskedEmail: string;
+  authStatus: string;
+  provider: string;
+  plan: string;
+  createdAt: string | null;
+  lastSignInAt: string | null;
+  entitlements: IdentityEntitlements;
+}
+
+export interface IdentityRecordsQuery {
+  limit?: number;
+  cursor?: string | null;
+  plan?: string;
+  status?: string;
+}
+
+export interface IdentityRecordsPage {
+  records: IdentityRecord[];
+  nextCursor: string | null;
+  limit: number;
+  filters: {
+    plan?: string;
+    status?: string;
+  };
+  generatedAt: string;
+}
+
+export interface EntitlementPlan {
+  plan: string;
+  period: string;
+  fullMasterLimit: number;
+  spotifyPitchLimit: number;
+  buildProjectLimit: number;
+  buildStorageBytesLimit: number;
+}
+
+export interface EntitlementCatalog {
+  plans: EntitlementPlan[];
+  generatedAt: string;
+}
+
 export type AdminActionType =
   'review_flag.set';
 
@@ -220,6 +289,18 @@ export class AdminApiService {
 
   referralRecords(query: ReferralRecordsQuery = {}): Promise<ReferralRecordsPage> {
     return this.get<ReferralRecordsPage>('/api/admin/referrals/records', query);
+  }
+
+  identitySummary(): Promise<IdentitySummary> {
+    return this.get<IdentitySummary>('/api/admin/identity/summary');
+  }
+
+  identityRecords(query: IdentityRecordsQuery = {}): Promise<IdentityRecordsPage> {
+    return this.get<IdentityRecordsPage>('/api/admin/identity/records', query);
+  }
+
+  entitlementCatalog(): Promise<EntitlementCatalog> {
+    return this.get<EntitlementCatalog>('/api/admin/identity/entitlements');
   }
 
   actionsConfig(): Promise<AdminActionsConfig> {
