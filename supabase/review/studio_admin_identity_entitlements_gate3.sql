@@ -70,12 +70,12 @@ $function$;
 create or replace function public.studio_admin_identity_records(
   p_fetch_limit integer default 26,
   p_cursor_created_at timestamptz default null,
-  p_cursor_id uuid default null,
+  p_cursor_ref text default null,
   p_plan text default null,
   p_status text default null
 )
 returns table (
-  cursor_id uuid,
+  cursor_ref text,
   cursor_created_at timestamptz,
   identity_ref text,
   masked_email text,
@@ -117,7 +117,14 @@ begin
       message = 'STUDIO_ADMIN_INVALID_PAGE_SIZE';
   end if;
 
-  if (p_cursor_created_at is null) <> (p_cursor_id is null) then
+  if (p_cursor_created_at is null) <> (p_cursor_ref is null) then
+    raise exception using
+      errcode = '22023',
+      message = 'STUDIO_ADMIN_INVALID_CURSOR';
+  end if;
+
+  if p_cursor_ref is not null
+     and p_cursor_ref !~ '^[0-9a-f]{32}$' then
     raise exception using
       errcode = '22023',
       message = 'STUDIO_ADMIN_INVALID_CURSOR';
@@ -138,7 +145,7 @@ begin
   return query
   with identity_rows as (
     select
-      u.id as row_cursor_id,
+      md5(u.id::text) as row_cursor_ref,
       coalesce(u.created_at, '1970-01-01 00:00:00+00'::timestamptz) as row_cursor_created_at,
       substring(md5(u.id::text) from 1 for 12) as row_identity_ref,
       case
@@ -171,7 +178,7 @@ begin
     left join public.rqs_plan_entitlements e on e.plan = p.rqs_plan
   )
   select
-    r.row_cursor_id,
+    r.row_cursor_ref,
     r.row_cursor_created_at,
     r.row_identity_ref,
     r.row_masked_email,
@@ -189,10 +196,10 @@ begin
     and (v_status is null or r.row_auth_status = v_status)
     and (
       p_cursor_created_at is null
-      or (r.row_cursor_created_at, r.row_cursor_id)
-         < (p_cursor_created_at, p_cursor_id)
+      or (r.row_cursor_created_at, r.row_cursor_ref)
+         < (p_cursor_created_at, p_cursor_ref)
     )
-  order by r.row_cursor_created_at desc, r.row_cursor_id desc
+  order by r.row_cursor_created_at desc, r.row_cursor_ref desc
   limit p_fetch_limit;
 end;
 $function$;
@@ -248,12 +255,12 @@ end;
 $function$;
 
 revoke all on function public.studio_admin_identity_summary() from public, anon, authenticated;
-revoke all on function public.studio_admin_identity_records(integer, timestamptz, uuid, text, text)
+revoke all on function public.studio_admin_identity_records(integer, timestamptz, text, text, text)
   from public, anon, authenticated;
 revoke all on function public.studio_admin_entitlement_catalog() from public, anon, authenticated;
 
 grant execute on function public.studio_admin_identity_summary() to authenticated;
-grant execute on function public.studio_admin_identity_records(integer, timestamptz, uuid, text, text)
+grant execute on function public.studio_admin_identity_records(integer, timestamptz, text, text, text)
   to authenticated;
 grant execute on function public.studio_admin_entitlement_catalog() to authenticated;
 

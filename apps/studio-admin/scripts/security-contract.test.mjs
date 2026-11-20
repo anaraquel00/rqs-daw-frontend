@@ -428,4 +428,29 @@ test('Gate 3 Supabase identity contract is owner-gated, read-only and secretless
     runtime,
     /method:\s*['"](?:POST|PATCH|PUT|DELETE)['"]/,
   );
+
+  assert.match(
+    sql,
+    /p_cursor_ref text/i,
+  );
+
+  assert.match(
+    sql,
+    /cursor_ref text/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /p_cursor_id|cursor_id\s+uuid/i,
+  );
+
+  assert.match(
+    adapter,
+    /p_cursor_ref/,
+  );
+
+  assert.doesNotMatch(
+    adapter,
+    /p_cursor_id|cursor_id|decoded\.id/,
+  );
 });

@@ -205,8 +205,8 @@ export async function identityRecords(
         p_cursor_created_at:
           decodedCursor?.createdAt ??
           null,
-        p_cursor_id:
-          decodedCursor?.id ??
+        p_cursor_ref:
+          decodedCursor?.ref ??
           null,
         p_plan:
           normalizedFilters.plan ??
@@ -369,19 +369,20 @@ function sanitizeIdentityRecord(
 function encodeCursor(
   row,
 ) {
-  const id =
+  const ref =
     String(
-      row?.cursor_id || '',
-    ).trim();
+      row?.cursor_ref || '',
+    )
+      .trim()
+      .toLowerCase();
 
   const createdAt =
     String(
       row?.cursor_created_at || '',
     ).trim();
 
-  assertUuid(
-    id,
-    'cursor id',
+  assertCursorRef(
+    ref,
   );
 
   if (
@@ -399,7 +400,7 @@ function encodeCursor(
     .from(
       JSON.stringify({
         v: 1,
-        id,
+        ref,
         createdAt,
       }),
     )
@@ -453,7 +454,7 @@ function decodeCursor(
 
   if (
     decoded?.v !== 1 ||
-    typeof decoded?.id !==
+    typeof decoded?.ref !==
       'string' ||
     typeof decoded?.createdAt !==
       'string'
@@ -463,9 +464,13 @@ function decodeCursor(
     );
   }
 
-  assertUuid(
-    decoded.id,
-    'cursor id',
+  const ref =
+    decoded.ref
+      .trim()
+      .toLowerCase();
+
+  assertCursorRef(
+    ref,
   );
 
   if (
@@ -481,10 +486,23 @@ function decodeCursor(
   }
 
   return {
-    id: decoded.id,
+    ref,
     createdAt:
       decoded.createdAt,
   };
+}
+
+function assertCursorRef(
+  value,
+) {
+  if (
+    !/^[0-9a-f]{32}$/
+      .test(value)
+  ) {
+    throw new TypeError(
+      'Invalid cursor reference',
+    );
+  }
 }
 
 function normalizePlanBreakdown(

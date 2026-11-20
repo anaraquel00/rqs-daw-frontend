@@ -886,7 +886,7 @@ test('Gate 3 identity records are masked, bounded, filtered and cursor-safe', as
     assert.equal(functionName, 'studio_admin_identity_records');
     observedArgs = args;
     return [{
-      cursor_id: '00000000-0000-4000-8000-000000000010',
+      cursor_ref: '00000000000000000000000000000010',
       cursor_created_at: '2026-11-20T10:00:00.000Z',
       identity_ref: '0123456789ab',
       masked_email: 'an***@example.com',
@@ -925,7 +925,169 @@ test('Gate 3 identity records are masked, bounded, filtered and cursor-safe', as
   const serialized = JSON.stringify(result.body);
   assert.equal(serialized.includes('MUST_NOT_LEAK'), false);
   assert.equal(serialized.includes('cursor_id'), false);
+  assert.equal(serialized.includes('cursor_ref'), false);
   assert.equal(serialized.includes('user_id'), false);
+});
+
+test('Gate 3 identity pagination never exposes an Auth UUID in the cursor', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  const rawAuthUuid =
+    '00000000-0000-4000-8000-000000000019';
+
+  const cursorRef =
+    '00000000000000000000000000000019';
+
+  const rows =
+    Array.from(
+      { length: 26 },
+      (_, index) => ({
+        cursor_ref:
+          index === 24
+            ? cursorRef
+            : index
+                .toString(16)
+                .padStart(32, '0'),
+        cursor_created_at:
+          index === 24
+            ? '2026-11-20T10:00:00.000Z'
+            : new Date(
+                Date.UTC(
+                  2026,
+                  10,
+                  20,
+                  12,
+                  0,
+                  0,
+                ) - index * 1000,
+              ).toISOString(),
+        identity_ref:
+          index
+            .toString(16)
+            .padStart(12, '0'),
+        masked_email:
+          'an***@example.com',
+        auth_status:
+          'active',
+        provider:
+          'google',
+        plan:
+          'pro',
+        created_at:
+          '2026-11-20T10:00:00.000Z',
+        last_sign_in_at:
+          '2026-11-20T11:00:00.000Z',
+        full_master_limit:
+          80,
+        spotify_pitch_limit:
+          60,
+        build_project_limit:
+          100,
+        build_storage_bytes_limit:
+          53687091200,
+      }),
+    );
+
+  let call = 0;
+  let secondCallArgs = null;
+
+  setSupabaseIdentityRpcProviderForTests(
+    async (_client, functionName, args) => {
+      assert.equal(
+        functionName,
+        'studio_admin_identity_records',
+      );
+
+      call += 1;
+
+      if (call === 1) {
+        return rows;
+      }
+
+      secondCallArgs = args;
+      return [];
+    },
+  );
+
+  const first =
+    await invoke(
+      identityRecordsHandler,
+    );
+
+  assert.equal(
+    first.status,
+    200,
+  );
+
+  assert.equal(
+    typeof first.body.nextCursor,
+    'string',
+  );
+
+  const decoded =
+    JSON.parse(
+      Buffer
+        .from(
+          first.body.nextCursor,
+          'base64url',
+        )
+        .toString(
+          'utf8',
+        ),
+    );
+
+  assert.deepEqual(
+    decoded,
+    {
+      v: 1,
+      ref: cursorRef,
+      createdAt:
+        '2026-11-20T10:00:00.000Z',
+    },
+  );
+
+  assert.equal(
+    first.body.nextCursor
+      .includes(rawAuthUuid),
+    false,
+  );
+
+  assert.equal(
+    JSON.stringify(decoded)
+      .includes(rawAuthUuid),
+    false,
+  );
+
+  const second =
+    await invoke(
+      identityRecordsHandler,
+      {
+        query: {
+          cursor:
+            first.body.nextCursor,
+        },
+      },
+    );
+
+  assert.equal(
+    second.status,
+    200,
+  );
+
+  assert.equal(
+    secondCallArgs.p_cursor_ref,
+    cursorRef,
+  );
+
+  assert.equal(
+    secondCallArgs.p_cursor_created_at,
+    '2026-11-20T10:00:00.000Z',
+  );
+
+  assert.equal(
+    'p_cursor_id' in secondCallArgs,
+    false,
+  );
 });
 
 test('Gate 3 identity endpoints reject unauthorized and invalid queries before RPC', async () => {
