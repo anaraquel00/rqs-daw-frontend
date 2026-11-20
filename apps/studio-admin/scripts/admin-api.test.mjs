@@ -3,13 +3,10 @@ import assert from 'node:assert/strict';
 import authConfigHandler from '../api/auth/config.js';
 import meHandler from '../api/admin/me.js';
 import overviewHandler from '../api/admin/overview.js';
-import summaryHandler from '../api/admin/waitlist/summary.js';
-import waitlistRecordsHandler from '../api/admin/waitlist/records.js';
+import waitlistHandler from '../api/admin/waitlist.js';
 import referralSummaryHandler from '../api/admin/referrals/summary.js';
 import referralRecordsHandler from '../api/admin/referrals/records.js';
-import identitySummaryHandler from '../api/admin/identity/summary.js';
-import identityRecordsHandler from '../api/admin/identity/records.js';
-import entitlementCatalogHandler from '../api/admin/identity/entitlements.js';
+import identityHandler from '../api/admin/identity.js';
 import { setAdminContextProviderForTests } from '../api/_auth.mjs';
 import { adminEnvironmentConfiguration } from '../api/_firestore-environment.mjs';
 import { adminFirestoreConfiguration } from '../api/_firestore-admin.mjs';
@@ -87,6 +84,56 @@ function membershipContext(role = 'owner', active = true) {
   };
 }
 
+function routeOperation(
+  handler,
+  operation,
+) {
+  return (
+    req,
+    res,
+  ) =>
+    handler(
+      {
+        ...req,
+        query: {
+          ...req.query,
+          operation,
+        },
+      },
+      res,
+    );
+}
+
+const summaryHandler =
+  routeOperation(
+    waitlistHandler,
+    'summary',
+  );
+
+const waitlistRecordsHandler =
+  routeOperation(
+    waitlistHandler,
+    'records',
+  );
+
+const identitySummaryHandler =
+  routeOperation(
+    identityHandler,
+    'summary',
+  );
+
+const identityRecordsHandler =
+  routeOperation(
+    identityHandler,
+    'records',
+  );
+
+const entitlementCatalogHandler =
+  routeOperation(
+    identityHandler,
+    'entitlements',
+  );
+
 async function invoke(
   handler,
   {
@@ -139,6 +186,40 @@ test.afterEach(() => {
   setSupabaseIdentityRpcProviderForTests(null);
   delete process.env.ADMIN_ALLOWED_ORIGINS;
   configure(STAGING);
+});
+
+test('consolidated read-only routers reject unknown operations', async () => {
+  const identity =
+    await invoke(
+      identityHandler,
+      {
+        query: {
+          operation:
+            'unexpected',
+        },
+      },
+    );
+
+  const waitlist =
+    await invoke(
+      waitlistHandler,
+      {
+        query: {
+          operation:
+            'unexpected',
+        },
+      },
+    );
+
+  assert.equal(
+    identity.status,
+    404,
+  );
+
+  assert.equal(
+    waitlist.status,
+    404,
+  );
 });
 
 test('unauthenticated request is denied by /api/admin/me', async () => {

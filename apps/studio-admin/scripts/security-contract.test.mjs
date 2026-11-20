@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 
 const read = path =>
   readFile(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -66,7 +66,7 @@ test('Admin and Referral Firestore namespaces are structurally isolated', async 
       read('api/_firestore-referral.mjs'),
       read('api/_firestore-isolation.mjs'),
       read('api/admin/overview.js'),
-      read('api/admin/waitlist/summary.js'),
+      read('api/admin/waitlist.js'),
     ]);
 
   assert.match(environment, /rqs-studio-admin-staging/);
@@ -144,6 +144,113 @@ test('Studio Admin disables automatic Git deployments and preserves required SPA
   );
 });
 
+test('Hobby deployment keeps consolidated Admin Functions within budget', async () => {
+  const vercel =
+    JSON.parse(
+      await read(
+        'vercel.json',
+      ),
+    );
+
+  const expectedRewrites =
+    new Map([
+      [
+        '/api/admin/identity/summary',
+        '/api/admin/identity?operation=summary',
+      ],
+      [
+        '/api/admin/identity/records',
+        '/api/admin/identity?operation=records',
+      ],
+      [
+        '/api/admin/identity/entitlements',
+        '/api/admin/identity?operation=entitlements',
+      ],
+      [
+        '/api/admin/waitlist/summary',
+        '/api/admin/waitlist?operation=summary',
+      ],
+      [
+        '/api/admin/waitlist/records',
+        '/api/admin/waitlist?operation=records',
+      ],
+    ]);
+
+  for (
+    const [
+      source,
+      destination,
+    ]
+    of expectedRewrites
+  ) {
+    assert.ok(
+      vercel.rewrites?.some(
+        rewrite =>
+          rewrite.source === source &&
+          rewrite.destination ===
+            destination,
+      ),
+      `missing rewrite ${source}`,
+    );
+  }
+
+  const apiEntries =
+    await readdir(
+      new URL(
+        '../api/',
+        import.meta.url,
+      ),
+      {
+        recursive: true,
+      },
+    );
+
+  const functions =
+    apiEntries
+      .filter(
+        entry =>
+          entry.endsWith('.js'),
+      )
+      .sort();
+
+  assert.ok(
+    functions.length <= 11,
+    `Hobby containment exceeded: ${functions.length} direct Functions`,
+  );
+
+  assert.ok(
+    functions.includes(
+      'admin/identity.js',
+    ),
+  );
+
+  assert.ok(
+    functions.includes(
+      'admin/waitlist.js',
+    ),
+  );
+
+  assert.equal(
+    functions.some(
+      path =>
+        path.startsWith(
+          'admin/identity/',
+        ),
+    ),
+    false,
+  );
+
+  assert.equal(
+    functions.some(
+      path =>
+        path.startsWith(
+          'admin/waitlist/',
+        ),
+    ),
+    false,
+  );
+});
+
 test('GCP identity is validated before OIDC token exchange', async () => {
   const oidc = await read('api/_gcp-oidc.mjs');
 
@@ -180,7 +287,7 @@ test('Phase 2 record endpoints stay read-only and contain no privileged credenti
   const [referral, waitlistRecords, referralSummary, referralRecords] =
     await Promise.all([
       read('api/_firestore-referral.mjs'),
-      read('api/admin/waitlist/records.js'),
+      read('api/admin/waitlist.js'),
       read('api/admin/referrals/summary.js'),
       read('api/admin/referrals/records.js'),
     ]);
@@ -381,9 +488,9 @@ test('Gate 3 Supabase identity contract is owner-gated, read-only and secretless
   ] = await Promise.all([
     read('../../supabase/review/studio_admin_identity_entitlements_gate3.sql'),
     read('api/_supabase-identity.mjs'),
-    read('api/admin/identity/summary.js'),
-    read('api/admin/identity/records.js'),
-    read('api/admin/identity/entitlements.js'),
+    read('api/admin/identity.js'),
+    read('api/admin/identity.js'),
+    read('api/admin/identity.js'),
   ]);
 
   const runtime = [
