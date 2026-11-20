@@ -7,6 +7,9 @@ import summaryHandler from '../api/admin/waitlist/summary.js';
 import waitlistRecordsHandler from '../api/admin/waitlist/records.js';
 import referralSummaryHandler from '../api/admin/referrals/summary.js';
 import referralRecordsHandler from '../api/admin/referrals/records.js';
+import identitySummaryHandler from '../api/admin/identity/summary.js';
+import identityRecordsHandler from '../api/admin/identity/records.js';
+import entitlementCatalogHandler from '../api/admin/identity/entitlements.js';
 import { setAdminContextProviderForTests } from '../api/_auth.mjs';
 import { adminEnvironmentConfiguration } from '../api/_firestore-environment.mjs';
 import { adminFirestoreConfiguration } from '../api/_firestore-admin.mjs';
@@ -18,6 +21,9 @@ import {
   setReferralPageProviderForTests,
 } from '../api/_firestore-referral.mjs';
 import { gcpOidcConfiguration } from '../api/_gcp-oidc.mjs';
+import {
+  setSupabaseIdentityRpcProviderForTests,
+} from '../api/_supabase-identity.mjs';
 
 process.env.NODE_TEST_CONTEXT = '1';
 
@@ -130,6 +136,7 @@ test.afterEach(() => {
   setAdminContextProviderForTests(null);
   setReferralCountProviderForTests(null);
   setReferralPageProviderForTests(null);
+  setSupabaseIdentityRpcProviderForTests(null);
   delete process.env.ADMIN_ALLOWED_ORIGINS;
   configure(STAGING);
 });
@@ -829,6 +836,157 @@ test('Phase 2 overview exposes expanded aggregate intelligence only', async () =
   assertPrivacy(result.body);
 });
 
+
+test('Gate 3 identity summary uses Auth as canonical identity without PII', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+  setSupabaseIdentityRpcProviderForTests(async (_client, functionName) => {
+    assert.equal(functionName, 'studio_admin_identity_summary');
+    return {
+      totalUsers: 8,
+      activeUsers: 7,
+      confirmedUsers: 7,
+      unconfirmedUsers: 1,
+      authWithoutProfile: 0,
+      profilesWithoutAuth: 21,
+      byPlan: {
+        free: 6,
+        master: 0,
+        plus: 0,
+        pro: 2,
+        unknown: 0,
+      },
+    };
+  });
+
+  const result = await invoke(identitySummaryHandler);
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.totalUsers, 8);
+  assert.equal(result.body.profilesWithoutAuth, 21);
+  assert.deepEqual(result.body.byPlan, {
+    free: 6,
+    master: 0,
+    plus: 0,
+    pro: 2,
+    unknown: 0,
+  });
+
+  const serialized = JSON.stringify(result.body).toLowerCase();
+  assert.equal(serialized.includes('access_token'), false);
+  assert.equal(serialized.includes('refresh_token'), false);
+  assert.equal(serialized.includes('user_id'), false);
+  assert.equal(serialized.includes('@'), false);
+});
+
+test('Gate 3 identity records are masked, bounded, filtered and cursor-safe', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+
+  let observedArgs = null;
+  setSupabaseIdentityRpcProviderForTests(async (_client, functionName, args) => {
+    assert.equal(functionName, 'studio_admin_identity_records');
+    observedArgs = args;
+    return [{
+      cursor_id: '00000000-0000-4000-8000-000000000010',
+      cursor_created_at: '2026-11-20T10:00:00.000Z',
+      identity_ref: '0123456789ab',
+      masked_email: 'an***@example.com',
+      auth_status: 'active',
+      provider: 'google',
+      plan: 'pro',
+      created_at: '2026-11-20T10:00:00.000Z',
+      last_sign_in_at: '2026-11-20T11:00:00.000Z',
+      full_master_limit: 80,
+      spotify_pitch_limit: 60,
+      build_project_limit: 100,
+      build_storage_bytes_limit: 53687091200,
+      email: 'MUST_NOT_LEAK@example.com',
+      user_id: 'MUST_NOT_LEAK',
+    }];
+  });
+
+  const result = await invoke(identityRecordsHandler, {
+    query: {
+      limit: '25',
+      plan: 'pro',
+      status: 'active',
+    },
+  });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.records.length, 1);
+  assert.equal(result.body.records[0].maskedEmail, 'an***@example.com');
+  assert.equal(result.body.records[0].identityRef, '0123456789ab');
+  assert.equal(result.body.records[0].plan, 'pro');
+  assert.equal(result.body.records[0].entitlements.spotifyPitchLimit, 60);
+  assert.equal(observedArgs.p_fetch_limit, 26);
+  assert.equal(observedArgs.p_plan, 'pro');
+  assert.equal(observedArgs.p_status, 'active');
+
+  const serialized = JSON.stringify(result.body);
+  assert.equal(serialized.includes('MUST_NOT_LEAK'), false);
+  assert.equal(serialized.includes('cursor_id'), false);
+  assert.equal(serialized.includes('user_id'), false);
+});
+
+test('Gate 3 identity endpoints reject unauthorized and invalid queries before RPC', async () => {
+  let called = false;
+  setSupabaseIdentityRpcProviderForTests(async () => {
+    called = true;
+    return {};
+  });
+
+  setAdminContextProviderForTests(async () => null);
+  assert.equal((await invoke(identitySummaryHandler)).status, 401);
+  assert.equal((await invoke(identityRecordsHandler)).status, 401);
+  assert.equal((await invoke(entitlementCatalogHandler)).status, 401);
+  assert.equal(called, false);
+
+  setAdminContextProviderForTests(async () => membershipContext());
+  assert.equal(
+    (await invoke(identityRecordsHandler, { query: { limit: '51' } })).status,
+    400,
+  );
+  assert.equal(
+    (await invoke(identityRecordsHandler, { query: { plan: 'enterprise' } })).status,
+    400,
+  );
+  assert.equal(
+    (await invoke(identityRecordsHandler, { query: { status: 'root' } })).status,
+    400,
+  );
+  assert.equal(
+    (await invoke(identityRecordsHandler, { query: { cursor: 'invalid!' } })).status,
+    400,
+  );
+  assert.equal(called, false);
+});
+
+test('Gate 3 entitlement catalog exposes only reviewed plan limits', async () => {
+  setAdminContextProviderForTests(async () => membershipContext());
+  setSupabaseIdentityRpcProviderForTests(async (_client, functionName) => {
+    assert.equal(functionName, 'studio_admin_entitlement_catalog');
+    return [{
+      plan: 'free',
+      period: 'lifetime',
+      full_master_limit: 3,
+      spotify_pitch_limit: 3,
+      build_project_limit: 2,
+      build_storage_bytes_limit: 1073741824,
+    }];
+  });
+
+  const result = await invoke(entitlementCatalogHandler);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body.plans[0], {
+    plan: 'free',
+    period: 'lifetime',
+    fullMasterLimit: 3,
+    spotifyPitchLimit: 3,
+    buildProjectLimit: 2,
+    buildStorageBytesLimit: 1073741824,
+  });
+});
 
 function assertPrivacy(body) {
   const serialized = JSON.stringify(body).toLowerCase();
