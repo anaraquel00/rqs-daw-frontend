@@ -510,7 +510,15 @@ test('Gate 3 Supabase identity contract is owner-gated, read-only and secretless
 
   assert.match(
     sql,
-    /revoke all on function public\.studio_admin_identity_summary\(\) from public, anon, authenticated/i,
+    /revoke all on function public\.studio_admin_identity_summary\(\) from public, anon, authenticated, service_role/i,
+  );
+  assert.match(
+    sql,
+    /revoke all on function public\.studio_admin_identity_records\(integer, timestamptz, text, text, text\)[\s\S]*from public, anon, authenticated, service_role/i,
+  );
+  assert.match(
+    sql,
+    /revoke all on function public\.studio_admin_entitlement_catalog\(\) from public, anon, authenticated, service_role/i,
   );
   assert.match(
     sql,

@@ -254,10 +254,10 @@ begin
 end;
 $function$;
 
-revoke all on function public.studio_admin_identity_summary() from public, anon, authenticated;
+revoke all on function public.studio_admin_identity_summary() from public, anon, authenticated, service_role;
 revoke all on function public.studio_admin_identity_records(integer, timestamptz, text, text, text)
-  from public, anon, authenticated;
-revoke all on function public.studio_admin_entitlement_catalog() from public, anon, authenticated;
+  from public, anon, authenticated, service_role;
+revoke all on function public.studio_admin_entitlement_catalog() from public, anon, authenticated, service_role;
 
 grant execute on function public.studio_admin_identity_summary() to authenticated;
 grant execute on function public.studio_admin_identity_records(integer, timestamptz, text, text, text)
