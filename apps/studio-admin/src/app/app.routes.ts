@@ -37,6 +37,16 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/referrals.component').then(module => module.ReferralsComponent),
         title: 'Referrals | RQS Studio Admin',
       },
+      {
+        path: 'identity',
+        loadComponent: () => import('./pages/identity.component').then(module => module.IdentityComponent),
+        title: 'Identity & Entitlements | RQS Studio Admin',
+      },
+      {
+        path: 'usage',
+        loadComponent: () => import('./pages/usage.component').then(module => module.UsageComponent),
+        title: 'Product Usage | RQS Studio Admin',
+      },
     ],
   },
   { path: '**', redirectTo: '' },

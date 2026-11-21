@@ -7,22 +7,87 @@
     "deploymentEnabled": false
   },
   "rewrites": [
-    { "source": "/login", "destination": "/index.html" },
-    { "source": "/forbidden", "destination": "/index.html" },
-    { "source": "/unavailable", "destination": "/index.html" },
-    { "source": "/waitlist", "destination": "/index.html" },
-    { "source": "/referrals", "destination": "/index.html" }
+    {
+      "source": "/api/admin/usage/records",
+      "destination": "/api/admin/identity?operation=usage-records"
+    },
+    {
+      "source": "/api/admin/identity/summary",
+      "destination": "/api/admin/identity?operation=summary"
+    },
+    {
+      "source": "/api/admin/identity/records",
+      "destination": "/api/admin/identity?operation=records"
+    },
+    {
+      "source": "/api/admin/identity/entitlements",
+      "destination": "/api/admin/identity?operation=entitlements"
+    },
+    {
+      "source": "/api/admin/waitlist/summary",
+      "destination": "/api/admin/waitlist?operation=summary"
+    },
+    {
+      "source": "/api/admin/waitlist/records",
+      "destination": "/api/admin/waitlist?operation=records"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/forbidden",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/unavailable",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/waitlist",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/referrals",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/identity",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/usage",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "no-referrer" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; upgrade-insecure-requests" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; upgrade-insecure-requests"
+        }
       ]
     }
   ]

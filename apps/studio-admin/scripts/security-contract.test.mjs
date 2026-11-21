@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 
 const read = path =>
   readFile(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -66,7 +66,7 @@ test('Admin and Referral Firestore namespaces are structurally isolated', async 
       read('api/_firestore-referral.mjs'),
       read('api/_firestore-isolation.mjs'),
       read('api/admin/overview.js'),
-      read('api/admin/waitlist/summary.js'),
+      read('api/admin/waitlist.js'),
     ]);
 
   assert.match(environment, /rqs-studio-admin-staging/);
@@ -133,6 +133,122 @@ test('Studio Admin disables automatic Git deployments and preserves required SPA
         rewrite.destination === '/index.html',
     ),
   );
+
+
+  assert.ok(
+    vercel.rewrites?.some(
+      rewrite =>
+        rewrite.source === '/identity' &&
+        rewrite.destination === '/index.html',
+    ),
+  );
+});
+
+test('Hobby deployment keeps consolidated Admin Functions within budget', async () => {
+  const vercel =
+    JSON.parse(
+      await read(
+        'vercel.json',
+      ),
+    );
+
+  const expectedRewrites =
+    new Map([
+      [
+        '/api/admin/identity/summary',
+        '/api/admin/identity?operation=summary',
+      ],
+      [
+        '/api/admin/identity/records',
+        '/api/admin/identity?operation=records',
+      ],
+      [
+        '/api/admin/identity/entitlements',
+        '/api/admin/identity?operation=entitlements',
+      ],
+      [
+        '/api/admin/waitlist/summary',
+        '/api/admin/waitlist?operation=summary',
+      ],
+      [
+        '/api/admin/waitlist/records',
+        '/api/admin/waitlist?operation=records',
+      ],
+    ]);
+
+  for (
+    const [
+      source,
+      destination,
+    ]
+    of expectedRewrites
+  ) {
+    assert.ok(
+      vercel.rewrites?.some(
+        rewrite =>
+          rewrite.source === source &&
+          rewrite.destination ===
+            destination,
+      ),
+      `missing rewrite ${source}`,
+    );
+  }
+
+  const apiEntries =
+    await readdir(
+      new URL(
+        '../api/',
+        import.meta.url,
+      ),
+      {
+        recursive: true,
+      },
+    );
+
+  const functions =
+    apiEntries
+      .filter(
+        entry =>
+          entry.endsWith('.js'),
+      )
+      .sort();
+
+  assert.ok(
+    functions.length <= 11,
+    `Hobby containment exceeded: ${functions.length} direct Functions`,
+  );
+
+  assert.ok(
+    functions.includes(
+      'admin/identity.js',
+    ),
+  );
+
+  assert.ok(
+    functions.includes(
+      'admin/waitlist.js',
+    ),
+  );
+
+  assert.equal(
+    functions.some(
+      path =>
+        path.startsWith(
+          'admin/identity/',
+        ),
+    ),
+    false,
+  );
+
+  assert.equal(
+    functions.some(
+      path =>
+        path.startsWith(
+          'admin/waitlist/',
+        ),
+    ),
+    false,
+  );
 });
 
 test('GCP identity is validated before OIDC token exchange', async () => {
@@ -171,7 +287,7 @@ test('Phase 2 record endpoints stay read-only and contain no privileged credenti
   const [referral, waitlistRecords, referralSummary, referralRecords] =
     await Promise.all([
       read('api/_firestore-referral.mjs'),
-      read('api/admin/waitlist/records.js'),
+      read('api/admin/waitlist.js'),
       read('api/admin/referrals/summary.js'),
       read('api/admin/referrals/records.js'),
     ]);
@@ -359,5 +475,323 @@ test('Phase 3 capability endpoint exposes only bounded action configuration', as
   assert.doesNotMatch(
     config,
     /createDocument|updateDocument|documents:commit/,
+  );
+});
+
+test('Gate 3 Supabase identity contract is owner-gated, read-only and secretless', async () => {
+  const [
+    sql,
+    adapter,
+    summary,
+    records,
+    entitlements,
+  ] = await Promise.all([
+    read('../../supabase/review/studio_admin_identity_entitlements_gate3.sql'),
+    read('api/_supabase-identity.mjs'),
+    read('api/admin/identity.js'),
+    read('api/admin/identity.js'),
+    read('api/admin/identity.js'),
+  ]);
+
+  const runtime = [
+    adapter,
+    summary,
+    records,
+    entitlements,
+  ].join('\n');
+
+  assert.match(sql, /security definer/i);
+  assert.match(sql, /set search_path to ''/i);
+  assert.match(sql, /studio_admin_memberships/i);
+  assert.match(sql, /m\.role = 'owner'/i);
+  assert.match(sql, /auth\.users/i);
+  assert.match(sql, /profiles\.rqs_plan|p\.rqs_plan/i);
+  assert.match(sql, /rqs_plan_entitlements/i);
+
+  assert.match(
+    sql,
+    /revoke all on function public\.studio_admin_identity_summary\(\) from public, anon, authenticated, service_role/i,
+  );
+  assert.match(
+    sql,
+    /revoke all on function public\.studio_admin_identity_records\(integer, timestamptz, text, text, text\)[\s\S]*from public, anon, authenticated, service_role/i,
+  );
+  assert.match(
+    sql,
+    /revoke all on function public\.studio_admin_entitlement_catalog\(\) from public, anon, authenticated, service_role/i,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.studio_admin_identity_summary\(\) to authenticated/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /\binsert\s+into\b|\bupdate\s+public\.|\bdelete\s+from\b|\btruncate\b/i,
+  );
+
+  assert.doesNotMatch(
+    runtime,
+    /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET|sb_secret_|private_key/i,
+  );
+
+  assert.match(summary, /authorizeOwner/);
+  assert.match(records, /authorizeOwner/);
+  assert.match(entitlements, /authorizeOwner/);
+  assert.match(records, /req\.method !== 'GET'/);
+  assert.doesNotMatch(
+    runtime,
+    /method:\s*['"](?:POST|PATCH|PUT|DELETE)['"]/,
+  );
+
+  assert.match(
+    sql,
+    /p_cursor_ref text/i,
+  );
+
+  assert.match(
+    sql,
+    /cursor_ref text/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /p_cursor_id|cursor_id\s+uuid/i,
+  );
+
+  assert.match(
+    adapter,
+    /p_cursor_ref/,
+  );
+
+  assert.doesNotMatch(
+    adapter,
+    /p_cursor_id|cursor_id|decoded\.id/,
+  );
+});
+
+
+test('Gate 4.0.1 MASTER quota canonicalization uses rqs_plan entitlements without rewriting legacy semantics', async () => {
+  const sql =
+    await read(
+      '../../supabase/review/mastering_quota_canonicalization_gate4.sql',
+    );
+
+  assert.match(
+    sql,
+    /create or replace function public\.get_mastering_quota/i,
+  );
+
+  assert.match(
+    sql,
+    /resolve_rqs_plan_entitlement/i,
+  );
+
+  assert.match(
+    sql,
+    /policy_version\s*=\s*'rqs_plan_v1'/i,
+  );
+
+  assert.match(
+    sql,
+    /period_key/i,
+  );
+
+  assert.match(
+    sql,
+    /quota_limit/i,
+  );
+
+  assert.match(
+    sql,
+    /r\.policy_version is null/i,
+  );
+
+  assert.match(
+    sql,
+    /v_plan = 'free'/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /p\.role|v_role|'premium'/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    />=\s*3\b/,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /security\s+definer/i,
+  );
+
+  assert.match(
+    sql,
+    /revoke all[\s\S]*get_mastering_quota\(uuid\)[\s\S]*from public, anon, authenticated/i,
+  );
+
+  assert.match(
+    sql,
+    /grant execute[\s\S]*get_mastering_quota\(uuid\)[\s\S]*to service_role/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /\bdelete\s+from\b|\btruncate\b|\bdrop\s+table\b/i,
+  );
+});
+
+
+test('Gate 4.1 usage projection is owner-only, bounded and browser-safe', async () => {
+  const sql =
+    await read(
+      '../../supabase/review/studio_admin_product_usage_gate4.sql',
+    );
+
+  assert.match(
+    sql,
+    /create or replace function public\.studio_admin_usage_records/i,
+  );
+
+  assert.match(
+    sql,
+    /security definer/i,
+  );
+
+  assert.match(
+    sql,
+    /set search_path to ''/i,
+  );
+
+  assert.match(
+    sql,
+    /auth\.uid\(\)/i,
+  );
+
+  assert.match(
+    sql,
+    /studio_admin_memberships/i,
+  );
+
+  assert.match(
+    sql,
+    /m\.active = true/i,
+  );
+
+  assert.match(
+    sql,
+    /m\.role = 'owner'/i,
+  );
+
+  assert.match(
+    sql,
+    /from auth\.users/i,
+  );
+
+  assert.match(
+    sql,
+    /profiles/i,
+  );
+
+  assert.match(
+    sql,
+    /rqs_plan_entitlements/i,
+  );
+
+  assert.match(
+    sql,
+    /get_mastering_quota/i,
+  );
+
+  assert.match(
+    sql,
+    /get_spotify_pitch_quota/i,
+  );
+
+  assert.match(
+    sql,
+    /get_build_quota/i,
+  );
+
+  assert.match(
+    sql,
+    /p_fetch_limit > 51/i,
+  );
+
+  assert.match(
+    sql,
+    /p_cursor_ref text/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /p_cursor_id/i,
+  );
+
+  assert.match(
+    sql,
+    /\^\[0-9a-f\]\{32\}\$/,
+  );
+
+  assert.match(
+    sql,
+    /md5\(u\.id::text\)/i,
+  );
+
+  assert.match(
+    sql,
+    /masked_email text/i,
+  );
+
+  assert.match(
+    sql,
+    /master_used bigint/i,
+  );
+
+  assert.match(
+    sql,
+    /pitch_used bigint/i,
+  );
+
+  assert.match(
+    sql,
+    /build_projects_used bigint/i,
+  );
+
+  assert.match(
+    sql,
+    /build_storage_used_bytes bigint/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /returns table\s*\([^)]*\buser_id\b/is,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /returns table\s*\([^)]*\bemail\b/is,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /\binsert\s+into\b|\bupdate\s+public\.|\bdelete\s+from\b|\btruncate\b/i,
+  );
+
+  assert.match(
+    sql,
+    /revoke all[\s\S]*studio_admin_usage_records[\s\S]*from public, anon, authenticated/i,
+  );
+
+  assert.match(
+    sql,
+    /grant execute[\s\S]*studio_admin_usage_records[\s\S]*to authenticated/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /SUPABASE_SERVICE_ROLE_KEY|sb_secret_|private_key/i,
   );
 });

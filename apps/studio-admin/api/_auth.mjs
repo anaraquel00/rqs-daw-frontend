@@ -34,7 +34,7 @@ export async function authorizeOwner(req) {
   if (error || data?.active !== true || !ADMIN_ROLES.includes(data.role) || data.role !== 'owner') {
     return { status: 403, userId: context.user.id };
   }
-  return { status: 200, userId: context.user.id, role: data.role };
+  return { status: 200, userId: context.user.id, role: data.role, client: context.client };
 }
 
 export function setAdminContextProviderForTests(provider) {

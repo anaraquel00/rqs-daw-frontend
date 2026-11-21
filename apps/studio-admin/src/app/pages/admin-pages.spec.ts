@@ -6,6 +6,8 @@ import { AdminApiService } from '../core/admin-api.service';
 import { AdminAuthService } from '../core/admin-auth.service';
 import { AdminSeoService } from '../core/admin-seo.service';
 import { ForbiddenComponent } from './forbidden.component';
+import { IdentityComponent } from './identity.component';
+import { UsageComponent } from './usage.component';
 import { OverviewComponent } from './overview.component';
 import { ReferralsComponent } from './referrals.component';
 import { WaitlistComponent } from './waitlist.component';
@@ -17,6 +19,10 @@ describe('admin pages', () => {
     waitlistRecords: jasmine.createSpy('waitlistRecords'),
     referralSummary: jasmine.createSpy('referralSummary'),
     referralRecords: jasmine.createSpy('referralRecords'),
+    identitySummary: jasmine.createSpy('identitySummary'),
+    identityRecords: jasmine.createSpy('identityRecords'),
+    usageRecords: jasmine.createSpy('usageRecords'),
+    entitlementCatalog: jasmine.createSpy('entitlementCatalog'),
     actionsConfig: jasmine.createSpy('actionsConfig'),
     requestReviewFlag: jasmine.createSpy('requestReviewFlag'),
     confirmAction: jasmine.createSpy('confirmAction'),
@@ -30,6 +36,10 @@ describe('admin pages', () => {
     api.waitlistRecords.calls.reset();
     api.referralSummary.calls.reset();
     api.referralRecords.calls.reset();
+    api.identitySummary.calls.reset();
+    api.identityRecords.calls.reset();
+    api.usageRecords.calls.reset();
+    api.entitlementCatalog.calls.reset();
     api.actionsConfig.calls.reset();
     api.requestReviewFlag.calls.reset();
     api.confirmAction.calls.reset();
@@ -324,6 +334,244 @@ describe('admin pages', () => {
     ).toContain(
       'FLAG FOR REVIEW',
     );
+  });
+
+  it('renders Gate 3 masked identity and entitlement intelligence', async () => {
+    api.identitySummary.and.resolveTo({
+      totalUsers: 8,
+      activeUsers: 7,
+      confirmedUsers: 7,
+      unconfirmedUsers: 1,
+      authWithoutProfile: 0,
+      profilesWithoutAuth: 21,
+      byPlan: {
+        free: 6,
+        master: 0,
+        plus: 0,
+        pro: 2,
+        unknown: 0,
+      },
+      generatedAt: '2026-11-20T12:00:00.000Z',
+    });
+
+    api.identityRecords.and.resolveTo({
+      records: [{
+        identityRef: '0123456789ab',
+        maskedEmail: 'an***@example.com',
+        authStatus: 'active',
+        provider: 'google',
+        plan: 'pro',
+        createdAt: '2026-11-01T00:00:00.000Z',
+        lastSignInAt: '2026-11-20T11:00:00.000Z',
+        entitlements: {
+          fullMasterLimit: 80,
+          spotifyPitchLimit: 60,
+          buildProjectLimit: 100,
+          buildStorageBytesLimit: 53687091200,
+        },
+      }],
+      nextCursor: null,
+      limit: 25,
+      filters: {},
+      generatedAt: '2026-11-20T12:00:00.000Z',
+    });
+
+    api.entitlementCatalog.and.resolveTo({
+      plans: [{
+        plan: 'pro',
+        period: 'monthly',
+        fullMasterLimit: 80,
+        spotifyPitchLimit: 60,
+        buildProjectLimit: 100,
+        buildStorageBytesLimit: 53687091200,
+      }],
+      generatedAt: '2026-11-20T12:00:00.000Z',
+    });
+
+    const fixture = await create(IdentityComponent);
+    const text = fixture.nativeElement.textContent;
+
+    expect(text).toContain('AUTH USERS');
+    expect(text).toContain('ORPHAN PROFILES');
+    expect(text).toContain('an***@example.com');
+    expect(text).toContain('0123456789ab');
+    expect(text).toContain('PRO');
+    expect(text).toContain('60');
+    expect(text).toContain('50 GiB');
+    expect(text).not.toContain('ana@example.com');
+    expect(text).not.toContain('user_id');
+    expect(seo.setCanonical).toHaveBeenCalledWith('/identity');
+  });
+
+  it('keeps Gate 3 identity inside the owner-guarded admin route', () => {
+    const protectedRoot = routes.find(route => route.path === '');
+
+    expect(protectedRoot?.canActivate?.length).toBeGreaterThan(0);
+    expect(
+      protectedRoot?.children?.some(route => route.path === 'identity'),
+    ).toBeTrue();
+  });
+
+  it('renders Gate 4 product usage without raw identity data', async () => {
+    api.usageRecords.and.resolveTo({
+      records: [{
+        identityRef: '0123456789ab',
+        maskedEmail: 'an***@example.com',
+        plan: 'pro',
+        master: {
+          used: 0,
+          reserved: 0,
+          limit: 80,
+          remaining: 80,
+          period: 'monthly',
+          periodKey: '2026-11',
+          available: true,
+        },
+        pitch: {
+          used: 0,
+          reserved: 0,
+          limit: 60,
+          remaining: 60,
+          period: 'monthly',
+          periodKey: '2026-11',
+          available: true,
+        },
+        build: {
+          projects: {
+            used: 0,
+            limit: 100,
+            remaining: 100,
+            available: true,
+          },
+          storage: {
+            confirmedBytes: 0,
+            reservedBytes: 0,
+            usedBytes: 0,
+            limitBytes: 53687091200,
+            remainingBytes: 53687091200,
+            available: true,
+          },
+        },
+        uplink: {
+          active: {
+            used: 1,
+            limit: null,
+            remaining: null,
+            unlimited: true,
+            available: true,
+          },
+          clicks: {
+            used: 0,
+            limit: 500000,
+            remaining: 500000,
+            period: 'monthly',
+            periodKey: '2026-11',
+            available: true,
+          },
+        },
+      }],
+      nextCursor: null,
+      limit: 25,
+      filters: {},
+      generatedAt: '2026-11-21T12:00:00.000Z',
+    });
+
+    const fixture =
+      await create(UsageComponent);
+
+    const text =
+      fixture.nativeElement.textContent;
+
+    expect(text).toContain(
+      'USAGE OBSERVABILITY',
+    );
+
+    expect(text).toContain(
+      '0123456789ab',
+    );
+
+    expect(text).toContain(
+      'an***@example.com',
+    );
+
+    expect(text).toContain(
+      '0 / 80',
+    );
+
+    expect(text).toContain(
+      '0 / 60',
+    );
+
+    expect(text).toContain(
+      '0 / 100',
+    );
+
+    expect(text).toContain(
+      '0 B / 50 GiB',
+    );
+
+    expect(text).toContain(
+      'ACTIVE 1 / ∞',
+    );
+
+    expect(text).toContain(
+      'CLICKS 0 / 500000',
+    );
+
+    expect(text).toContain(
+      'MONTHLY · 2026-11',
+    );
+
+    expect(text).toContain(
+      'AVAILABLE',
+    );
+
+    expect(text).not.toContain(
+      'ana@example.com',
+    );
+
+    expect(text).not.toContain(
+      'user_id',
+    );
+
+    expect(
+      api.usageRecords,
+    ).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        limit: 25,
+        cursor: null,
+      }),
+    );
+
+    expect(
+      seo.setCanonical,
+    ).toHaveBeenCalledWith(
+      '/usage',
+    );
+  });
+
+  it('keeps Gate 4 usage inside the owner-guarded admin route', () => {
+    const protectedRoot =
+      routes.find(
+        route =>
+          route.path === '',
+      );
+
+    expect(
+      protectedRoot
+        ?.canActivate
+        ?.length,
+    ).toBeGreaterThan(0);
+
+    expect(
+      protectedRoot
+        ?.children
+        ?.some(
+          route =>
+            route.path ===
+            'usage',
+        ),
+    ).toBeTrue();
   });
 
   it('renders forbidden copy without exposing RBAC internals', async () => {
