@@ -8,6 +8,10 @@
   },
   "rewrites": [
     {
+      "source": "/api/admin/usage/records",
+      "destination": "/api/admin/identity?operation=usage-records"
+    },
+    {
       "source": "/api/admin/identity/summary",
       "destination": "/api/admin/identity?operation=summary"
     },
@@ -49,6 +53,10 @@
     },
     {
       "source": "/identity",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/usage",
       "destination": "/index.html"
     }
   ],

@@ -6,6 +6,13 @@ import {
   parseIdentityFilters,
   parseIdentityPageSize,
 } from '../_supabase-identity.mjs';
+
+import {
+  parseUsageFilters,
+  parseUsagePageSize,
+  usageRecords,
+} from '../_supabase-usage.mjs';
+
 import {
   completeRequest,
   prepareRequest,
@@ -18,6 +25,7 @@ const ROUTES = Object.freeze({
     '/api/admin/identity/records',
   entitlements:
     '/api/admin/identity/entitlements',
+  'usage-records': '/api/admin/usage/records',
 });
 
 export default async function handler(
@@ -111,6 +119,14 @@ export default async function handler(
           route,
           authorization,
         );
+      case 'usage-records':
+        return await handleUsageRecords(
+          req,
+          res,
+          context,
+          route,
+          authorization,
+        );
 
       case 'entitlements':
         return await handleEntitlements(
@@ -135,8 +151,7 @@ export default async function handler(
     }
   } catch (error) {
     if (
-      operation === 'records' &&
-      error instanceof TypeError
+      (operation === 'records' || operation === 'usage-records') && error instanceof TypeError
     ) {
       return respond(
         res,
@@ -156,7 +171,9 @@ export default async function handler(
         ? 'IDENTITY_SUMMARY_UNAVAILABLE'
         : operation === 'records'
           ? 'IDENTITY_RECORDS_UNAVAILABLE'
-          : 'ENTITLEMENT_CATALOG_UNAVAILABLE';
+          : operation === 'usage-records'
+              ? 'USAGE_RECORDS_UNAVAILABLE'
+              : 'ENTITLEMENT_CATALOG_UNAVAILABLE';
 
     return respond(
       res,
@@ -237,6 +254,52 @@ async function handleRecords(
     authorization.userId,
   );
 }
+
+async function handleUsageRecords(
+  req,
+  res,
+  context,
+  route,
+  authorization,
+) {
+  const limit =
+    parseUsagePageSize(
+      req.query?.limit,
+    );
+
+  const filters =
+    parseUsageFilters(
+      req.query,
+    );
+
+  const page =
+    await usageRecords(
+      authorization.client,
+      {
+        limit,
+        cursor:
+          req.query?.cursor ??
+          null,
+        filters,
+      },
+    );
+
+  return respond(
+    res,
+    context,
+    route,
+    200,
+    {
+      ...page,
+      limit,
+      filters,
+      generatedAt:
+        new Date().toISOString(),
+    },
+    authorization.userId,
+  );
+}
+
 
 async function handleEntitlements(
   res,

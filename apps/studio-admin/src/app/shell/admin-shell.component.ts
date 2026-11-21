@@ -22,6 +22,7 @@ import { AdminAuthService } from '../core/admin-auth.service';
         <a routerLink="/waitlist" routerLinkActive="active">WAITLIST</a>
         <a routerLink="/referrals" routerLinkActive="active">REFERRALS</a>
         <a routerLink="/identity" routerLinkActive="active">IDENTITY</a>
+        <a routerLink="/usage" routerLinkActive="active">USAGE</a>
         <div class="sidebar-spacer"></div>
         <button type="button" (click)="logout()" [disabled]="signingOut()">SIGN OUT</button>
       </aside>
@@ -29,7 +30,7 @@ import { AdminAuthService } from '../core/admin-auth.service';
       <footer>
         <span>{{ environment }}</span>
         <span>ROLE: {{ role() }}</span>
-        <span>VERSION: GATE 3</span>
+        <span>VERSION: GATE 4</span>
       </footer>
     </div>
   `,

@@ -561,3 +561,229 @@ test('Gate 3 Supabase identity contract is owner-gated, read-only and secretless
     /p_cursor_id|cursor_id|decoded\.id/,
   );
 });
+
+
+test('Gate 4.0.1 MASTER quota canonicalization uses rqs_plan entitlements without rewriting legacy semantics', async () => {
+  const sql =
+    await read(
+      '../../supabase/review/mastering_quota_canonicalization_gate4.sql',
+    );
+
+  assert.match(
+    sql,
+    /create or replace function public\.get_mastering_quota/i,
+  );
+
+  assert.match(
+    sql,
+    /resolve_rqs_plan_entitlement/i,
+  );
+
+  assert.match(
+    sql,
+    /policy_version\s*=\s*'rqs_plan_v1'/i,
+  );
+
+  assert.match(
+    sql,
+    /period_key/i,
+  );
+
+  assert.match(
+    sql,
+    /quota_limit/i,
+  );
+
+  assert.match(
+    sql,
+    /r\.policy_version is null/i,
+  );
+
+  assert.match(
+    sql,
+    /v_plan = 'free'/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /p\.role|v_role|'premium'/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    />=\s*3\b/,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /security\s+definer/i,
+  );
+
+  assert.match(
+    sql,
+    /revoke all[\s\S]*get_mastering_quota\(uuid\)[\s\S]*from public, anon, authenticated/i,
+  );
+
+  assert.match(
+    sql,
+    /grant execute[\s\S]*get_mastering_quota\(uuid\)[\s\S]*to service_role/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /\bdelete\s+from\b|\btruncate\b|\bdrop\s+table\b/i,
+  );
+});
+
+
+test('Gate 4.1 usage projection is owner-only, bounded and browser-safe', async () => {
+  const sql =
+    await read(
+      '../../supabase/review/studio_admin_product_usage_gate4.sql',
+    );
+
+  assert.match(
+    sql,
+    /create or replace function public\.studio_admin_usage_records/i,
+  );
+
+  assert.match(
+    sql,
+    /security definer/i,
+  );
+
+  assert.match(
+    sql,
+    /set search_path to ''/i,
+  );
+
+  assert.match(
+    sql,
+    /auth\.uid\(\)/i,
+  );
+
+  assert.match(
+    sql,
+    /studio_admin_memberships/i,
+  );
+
+  assert.match(
+    sql,
+    /m\.active = true/i,
+  );
+
+  assert.match(
+    sql,
+    /m\.role = 'owner'/i,
+  );
+
+  assert.match(
+    sql,
+    /from auth\.users/i,
+  );
+
+  assert.match(
+    sql,
+    /profiles/i,
+  );
+
+  assert.match(
+    sql,
+    /rqs_plan_entitlements/i,
+  );
+
+  assert.match(
+    sql,
+    /get_mastering_quota/i,
+  );
+
+  assert.match(
+    sql,
+    /get_spotify_pitch_quota/i,
+  );
+
+  assert.match(
+    sql,
+    /get_build_quota/i,
+  );
+
+  assert.match(
+    sql,
+    /p_fetch_limit > 51/i,
+  );
+
+  assert.match(
+    sql,
+    /p_cursor_ref text/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /p_cursor_id/i,
+  );
+
+  assert.match(
+    sql,
+    /\^\[0-9a-f\]\{32\}\$/,
+  );
+
+  assert.match(
+    sql,
+    /md5\(u\.id::text\)/i,
+  );
+
+  assert.match(
+    sql,
+    /masked_email text/i,
+  );
+
+  assert.match(
+    sql,
+    /master_used bigint/i,
+  );
+
+  assert.match(
+    sql,
+    /pitch_used bigint/i,
+  );
+
+  assert.match(
+    sql,
+    /build_projects_used bigint/i,
+  );
+
+  assert.match(
+    sql,
+    /build_storage_used_bytes bigint/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /returns table\s*\([^)]*\buser_id\b/is,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /returns table\s*\([^)]*\bemail\b/is,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /\binsert\s+into\b|\bupdate\s+public\.|\bdelete\s+from\b|\btruncate\b/i,
+  );
+
+  assert.match(
+    sql,
+    /revoke all[\s\S]*studio_admin_usage_records[\s\S]*from public, anon, authenticated/i,
+  );
+
+  assert.match(
+    sql,
+    /grant execute[\s\S]*studio_admin_usage_records[\s\S]*to authenticated/i,
+  );
+
+  assert.doesNotMatch(
+    sql,
+    /SUPABASE_SERVICE_ROLE_KEY|sb_secret_|private_key/i,
+  );
+});

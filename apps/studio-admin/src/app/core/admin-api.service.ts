@@ -173,6 +173,81 @@ export interface IdentityRecordsPage {
   generatedAt: string;
 }
 
+export interface UsageQuotaMetric {
+  used: number | null;
+  reserved: number | null;
+  limit: number | null;
+  remaining: number | null;
+  period: string | null;
+  periodKey: string | null;
+  available: boolean | null;
+}
+
+export interface UsageBuildProjects {
+  used: number | null;
+  limit: number | null;
+  remaining: number | null;
+  available: boolean | null;
+}
+
+export interface UsageBuildStorage {
+  confirmedBytes: number | null;
+  reservedBytes: number | null;
+  usedBytes: number | null;
+  limitBytes: number | null;
+  remainingBytes: number | null;
+  available: boolean | null;
+}
+
+export interface UsageUplinkActive {
+  used: number | null;
+  limit: number | null;
+  remaining: number | null;
+  unlimited: boolean | null;
+  available: boolean | null;
+}
+
+export interface UsageUplinkClicks {
+  used: number | null;
+  limit: number | null;
+  remaining: number | null;
+  period: string | null;
+  periodKey: string | null;
+  available: boolean | null;
+}
+
+export interface UsageRecord {
+  identityRef: string;
+  maskedEmail: string;
+  plan: string;
+  master: UsageQuotaMetric;
+  pitch: UsageQuotaMetric;
+  build: {
+    projects: UsageBuildProjects;
+    storage: UsageBuildStorage;
+  };
+  uplink: {
+    active: UsageUplinkActive;
+    clicks: UsageUplinkClicks;
+  };
+}
+
+export interface UsageRecordsQuery {
+  limit?: number;
+  cursor?: string | null;
+  plan?: string;
+}
+
+export interface UsageRecordsPage {
+  records: UsageRecord[];
+  nextCursor: string | null;
+  limit: number;
+  filters: {
+    plan?: string;
+  };
+  generatedAt: string;
+}
+
 export interface EntitlementPlan {
   plan: string;
   period: string;
@@ -301,6 +376,15 @@ export class AdminApiService {
 
   entitlementCatalog(): Promise<EntitlementCatalog> {
     return this.get<EntitlementCatalog>('/api/admin/identity/entitlements');
+  }
+
+  usageRecords(
+    query: UsageRecordsQuery = {},
+  ): Promise<UsageRecordsPage> {
+    return this.get<UsageRecordsPage>(
+      '/api/admin/usage/records',
+      query,
+    );
   }
 
   actionsConfig(): Promise<AdminActionsConfig> {

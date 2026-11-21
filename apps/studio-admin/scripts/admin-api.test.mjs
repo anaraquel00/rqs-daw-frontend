@@ -1255,3 +1255,248 @@ function restoreEnvironment(name, value) {
   if (value === undefined) delete process.env[name];
   else process.env[name] = value;
 }
+
+
+test('Gate 4 usage adapter sanitizes pagination and never embeds a raw UUID cursor', async () => {
+  const usage =
+    await import(
+      '../api/_supabase-usage.mjs'
+    );
+
+  let observedArgs = null;
+
+  const rows =
+    Array.from(
+      { length: 26 },
+      (_, index) => ({
+        cursor_ref:
+          index
+            .toString(16)
+            .padStart(32, '0'),
+
+        cursor_created_at:
+          new Date(
+            Date.UTC(
+              2026,
+              10,
+              21,
+              12,
+              0,
+              index,
+            ),
+          ).toISOString(),
+
+        identity_ref:
+          index
+            .toString(16)
+            .padStart(12, '0'),
+
+        masked_email:
+          'an***@example.com',
+
+        plan:
+          'pro',
+
+        master_used: 0,
+        master_reserved: 0,
+        master_limit: 80,
+        master_remaining: 80,
+        master_period: 'monthly',
+        master_period_key: '2026-11',
+        master_available: true,
+
+        pitch_used: 0,
+        pitch_reserved: 0,
+        pitch_limit: 60,
+        pitch_remaining: 60,
+        pitch_period: 'monthly',
+        pitch_period_key: '2026-11',
+        pitch_available: true,
+
+        build_projects_used: 0,
+        build_projects_limit: 100,
+        build_projects_remaining: 100,
+        build_projects_available: true,
+
+        build_storage_confirmed_bytes: 0,
+        build_storage_reserved_bytes: 0,
+        build_storage_used_bytes: 0,
+        build_storage_limit_bytes: 53687091200,
+        build_storage_remaining_bytes: 53687091200,
+        build_storage_available: true,
+
+        uplink_active_used: 1,
+        uplink_active_limit: null,
+        uplink_active_remaining: null,
+        uplink_active_unlimited: true,
+        uplink_active_available: true,
+
+        uplink_clicks_used: 0,
+        uplink_clicks_limit: 500000,
+        uplink_clicks_remaining: 500000,
+        uplink_clicks_period: 'monthly',
+        uplink_clicks_period_key: '2026-11',
+        uplink_clicks_available: true,
+      }),
+    );
+
+  usage.setUsageRpcProviderForTests(
+    async (
+      _client,
+      functionName,
+      args,
+    ) => {
+      assert.equal(
+        functionName,
+        'studio_admin_usage_records',
+      );
+
+      observedArgs = args;
+
+      return rows;
+    },
+  );
+
+  try {
+    const page =
+      await usage.usageRecords(
+        {},
+        {
+          limit: 25,
+          cursor: null,
+          filters: {
+            plan: 'pro',
+          },
+        },
+      );
+
+    assert.equal(
+      page.records.length,
+      25,
+    );
+
+    assert.ok(
+      page.nextCursor,
+    );
+
+    assert.equal(
+      observedArgs.p_fetch_limit,
+      26,
+    );
+
+    assert.equal(
+      observedArgs.p_plan,
+      'pro',
+    );
+
+    assert.equal(
+      observedArgs.p_cursor_ref,
+      null,
+    );
+
+    assert.equal(
+      page.records[0].identityRef,
+      '000000000000',
+    );
+
+    assert.equal(
+      page.records[0].master.limit,
+      80,
+    );
+
+    assert.equal(
+      page.records[0].pitch.limit,
+      60,
+    );
+
+    assert.equal(
+      page.records[0].build.projects.limit,
+      100,
+    );
+
+    assert.equal(
+      page.records[0].uplink.active.used,
+      1,
+    );
+
+    assert.equal(
+      page.records[0].uplink.active.limit,
+      null,
+    );
+
+    assert.equal(
+      page.records[0].uplink.active.unlimited,
+      true,
+    );
+
+    assert.equal(
+      page.records[0].uplink.clicks.limit,
+      500000,
+    );
+
+    assert.equal(
+      page.records[0].uplink.clicks.period,
+      'monthly',
+    );
+
+    assert.equal(
+      page.records[0].uplink.clicks.periodKey,
+      '2026-11',
+    );
+
+    const decoded =
+      JSON.parse(
+        Buffer
+          .from(
+            page.nextCursor,
+            'base64url',
+          )
+          .toString('utf8'),
+      );
+
+    assert.match(
+      decoded.ref,
+      /^[0-9a-f]{32}$/,
+    );
+
+    assert.equal(
+      decoded.id,
+      undefined,
+    );
+
+    assert.equal(
+      JSON.stringify(page)
+        .includes(
+          '00000000-0000-4000-8000-000000000001',
+        ),
+      false,
+    );
+  } finally {
+    usage.setUsageRpcProviderForTests(
+      null,
+    );
+  }
+});
+
+test('Gate 4 usage adapter rejects invalid page sizes and plan filters', async () => {
+  const usage =
+    await import(
+      '../api/_supabase-usage.mjs'
+    );
+
+  assert.throws(
+    () =>
+      usage.parseUsagePageSize(
+        '51',
+      ),
+    TypeError,
+  );
+
+  assert.throws(
+    () =>
+      usage.parseUsageFilters({
+        plan: 'enterprise',
+      }),
+    TypeError,
+  );
+});
